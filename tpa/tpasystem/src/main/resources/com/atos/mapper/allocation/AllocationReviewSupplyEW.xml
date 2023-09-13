@@ -1,0 +1,373 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<!-- Namespace -->
+<mapper namespace="com.atos.mapper.allocation.AllocationReviewSupplyEWMapper">
+
+    <select id="selectFactorFromDefaultUnit" resultType="java.math.BigDecimal">
+		SELECT conversion_factor FROM tpa_vunit_convert_from_default WHERE unit_code = #{otherUnit} 
+	</select>
+
+    <select id="selectFactorToDefaultUnit" resultType="java.math.BigDecimal">
+		SELECT conversion_factor FROM tpa_vunit_convert_to_default WHERE unit_code = #{otherUnit} 
+	</select>
+	
+     <select id="selectOpenPeriodFirstDay" resultType="java.util.Date" parameterType="hashmap">
+		SELECT nvl((SELECT MAX(bc.gas_day) + 1 
+		             FROM tpa_tbalance_closing bc 
+		            WHERE bc.idn_balance_closing_type = (SELECT bct.idn_balance_closing_type 
+		                                                   FROM tpa_tbalance_closing_type bct 
+		                                                  WHERE bct.type_code = #{closingTypeCode}) 
+                           AND bc.idn_pipeline_system = #{idnSystem}
+		              AND bc.version_date = 
+		                  (SELECT MAX(bcx.version_date) 
+		                     FROM tpa_tbalance_closing bcx 
+		                    WHERE bcx.gas_day = bc.gas_day 
+                                   AND bcx.idn_pipeline_system = bc.idn_pipeline_system
+		                      AND bcx.idn_balance_closing_type = bc.idn_balance_closing_type)), 
+		           to_date(tval.parameter_value, tpar.data_format)) 
+		  FROM tpa_tparameter_value tval, 
+		       tpa_tparameter       tpar 
+		 WHERE tpar.idn_parameter = tval.idn_parameter 
+		 <if test="sysCode == 'ONSHORE'">
+		   AND tpar.parameter_code = 'ALLOCATION.START.DATE.ONSHORE' 
+		   </if>
+		 <if test="sysCode == 'OFFSHORE'">
+
+		   AND tpar.parameter_code = 'ALLOCATION.START.DATE.OFFSHORE'
+		   </if>
+		   AND trunc(SYSDATE) BETWEEN tval.start_date AND nvl(tval.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+		   </select>
+		   <!--  
+     <select id="selectOpenPeriodFirstDay" resultType="java.util.Date">
+		SELECT nvl((SELECT MAX(bc.gas_day) + 1 
+		             FROM tpa_tbalance_closing bc 
+		            WHERE bc.idn_balance_closing_type = (SELECT bct.idn_balance_closing_type 
+		                                                   FROM tpa_tbalance_closing_type bct 
+		                                                  WHERE bct.type_code = 'DEFINITIVE') 
+		              AND bc.version_date = 
+		                  (SELECT MAX(bcx.version_date) 
+		                     FROM tpa_tbalance_closing bcx 
+		                    WHERE bcx.gas_day = bc.gas_day 
+		                      AND bcx.idn_balance_closing_type = bc.idn_balance_closing_type)), 
+		           to_date(tval.parameter_value, tpar.data_format)) 
+		  FROM tpa_tparameter_value tval, 
+		       tpa_tparameter       tpar 
+		 WHERE tpar.idn_parameter = tval.idn_parameter 
+		   AND tpar.parameter_code = 'ALLOCATION.START.DATE' 
+		   AND trunc(SYSDATE) BETWEEN tval.start_date AND nvl(tval.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+    </select>
+    -->
+	<!-- Para hacer consultas, el punto no tendria por que estar vigente. -->
+    <select id="selectShipperId" resultType="com.atos.beans.ComboFilterNS">
+		select tgr.idn_user_group as key, tgr.user_group_id as value
+		from tpa_tuser_group tgr
+		where tgr.idn_user_group_type = (select idn_user_group_type from tpa_tuser_group_type where type_code = 'SHIPPER')
+		order by upper(tgr.user_group_id) asc
+    </select>
+	
+    <select id="selectContractId" parameterType="com.atos.filters.allocation.AllocationReviewSupplyEWFilter" resultType="com.atos.beans.ComboFilterNS">
+		select tcon.idn_contract as key, tcon.contract_code as value
+		  from tpa_tcontract tcon
+	     where EXISTS (SELECT 1
+	             FROM tpa_tcontract_consolidate tconso
+	            WHERE tconso.idn_contract = tcon.idn_contract)
+	            and tcon.idn_pipeline_system = #{systemId}
+				<if test="gasDay != null">
+				and #{gasDay} >= tcon.start_date and tcon.end_date >= #{gasDay}
+				</if>
+		       	<if test="shipperId != null">
+		       	and tcon.idn_user_group = #{shipperId}
+		       	</if>
+	     order by upper(tcon.contract_code) asc
+	</select>
+
+   <select id="selectConceptId" resultType="com.atos.beans.ComboFilterNS">
+   SELECT tncon.idn_nomination_concept AS key,
+       tncon.concept_desc           AS VALUE
+  FROM tpa_tnomination_concept  tncon,
+       tpa_tallocatable_concept tacon,
+       tpa_tnom_concept_system tconsy,
+       tpa_tpipeline_system    tpip
+ WHERE tncon.idn_nomination_concept = tacon.idn_nomination_concept
+   AND tacon.is_reviewable = 'Y'
+   AND tacon.idn_nomination_concept = tconsy.idn_nomination_concept
+   AND tconsy.idn_pipeline_system = tpip.idn_pipeline_system
+   AND tpip.pipeline_system_code = #{system}
+ GROUP BY tncon.idn_nomination_concept,
+          tncon.concept_desc
+ ORDER BY tncon.idn_nomination_concept ASC
+	</select>
+      
+    <resultMap type="com.atos.beans.allocation.AllocationBean" id="Allocation">
+        <id property="allocationDataId" column="idn_allocation_data" />
+		<result property="gasDay" column="gas_day"/>
+		<result property="shipperId" column="idn_user_group"/>
+        <result property="shipperCode" column="user_group_id"/>
+        <result property="contractId" column="idn_contract"/> 
+        <result property="contractCode" column="contract_code"/>   
+        <result property="zoneId" column="idn_zone"/>
+        <result property="zoneCode" column="zone_code"/>
+        <result property="nominationConceptId" column="idn_nomination_concept"/>
+        <result property="nominationConceptDesc" column="concept_desc"/>
+        <result property="nominatedCap" column="nominated_value"/>   
+        <result property="allocationTPA" column="allocated_value"/>
+        <result property="allocationChanged" column="allocation_changed"/>
+        <result property="originalAllocationForReview" column="allocation_value"/>
+        <result property="reviewedAllocation" column="reviewed_value"/>
+        <result property="reviewComments" column="operator_comments"/>
+        <result property="allocationDiff" column="allocation_diff"/>    
+        <result property="allocationPerc" column="allocation_perc"/>
+        <result property="statusCode" column="status"/>
+        <result property="reviewId" column="idn_allocation_review"/>
+        <result property="reviewCode" column="review_code"/>        
+    </resultMap>
+
+	<!-- Se valida que el reparto es de tipo commercial por, si en algun momento se definiera otro tipo, no se obtengan 2 registros
+		 uno para cada tipo de reparto.
+		 De todos los conceptos de reparto, solo interesan los repartos con conceptos 'ENERGY'.
+		 La clave primaria de la tabla tpa_tallocation_data contiene 
+		 (IDN_ALLOCATION, IDN_CONTRACT, IDN_ZONE, IDN_NOMINATION_POINT, IDN_NOMINATION_CONCEPT)
+		 1.- IDN_ALLOCATION tiene como clave primaria (IDN_ALLOCATION_TYPE, GAS_DAY, VERSION_DATE)
+		     - IDN_ALLOCATION_TYPE se fija a COMMERCIAL.
+		     - El resto de campos marcan dia de gas y version.
+		 2.- IDN_CONTRACT: Hay un reparto por contrato.
+		 5.- IDN_NOMINATION_CONCEPT: Se fija a 'ENERGY'.
+		 3, 4.- IDN_ZONE, IDN_NOMINATION_POINT estan definidos por el IDN_NOMINATION_CONCEPT: Si el concepto es ENERGY, siempre va a 
+		 venir relleno el punto. Para un punto, la zona es fija (No puede haber dos registros, con 1 mismo punto y 2 zonas distintas)
+		 Para otros conceptos, el punto es nulo, y el valor afecta a una zona concreta. Pero no aplica aqui, pues filtramos por ENERGY.
+		 Se hace doble decode al calcular allocation_perc para evitar una division por cero (excepcion).
+		 Si el tdata.allocated_value es cero, se comprueba si trev.shipper_value tambien es cero:
+		    - Si el shipper revisa a cero, se deja un 0%.
+		    - Si el shipper revisa a otro valor, se devuelve un 100% para que se muestre el warning al operador. 
+		    Se supone que el umbral configuraddo en DAM no va a superar nunca ese 100%.	 
+		 Para asociar las reviews, se buscan las que coincidan en dia de gas, contrato y punto, con left join, porque podrian no 
+		 existir.-->
+        <select id="selectAllocations" resultMap="Allocation">
+    WITH reviewable_concept AS
+     (SELECT DISTINCT ac.idn_nomination_concept
+        FROM tpa_tallocatable_concept ac,
+             tpa_tnom_concept_system ncs,
+             tpa_tpipeline_system ps
+       WHERE ac.is_reviewable='Y'
+         AND ac.idn_nomination_concept = ncs.idn_nomination_concept
+         AND ncs.idn_pipeline_system = ps.idn_pipeline_system
+         AND ps.pipeline_system_code = #{system}),
+    
+    allocation_review AS
+		 (SELECT ar.*
+		    FROM tpa_tallocation_review ar, tpa_tcontract tcon
+		   WHERE tcon.idn_contract = ar.idn_contract
+  AND tcon.idn_pipeline_system = #{systemId}
+         and ar.idn_system_point is null
+         AND ar.idn_nomination_concept IN (SELECT idn_nomination_concept FROM reviewable_concept)
+			   	<if test="gasDay != null">
+				and ar.gas_day = #{gasDay}
+				</if>
+		       	<if test="shipperId != null">
+		       	and tcon.idn_user_group = #{shipperId}
+		       	</if>
+		       	<if test="contractId != null">
+		       	and ar.idn_contract = #{contractId}
+		       	</if>
+	            <if test="nominationConceptId != null">
+		       	and ar.idn_nomination_concept = #{nominationConceptId}
+		       	</if>
+			    and ar.version_date =
+			       (SELECT MAX(arx.version_date)
+			          FROM tpa_tallocation_review arx
+			         WHERE arx.gas_day = ar.gas_day
+			           and arx.idn_contract = ar.idn_contract
+                 and arx.idn_system_point IS NULL
+                 and arx.idn_zone = ar.idn_zone
+                 and arx.idn_nomination_concept = ar.idn_nomination_concept))
+		
+		select * 
+		from (SELECT tdata.idn_allocation_data,
+			       tal.gas_day,
+			       tgr.idn_user_group,
+			       tgr.user_group_id,
+			       tcon.idn_contract,
+			       tcon.contract_code,
+		           tdata.idn_zone,
+             	   tzon.zone_code,
+		           tdata.idn_nomination_concept,
+             	   tnomcon.concept_desc,
+			       tdata.nominated_value * #{factorFromDefaultUnit} as nominated_value,
+			       tdata.allocated_value * #{factorFromDefaultUnit} as allocated_value,
+			       case when trev.status != 'ALLOCATED' and tal.version_date > nvl(trev.version_date, tal.version_date) then 'Y' else 'N' end as allocation_changed,
+			       trev.allocation_value * #{factorFromDefaultUnit} as allocation_value,
+			       trev.reviewed_value * #{factorFromDefaultUnit} as reviewed_value,
+			       trev.operator_comments,
+			       decode(trev.reviewed_value,
+			              NULL,
+			              NULL,
+			              (tdata.allocated_value - trev.reviewed_value) * #{factorFromDefaultUnit}) AS allocation_diff,
+			       decode(trev.reviewed_value,
+			              NULL,
+			              NULL,
+			              decode(tdata.allocated_value,
+			                     0,
+			                     decode(trev.reviewed_value, 0, 0, 1),
+			                     (tdata.allocated_value - trev.reviewed_value) /
+			                     tdata.allocated_value)) AS allocation_perc,
+			       trev.status,
+			       trev.idn_allocation_review,
+			       trev.review_code
+			  FROM tpa_tallocation         tal,
+			       tpa_tallocation_data    tdata,
+			       allocation_review       trev,
+			       tpa_tcontract           tcon,
+			       tpa_tuser_group         tgr,
+             	   tpa_tzone               tzon,
+             	   tpa_tnomination_concept tnomcon
+			 WHERE tdata.idn_allocation = tal.idn_allocation
+         	   AND tdata.idn_nomination_point IS NULL
+			   AND tal.idn_allocation_type =
+			       (SELECT talty.idn_allocation_type
+			          FROM tpa_tallocation_type talty
+			         WHERE talty.type_code = 'COMMERCIAL')
+			   AND tal.version_date =
+			       (SELECT MAX(ax.version_date)
+			          FROM tpa_tallocation ax
+			         WHERE ax.gas_day = tal.gas_day
+			           AND ax.idn_allocation_type = tal.idn_allocation_type)
+			   AND tdata.idn_nomination_concept IN (SELECT idn_nomination_concept FROM reviewable_concept)       
+	           AND tdata.idn_zone = tzon.idn_zone
+	           AND tdata.idn_nomination_concept = tnomcon.idn_nomination_concept
+    AND tcon.idn_pipeline_system = #{systemId}
+			   	<if test="gasDay != null">
+				and tal.gas_day = #{gasDay}
+				</if>
+		       	<if test="contractId != null">
+		       	and tdata.idn_contract = #{contractId}
+		       	</if>
+            	<if test="nominationConceptId != null">
+		       	and tdata.idn_nomination_concept = #{nominationConceptId}
+		       	</if>
+			    AND tcon.idn_contract = tdata.idn_contract
+		       	<if test="shipperId != null">
+		       	and tcon.idn_user_group = #{shipperId}
+		       	</if>
+			   AND tgr.idn_user_group = tcon.idn_user_group
+			   AND trev.gas_day(+) = tal.gas_day
+			   AND trev.idn_contract(+) = tdata.idn_contract
+         	   AND trev.idn_zone (+)= tdata.idn_zone
+         	   AND trev.idn_nomination_concept (+)= tdata.idn_nomination_concept) t1
+			 <where>
+			 	<choose>
+					<when test="statusCode != null and statusCode.length > 0">
+						and (
+						<foreach item="item" index="index" collection="statusCode"
+				             open="t1.status in (" separator="," close=")">
+				        		#{item}
+				    	</foreach>
+						<foreach item="item2" index="index2" collection="statusCode">
+		       				<if test="item2 != null and item2 == 'NOT_REVIEWED'">
+		       					or t1.status is null
+		       				</if>
+				    	</foreach>
+				    	)
+					</when>
+					<otherwise>
+						and t1.status in ('no_valid_status')
+					</otherwise>
+				</choose>
+				<if test="reviewCode != null and reviewCode != ''">
+			  	and t1.review_code like #{reviewCode}
+			  	</if>
+			 </where>			 
+			 order by t1.gas_day asc,
+                	  upper(t1.concept_desc) asc,
+                	  upper(t1.user_group_id) asc,
+			          upper(t1.contract_code) asc,
+					  upper(t1.zone_code) asc
+	</select>
+
+   
+    <resultMap type="com.atos.beans.allocation.AllocationBean" id="AllocationReview">
+        <id property="reviewId" column="idn_allocation_review"/>
+		<result property="gasDay" column="gas_day"/>
+        <result property="contractId" column="idn_contract"/> 
+        <result property="nomPointId" column="idn_system_point"/>
+        <result property="zoneId" column="idn_zone"/>
+        <result property="nominationConceptId" column="idn_nomination_concept"/>
+        <result property="originalAllocationForReview" column="allocation_value"/>
+        <result property="reviewedAllocation" column="shipper_value"/>
+        <result property="reviewComments" column="shipper_comments"/>
+        <result property="statusCode" column="status"/>
+        <result property="reviewCode" column="review_code"/>        
+    </resultMap>
+    
+    <!-- La clave de tpa_tallocation_review es
+    [GAS_DAY, IDN_CONTRACT, IDN_SYSTEM_POINT, IDN_ZONE, IDN_NOMINATION_CONCEPT, VERSION_DATE] -->
+	<select id="selectLastAllocationReview" resultMap="AllocationReview">
+		SELECT ar.idn_allocation_review,
+			   ar.gas_day,
+		       ar.idn_contract,
+			   ar.idn_zone,
+			   ar.idn_nomination_concept,
+			   ar.reviewed_value * #{conversionFactor} as shipper_value,
+			   ar.operator_comments,
+			   ar.status,
+			   ar.review_code
+		    FROM tpa_tallocation_review ar
+      	 WHERE  ar.idn_system_point IS NULL
+			   	<if test="gasDay != null">
+				and ar.gas_day = #{gasDay}
+				</if>
+		       	<if test="contractId != null">
+		       	and ar.idn_contract = #{contractId}
+		       	</if>
+		       	<if test="zoneId != null">
+		       	and ar.idn_zone = #{zoneId}
+		       	</if>
+		       	<if test="nominationConceptId != null">
+		       	and ar.idn_nomination_concept = #{nominationConceptId}
+		       	</if>
+			    and ar.version_date =
+			       (SELECT MAX(arx.version_date)
+			          FROM tpa_tallocation_review arx
+			         WHERE arx.gas_day = ar.gas_day
+			           and arx.idn_contract = ar.idn_contract
+                       and arx.idn_system_point IS NULL
+	                   and arx.idn_zone = ar.idn_zone
+	                   and arx.idn_nomination_concept = ar.idn_nomination_concept)
+	</select>
+   
+   	<insert id="insertAllocationReview" useGeneratedKeys="true" keyProperty="reviewId" keyColumn="idn_allocation_review" parameterType="com.atos.beans.allocation.AllocationBean">
+	    insert into tpa_tallocation_review (idn_allocation_review,
+	                                        review_code,
+	                                        gas_day,
+	                                        idn_contract,
+	                                        idn_system_point,
+                                            idn_zone,
+                                            idn_nomination_concept,
+	                                        version_date,
+	                                        allocation_value,
+	                                        reviewed_value,
+	                                        shipper_comments,
+	                                        operator_comments,
+	                                        status,
+	                                        is_warned,
+	                                        aud_ins_user,
+	                                        aud_last_user) 
+	    values 
+	      (tpa_sallocation_review.nextval, 
+	      #{reviewCode}, 
+	      #{gasDay},
+	      #{contractId},
+	      null,
+          #{zoneId},
+          #{nominationConceptId},
+	      systimestamp,
+	      #{originalAllocationForReview} * #{conversionFactor},
+	      #{reviewedAllocation} * #{conversionFactor},
+	      null,
+	      #{reviewComments},
+	      #{statusCode},
+	      #{isWarned},
+	      #{username},
+	      #{username})
+	</insert>
+</mapper>

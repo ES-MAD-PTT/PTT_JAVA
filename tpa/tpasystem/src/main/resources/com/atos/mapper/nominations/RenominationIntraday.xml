@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atos.mapper.nominations.RenominationIntradayMapper">
+
+   <select id="selectShipperId" resultType="com.atos.beans.ComboFilterNS">
+		
+	SELECT tuser.idn_user_group as key, tuser.user_group_id as value
+    FROM tpa_tuser_group tuser
+    WHERE tuser.idn_user_group_type = (SELECT idn_user_group_type 
+	         FROM tpa_tuser_group_type 
+			 WHERE type_code = 'SHIPPER')                      
+   </select>
+
+	<resultMap id="resultMapRenominationIntraday" type="com.atos.beans.nominations.RenominationIntradayBean">
+		<result property="idn_intraday_renom_cab" 	column="idn_intraday_renom_cab"/>
+		<result property="intraday_renom_code" 	column="intraday_renom_code"/>
+		<result property="gas_day" 	column="gas_day"/>
+		<result property="hour" 	column="hour"/>
+		<result property="idn_user_group" 	column="idn_user_group"/>
+		<result property="user_group_code" 	column="user_group_code"/>
+		<result property="user_group_name" 	column="user_group_name"/>
+		<association property="detail" select="com.atos.mapper.nominations.RenominationIntradayMapper.selectRenominationIntradayDet"
+				column="idn_intraday_renom_cab=IDN_INTRADAY_RENOM_CAB}" />
+	</resultMap>
+  
+   
+   <select id="selectRenominationIntradayCab" parameterType="com.atos.filters.nominations.RenominationIntradayFilter" resultMap="resultMapRenominationIntraday">
+
+SELECT rc.idn_intraday_renom_cab,
+       rc.intraday_renom_code,
+       rc.gas_day,
+       rc.hour_from as hour,
+       rc.idn_user_group,
+       nvl(ug.user_group_id, 'All shippers') AS user_group_code,
+       nvl(ug.user_group_name, 'All shippers') AS user_group_name,
+       rc.status
+  FROM tpa_tintraday_renom_cab rc
+  LEFT JOIN tpa_tuser_group ug
+    ON rc.idn_user_group = ug.idn_user_group
+ WHERE rc.gas_day = TRUNC(sysdate)
+    <if test="shipperId != null and shipperId != ''">
+        and ug.idn_user_group = #{shipperId}
+        </if>
+    <if test="status != null and status != ''">
+    	and rc.status = #{status}
+        </if>
+       
+ORDER BY rc.intraday_renom_code
+
+   </select>
+  
+   <select id="selectRenominationIntradayDet" parameterType="com.atos.beans.nominations.RenominationIntradayBean" resultType="com.atos.beans.nominations.RenominationIntradayDetBean">
+
+SELECT rd.idn_intraday_renom_det,
+       rd.idn_intraday_renom_cab,
+       rd.idn_system_point,
+       sp.point_code,
+       rd.hour_1_period as minutes,
+       rd.energy,
+       rd.volume
+  FROM tpa_tintraday_renom_det rd,
+       tpa_tsystem_point       sp
+ WHERE rd.idn_intraday_renom_cab = #{idn_intraday_renom_cab}
+   AND rd.version_date = (SELECT MAX(rdx.version_date)
+                             FROM tpa_tintraday_renom_det rdx
+                            WHERE rd.idn_intraday_renom_cab = rdx.idn_intraday_renom_cab
+                              AND rd.idn_system_point = rdx.idn_system_point)
+   AND rd.idn_system_point = sp.idn_system_point
+
+   </select>  
+
+  <resultMap type="com.atos.beans.nominations.RenominationIntradayDialogDetBean" id="RenominationIntradayBean">
+        <result property="gas_day" column="gas_day"/>    
+        <result property="point_code" column="nomination_point"/>
+        <result property="idn_system_point" column="idn_nom"/>  
+        <result property="event_id" column="idn_intraday_renom_cab"/>
+        <result property="intraday_renom_code" column="intraday_renom_code"/>
+    </resultMap>
+
+   <select id="selectRenominationIntradayDialog" parameterType="com.atos.beans.nominations.RenominationIntradayDialogBean" resultMap="RenominationIntradayBean">
+
+	WITH
+  -- ALL DATES IN QUERY
+  w_dates AS  
+    (SELECT 
+    --Se suma 1 para calcular la hora siguiente y otro 1 para ajustar la hora a la que es. Hora 1 es de las 00 a la 01
+    trunc(SYSDATE) AS days,
+    --to_char(sysdate, 'HH24:MI:SS'),
+    to_char(sysdate, 'HH24') + 1 + 1 as hourfrom,
+    to_char(sysdate, 'MI') as minutes
+    --trunc(to_date('31/05/2022', 'dd/mm/yyyy')) AS days,
+    --to_char(to_date('31/05/2022 11:40:22', 'dd/mm/yyyy HH24:MI:SS'),'HH24') + 1 + 1 as hourfrom,
+    --to_char(to_date('31/05/2022 11:40:22', 'dd/mm/yyyy HH24:MI:SS'),'MI')  as minutes
+    FROM DUAL),
+    
+  TSYSTEM_POINT AS
+  (
+    SELECT sp.start_date,sp.end_date, sp.point_code AS NOMINATION_POINT, sp.IDN_SYSTEM_POINT AS IDN_NOM
+    , sp.type_code AS IDN_TYPE_CODE
+    FROM 
+    tpa_vsystem_point sp,
+    w_dates
+    WHERE 
+    	<![CDATA[
+				sp.start_date <=days
+			]]>
+    and (sp.end_date is null or sp.end_date > days)
+    AND sp.type_code ='ENTRY'
+    and sp.GROUP_CODE = 'NOMINATION'
+    ORDER BY sp.IDN_SYSTEM_POINT  
+  ),
+  SHIPPER AS
+(
+select vs.user_group_id AS SHIPPER_CODE, 
+vs.idn_user_group_type GROUP_TYPE, 
+vs.idn_user_group  AS USER_GROUP,
+vs.user_group_name AS USER_GROUP_NAME
+from tpa_vuser vs, tpa_tuser_group_type b
+where b.type_code = 'SHIPPER'
+AND b.idn_user_group_type= vs.idn_user_group_type),
+
+-- NOMINATIONS
+  consulta AS
+    (SELECT d.days as gas_day,
+            hourfrom as hourfrom,
+            ':'||minutes as minutes,
+            NOMINATION_POINT,
+            IDN_NOM
+       FROM tpa_tnomination n,
+            tpa_voperation  o,
+            tpa_tcontract c,
+            tpa_tnomination_entity ne,
+            w_dates         d,
+            SHIPPER,
+            TSYSTEM_POINT
+      WHERE n.is_contracted = 'Y'
+         
+         
+         <if test="shipperId != null and shipperId != ''">
+
+            AND USER_GROUP = #{shipperId}
+
+        </if>
+        
+        AND n.idn_user_group = USER_GROUP
+         AND n.idn_nomination = ne.idn_nomination
+         AND n.idn_contract = c.idn_contract
+         AND ne.idn_system_point = IDN_NOM  
+         AND d.days BETWEEN n.start_date AND n.end_date
+         AND n.nomination_version =
+              (SELECT MAX(nx.nomination_version) FROM tpa_tnomination nx WHERE nx.nomination_code = n.nomination_code)
+         AND NOT (n.is_responsed = 'Y' AND n.is_valid = 'N')
+         AND n.idn_operation = o.idn_operation
+         AND o.category_code = 'NOMINATION'
+         AND c.idn_pipeline_system = 1
+         AND o.TERM_CODE = 'DAILY'
+         GROUP BY d.days,
+            hourfrom,
+            ':'||minutes,          
+            NOMINATION_POINT,
+            IDN_NOM
+    )
+    
+    SELECT gas_day,
+            NOMINATION_POINT,
+            IDN_NOM
+            FROM consulta ORDER BY nomination_point
+
+   </select>
+
+
+   
+    <select id="getSysdate" resultType="java.util.Date">
+		select sysdate from dual
+	</select>
+   
+   <select id="getIdEvent" statementType="CALLABLE" parameterType="com.atos.beans.scadaAlarms.IdEventBean">
+		{call #{valid,jdbcType=INTEGER,mode=OUT} :=
+		pck_id_generation.get_id(
+				#{type,jdbcType=VARCHAR,mode=IN},
+				#{date,jdbcType=DATE,mode=IN},
+				#{p_id,jdbcType=VARCHAR,mode=OUT},
+				#{error_desc,jdbcType=VARCHAR,mode=OUT})}
+	</select>
+   
+   <insert id="insertHeader" useGeneratedKeys="true" keyProperty="idn_intraday_renom_cab" keyColumn="idn_intraday_renom_cab" parameterType="com.atos.beans.nominations.RenominationIntradayDialogBean">
+    insert into Tpa_Tintraday_Renom_Cab (idn_intraday_renom_cab, Intraday_Renom_Code, gas_day, Hour_From, Idn_User_Group, Is_All_Shippers, status, aud_ins_date, aud_last_date,aud_ins_user, aud_last_user)
+		values (tpa_sintraday_renom_cab.nextval, 
+		#{intraday_renom_code}, 
+		#{gas_day}, 
+		#{hour},  
+		#{shipperId}, 
+		#{strallShippers},
+		'SUBMITTED', 
+ 		sysdate, sysdate,
+		#{username},  #{username})
+    
+  </insert>
+
+	<update id="updateStatus" parameterType="com.atos.beans.nominations.RenominationIntradayBean">
+		UPDATE tpa_tintraday_renom_cab set
+			status = #{status},
+		    aud_last_date=sysdate,
+		    aud_last_user=#{username}
+		WHERE idn_intraday_renom_cab = #{idn_intraday_renom_cab}
+	</update>
+
+ 
+  
+  <insert id="insertDetail" parameterType="com.atos.beans.nominations.RenominationIntradayDialogDetBean">
+    insert into tpa_tintraday_renom_det (idn_intraday_renom_det, idn_intraday_renom_cab, idn_system_point, hour_1_period, energy, volume, aud_ins_date, aud_last_date,aud_ins_user, aud_last_user)
+values (tpa_sintraday_renom_det.nextval, 
+#{idn_intraday_renom_cab},
+#{idn_system_point},
+#{minutes},
+#{energy},
+#{volume},
+sysdate, sysdate, 
+#{username},  #{username})
+  </insert>
+  
+  <select id="prorate" statementType="CALLABLE" parameterType="com.atos.beans.nominations.RenominationIntradayProrateBean">
+  {call #{errorCode,jdbcType=INTEGER,mode=OUT} :=
+            PCK_INTRADAY_NOMINATION.prorate(
+  				#{idn_intraday_renom_cab,jdbcType=INTEGER,mode=IN},
+                #{hour,jdbcType=INTEGER,mode=IN},                      
+                #{user,jdbcType=VARCHAR,mode=IN},
+				#{language,jdbcType=VARCHAR,mode=IN},
+				#{errorDesc,jdbcType=VARCHAR,mode=OUT})}
+	</select>
+
+</mapper>

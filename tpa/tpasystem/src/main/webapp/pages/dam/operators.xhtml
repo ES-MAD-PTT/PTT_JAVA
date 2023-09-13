@@ -1,0 +1,375 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_dam']}" url="#" />
+			<p:menuitem value="#{msg['menu_buss_partners']}" url="#" />
+			<p:menuitem value="#{msg['menu_operators']}" url="/pages/dam/operators.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="5000"/>
+			
+            <p:layout widgetVar="operatorLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">	
+					
+				<p:panelGrid columns="2" style="width:100%">
+					
+						<p:panelGrid>
+							<p:row>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['operator_ID']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['operator_Name']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['operator_Start_Date']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['operator_End_Date']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								
+								<p:column>
+					           		<p:selectOneMenu widgetVar="id_w" id="id" style="width:100px" value="#{operatorView.filters.id}" >
+										<f:selectItem itemLabel="" itemValue="" />
+        								<f:selectItems value="#{operatorView.ids.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />						
+					           		</p:selectOneMenu>									
+								</p:column>
+								
+								<p:column>
+									<p:autoComplete id="name" size="10" maxlength="120" value="#{operatorView.filters.name}" completeMethod="#{operatorView.nameList}" />									
+								</p:column>
+								<p:column>
+									<p:calendar id="fecInicio"  size="10" pattern="dd/MM/yyyy" mask="true" value="#{operatorView.filters.startDate}"
+										showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="fecInicio"></p:ajax>
+										<p:ajax event="change" update="fecInicio"></p:ajax>
+									</p:calendar>
+								</p:column>
+								<p:column>
+									<p:calendar id="fecFin"  size="10" pattern="dd/MM/yyyy" mask="true" value="#{operatorView.filters.endDate}"
+										showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="fecFin"></p:ajax>
+										<p:ajax event="change" update="fecFin"></p:ajax>
+									</p:calendar>
+								</p:column>
+							
+								
+							</p:row>
+						</p:panelGrid>
+						<p:panelGrid columns="2" style="float:right;top:0px">
+							<shiro:hasPermission name="#{changeSystemView.system}.DAM.OPERATOR.QUERY">
+							<p:commandButton value="#{msg['search']}" icon="ui-icon fa fa-search" 
+								actionListener="#{operatorView.onSearch}"
+								onstart="PF('cargando').show()"
+								oncomplete="PF('cargando').hide()" 
+								update="msgs,:#{p:component('operators1')}"/>
+							</shiro:hasPermission>
+							
+							<p:commandButton  onclick="PF('operatorLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+							
+							<shiro:hasPermission name="#{changeSystemView.system}.DAM.OPERATOR.QUERY">
+								<p:commandButton value="#{msg['clear']}"
+								actionListener="#{operatorView.onClear}"
+								onstart="PF('limpiando').show()"
+								oncomplete="PF('limpiando').hide()" 
+								process="@this" 
+								update="form"/> 
+							</shiro:hasPermission>
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center"
+					resizable="false" closable="false" collapsible="false">
+
+					<p:dataTable widgetVar="w_operator1"  id="operators1" var="operator" value="#{operatorView.items}" reflow="true" editable="true" 
+						style="margin-bottom:20px;border-collapse:collapse"
+					    paginator="true" rows="15"
+					    scrollable="true"  scrollHeight="100%"
+					   rowsPerPageTemplate="5,10,15,20,25, #{operatorView.itemsSize}" >
+
+							<f:facet name="header">
+								<p:outputPanel style="height:25px">
+									<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+	        						<p:columnToggler datasource="operators1" trigger="toggler" style="width:200px"/>
+	        						<shiro:hasPermission name="#{changeSystemView.system}.DAM.OPERATOR.ADD">
+		        						<p:commandButton id="new" type="button" value="New" icon="ui-icon fa fa-save" style="float:right;"
+		        							onclick="PF('dlgNewOperator').show();"/>
+	        						</shiro:hasPermission>	
+								</p:outputPanel>        										          
+					        </f:facet>
+					         <shiro:hasPermission name="#{changeSystemView.system}.DAM.OPERATOR.MOD">  
+						 		<p:ajax event="rowEditInit" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','hidden')});" />
+								<p:ajax event="rowEdit" listener="#{operatorView.onRowEdit}" update=":form:msgs" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>   
+								<p:ajax event="rowEditCancel" listener="#{operatorView.onRowCancel}" update=":form:msgs" onstart="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>
+					 		</shiro:hasPermission>
+					 
+					    
+					       <p:column headerText="#{msg['operator_ID']}" style="width: 100px;" sortBy="#{operator.id}" filterMatchMode="contains" filterBy="#{operator.id}">
+					       		<h:outputText value="#{operator.id}" />
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['operator_Name']}"  style="width: 100px;" sortBy="#{operator.name}" filterMatchMode="contains" filterBy="#{operator.name}">
+					           <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{operator.name}" /></f:facet>
+					               <f:facet name="input">
+					               			<p:inputText value="#{operator.name}" required="true"  style="width:100%"  maxlength="120"
+					               				label="#{msg['operator_Name']}" disabled="#{operatorView.disabledField(operator)}"
+					               				requiredMessage="#{msg['operator_Name']}: #{msg['empty_field']}" 
+					               				validatorMessage="#{msg['operator_Name']}: #{msg['lenght_field']} 120">
+					               				<f:validateLength maximum="120"/>
+					               				<f:validateRequired/>
+					               			</p:inputText>	
+					               	</f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					   			       
+					       <p:column headerText="#{msg['operator_Division']}" style="width: 100px;" sortBy="#{operator.division}" filterMatchMode="contains"  filterBy="#{operator.division}">
+					          <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{operator.division}" /></f:facet>
+					               <f:facet name="input">
+					               		<p:inputText value="#{operator.division}" required="true" style="width:100%" maxlength="120"
+					               			label="#{msg['Address']}" disabled="#{operatorView.disabledField(operator)}"
+					               			requiredMessage="#{msg['operator_Division']}: #{msg['empty_field']}" 
+					               			validatorMessage="#{msg['operator_Division']}: #{msg['lenght_field']} 120">
+					               			<f:validateLength maximum="120"/>
+					               		</p:inputText>	
+					               	</f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					          
+					 	   <p:column headerText="#{msg['operator_Telephone']}" style="width: 100px;" sortBy="#{operator.telephone}" filterMatchMode="contains" filterBy="#{operator.telephone}">
+					          <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{operator.telephone}" /></f:facet>
+					               <f:facet name="input">
+					               		<p:inputText value="#{operator.telephone}"  style="width:100%" maxlength="120" 
+					               			label="#{msg['operator_Telephone']}" disabled="#{operatorView.disabledField(operator)}"
+						               		requiredMessage="#{msg['operator_Telephone']}: #{msg['empty_field']}" validatorMessage="#{msg['operator_Telephone']}: #{msg['lenght_field']} 120">
+					               			<f:validateLength maximum="120"/>
+					               		</p:inputText>
+					               	</f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       <p:column headerText="#{msg['operator_FAX']}" style="width: 100px;" sortBy="#{operator.fax}" filterMatchMode="contains" filterBy="#{operator.fax}">
+					          <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{operator.fax}" /></f:facet>
+					               <f:facet name="input">
+					               		<p:inputText value="#{operator.fax}"  style="width:100%" maxlength="120" 
+					               			label="#{msg['operator_FAX']}" disabled="#{operatorView.disabledField(operator)}"
+					               			requiredMessage="#{msg['operator_FAX']}: #{msg['empty_field']}" validatorMessage="#{msg['operator_FAX']}: #{msg['lenght_field']} 120">
+					               			<f:validateLength maximum="120"/>
+					               		</p:inputText>
+					               	</f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					       
+					       <p:column headerText="#{msg['operator_Email']}"  style="width: 100px;" sortBy="#{operator.email}" filterMatchMode="contains" filterBy="#{operator.email}">
+					          <p:cellEditor>
+					               <f:facet name="output"><h:outputText id="mail" value="#{operator.email}" /></f:facet>
+					             
+					               <p:tooltip id="toolTipMail" for="mail" value="#{operator.email}" trackMouse="true" />
+					               <f:facet name="input">
+					               		<p:inputText value="#{operator.email}"  style="width:100%" maxlength="120" 
+					               			label="#{msg['operator_Email']}" disabled="#{operatorView.disabledField(operator)}"
+					               			requiredMessage="#{msg['operator_Email']}: #{msg['empty_field']}" validatorMessage="#{msg['operator_Email']}: #{msg['lenght_field']} 100">
+					               			<f:validateLength maximum="100"/>
+					               		</p:inputText>
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       <p:column headerText="#{msg['operator_Start_Date']}" style="width: 100px;" sortBy="#{operator.startDate}" >
+					          <p:cellEditor>
+					               <f:facet name="output">
+					               			<h:outputText value="#{operator.startDate}" >
+					              				<f:convertDateTime pattern="dd/MM/yyyy" />
+					              		 </h:outputText>
+					               </f:facet>
+					               <f:facet name="input">
+					               		<p:calendar required="true" id="startDate" value="#{operator.startDate}" pattern="dd/MM/yyyy" 
+						               		disabled="#{operatorView.disabledField(operator)}"
+					               			readonlyInput="true"   mindate="#{(operatorView.sysdate).getTime()}"
+											requiredMessage="#{msg['operator_Start_Date']}: #{msg['empty_field']}" validatorMessage="#{msg['operator_Start_Date']}: #{msg['empty_field']}">
+											<f:convertDateTime pattern="dd/MM/yyyy"/>
+										</p:calendar>
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['operator_End_Date']}"  style="width: 100px;" sortBy="#{operator.endDate}" >
+					          <p:cellEditor>
+					               <f:facet name="output">
+					               		<h:outputText value="#{operator.endDate}" >
+					              			<f:convertDateTime pattern="dd/MM/yyyy" />
+					              		 </h:outputText>
+					               </f:facet>
+					               <f:facet name="input">
+					            	    <p:calendar  id="endDate" value="#{operator.endDate}" pattern="dd/MM/yyyy" 
+					            	    	mindate="#{(operatorView.sysdate).getTime()}"
+					            	    	disabled="#{operatorView.disabledEndDate(operator)}"
+											requiredMessage="#{msg['operator_End_Date']}: #{msg['empty_field']}" validatorMessage="#{msg['operator_End_Date']}: #{msg['empty_field']}">
+											<f:convertDateTime pattern="dd/MM/yyyy"/>
+										</p:calendar>
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					      <shiro:hasPermission name="#{changeSystemView.system}.DAM.OPERATOR.MOD">
+					       <p:column style="width:32px">
+					            <p:rowEditor rendered="#{operatorView.renderItemEditor(operator)}"/>
+					       </p:column>
+					       </shiro:hasPermission>
+					   </p:dataTable>
+				</p:layoutUnit>
+
+			</p:layout>
+		</h:form>
+		<shiro:hasPermission name="#{changeSystemView.system}.DAM.OPERATOR.ADD">
+		<p:dialog widgetVar="dlgNewOperator" resizable="false"  closable="true" modal="true" appendTo="@(body)" header="New Operator">
+		<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario
+		 <p:ajax event="close" update="formNewEntity"  process="@this" listener="#{operatorView.cancel}" />	-->
+			<h:form id="formNewEntity">
+			<p:growl id="msgs" showDetail="true"  life="5000"/>
+				<p:panelGrid columns="4" style="width:100%">
+					<p:panelGrid>
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['operator_ID']}" />
+							</p:column>
+							<p:column>
+								<p:inputText required="true" id="id" value="#{operatorView.newOperator.id}"  maxlength="20"
+									requiredMessage="#{msg['operator_ID']}: #{msg['empty_field']}" validatorMessage="#{msg['operator_ID']}: #{msg['lenght_field']} 20">
+									<f:validateLength maximum="20"/>
+								</p:inputText>
+								<p:message for="id" />
+							</p:column>
+
+							<p:column>
+								<h:outputText value="#{msg['operator_Name']}" />
+							</p:column>
+							<p:column>
+								<p:inputText required="true" id="name" value="#{operatorView.newOperator.name}" maxlength="120" 
+									requiredMessage="#{msg['operator_Name']}: #{msg['empty_field']}" 
+									validatorMessage="#{msg['operator_Name']}: #{msg['lenght_field']} 120">
+									<f:validateLength maximum="120"/>
+								</p:inputText>
+								<p:message for="name" />
+							</p:column>
+						</p:row>
+						<p:row>
+							<p:column>
+								<h:outputText  value="#{msg['operator_Division']}" />
+							</p:column>
+							<p:column>
+								<p:inputText required="true" id="division" value="#{operatorView.newOperator.division}" maxlength="120"
+									requiredMessage="#{msg['operator_Division']}: #{msg['empty_field']}"
+									validatorMessage="#{msg['operator_Division']}: #{msg['lenght_field']} 120">
+									<f:validateLength maximum="120"/>
+								</p:inputText>
+								<p:message for="division" />
+							</p:column>
+							<p:column>
+								<h:outputText value="#{msg['operator_Email']}" />
+							</p:column>
+							<p:column>
+								<p:inputText id="email" value="#{operatorView.newOperator.email}"  maxlength="120"
+									requiredMessage="#{msg['operator_Email']}: #{msg['empty_field']}" 
+									validatorMessage="#{msg['operator_Email']}: #{msg['lenght_field']} 100">
+									<f:validateLength maximum="100"/>
+								</p:inputText>
+								<p:message for="email" />
+							</p:column>
+						</p:row>
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['operator_Telephone']}" />
+							</p:column>
+							<p:column>
+								<p:inputText  id="telephone" value="#{operatorView.newOperator.telephone}" maxlength="120" 
+									requiredMessage="#{msg['operator_Telephone']}: #{msg['empty_field']}" 
+									validatorMessage="#{msg['operator_Telephone']}: #{msg['lenght_field']} 120">
+									<f:validateLength maximum="120"/>
+								</p:inputText>
+								<p:message for="telephone" />
+							</p:column>
+							<p:column>
+								<h:outputText value="#{msg['operator_FAX']}" />
+							</p:column>
+							<p:column>
+								<p:inputText  id="fax" value="#{operatorView.newOperator.fax}" maxlength="120"
+									requiredMessage="#{msg['operator_FAX']}: #{msg['empty_field']}" 
+									validatorMessage="#{msg['FAX']}: #{msg['lenght_field']} 120">
+									<f:validateLength maximum="120"/>
+								</p:inputText>
+								<p:message for="fax" />
+							</p:column>
+						</p:row>
+						
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['operator_Start_Date']}"/>
+							</p:column>
+							<p:column>
+								<p:calendar required="true" id="startDate" value="#{operatorView.newOperator.startDate}" pattern="dd/MM/yyyy"
+									readonlyInput="true"  mindate="#{(areaView.sysdate).getTime()}" 
+									requiredMessage="#{msg['operator_Start_Date']}: #{msg['empty_field']}" 
+									validatorMessage="#{msg['operator_Start_Date']}: #{msg['lenght_field']}">
+								</p:calendar>
+								<p:message for="startDate" />
+							</p:column>
+							<p:column>
+								<h:outputText value="#{msg['operator_End_Date']}"/>
+							</p:column>
+							<p:column>
+								<p:calendar id="endDate" 
+									value="#{operatorView.newOperator.endDate}" pattern="dd/MM/yyyy"
+									mask="true"  mindate="#{(areaView.sysdate).getTime()}" 
+									validatorMessage="#{msg['operator_End_Date']}: #{msg['lenght_field']}">
+								</p:calendar>
+								<p:message for="endDate" />
+							</p:column>
+						</p:row>					
+						
+					</p:panelGrid>
+				</p:panelGrid>
+				
+				<p:separator/>
+				<p:panelGrid>
+					<p:row>
+						<p:column>
+							<p:commandButton value="#{msg['save']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" validateClient="true"
+								action="#{operatorView.save}" update=":#{p:component('operators1')},:formNewEntity,#{p:component('id')}"
+								onstart="PF('cargando').show()"
+								oncomplete="PF('dlgNewOperator').hide(),PF('cargando').hide()" />
+			        		<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close"
+			        			update="formNewEntity" process="@this" actionListener="#{operatorView.cancel}" 
+			        			oncomplete="PF('dlgNewOperator').hide()"/>
+						</p:column>					
+					</p:row>
+				</p:panelGrid>							
+			</h:form>			
+		</p:dialog>
+		</shiro:hasPermission>
+	</ui:define>
+
+
+</ui:composition>

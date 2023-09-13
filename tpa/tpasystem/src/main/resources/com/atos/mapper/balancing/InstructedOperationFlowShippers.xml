@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<!-- Namespace -->
+<mapper namespace="com.atos.mapper.balancing.InstructedOperationFlowShippersMapper">
+
+   <!-- Para hacer consultas, el punto no tendria por que estar vigente. -->
+    <select id="selectShipperId" resultType="com.atos.beans.ComboFilterNS">
+		select tgr.idn_user_group as key, tgr.user_group_id as value
+		from tpa_tuser_group tgr
+		where tgr.idn_user_group_type = (select idn_user_group_type from tpa_tuser_group_type where type_code = 'SHIPPER')
+		order by upper(tgr.user_group_id) asc
+    </select>
+
+     <select id="selectZonesSystem" resultType="com.atos.beans.ComboFilterNS">		
+		SELECT z.idn_zone as key, z.zone_code as value
+	    FROM TPA_VZONE_TPA z
+	    WHERE z.idn_pipeline_system =#{idn_system}
+	    order by UPPER(z.zone_code)
+    </select>
+
+   
+    <resultMap type="com.atos.beans.balancing.InstructedOperationFlowShippersBean" id="InstructedOperationFlowShippers">
+        <id property="idn_intraday_gas_flow" column="idn_intraday_gas_flow" /> 
+		<result property="timestamp" column="version_date"/>
+		<result property="shipperId" column="idn_user_group"/>
+        <result property="shipperCode" column="user_group_id"/>
+        <result property="zoneId" column="idn_zone"/> 
+        <result property="zoneCode" column="zone_code"/>   
+        <result property="accImbalanceImbalanceInventory" column="imbalance_value"/>
+        <result property="accMargin" column="margin_value"/>
+        <result property="flowType" column="flow_type"/>   
+        <result property="opInsFlowOrderMMBTU" column="flow_energy"/>   
+        <result property="opInsFlowOrderMMSCF" column="flow_volume"/>
+        <result property="opInsFlowOrderMMSCFH" column="flowtime"/>
+        <result property="resolvedTime" column="resolve_time"/> 
+        <result property="hv" column="hv"/> 
+        <result property="operatorComments" column="comment_operator"/> 
+        <result property="shipperComments" column="comment_shipper"/>  
+        <result property="idn_intraday_gas_flow_file" column="idn_intraday_gas_flow_file"/>  
+        <result property="file_name" column="file_name"/>  
+        
+          
+    </resultMap> 
+
+
+    <select id="selectInstructedOperationFlowShippers" resultMap="InstructedOperationFlowShippers" parameterType="com.atos.filters.balancing.InstructedOperationFlowShippersFilter">
+	  SELECT 
+	   gf.idn_intraday_gas_flow,
+	   gf.idn_user_group,
+       a.version_date,
+       ug.user_group_id,
+       z.zone_code, 
+       gf.imbalance_value,
+       gf.margin_value,
+       gf.flow_type,
+       gf.flow_energy,
+       gf.flow_volume,
+       gf.resolve_time,
+       gf.flow_volume/gf.resolve_time AS FLOWTIME,
+       gf.idn_base_inv,
+       bi.hv_value AS hv,
+       gf.comment_operator,
+       gf.comment_shipper,
+       gf.idn_intraday_gas_flow_file,
+       (select file_name from tpa_tintraday_gas_flow_file t where t.idn_intraday_gas_flow_file = gf.idn_intraday_gas_flow_file) as file_name,
+       'N' AS is_total
+FROM tpa_tintraday_gas_flow gf,
+     tpa_tallocation a,
+     tpa_tallocation_origin ao,
+     tpa_tuser_group ug ,
+     tpa_vzone_tpa z,
+     tpa_tbase_inv bi
+WHERE 
+     gf.idn_allocation = a.idn_allocation
+ AND gf.idn_user_group = ug.idn_user_group
+ AND a.idn_allocation_type =
+    (SELECT t.idn_allocation_type FROM tpa_tallocation_type t WHERE t.type_code = 'INTRADAY')
+ AND a.idn_allocation_origin = ao.idn_allocation_origin
+ AND ao.origin_code IN ('BALANCE', 'CLOSING_PROCESS')
+ AND gf.idn_zone = z.idn_zone
+ AND gf.idn_base_inv = bi.idn_base_inv
+		 <if test="zoneId!= null and zoneId!= ''">
+		 and gf.idn_zone  = #{zoneId}
+		 </if>
+		 <if test="date!= null">
+		 and a.gas_day = #{date} 
+		</if>
+		<if test="isShipper==true">
+		 and gf.idn_user_group = #{shipperId}  
+		</if>
+		<if test="shipperId != null">
+		AND gf.idn_user_group = #{shipperId}
+		</if>
+		<if test="timestampVar != null and timestampVar != ''">
+	             AND a.idn_allocation=#{timestampVar}
+	             <!-- AND to_char(t.version_date,'DD/MM/YY HH24:MI:SS FF9')
+	             = to_char(#{timestampVar},'DD/MM/YY HH24:MI:SS FF9')  -->
+         	</if>
+        	<choose>
+	            <when test='strLastVersion != null and "Y".equals(strLastVersion)'>
+	              AND a.version_date = (SELECT MAX(ax.version_date)
+                                      FROM tpa_tallocation        ax,
+                                           tpa_tallocation_origin ao
+                                     WHERE ax.gas_day = a.gas_day
+                                       AND ax.idn_pipeline_system = a.idn_pipeline_system
+                                       AND ax.idn_allocation_type = a.idn_allocation_type
+                                       AND ax.idn_allocation_origin = ao.idn_allocation_origin
+                              AND ao.origin_code IN ('BALANCE', 'CLOSING_PROCESS'))
+	            </when>
+            </choose>
+
+	</select>
+	
+	<select id="selectTimestampIds" resultType="com.atos.beans.ComboFilterNS">
+		SELECT a.idn_allocation as key,
+		to_char(a.version_date, 'DD/MM/YY HH24:MI:SS FF9') AS value
+		FROM tpa_tallocation a,
+		tpa_tallocation_origin ao
+		WHERE a.idn_pipeline_system = #{systemId}
+		AND ao.origin_code IN ('BALANCE', 'CLOSING_PROCESS')
+		AND a.idn_allocation_type =
+		(SELECT t.idn_allocation_type FROM tpa_tallocation_type t WHERE t.type_code = 'INTRADAY')
+		AND a.idn_allocation_origin = ao.idn_allocation_origin
+		AND to_char(a.gas_day,'DD/MM/YY')
+             = to_char(#{date},'DD/MM/YY')
+		GROUP BY idn_allocation, to_char(a.version_date, 'DD/MM/YY HH24:MI:SS FF9')
+		ORDER BY idn_allocation, to_char(a.version_date, 'DD/MM/YY HH24:MI:SS FF9')
+		</select>
+	
+	<update id="updateComments" parameterType="com.atos.beans.balancing.InstructedOperationFlowShippersBean">
+		update TPA_TINTRADAY_GAS_FLOW set
+             comment_operator =#{operatorComments},
+             comment_shipper =#{shipperComments},
+             idn_intraday_gas_flow_file = #{idn_intraday_gas_flow_file},
+             aud_last_user = #{username}
+		where idn_intraday_gas_flow=#{idn_intraday_gas_flow}
+		
+	</update>
+	
+	<select id="selectFileGasFlow" parameterType="java.math.BigDecimal" resultType="com.atos.beans.balancing.InstructedOperationFlowShipperFileBean">		
+		select t.idn_intraday_gas_flow_file as idn_intraday_gas_flow_file,
+		       t.file_name as file_name,
+		       t.content_type as content_type,
+		       t.binary_data as binary_data
+		from tpa_tintraday_gas_flow_file t
+		where t.idn_intraday_gas_flow_file = #{idn_intraday_gas_flow_file}
+    </select>
+	
+	<update id="updateFileGasFlow" parameterType="com.atos.beans.balancing.InstructedOperationFlowShipperFileBean">
+		update tpa_tintraday_gas_flow_file set
+             binary_data = #{binary_data},
+             file_name =#{file_name},
+             content_type = #{content_type}
+		where idn_intraday_gas_flow_file = #{idn_intraday_gas_flow_file}
+		
+	</update>
+	
+	<insert id="insertFileGasFlow" useGeneratedKeys="true" keyProperty="idn_intraday_gas_flow_file" keyColumn="idn_intraday_gas_flow_file" parameterType="com.atos.beans.balancing.InstructedOperationFlowShipperFileBean">
+		INSERT INTO TPA_TINTRADAY_GAS_FLOW_FILE (IDN_INTRADAY_GAS_FLOW_FILE, FILE_NAME, CONTENT_TYPE, BINARY_DATA)
+		VALUES (tpa_sintraday_gas_flow_file.nextval, 
+		       #{file_name},
+		       #{content_type},
+		       #{binary_data})
+	</insert>
+	
+	
+</mapper>

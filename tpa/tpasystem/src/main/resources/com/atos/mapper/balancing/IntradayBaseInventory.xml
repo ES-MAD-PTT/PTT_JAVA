@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atos.mapper.balancing.IntradayBaseInventoryMapper">
+
+	<resultMap type="com.atos.beans.balancing.IntradayBaseInventoryBean" id="IntradayBaseInventory">
+		<result property="gasDay" column="gas_day"/>
+        <result property="zoneId" column="idn_zone"/>
+        <result property="zoneCode" column="zone_code"/>
+        <result property="modeId" column="idn_base_inv_mode"/>
+        <result property="modeCode" column="mode_code"/>
+        <result property="hv_value" column="hv_value"/>
+        <result property="base_inv_value" column="base_inv_value"/>
+        <result property="high_threshold_top" column="high_threshold_top"/>
+		<result property="high_threshold_mid" column="high_threshold_mid"/>       
+       	<result property="high_threshold" column="high_threshold"/>
+		<result property="low_threshold" column="low_threshold"/>
+		<result property="low_threshold_mid" column="low_threshold_mid"/>
+		<result property="low_threshold_top" column="low_threshold_top"/>
+       </resultMap>
+
+	<select id="selectZoneId" resultType="com.atos.beans.ComboFilterNS">
+		SELECT DISTINCT z.idn_zone as key, z.zone_code as value 
+		FROM TPA_TZONE z, TPA_TBASE_INV_MODE_ZONE mz 
+		WHERE z.IDN_ZONE = mz.IDN_ZONE 
+		AND TRUNC(SYSDATE) between mz.START_DATE AND NVL(mz.END_DATE, to_date('9999-12-31','yyyy-mm-dd'))
+		AND Z.IDN_PIPELINE_SYSTEM = #{systemId}
+		order by 1
+	</select>
+	
+	<select id="selectModeId" resultType="com.atos.beans.ComboFilterNS">
+		select im.idn_base_inv_mode as key, im.mode_code as value
+		from TPA_TBASE_INV_MODE im, TPA_TBASE_INV_MODE_zone imz, TPA_TZONE z
+		where im.idn_base_inv_mode = imz.idn_base_inv_mode
+		AND imz.idn_zone = z.idn_zone
+		AND z.idn_zone = #{zoneId}
+	</select>
+	
+	<select id="selectTimestampIds" resultType="com.atos.beans.ComboFilterNS">
+		SELECT a.idn_allocation as key,
+        to_char(a.version_date, 'DD/MM/YY HH24:MI:SS FF9') AS value
+        FROM tpa_tallocation a,
+        tpa_tallocation_origin ao
+        WHERE a.idn_pipeline_system = #{systemId}
+        AND ao.origin_code IN ('BALANCE', 'CLOSING_PROCESS')
+        AND a.idn_allocation_type =
+        (SELECT t.idn_allocation_type FROM tpa_tallocation_type t WHERE t.type_code = 'INTRADAY')
+        AND a.idn_allocation_origin = ao.idn_allocation_origin
+        AND to_char(a.gas_day,'DD/MM/YY')
+             = to_char(#{date},'DD/MM/YY')
+        AND a.gas_day = trunc(a.version_date)
+        GROUP BY idn_allocation, to_char(a.version_date, 'DD/MM/YY HH24:MI:SS FF9')
+        ORDER BY idn_allocation, to_char(a.version_date, 'DD/MM/YY HH24:MI:SS FF9')
+		</select>
+	
+	<select id="selectIntradayBaseInventory" resultMap="IntradayBaseInventory">	
+		SELECT bi.gas_day, bi.idn_zone, zo.zone_code, bi.idn_base_inv_mode, im.mode_code, bi.hv_value, bi.base_inv_value, bi.high_threshold_top, bi.high_threshold_mid, bi.high_threshold,
+                  bi.low_threshold, bi.low_threshold_mid, bi.low_threshold_top
+        FROM TPA_TBASE_INV bi, TPA_TZONE zo, TPA_TBASE_INV_MODE im
+        WHERE bi.idn_zone = zo.idn_zone
+          AND bi.idn_base_inv_mode = im.idn_base_inv_mode
+        
+        <if test="date != null">
+          AND bi.gas_day = #{date}
+        </if>
+        <if test="zoneId != null and zoneId != ''">
+          AND bi.idn_zone = #{zoneId}
+        </if>
+        <if test="modeId != null and modeId != ''">
+          AND bi.idn_base_inv_mode = #{modeId}
+        </if>
+       
+        AND bi.version_date = (SELECT MAX(bix.version_date)  
+                  FROM tpa_tbase_inv bix                         
+                  WHERE bix.gas_day = bi.gas_day
+                  AND bix.idn_zone = bi.idn_zone
+                  AND bix.idn_base_inv_mode = bi.idn_base_inv_mode
+                  
+        <if test="timestampVar != null and timestampVar != ''">    
+         AND bix.version_date <![CDATA[ < ]]> (select a.version_date
+                                             from tpa_tallocation a
+                                             where a.idn_allocation = #{timestampVar})
+                                   
+        </if>       
+                   )
+                  
+        ORDER BY gas_day,zone_code,mode_code
+	</select>
+	
+</mapper>

@@ -1,0 +1,11 @@
+package com.atos.mapper.balancing;
+
+import java.util.List;
+
+import com.atos.beans.balancing.IntradayAccImbalanceInventoryAdjustmentBean;
+import com.atos.filters.balancing.IntradayAccImbalanceInventoryAdjustmentFilter;
+
+public interface IntradayAccImbalanceInvAdjustmentMapper {
+	public List<IntradayAccImbalanceInventoryAdjustmentBean> selectIntradayAccImbalanceInvAdjustment(IntradayAccImbalanceInventoryAdjustmentFilter filters);
+	public int insertIntradayAccImbalanceInvAdjustment(IntradayAccImbalanceInventoryAdjustmentBean bean);
+}

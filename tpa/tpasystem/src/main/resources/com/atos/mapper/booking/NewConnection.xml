@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<!-- Namespace -->
+<mapper namespace="com.atos.mapper.booking.NewConnectionMapper">
+   
+    <select id="selectShipperId" resultType="com.atos.beans.ComboFilterNS">
+		select tgr.idn_user_group as key, tgr.user_group_id as value
+		from tpa_tuser_group tgr
+		where tgr.idn_user_group_type = (select idn_user_group_type from tpa_tuser_group_type where type_code = 'SHIPPER')
+			  and trunc(sysdate) between tgr.start_date and nvl(tgr.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+		order by upper(tgr.user_group_id) asc
+    </select>   
+
+    <resultMap type="com.atos.beans.booking.NewConnectionBean" id="newConnCapacityRequest">
+        <id property="capacityRequestId" column="idn_contract_request" />
+		<result property="submittedTimestamp" column="arriving_date"/>
+        <result property="shipperId" column="idn_user_group"/> 
+        <result property="shipperCode" column="user_group_id"/>
+        <result property="shipperName" column="user_group_name"/>
+        <result property="operationFileId" column="idn_operation_file"/>
+        <result property="xlsFileName" column="file_name"/>    
+    </resultMap>
+
+	<!-- El campo idn_operation_file de tpa_tcontract_request, es opcional, porque en caso 
+		de release de capacidad, no se incluye fichero excel.
+		En esta query no hace falta tenerlo en cuenta porque al filtrar por 
+		New Connection, esto solo ocurre en contract requests que no son release de capacidad. -->	
+    
+	<select id="selectNewConnectionCapacityRequests" resultMap="newConnCapacityRequest">
+		select tcreq.idn_contract_request as idn_contract_request,
+		       tcreq.arriving_date as arriving_date,
+       		   tusergr.idn_user_group as idn_user_group,
+		       tusergr.user_group_id as user_group_id,
+		       tusergr.user_group_name as user_group_name,
+		       top.idn_operation_file as idn_operation_file,   
+		       top.file_name as file_name
+		from tpa_tcontract_request tcreq, 
+		     tpa_tuser_group tusergr,
+		     tpa_toperation_file top
+		where tcreq.status = 'SUBMITTED'
+			  <if test="shipperId != null and shipperId != ''">
+			  and tcreq.idn_user_group = #{shipperId}
+  			  </if>
+		      and tcreq.idn_contract_request in (select distinct(tagr.idn_contract_request) 
+							                      from tpa_tcontract_agreement tagr, tpa_tcontract_point tp
+							                      where tp.idn_contract_agreement = tagr.idn_contract_agreement 
+		                                                and tp.is_new_connection = 'Y')
+                    and tcreq.idn_pipeline_system = #{idn_system}
+		      and tusergr.idn_user_group = tcreq.idn_user_group	      
+		      and top.idn_operation_file = tcreq.idn_operation_file
+			  and trunc(sysdate) between tusergr.start_date and nvl(tusergr.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+		order by tcreq.arriving_date desc
+    </select>
+    
+	<resultMap type="com.atos.beans.booking.OperationFileBean" id="OperationFile">
+		<result property="binaryData" column="binary_data" jdbcType="BLOB" />
+	</resultMap>
+	
+	<select id="getFileByOpFileId" parameterType="java.math.BigDecimal" resultMap="OperationFile">
+	   select binary_data 
+	   from tpa_toperation_file
+	   where idn_operation_file=#{opFileId}
+	</select>
+	
+   	<select id="selectNewConnectionPointCodesByCapRequest" resultType="java.lang.String">
+		select distinct(tsp.point_code)
+		from tpa_tcontract_agreement tagr, tpa_tcontract_point tcp, tpa_tsystem_point tsp
+		where tcp.idn_contract_agreement = tagr.idn_contract_agreement
+		      and tsp.idn_system_point = tcp.idn_system_point
+		      and tagr.idn_contract_request = #{capacityRequestId}
+		      and tcp.is_new_connection = 'Y'
+			  and trunc(sysdate) between tsp.start_date and nvl(tsp.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))		      
+		order by upper(tsp.point_code)
+    </select> 	
+
+   	<select id="selectContractCodeByCapRequest" resultType="java.lang.String">
+		select tc.contract_code
+		from tpa_tcontract_request treq, tpa_tcontract tc
+		where tc.idn_contract = treq.idn_contract
+		      and treq.idn_contract_request = #{capacityRequestId}
+    </select>
+
+   	<select id="selectERCLicenseIdByShipperId" resultType="java.lang.String">
+		select tsh.erc_license_id
+		from tpa_tshipper tsh
+		where tsh.idn_user_group = #{shipperId}
+    </select>
+
+	<resultMap type="com.atos.beans.OpTemplateBean" id="OperationTemplate">
+		<result property="opTemplateId" column="idn_operation_template" />
+		<result property="opCategoryId" column="idn_operation_category" />
+		<result property="opTermId" column="idn_operation_term" />
+		<result property="fileType" column="file_type" />
+		<result property="binaryData" column="binary_data" jdbcType="BLOB" />
+		<result property="fileName" column="file_name" />
+		<result property="xmlMapId" column="idn_xml_map" />
+		<result property="systemId" column="idn_pipeline_system" />
+	</resultMap>
+	
+	<!-- Se ordena por start_date desc, por si no se hubieran especificado end_date, coger el ultimo registro vigente. -->	
+	<select id="getOpTemplateByCatTermFiletypeSystem" parameterType="com.atos.beans.OpTemplateBean" resultMap="OperationTemplate">
+		select idn_operation_template,
+			idn_operation_category,
+			idn_operation_term,
+			file_type,
+			binary_data,
+			file_name,
+			idn_xml_map,
+			idn_pipeline_system
+		from tpa_toperation_template
+		where idn_operation_category=(select tcat.idn_operation_category
+										from tpa_toperation_category tcat
+										where tcat.category_code=#{opCategoryCode})
+			and idn_operation_term=(select tterm.idn_operation_term
+									from tpa_toperation_term tterm
+									where tterm.term_code=#{opTermCode})
+			and file_type=#{fileType}
+			and idn_pipeline_system=#{systemId}
+			and trunc(sysdate) between start_date and nvl(end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+		order by start_date desc
+	</select>	
+</mapper>

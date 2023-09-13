@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+
+<mapper namespace="com.atos.mapper.metering.MeteringRetrievingMapper">
+
+<resultMap type="com.atos.beans.metering.MeteringRetrievingBean" id="MeteringRetrieving">
+
+	    <result property="idnMeteringInput" column="idnMeteringInput"/>
+    	<result property="inputCode" column="inputCode"/>
+		<result property="lastModifDate" column="lastModifDate"/>
+		<result property="status" column="status"/>
+		<result property="xml_data" column="xml_data"/>
+		<result property="binary_data" column="binary_data"/>
+		<result property="file_name" column="file_name"/>
+		<result property="wsErrorDesc" column="xml_error"/>
+		
+		<result property="errorGasDay" column="errorGasDay"/>
+		<result property="errorMeteringPointID" column="errorMeteringPointID"/>
+		<result property="errorTimeStamp" column="errorTimeStamp"/>
+		<result property="errorDescription" column="errorDescription"/>
+		
+		<result property="warningGasDay" column="warningGasDay"/>
+		<result property="warningMeteringPointID" column="warningMeteringPointID"/>
+		<result property="warningEnergy" column="warningEnergy"/>
+		<result property="warningTimeStamp" column="warningTimeStamp"/>
+		<result property="warning" column="warning"/>
+
+</resultMap>
+
+
+<select id="selectCabMetRetrieving"  parameterType="com.atos.filters.metering.MeteringRetrievingFilter" resultMap="MeteringRetrieving"> 
+	SELECT input_code AS inputCode,
+           aud_last_date AS lastModifDate,
+           DECODE(status, 'NEW', 'In Progress', 'OK', 'Finished OK', 'ERROR', 'Finished with errors') AS "STATUS",
+           idn_Metering_Input AS idnMeteringInput,
+           (SELECT EXTRACTVALUE(VALUE(errordescription), '/error/errorDescription')
+          	FROM TABLE(xmlsequence(extract(xmltype.createxml(xml_data),
+                                         '/ns2:meteringQueryResponse/error',
+                                         'xmlns:ns2="http://message.ws.atos.com/"'))) errordescription) AS xml_error
+    FROM tpa_tmetering_input
+    WHERE idn_metering_input = #{idnMeteringInput}
+</select>
+
+
+
+ <select id="selectMeteringRetrieving"  parameterType="com.atos.filters.metering.MeteringRetrievingFilter" resultMap="MeteringRetrieving"> 
+	SELECT GAS_DAY AS errorGasDay, 
+		   METERED_POINT AS errorMeteringPointID, 
+		   ENERGY AS errorEnergy, 
+		   REGISTER_TIMESTAMP AS errorTimeStamp,
+		   ERROR_DESC AS errorDescription
+	FROM tpa_tmetering_input_error
+	WHERE idn_metering_input  = #{idnMeteringInput}
+  		  AND is_critical = 'Y'
+</select>
+
+<select id="selectMeteringRetrievingWarning"  parameterType="com.atos.filters.metering.MeteringRetrievingFilter" resultMap="MeteringRetrieving"> 
+	SELECT GAS_DAY AS warningGasDay, 
+		   METERED_POINT AS warningMeteringPointID, 
+		   ENERGY AS warningEnergy, 
+		   REGISTER_TIMESTAMP AS warningTimeStamp,
+		   ERROR_DESC AS warning
+	FROM tpa_tmetering_input_error
+	WHERE idn_metering_input  = #{idnMeteringInput}
+  		  AND is_critical = 'N'
+</select>
+
+ 
+ <select id="selectMeteringInputCodes"  parameterType="com.atos.filters.metering.MeteringRetrievingFilter" resultType="com.atos.beans.ComboFilterNS">
+		
+		SELECT IDN_METERING_INPUT AS KEY, INPUT_CODE AS VALUE
+ 	 	FROM TPA_TMETERING_INPUT
+ 	 	WHERE INPUT_DATE BETWEEN #{generatedDayFrom} AND #{generatedDayTo}
+ 	 	ORDER BY UPPER (INPUT_CODE)  DESC
+ 	 	
+ 	 	
+		
+ </select>
+
+ <select id="selectFileXml"  parameterType="com.atos.filters.metering.MeteringRetrievingFilter" resultMap="MeteringRetrieving">
+	
+		SELECT  doc.file_name file_name, doc.binary_data binary_data, doc.xml_data xml_data
+		FROM tpa_tmetering_input doc 
+		WHERE idn_metering_input = #{idnMeteringInput}
+		
+</select>
+
+ <select id="selectFileXmlbyIdn"  parameterType="java.math.BigDecimal" resultMap="MeteringRetrieving">
+	
+		SELECT  doc.file_name file_name, doc.binary_data binary_data, doc.xml_data xml_data
+		FROM tpa_tmetering_input doc 
+  	    WHERE idn_metering_input = #{idnMeteringInput}
+		
+</select>
+
+</mapper>

@@ -1,0 +1,271 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_dam']}" url="#" />
+			<p:menuitem value="#{msg['menu_parameters']}" url="#" />
+			<p:menuitem value="#{msg['menu_system_parameters']}" url="/pages/dam/systemParametersDam.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="5000"/>
+			
+            <p:layout widgetVar="systemParameterLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">	
+					
+				<p:panelGrid columns="2" style="width:100%">
+					
+						<p:panelGrid>
+							<p:row>
+							
+							<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['systemParameter_Module']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['systemParameter_System_Parameter']}" />
+								</p:column>
+							
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['systemParameter_Start_Date']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['systemParameter_End_Date']}" />
+								</p:column>
+							</p:row>
+							
+							<p:row>
+								<p:column>
+					               	<p:selectOneMenu widgetVar="module_w" id="module" style="width:100px" value="#{systemParameterView.filters.idn_parameter_module}" >
+										
+        								<f:selectItems value="#{systemParameterView.modules.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+        								    <!--  <p:ajax  update="parameter" />-->
+        								    <p:ajax listener="#{systemParameterView.onSearch()}" update="parameter,msgs,:#{p:component('systemParameters1')}" /> 
+					           		</p:selectOneMenu>
+								</p:column>
+								<p:column>
+					               	<p:selectOneMenu widgetVar="parameter_w" id="parameter" style="width:100px" value="#{systemParameterView.filters.idn_parameter}" >
+										<f:selectItem itemLabel="" itemValue="" />
+        								<f:selectItems value="#{systemParameterView.getParameters(systemParameterView.filters.idn_parameter_module).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>
+								</p:column>
+								<p:column>
+									<p:calendar id="fecInicio"  size="6" pattern="dd/MM/yyyy" mask="true" value="#{systemParameterView.filters.startDate}"
+										showOn="button" navigator="true">
+										<p:ajax event="dateSelect"  update="fecInicio"></p:ajax>
+										<p:ajax event="change"  update="fecInicio"></p:ajax>
+									</p:calendar>
+								</p:column>
+								<p:column>
+									<p:calendar id="fecFin"  size="6" pattern="dd/MM/yyyy" mask="true" value="#{systemParameterView.filters.endDate}"
+										showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="fecFin"></p:ajax>
+										<p:ajax event="change" update="fecFin"></p:ajax>
+									</p:calendar>
+								</p:column>
+							
+								
+							</p:row>
+						</p:panelGrid>
+						<p:panelGrid columns="2" style="float:right;top:0px">
+							<shiro:hasPermission name="#{changeSystemView.system}.DAM.SYSTEM_PARAMETERS.QUERY">
+								<p:commandButton value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{systemParameterView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,:#{p:component('systemParameters1')}"/>
+							</shiro:hasPermission>
+							
+							<p:commandButton  onclick="PF('systemParameterLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+							
+							<shiro:hasPermission name="#{changeSystemView.system}.DAM.SYSTEM_PARAMETERS.QUERY">									
+								<p:commandButton value="#{msg['clear']}"
+									actionListener="#{systemParameterView.onClear}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" 
+									process="@this" 
+								    update="form"/>
+							</shiro:hasPermission>
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center"
+					resizable="false" closable="false" collapsible="false">
+
+					<p:dataTable widgetVar="w_systemParameter1"  id="systemParameters1" var="systemParameter" value="#{systemParameterView.items}" reflow="true" editable="true" 
+						style="margin-bottom:20px;border-collapse:collapse"
+					    paginator="true" rows="15"
+					    scrollable="true"  scrollHeight="100%" 
+					    rowsPerPageTemplate="5,10,15,20,25, #{systemParameterView.itemsSize}" >
+
+							<f:facet name="header">
+								<p:outputPanel style="height:25px">
+									<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+	        						<p:columnToggler datasource="systemParameters1" trigger="toggler" style="width:200px"/>
+	        						<shiro:hasPermission name="#{changeSystemView.system}.DAM.SYSTEM_PARAMETERS.ADD">
+		        						<p:commandButton id="new" type="button" value="New" icon="ui-icon fa fa-save" style="float:right;"
+		        							onclick="PF('dlgNewSystemParameter').show();"/>
+	        						</shiro:hasPermission>	
+								</p:outputPanel>        										          
+					        </f:facet>
+					        
+					        <shiro:hasPermission name="#{changeSystemView.system}.DAM.SYSTEM_PARAMETERS.MOD">
+						 		<p:ajax event="rowEditInit" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','hidden')});" />
+								<p:ajax event="rowEdit" listener="#{systemParameterView.onRowEdit}" update=":form:msgs" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>   
+								<p:ajax event="rowEditCancel" listener="#{systemParameterView.onRowCancel}" update=":form:msgs" onstart="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>
+					 		</shiro:hasPermission>
+					       					       
+					        <p:column  headerText="#{msg['systemParameter_System_Parameter']}" style="width: 200px;" sortBy="#{systemParameter.parameter_desc}" filterMatchMode="contains" filterBy="#{systemParameter.parameter_desc}">
+					       		<h:outputText value="#{systemParameter.parameter_desc}">			
+					            </h:outputText>
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['systemParameter_value']}" style="width: 50px;" sortBy="#{systemParameter.parameter_value}" filterMatchMode="contains" filterBy="#{systemParameter.parameter_value}">
+					       		<p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{systemParameter.parameter_value}" /></f:facet>
+					               <f:facet name="input">
+					               		<p:inputText value="#{systemParameter.parameter_value}"  required="true"  style="width:100%" 
+					               			label="#{msg['systemParameter_value']}" 
+					               			disabled="#{systemParameterView.disabledField(systemParameter)}"
+					               			requiredMessage="#{msg['systemParameter_value']}: #{msg['empty_field']}" 
+					               			validatorMessage="#{msg['systemParameter_value']}: #{msg['lenght_field']}"
+					               			maxlength="100">	
+					               		</p:inputText>
+					               	</f:facet>
+					             
+					           </p:cellEditor>
+					       </p:column>
+					       
+					   	    <p:column headerText="#{msg['systemParameter_Start_Date']}" style="width: 100px;" sortBy="#{systemParameter.startDate}" >
+					          <p:cellEditor>
+					               <f:facet name="output">
+					               			<h:outputText value="#{systemParameter.startDate}" style="center">
+					              				<f:convertDateTime pattern="dd/MM/yyyy" />
+					              		 </h:outputText>
+					               </f:facet>
+					               <f:facet name="input">
+					               		<p:calendar required="true" id="startDate" 
+					               			value="#{systemParameter.startDate}"	pattern="dd/MM/yyyy"
+					               			readonlyInput="true"   mindate="#{(systemParameterView.sysdate).getTime()}"   
+					               			disabled="#{systemParameterView.disabledField(systemParameter)}"
+											requiredMessage="#{msg['systemParameter_Start_Date']}: #{msg['empty_field']}" validatorMessage="#{msg['systemParameter_Start_Date']}: #{msg['empty_field']}">
+											<f:convertDateTime pattern="dd/MM/yyyy"/>
+										</p:calendar>
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					      <shiro:hasPermission name="#{changeSystemView.system}.DAM.SYSTEM_PARAMETERS.MOD">			      
+					       <p:column style="width:32px">
+					           <p:rowEditor rendered="#{systemParameterView.renderItemEditor(systemParameter)}"/>
+					       </p:column>
+					     </shiro:hasPermission>  
+					   </p:dataTable>
+				</p:layoutUnit>
+
+			</p:layout>
+		</h:form>
+		
+		<shiro:hasPermission name="#{changeSystemView.system}.DAM.SYSTEM_PARAMETERS.ADD">
+		<p:dialog widgetVar="dlgNewSystemParameter" resizable="false"  closable="true" modal="true" appendTo="@(body)" header="New SystemParameter">
+		<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario
+		 <p:ajax event="close" update="formNewEntity"  process="@this" listener="#{systemParameterView.cancel}" />	-->
+			<h:form id="formNewEntity">
+			<p:growl id="msgs" showDetail="true"  life="5000"/>
+				<p:panelGrid columns="4" style="width:100%">
+					<p:panelGrid>
+						<p:row>
+						
+							<p:column>
+								<h:outputText value="#{msg['systemParameter_Module']}" />
+							</p:column>
+							<p:column>
+								<p:selectOneMenu id="module" style="width:100px"   value="#{systemParameterView.newSystemParameter.idn_parameter_module}" 
+								required="true" requiredMessage="#{msg['systemParameter_Module']}: #{msg['empty_field']}" >
+										<f:selectItem  itemValue="-1" itemLabel="" />
+									  	<f:selectItems value="#{systemParameterView.modules.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+									  	<!-- <p:ajax  update="parameter" /> -->
+									  	<p:ajax listener="#{systemParameterView.onModuleChange()}" update="parameter,startDate" /> 
+					           	</p:selectOneMenu>									
+							</p:column>
+						
+							<p:column>
+								<h:outputText value="#{msg['systemParameter_System_Parameter']}" />
+							</p:column>
+							<p:column>
+								<p:selectOneMenu id="parameter" style="width:100px"   value="#{systemParameterView.newSystemParameter.idn_parameter}"  
+									required="true" requiredMessage="#{msg['systemParameter_System_Parameter']}: #{msg['empty_field']}">
+										<f:selectItem itemLabel="" itemValue="" />
+									  	<f:selectItems value="#{systemParameterView.getParameters(systemParameterView.newSystemParameter.idn_parameter_module).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           	</p:selectOneMenu>									
+							</p:column>
+							</p:row>
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['systemParameter_value']}" />
+							</p:column>
+							<p:column>											
+								<p:inputText required="true" id="value" value="#{systemParameterView.newSystemParameter.parameter_value}" size="10"
+									requiredMessage="#{msg['systemParameter_value']}: #{msg['empty_field']}" 
+									validatorMessage="#{msg['systemParameter_value']}: #{msg['lenght_field']} 100" maxlength="100"
+									>
+									
+								</p:inputText>
+								<p:message for="value" />
+								
+							</p:column>
+							<p:column>
+								<h:outputText value="#{msg['systemParameter_Start_Date']}"/>
+							</p:column>
+							<p:column>
+								<p:calendar required="true" id="startDate" 
+									value="#{systemParameterView.newSystemParameter.startDate}" pattern="dd/MM/yyyy"
+									readonlyInput="true" 
+									
+									requiredMessage="#{msg['systemParameter_Start_Date']}: #{msg['empty_field']}" 
+									validatorMessage="#{msg['systemParameter_Start_Date']}: #{msg['lenght_field']}">
+									<p:ajax event="dateSelect" listener="#{systemParameterView.onModuleChange()}" update="startDate"></p:ajax>
+									<p:ajax event="change" listener="#{systemParameterView.onModuleChange()}" update="startDate"></p:ajax>
+								</p:calendar>
+								<p:message for="startDate" />
+							</p:column>
+							
+						</p:row>					
+						
+					</p:panelGrid>
+				</p:panelGrid>
+				
+				<p:separator/>
+				<p:panelGrid>
+					<p:row>
+						<p:column>
+							<p:commandButton value="#{msg['save']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" validateClient="true"
+								action="#{systemParameterView.save}" update=":#{p:component('systemParameters1')},:formNewEntity"
+								onstart="PF('cargando').show()"
+								oncomplete="PF('dlgNewSystemParameter').hide(),PF('cargando').hide()" />
+			        		<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close"
+			        			update="formNewEntity" process="@this" actionListener="#{systemParameterView.cancel}" 
+			        			oncomplete="PF('dlgNewSystemParameter').hide()"/>
+						</p:column>					
+					</p:row>
+				</p:panelGrid>							
+			</h:form>			
+		</p:dialog>
+	
+	</shiro:hasPermission>
+	</ui:define>
+
+
+</ui:composition>

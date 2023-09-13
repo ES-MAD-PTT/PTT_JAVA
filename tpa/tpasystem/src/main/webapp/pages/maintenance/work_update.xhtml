@@ -1,0 +1,479 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_maintenance']}" url="#" />
+			<p:menuitem value="#{msg['menu_maintenance_work_update']}" url="/pages/maintenance/work_update.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="5000"/>
+			
+            <p:layout widgetVar="workUpdateLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">	
+					
+				<p:panelGrid columns="2" style="width:100%">
+					
+						<p:panelGrid id="filters">
+							<p:row>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['maintenance_code']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['maintenance_subject']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['maintenance_area']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['maintenance_subarea']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['from']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['to']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+								<p:inputText id="maintenance_code" style="width:120px;text-transform: uppercase" value="#{workUpdateView.filters.idn_maintenance}" size="40" />
+								<ui:remove>
+									<p:selectOneMenu widgetVar="maintenance_code" onchange="" id="maintenance_code" style="width:100px" value="#{workUpdateView.filters.idn_maintenance}" >
+										<f:selectItem itemLabel="" itemValue="" />
+        								<f:selectItems value="#{workUpdateView.maintenanceCode.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>							
+					           	</ui:remove>	
+								</p:column>
+								<p:column>
+									<p:inputText id="maintenance_subject" style="width:120px;text-transform: uppercase" value="#{workSubmissionView.filters.maintenance_subject}" size="40" />
+								</p:column>
+							
+								<p:column>
+									<p:selectOneMenu widgetVar="area_code" onchange="" id="area_code" style="width:100px" value="#{workUpdateView.filters.idn_area}" >
+										<f:selectItem itemLabel="" itemValue="" />
+        								<f:selectItems value="#{workUpdateView.area.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+										<p:ajax update="subarea_code"/>
+					           		</p:selectOneMenu>							
+								</p:column>
+								<p:column>
+									<p:selectOneMenu widgetVar="subarea_code" onchange="" id="subarea_code" style="width:100px" value="#{workUpdateView.filters.idn_subarea}" >
+										<f:selectItem itemLabel="" itemValue="" />
+        								<f:selectItems value="#{workUpdateView.subAreas.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>							
+								</p:column>
+								<p:column>
+									<p:calendar id="fecInicio" size="11" pattern="dd/MM/yyyy HH:mm" value="#{workUpdateView.filters.start_date}"
+										mask="true" showButtonPanel="true" showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="fecEnd"></p:ajax>
+										<p:ajax event="change" update="fecEnd"></p:ajax>
+									</p:calendar>
+								</p:column>
+								<p:column>
+									<p:calendar id="fecEnd" size="11" pattern="dd/MM/yyyy HH:mm" value="#{workUpdateView.filters.end_date}"
+										mask="true" showButtonPanel="true" showOn="button" navigator="true" mindate="#{workSubmissionView.filters.start_date}">
+									</p:calendar>
+								</p:column>
+								
+							</p:row>
+						</p:panelGrid>
+						<p:panelGrid columns="2" style="float:right;top:0px">
+							<shiro:hasPermission name="#{changeSystemView.system}.MAINTENANCE.MAINTENANCE_WORK_UPDATE.QUERY">
+								<p:commandButton id="searchBtn" value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{workUpdateView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,:#{p:component('work_table')}"/>
+							</shiro:hasPermission>
+
+							<p:commandButton  onclick="PF('workUpdateLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+																
+							<shiro:hasPermission name="#{changeSystemView.system}.MAINTENANCE.MAINTENANCE_WORK_UPDATE.QUERY">
+								<p:commandButton value="#{msg['clear']}"
+									actionListener="#{workUpdateView.onClear}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,@form"/>
+							</shiro:hasPermission>
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center"
+					resizable="false" closable="false" collapsible="false">
+
+					<p:dataTable widgetVar="w_work"  id="work_table" var="maintenance" value="#{workUpdateView.items}" reflow="true"
+						style="margin-bottom:20px;border-collapse:collapse"
+						selection="#{workUpdateView.selectedItems}" rowKey="#{maintenance.idn_maintenance}"
+					    paginator="true" rows="15" rowsPerPageTemplate="5,10,15,20,25, #{workUpdateView.itemsSize}" >
+
+						<shiro:hasPermission name="#{changeSystemView.system}.MAINTENANCE.MAINTENANCE_WORK_UPDATE.QUERY">
+							<f:facet name="header">
+								<p:outputPanel style="height:25px">
+									<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+	        						<p:columnToggler datasource="work_table" trigger="toggler" style="width:200px"/>
+
+									<shiro:hasPermission name="#{changeSystemView.system}.MAINTENANCE.MAINTENANCE_WORK_UPDATE.MOD">
+										<p:commandButton id="delete" value="Delete" icon="ui-icon fa fa-remove" style="float:right;"
+		        							actionListener="#{workUpdateView.delete}" update=":form:msgs,:#{p:component('work_table')}"
+		        							onstart="PF('cargando').show()"
+											oncomplete="PF('cargando').hide()"/>
+											
+		        						<p:commandButton id="publish" value="Publish" icon="ui-icon fa fa-envelope-o" style="float:right;"
+		        							actionListener="#{workUpdateView.publish}" update=":form:msgs,:#{p:component('work_table')}"
+		        							onstart="PF('cargando').show()"
+											oncomplete="PF('cargando').hide()"/>
+	        						</shiro:hasPermission>
+								</p:outputPanel>        										          
+					        </f:facet>
+					        
+					        <p:column headerText="Select" selectionMode="multiple" style="width:36px;text-align:center"/>
+					        
+					        <p:ajax event="rowToggle" listener="#{workUpdateView.onRowToggle}"/>
+					  		<p:column headerText="Expand" style="width:40px">
+            					<p:rowToggler />
+        					</p:column>
+
+					       <p:column headerText="#{msg['maintenance_code']}"  style="width: 120px;" >
+					       		<h:outputText value="#{maintenance.maintenance_code}"/>
+					       </p:column>
+						   <p:column style="width:120px" headerText="#{msg['maintenance_subject']}">
+					       		<h:outputText value="#{maintenance.maintenance_subject}" />
+					       </p:column>
+					       <p:column headerText="#{msg['maintenance_status']}">
+					       		<h:outputText value="#{maintenance.status}" />
+					       </p:column>
+					 
+					       <p:column headerText="#{msg['maintenance_area']}"  style="width: 60px;" >
+					            <h:outputText value="#{maintenance.area}" />
+					       </p:column>
+
+					       <p:column headerText="#{msg['maintenance_subarea']}"  style="width: 60px;" >
+					            <h:outputText value="#{maintenance.subarea}" />
+					       </p:column>
+
+					       <p:column headerText="#{msg['from']}" style="width: 90px;" >
+		               			<h:outputText value="#{maintenance.start_date}" >
+		              				<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+			              		 </h:outputText>
+					       </p:column>
+
+					       <p:column headerText="#{msg['to']}" style="width: 90px;" >
+		               			<h:outputText value="#{maintenance.end_date}" >
+		              				<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+			              		 </h:outputText>
+					       </p:column>
+					       
+							<p:column headerText="#{msg['maintenance_daily']}">
+					       		<p:selectBooleanCheckbox disabled="true" value="#{maintenance.is_daily}" />
+					       </p:column>
+					       					       
+					       <p:column headerText="#{msg['maintenance_engineering_comment']}">
+					               <h:outputText value="#{maintenance.engineering_comments}" />
+					       </p:column>
+					       
+					       <p:column style="width:250px" headerText="#{msg['maintenance_file']}">
+					       		<p:commandButton ajax="false"
+							    	oncomplete="PrimeFaces.monitorDownload(start, stop);" icon="ui-icon fa fa-save">
+									<f:setPropertyActionListener value="#{maintenance}" target="#{workUpdateView.selected}" />
+							        <p:fileDownload value="#{workUpdateView.maintenanceFile}"/>
+								</p:commandButton>
+								<h:outputText value="#{maintenance.file_name}" />
+					       </p:column>
+					       
+					       <p:rowExpansion >
+
+							<p:dataTable widgetVar="w_work_detail" id="work_detail_table"
+								var="operator" value="#{maintenance.operator_data}"
+								reflow="true" editable="true"
+								style="margin-bottom:20px;border-collapse:collapse"
+								paginator="true" rows="5" rowsPerPageTemplate="5,10,15,20,25">
+
+								<f:facet name="header">
+									<p:outputPanel style="height:75px">
+										<p:outputLabel style="float:left" value="#{msg['maintenance_operator_data']}" />
+										<!--  ch241
+										<p:commandButton rendered="#{workUpdateView.renderSubmitted(maintenance)}" id="new" type="button" value="New" icon="ui-icon fa fa-file-o" style="float:right;"
+											onclick="PF('dlgNewWork').show();" />
+										-->
+										<shiro:hasPermission name="#{changeSystemView.system}.MAINTENANCE.MAINTENANCE_WORK_UPDATE.MOD">
+											<p:commandButton  id="new" type="button" value="New" icon="ui-icon fa fa-file-o" style="float:right;"
+												rendered="#{workUpdateView.renderSubmitted(maintenance)}"
+												onclick="PF('dlgNewWork').show();" />
+										</shiro:hasPermission>
+										
+										<p:spacer width="1" height="22" style="float:right;position: relative; bottom: 0px;background-color: #A8A8A8; margin-left: 10px;margin-right: 10px" />
+
+										<p:commandButton value="" ajax="true" rendered="#{workUpdateView.testColor('pubbluecss')}" style="float:right;background:blue;width:30px;height:25px;" />
+										<p:commandButton value="" ajax="true" rendered="#{workUpdateView.testColor('pubgreencss')}" style="float:right;background:green;width:30px;height:25px;" />
+										<p:commandButton value="" ajax="true" rendered="#{workUpdateView.testColor('pubyellowcss')}" style="float:right;background:yellow;width:30px;height:25px;" />
+										<p:commandButton value="" ajax="true" rendered="#{workUpdateView.testColor('pubredcss')}" style="float:right;background:red;width:30px;height:25px;" />
+										<p:commandButton value="" ajax="true" rendered="#{workUpdateView.testColor('pubblackcss')}" style="float:right;background:black;width:30px;height:25px;" />
+										<p:commandButton value="" ajax="true" rendered="#{workUpdateView.testColor('pubpinkcss')}" style="float:right;background:pink;width:30px;height:25px;" />
+										<p:commandButton value="" ajax="true" rendered="#{workUpdateView.testColor('pubgreycss')}"  style="float:right;background:grey;width:30px;height:25px;" />
+										<p:commandButton value="" ajax="true" rendered="#{workUpdateView.testColor('puborangecss')}"  style="float:right;background:orange;width:30px;height:25px;" />
+										<p:commandButton value="" ajax="true" rendered="#{workUpdateView.testColor('pubpurplecss')}"  style="float:right;background:purple;width:30px;height:25px;" />
+										<p:commandButton value="" ajax="true" rendered="#{workUpdateView.testColor('pubmarooncss')}"  style="float:right;background:maroon;width:30px;height:25px;" />
+										<p:commandButton value="" ajax="true" rendered="#{workUpdateView.testColor('pubfuchsiacss')}"  style="float:right;background:fuchsia;width:30px;height:25px;" />
+										<p:commandButton value="" ajax="true" rendered="#{workUpdateView.testColor('publimecss')}"  style="float:right;background:lime;width:30px;height:25px;" />
+										<p:commandButton value="" ajax="true" rendered="#{workUpdateView.testColor('pubnavycss')}"  style="float:right;background:navy;width:30px;height:25px;" />
+										<p:commandButton value="" ajax="true" rendered="#{workUpdateView.testColor('pubsilvercss')}"  style="float:right;background:silver;width:30px;height:25px;" />
+										<p:commandButton value="" ajax="true" rendered="#{workUpdateView.testColor('pubolivecss')}"  style="float:right;background:olive;width:30px;height:25px;" />
+										<p:commandButton value="" ajax="true" rendered="#{workUpdateView.testColor('pubaquacss')}"  style="float:right;background:aqua;width:30px;height:25px;" />
+										<p:commandButton value="" ajax="true" rendered="#{workUpdateView.testColor('pubchocolatecss')}"  style="float:right;background:chocolate;width:30px;height:25px;" />
+										<p:commandButton value="" ajax="true" rendered="#{workUpdateView.testColor('puborangeredcss')}"  style="float:right;background:orangered;width:30px;height:25px;" />
+
+										<shiro:hasPermission name="#{changeSystemView.system}.MAINTENANCE.MAINTENANCE_WORK_UPDATE.MOD">
+											<p:commandButton id="pick" type="button" value="" title="Pick Color" icon="ui-icon fa fa-tint" style="float:right;width:30px;height:25px;"
+												rendered="#{workUpdateView.renderSubmitted(maintenance)}"
+												onclick="PF('dlgPickColor').show();" />
+										</shiro:hasPermission>
+										
+										<p:spacer width="1" height="22" style="float:right;position: relative; bottom: 0px;background-color: #A8A8A8; margin-left: 10px;margin-right: 10px" />
+											
+										<shiro:hasPermission name="#{changeSystemView.system}.MAINTENANCE.MAINTENANCE_WORK_UPDATE.MOD">
+											<p:commandButton id="save_comment" value="" title="Save Comment" icon="ui-icon fa fa-save" style="float:right;width:30px;height:25px;"
+												actionListener="#{workUpdateView.saveComment}" update=":form:msgs,:#{p:component('work_table')}"
+												rendered="#{workUpdateView.renderSubmitted(maintenance)}"
+			        							onstart="PF('cargando').show()"
+												oncomplete="PF('cargando').hide()"/>
+										</shiro:hasPermission>
+												
+										<p:inputTextarea style="float:right" cols="70" rows="4"  value="#{maintenance.operator_comments}"  autoResize="false"
+											label="#{msg['maintenance_operator_comment']}" maxlength="250"
+											disabled="#{not workUpdateView.renderSubmitted(maintenance)}"
+											validatorMessage="#{msg['maintenance_operator_comment']}: #{msg['lenght_field']} 250">
+											<f:validateLength maximum="250" />
+										</p:inputTextarea>
+										<p:outputLabel style="float:right" value="#{msg['maintenance_operator_comment']}   " />
+										
+										<p:spacer width="1" height="22" style="float:right;position: relative; bottom: 0px;background-color: #A8A8A8; margin-left: 10px;margin-right: 10px" />
+										
+										<p:calendar id="fecActualEnd" size="11" pattern="dd/MM/yyyy HH:mm" value="#{maintenance.actual_end_date}"
+											showButtonPanel="true" showOn="button" navigator="true" style="float:right" 
+											disabled="#{not workUpdateView.enabledModifPermission(maintenance)}">
+											<p:ajax event="dateSelect" listener="#{workUpdateView.saveActualEndDate}" update=":form:msgs" />
+										</p:calendar>
+										<p:outputLabel style="float:right" value="#{msg['maintenance_actual_end_date']}   " />
+									</p:outputPanel>
+								</f:facet>
+								<f:facet name="header">
+								<p:outputPanel style="height:25px">
+									<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+	        						<p:columnToggler datasource="work_detail_table" trigger="toggler" style="width:200px"/>
+								</p:outputPanel>
+								</f:facet>
+								<p:ajax event="rowEditInit" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','hidden')});" />
+								<p:ajax event="rowEdit" listener="#{workUpdateView.onRowEdit}" update=":form:msgs" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});" />
+								<p:ajax event="rowEditCancel" listener="#{workUpdateView.onRowCancel}" update=":form:msgs" onstart="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});" />
+
+						       <p:column headerText="#{msg['maintenance_area']}">
+						           <p:cellEditor>
+						               <f:facet name="output"><h:outputText value="#{operator.area}" /></f:facet>
+						               <f:facet name="input">
+											<p:selectOneMenu required="true" value="#{operator.idn_area}" style="width:80%"
+												requiredMessage="The mandatory field #{msg['maintenance_area']} must be informed">
+	        									<f:selectItems value="#{workUpdateView.area.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+	        									<p:ajax update="operator_subarea"  />					                    
+	        								</p:selectOneMenu>					               
+						               	</f:facet>
+						           </p:cellEditor>
+						       </p:column>
+	
+						       <p:column headerText="#{msg['maintenance_subarea']}">
+						           <p:cellEditor>
+						               <f:facet name="output"><h:outputText value="#{operator.subarea}" /></f:facet>
+						               <f:facet name="input">
+											<p:selectOneMenu required="true" id="operator_subarea" value="#{operator.idn_subarea}" style="width:80%"
+												requiredMessage="The mandatory field #{msg['maintenance_subarea']} must be informed">
+	        									<f:selectItems value="#{workUpdateView.getSubAreas(operator.idn_area).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />					                    
+	        								</p:selectOneMenu>					               
+						               	</f:facet>
+						           </p:cellEditor>
+						       </p:column>
+	
+								<p:column headerText="#{msg['maintenance_capacity_affected']}">
+									<p:cellEditor>
+										<f:facet name="output">
+											<h:outputText style="float:right" value="#{operator.capacity_affected}" >
+												<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3" />
+											</h:outputText>
+										</f:facet>
+										<f:facet name="input">
+											<!-- ch240
+											 <p:inputText style="float:right" required="true" value="#{operator.capacity_affected}" size="10"
+												validatorMessage="The Available Remaining Capacity value should be informed as positive value or equal to 0">
+												<f:convertNumber groupingUsed="true" pattern="#0.00" />
+											</p:inputText>
+											-->
+											<p:inputNumber style="float:right" value="#{operator.capacity_affected}" size="10"
+												validatorMessage="The Available Remaining Capacity value should be informed as positive value or equal to 0"
+												decimalSeparator="." thousandSeparator="," decimalPlaces="3" minValue="0">
+											</p:inputNumber>
+										</f:facet>
+									</p:cellEditor>
+								</p:column>
+								<p:column style="width:32px">
+									<p:rowEditor rendered="#{workUpdateView.renderSubmitted(maintenance)}"/>
+									
+								</p:column>
+
+							</p:dataTable>
+
+						</p:rowExpansion>
+
+					</shiro:hasPermission>					       
+				   </p:dataTable>
+				</p:layoutUnit>
+
+
+			</p:layout>
+		</h:form>
+
+		<p:dialog widgetVar="dlgNewWork" resizable="false"  closable="true" modal="true" appendTo="@(body)" header="New Operator Maintenance">
+			<h:form id="formNewEntity">
+			<p:growl id="msgs" showDetail="true"  life="5000"/>
+				<p:panelGrid columns="4" style="width:100%">
+					<p:panelGrid>
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['maintenance_area']}" />
+							</p:column>
+					       <p:column >
+								<p:selectOneMenu required="true" value="#{workUpdateView.newOperatorMan.idn_area}" style="width:80%"
+									requiredMessage="The mandatory field #{msg['maintenance_area']} must be informed">
+										<f:selectItem itemLabel="" itemValue="" />
+      									<f:selectItems value="#{workUpdateView.area.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+      									<p:ajax update="new_subarea"  />					                    
+      								</p:selectOneMenu>					               
+					       </p:column>
+
+							<p:column>
+								<h:outputText value="#{msg['maintenance_subarea']}" />
+							</p:column>
+					       <p:column>
+								<p:selectOneMenu required="true" id="new_subarea" value="#{workUpdateView.newOperatorMan.idn_subarea}" style="width:80%"
+									requiredMessage="The mandatory field #{msg['maintenance_subarea']} must be informed">
+      									<f:selectItems value="#{workUpdateView.getSubAreas(workUpdateView.newOperatorMan.idn_area).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />					                    
+      								</p:selectOneMenu>					               
+					       </p:column>
+						</p:row>
+						<p:row>
+					       <p:column>
+								<h:outputText value="#{msg['maintenance_capacity_affected']}" />
+							</p:column>
+					       
+					       <p:column>
+			               		<!-- ch240
+			               		 <p:inputText required="true" value="#{workUpdateView.newOperatorMan.capacity_affected}" size="10"
+			               			requiredMessage="The Cap. value shoul be informed as positive value o iqual to 0"
+			               			validatorMessage="The Cap. value shoul be informed as positive value o iqual to 0">
+									<f:convertNumber pattern="#0.00" />
+								</p:inputText>
+								-->
+								<p:inputNumber  value="#{workUpdateView.newOperatorMan.capacity_affected}" size="10"
+			               			validatorMessage="The Cap. value shoul be informed as positive value o iqual to 0"
+			               			decimalSeparator="." thousandSeparator="," decimalPlaces="3" minValue="0">	
+								</p:inputNumber>
+					       </p:column>
+					       <p:column></p:column>
+					       <p:column></p:column>
+						</p:row>
+					</p:panelGrid>
+				</p:panelGrid>
+				
+				<p:separator/>
+				<p:panelGrid>
+					<p:row>
+						<p:column>
+							<p:commandButton value="#{msg['save']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" validateClient="true"
+								action="#{workUpdateView.save}" update=":#{p:component('work_table')},:formNewEntity"
+								onstart="PF('cargando').show()"
+								oncomplete="PF('dlgNewWork').hide(),PF('cargando').hide()" />
+			        		<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close" 
+			        			update="formNewEntity" process="@this" actionListener="#{workUpdateView.cancel}"
+			        			oncomplete="PF('dlgNewWork').hide()"/>
+						</p:column>					
+					</p:row>
+				</p:panelGrid>							
+			
+			</h:form>
+		</p:dialog>
+
+		<p:dialog widgetVar="dlgPickColor" resizable="false"  closable="true" modal="true" appendTo="@(body)" header="Pick Color for Maintenance Publication">
+			<h:form id="formPickColor">
+			<p:growl id="msgs" showDetail="true"  life="5000"/>
+				<p:panelGrid columns="4" style="width:100%">
+					<p:panelGrid>
+						<p:row>
+							<p:column>
+								<p:commandButton value="" ajax="true" action="#{workUpdateView.setColor('pubbluecss')}" style="background:blue;width:30px;height:25px;" />
+								<p:commandButton value="" ajax="true" action="#{workUpdateView.setColor('pubgreencss')}" style="background:green;width:30px;height:25px;" />
+								<p:commandButton value="" ajax="true" action="#{workUpdateView.setColor('pubyellowcss')}" style="background:yellow;width:30px;height:25px;" />
+								<p:commandButton value="" ajax="true" action="#{workUpdateView.setColor('pubredcss')}" style="background:red;width:30px;height:25px;" />
+								<p:commandButton value="" ajax="true" action="#{workUpdateView.setColor('pubblackcss')}" style="background:black;width:30px;height:25px;" />
+								<p:commandButton value="" ajax="true" action="#{workUpdateView.setColor('pubpinkcss')}" style="background:pink;width:30px;height:25px;" />
+								
+							</p:column>
+						</p:row>
+						<p:row>
+							<p:column>
+								<p:commandButton value="" ajax="true" action="#{workUpdateView.setColor('pubgreycss')}"  style="background:grey;width:30px;height:25px;" />
+								<p:commandButton value="" ajax="true" action="#{workUpdateView.setColor('puborangecss')}"  style="background:orange;width:30px;height:25px;" />
+								<p:commandButton value="" ajax="true" action="#{workUpdateView.setColor('pubpurplecss')}"  style="background:purple;width:30px;height:25px;" />
+								<p:commandButton value="" ajax="true" action="#{workUpdateView.setColor('pubmarooncss')}"  style="background:maroon;width:30px;height:25px;" />
+								<p:commandButton value="" ajax="true" action="#{workUpdateView.setColor('pubfuchsiacss')}"  style="background:fuchsia;width:30px;height:25px;" />
+								<p:commandButton value="" ajax="true" action="#{workUpdateView.setColor('publimecss')}"  style="background:lime;width:30px;height:25px;" />
+								
+							</p:column>
+						</p:row>
+						<p:row>
+							<p:column>
+								<p:commandButton value="" ajax="true" action="#{workUpdateView.setColor('pubnavycss')}"  style="background:navy;width:30px;height:25px;" />
+								<p:commandButton value="" ajax="true" action="#{workUpdateView.setColor('pubsilvercss')}"  style="background:silver;width:30px;height:25px;" />
+								<p:commandButton value="" ajax="true" action="#{workUpdateView.setColor('pubolivecss')}"  style="background:olive;width:30px;height:25px;" />
+								<p:commandButton value="" ajax="true" action="#{workUpdateView.setColor('pubaquacss')}"  style="background:aqua;width:30px;height:25px;" />
+								<p:commandButton value="" ajax="true" action="#{workUpdateView.setColor('pubchocolatecss')}"  style="background:chocolate;width:30px;height:25px;" />
+								<p:commandButton value="" ajax="true" action="#{workUpdateView.setColor('puborangeredcss')}"  style="background:orangered;width:30px;height:25px;" />
+								
+							</p:column>
+						</p:row>
+					</p:panelGrid>
+				</p:panelGrid>
+				
+				<p:separator/>
+				<p:panelGrid>
+					<p:row>
+						<p:column>
+							<p:commandButton value="#{msg['save']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" validateClient="true"
+								action="#{workUpdateView.saveColor}" update=":#{p:component('work_table')},:formPickColor"
+								onstart="PF('cargando').show()"
+								oncomplete="PF('dlgPickColor').hide(),PF('cargando').hide()" />
+			        		<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close" 
+			        			update="formPickColor" process="@this"
+			        			oncomplete="PF('dlgPickColor').hide()"/>
+						</p:column>					
+					</p:row>
+				</p:panelGrid>							
+			
+			</h:form>
+		</p:dialog>
+
+
+	</ui:define>
+
+
+</ui:composition>

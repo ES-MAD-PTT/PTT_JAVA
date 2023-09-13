@@ -1,0 +1,972 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atos.mapper.nominations.NominationMapper">
+
+
+     <select id="selectShipperIdNominations" parameterType="com.atos.filters.nominations.NominationFilter" resultType="com.atos.beans.ComboFilterNS">
+		SELECT a.idn_user_group as key, a.user_group_id as value
+		  FROM tpa_tuser_group a,
+		       tpa_tuser_group_type b,
+		       (SELECT ugt.type_code,
+		               ug.idn_user_group
+		          FROM tpa_tuser            u,
+		               tpa_tuser_group      ug,
+		               tpa_tuser_group_type ugt
+		         WHERE u.user_id = #{user}
+		           AND u.idn_user_group = ug.idn_user_group
+		           AND ug.idn_user_group_type = ugt.idn_user_group_type) c
+		 WHERE a.idn_user_group_type = b.idn_user_group_type
+		   AND b.type_code = 'SHIPPER'
+		   AND ((c.type_code = 'SHIPPER' AND c.idn_user_group = a.idn_user_group) OR c.type_code = 'OPERATOR')
+		order by UPPER(value)
+
+    </select>
+
+     <select id="selectContractCodeDayByShipper" parameterType="com.atos.filters.nominations.NominationFilter" resultType="com.atos.beans.ComboFilterNS">
+	    select c.idn_contract as key, c.contract_code as value
+	      from tpa_tcontract c, tpa_tuser_group ug
+	     where c.idn_pipeline_system = #{idn_pipeline_system}
+	       and c.idn_user_group = ug.idn_user_group
+	       <if test="shipper_code != null and shipper_code != ''">
+	       and ug.idn_user_group = #{shipper_code}
+	       </if>
+	       and exists (select 1
+	              from tpa_tcontract_consolidate cc
+	             where cc.idn_contract = c.idn_contract)
+	       and #{start_date} between c.start_date and c.end_date
+	     order by UPPER(value)
+	</select>
+
+     <select id="selectContractCodeWeekByShipper" parameterType="com.atos.filters.nominations.NominationFilter" resultType="com.atos.beans.ComboFilterNS">
+		select c.idn_contract as key, c.contract_code as value
+		  from tpa_tcontract c, tpa_tuser_group ug
+		 where c.idn_pipeline_system = #{idn_pipeline_system}
+		   and c.idn_user_group = ug.idn_user_group
+		   <if test="shipper_code != null and shipper_code != ''">
+		   and ug.idn_user_group = #{shipper_code}
+		   </if>
+		   and exists (select 1 from tpa_tcontract_consolidate cc where cc.idn_contract = c.idn_contract)
+		   and (#{start_date} between c.start_date and c.end_date or
+			 #{end_date} between c.start_date and c.end_date)
+		   order by UPPER(value)
+	</select>
+
+	<select id="selectZonesNomination" resultType="com.atos.beans.ComboFilterNS">
+		select idn_zone as key, zone_code as value
+		  from TPA_TZONE t
+		 where zone_code in ('EAST', 'WEST', 'EAST-WEST','OFSH')
+	</select>
+
+	<select id="selectNomination" parameterType="com.atos.filters.nominations.NominationFilter" resultType="com.atos.beans.nominations.NominationHeaderBean">
+		with warning_nom as
+		(
+		select ndq.idn_nomination, max(greatest(ndq.IS_WARNED, nvl(nhq.Is_Warned,'N') , nvl(ngq.is_warned, 'N'))) as is_warned
+		from tpa_vnomination_day_quantity ndq , tpa_vnomination_hour_quantity nhq , tpa_tnomination_gasq ngq
+		where ndq.idn_nomination_entity = nhq.idn_nomination_entity(+)
+		AND nhq.idn_nomination_day(+) = ndq.idn_nomination_day
+		AND ndq.idn_nomination_day = nhq.idn_nomination_day(+)
+		AND ndq.idn_nomination_entity = ngq.idn_nomination_entity(+)
+		AND ndq.idn_nomination_concept = ngq.idn_nomination_concept(+)
+		group by ndq.idn_nomination )		
+		SELECT n.idn_nomination,		
+		n.nomination_code,		
+		n.start_date,		
+		n.nomination_version,		
+		c.idn_contract,		
+		c.contract_code,		
+		ug.idn_user_group,		
+		ug.user_group_id,	
+		ug.user_group_name,	
+		n.is_responsed,		
+		n.shipper_comments,		
+		n.operator_comments,		
+		n.submission_comments,		
+		n.idn_shipper_file,
+		(select file_name from tpa_toperation_file where n.idn_shipper_file = idn_operation_file) as shipper_file_name,	
+		n.idn_operator_file,	
+		(select file_name from tpa_toperation_file where n.idn_operator_file = idn_operation_file) as operator_file_name,		
+		n.is_valid,		
+		n.is_renomination as is_renomination,		
+		n.aud_ins_date as aud_ins_date		
+		FROM tpa_tnomination n,		
+		tpa_tuser_group ug,		
+		tpa_tuser_group_type ugt,		
+		tpa_voperation o,		
+		tpa_tcontract c,	
+		warning_nom w		
+		WHERE n.idn_nomination = w.idn_nomination		
+		AND n.idn_operation = o.idn_operation		
+		AND o.category_code = #{category_code}		
+		AND o.term_code = #{term_code}		
+		AND n.idn_user_group = ug.idn_user_group		
+		AND ug.idn_user_group_type = ugt.idn_user_group_type		
+		AND ugt.type_code = #{type_code}		
+		AND n.is_contracted = 'Y'		
+		AND n.idn_contract = c.idn_contract		
+		AND n.start_date = #{start_date}		
+		AND n.end_date = #{end_date}		
+		AND EXISTS (SELECT 1 FROM tpa_vnomination_entity ne WHERE ne.idn_nomination = n.idn_nomination AND ne.idn_pipeline_system = #{idn_pipeline_system} AND 1 >= ROWNUM)		
+		AND exists (select 1 from tpa_tnomination_day nd where nd.idn_nomination=n.idn_nomination)	
+		AND n.nomination_version =	
+		(SELECT MAX(nx.nomination_version) FROM tpa_tnomination nx WHERE nx.nomination_code = n.nomination_code AND nx.is_intraday = 'N')	
+		AND n.is_intraday = 'N'	
+		<if test="shipper_code != null and shipper_code != ''">	
+		and ug.idn_user_group = #{shipper_code}	
+		</if>		
+		<if test="contract_code != null and contract_code != ''">		
+		and n.idn_contract = #{contract_code}		
+		</if>		
+		<if test="not_meet != null and not_meet != ''">		
+		and w.is_warned = #{not_meet}		
+		</if>	
+		ORDER BY ug.user_group_id,
+		c.contract_code
+	</select>
+
+	<select id="selectMaxVersionNomination" resultType="com.atos.beans.nominations.NominationHeaderBean">
+      SELECT n.idn_nomination,
+           n.nomination_code,
+           n.start_date,
+           n.nomination_version,
+           c.idn_contract,
+           c.contract_code,
+           ug.idn_user_group,
+           ug.user_group_id,
+           n.is_responsed,
+	       n.shipper_comments,
+           n.operator_comments,
+           n.submission_comments,
+           n.idn_operator_file,
+           (select file_name from tpa_toperation_file where n.idn_operator_file = idn_operation_file) as operator_file_name,
+           n.is_valid,
+	       n.is_renomination as is_renomination,
+           n.aud_ins_date as aud_ins_date
+      FROM tpa_tnomination      n,
+           tpa_tuser_group      ug,
+           tpa_tuser_group_type ugt,
+           tpa_tcontract        c
+     WHERE n.idn_user_group = ug.idn_user_group
+       AND ug.idn_user_group_type = ugt.idn_user_group_type
+       AND n.is_contracted = 'Y'
+       AND n.idn_contract = c.idn_contract
+       AND n.nomination_code = #{nomCode}
+       AND n.nomination_version = 
+           (SELECT MAX(nx.nomination_version) FROM tpa_tnomination nx WHERE nx.nomination_code = n.nomination_code AND n.is_intraday = 'N')
+           AND n.is_intraday = 'N'
+	</select>
+		          
+	<select id="selectDetailNomination" parameterType="com.atos.beans.nominations.NominationHeaderBean" resultType="com.atos.beans.nominations.NominationDetailBean">
+SELECT ne.zone_code AS "zone_code",
+       neh.supply_demand AS "supply_demand",
+       neh.area AS "area",
+       nvl(ne.point_code, nmc.concept_code) AS "point_id",
+       NULL AS wi_hv,
+       NULL AS area_concept,
+       neh.cust_type AS "cust_type",
+       neh.area_code AS "area_code",
+       neh.subarea AS "subarea",
+       neh.unit AS "unit",
+       neh.entry_exit AS "entry_exit",
+       MIN((SELECT ngq.quality_value
+             FROM tpa_tnomination_gasq   ngq,
+                  tpa_tgas_quality_param gqp
+            WHERE ngq.idn_nomination_entity = ne.idn_nomination_entity
+              AND ngq.idn_nomination_concept = nmc.idn_nomination_concept
+              AND ngq.idn_gas_quality_param = gqp.idn_gas_quality_param
+              AND gqp.parameter_code = 'WI')) AS wi,
+       NVL(MIN((SELECT ngq.is_warned
+             FROM tpa_tnomination_gasq   ngq,
+                  tpa_tgas_quality_param gqp
+            WHERE ngq.idn_nomination_entity = ne.idn_nomination_entity
+              AND ngq.idn_nomination_concept = nmc.idn_nomination_concept
+              AND ngq.idn_gas_quality_param = gqp.idn_gas_quality_param
+              AND gqp.parameter_code = 'WI')),'N') AS is_warned_wi,
+       MIN((SELECT ngq.quality_value
+             FROM tpa_tnomination_gasq   ngq,
+                  tpa_tgas_quality_param gqp
+            WHERE ngq.idn_nomination_entity = ne.idn_nomination_entity
+              AND ngq.idn_nomination_concept = nmc.idn_nomination_concept
+              AND ngq.idn_gas_quality_param = gqp.idn_gas_quality_param
+              AND gqp.parameter_code = 'HV')) AS hv,
+       NVL(MIN((SELECT ngq.is_warned
+             FROM tpa_tnomination_gasq   ngq,
+                  tpa_tgas_quality_param gqp
+            WHERE ngq.idn_nomination_entity = ne.idn_nomination_entity
+              AND ngq.idn_nomination_concept = nmc.idn_nomination_concept
+              AND ngq.idn_gas_quality_param = gqp.idn_gas_quality_param
+              AND gqp.parameter_code = 'HV')),'N') AS is_warned_hv,
+       MIN((SELECT ngq.quality_value
+             FROM tpa_tnomination_gasq   ngq,
+                  tpa_tgas_quality_param gqp
+            WHERE ngq.idn_nomination_entity = ne.idn_nomination_entity
+              AND ngq.idn_nomination_concept = nmc.idn_nomination_concept
+              AND ngq.idn_gas_quality_param = gqp.idn_gas_quality_param
+              AND gqp.parameter_code = 'SG')) AS sg,
+      NVL(MIN((SELECT ngq.is_warned
+                 FROM tpa_tnomination_gasq   ngq,
+                      tpa_tgas_quality_param gqp
+                WHERE ngq.idn_nomination_entity = ne.idn_nomination_entity
+                  AND ngq.idn_nomination_concept = nmc.idn_nomination_concept
+                  AND ngq.idn_gas_quality_param = gqp.idn_gas_quality_param
+                  AND gqp.parameter_code = 'SG')), 'N') AS is_warned_sg,
+       SUM(decode(nhq.hour, 1, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_01,
+       SUM(decode(nhq.hour, 2, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_02,
+       SUM(decode(nhq.hour, 3, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_03,
+       SUM(decode(nhq.hour, 4, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_04,
+       SUM(decode(nhq.hour, 5, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_05,
+       SUM(decode(nhq.hour, 6, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_06,
+       SUM(decode(nhq.hour, 7, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_07,
+       SUM(decode(nhq.hour, 8, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_08,
+       SUM(decode(nhq.hour, 9, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_09,
+       SUM(decode(nhq.hour, 10, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_10,
+       SUM(decode(nhq.hour, 11, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_11,
+       SUM(decode(nhq.hour, 12, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_12,
+       SUM(decode(nhq.hour, 13, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_13,
+       SUM(decode(nhq.hour, 14, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_14,
+       SUM(decode(nhq.hour, 15, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_15,
+       SUM(decode(nhq.hour, 16, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_16,
+       SUM(decode(nhq.hour, 17, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_17,
+       SUM(decode(nhq.hour, 18, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_18,
+       SUM(decode(nhq.hour, 19, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_19,
+       SUM(decode(nhq.hour, 20, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_20,
+       SUM(decode(nhq.hour, 21, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_21,
+       SUM(decode(nhq.hour, 22, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_22,
+       SUM(decode(nhq.hour, 23, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_23,
+       SUM(decode(nhq.hour, 24, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_24,
+       MIN(ndq.day_matched_quantity * ucfd.conversion_factor) AS total,
+       MIN(ndq.is_warned) AS is_warned,
+       MIN(decode(nhq.hour, 1, nhq.is_warned, NULL)) AS is_warned_h01,
+       MIN(decode(nhq.hour, 2, nhq.is_warned, NULL)) AS is_warned_h02,
+       MIN(decode(nhq.hour, 3, nhq.is_warned, NULL)) AS is_warned_h03,
+       MIN(decode(nhq.hour, 4, nhq.is_warned, NULL)) AS is_warned_h04,
+       MIN(decode(nhq.hour, 5, nhq.is_warned, NULL)) AS is_warned_h05,
+       MIN(decode(nhq.hour, 6, nhq.is_warned, NULL)) AS is_warned_h06,
+       MIN(decode(nhq.hour, 7, nhq.is_warned, NULL)) AS is_warned_h07,
+       MIN(decode(nhq.hour, 8, nhq.is_warned, NULL)) AS is_warned_h08,
+       MIN(decode(nhq.hour, 9, nhq.is_warned, NULL)) AS is_warned_h09,
+       MIN(decode(nhq.hour, 10, nhq.is_warned, NULL)) AS is_warned_h10,
+       MIN(decode(nhq.hour, 11, nhq.is_warned, NULL)) AS is_warned_h11,
+       MIN(decode(nhq.hour, 12, nhq.is_warned, NULL)) AS is_warned_h12,
+       MIN(decode(nhq.hour, 13, nhq.is_warned, NULL)) AS is_warned_h13,
+       MIN(decode(nhq.hour, 14, nhq.is_warned, NULL)) AS is_warned_h14,
+       MIN(decode(nhq.hour, 15, nhq.is_warned, NULL)) AS is_warned_h15,
+       MIN(decode(nhq.hour, 16, nhq.is_warned, NULL)) AS is_warned_h16,
+       MIN(decode(nhq.hour, 17, nhq.is_warned, NULL)) AS is_warned_h17,
+       MIN(decode(nhq.hour, 18, nhq.is_warned, NULL)) AS is_warned_h18,
+       MIN(decode(nhq.hour, 19, nhq.is_warned, NULL)) AS is_warned_h19,
+       MIN(decode(nhq.hour, 20, nhq.is_warned, NULL)) AS is_warned_h20,
+       MIN(decode(nhq.hour, 21, nhq.is_warned, NULL)) AS is_warned_h21,
+       MIN(decode(nhq.hour, 22, nhq.is_warned, NULL)) AS is_warned_h22,
+       MIN(decode(nhq.hour, 23, nhq.is_warned, NULL)) AS is_warned_h23,
+       MIN(decode(nhq.hour, 24, nhq.is_warned, NULL)) AS is_warned_h24,
+       MAX(GREATEST(ndq.is_warned, nhq.is_warned)) AS is_warned_quantity
+  FROM tpa_vnomination_entity         ne,
+       tpa_vnomination_excel_header   neh,
+       tpa_vnomination_day_quantity   ndq,
+       tpa_vnomination_hour_quantity  nhq,
+       tpa_vnomination_main_concepts  nmc,
+       tpa_vunit_convert_from_default ucfd
+ WHERE ne.idn_nomination =  #{idn_nomination}
+   AND ndq.idn_nomination = #{idn_nomination}
+   AND ne.idn_zone = #{idn_zone}
+   AND neh.idn_nomination_entity = ne.idn_nomination_entity
+   AND neh.idn_nomination_concept = nmc.idn_nomination_concept
+   AND ndq.idn_nomination_entity = ne.idn_nomination_entity
+   AND ndq.idn_nomination_concept = nmc.idn_nomination_concept
+   AND nhq.idn_nomination_day(+) = ndq.idn_nomination_day
+   AND nhq.idn_nomination_entity = ne.idn_nomination_entity
+   AND nhq.idn_nomination_concept = nmc.idn_nomination_concept
+   AND nhq.idn_nomination_entity = ndq.idn_nomination_entity
+   AND nhq.idn_nomination_concept = ndq.idn_nomination_concept
+   AND neh.idn_nomination_entity = ndq.idn_nomination_entity
+   AND neh.idn_nomination_concept = ndq.idn_nomination_concept
+   AND neh.idn_nomination_entity = nhq.idn_nomination_entity
+   AND neh.idn_nomination_concept = nhq.idn_nomination_concept
+   AND neh.idn_unit = ucfd.idn_unit
+   AND nmc.is_point_concept = ne.is_point_entity
+   AND nmc.is_area_concept = ne.is_area_entity
+   AND nmc.is_zone_concept = ne.is_zone_entity
+GROUP BY ne.zone_code,
+          neh.supply_demand,
+          neh.area,
+          nvl(ne.point_code, nmc.concept_code),
+          neh.cust_type,
+          neh.area_code,
+          neh.subarea,
+          neh.unit,
+          neh.entry_exit,
+          nmc.type_code,
+          nmc.sort_value
+          ORDER BY is_warned_wi desc,
+			is_warned_hv desc,
+			is_warned_sg desc,			
+			is_warned desc,			
+			is_warned_h01 desc,
+			is_warned_h02 desc,			
+			is_warned_h03 desc,			
+			is_warned_h04 desc,			
+			is_warned_h05 desc,			
+			is_warned_h06 desc,			
+			is_warned_h07 desc,			
+			is_warned_h08 desc,			
+			is_warned_h09 desc,			
+			is_warned_h10 desc,			
+			is_warned_h11 desc,			
+			is_warned_h12 desc,			
+			is_warned_h13 desc,			
+			is_warned_h14 desc,			
+			is_warned_h15 desc,			
+			is_warned_h16 desc,			
+			is_warned_h17 desc,			
+			is_warned_h18 desc,			
+			is_warned_h19 desc,			
+			is_warned_h20 desc,			
+			is_warned_h21 desc,			
+			is_warned_h22 desc,			
+			is_warned_h23 desc,			
+			is_warned_h24 desc,
+			ne.zone_code,
+          	neh.supply_demand DESC,
+          	neh.area,
+          	nmc.type_code,
+          	nmc.sort_value,
+          	nvl(ne.point_code, nmc.concept_code)
+
+	</select>
+
+	<select id="selectDetailWeeklyNomination" parameterType="com.atos.beans.nominations.NominationHeaderBean" resultType="com.atos.beans.nominations.NominationDetailWeekBean">
+SELECT ne.zone_code AS "zone_code",
+       neh.supply_demand AS "supply_demand",
+       neh.area AS "area",
+       decode(nc.type_code, 'OTHERS', NULL, nvl(ne.point_code, nc.concept_code)) AS "point_id",
+       NULL AS wi_hv,
+       decode(nc.type_code, 'OTHERS', nc.concept_code, NULL) AS area_concept,
+       neh.cust_type AS "cust_type",
+       neh.area_code AS "area_code",
+       neh.subarea AS "subarea",
+       neh.unit AS "unit",
+       neh.entry_exit AS "entry_exit",
+       MIN((SELECT ngq.quality_value
+             FROM tpa_tnomination_gasq   ngq,
+                  tpa_tgas_quality_param gqp
+            WHERE ngq.idn_nomination_entity = ne.idn_nomination_entity
+              AND ngq.idn_nomination_concept = nc.idn_nomination_concept
+              AND ngq.idn_gas_quality_param = gqp.idn_gas_quality_param
+              AND gqp.parameter_code = 'WI')) AS wi,
+       NVL(MIN((SELECT ngq.is_warned
+             FROM tpa_tnomination_gasq   ngq,
+                  tpa_tgas_quality_param gqp
+            WHERE ngq.idn_nomination_entity = ne.idn_nomination_entity
+              AND ngq.idn_nomination_concept = nc.idn_nomination_concept
+              AND ngq.idn_gas_quality_param = gqp.idn_gas_quality_param
+              AND gqp.parameter_code = 'WI')),'N') AS is_warned_wi,
+       MIN((SELECT ngq.quality_value
+             FROM tpa_tnomination_gasq   ngq,
+                  tpa_tgas_quality_param gqp
+            WHERE ngq.idn_nomination_entity = ne.idn_nomination_entity
+              AND ngq.idn_nomination_concept = nc.idn_nomination_concept
+              AND ngq.idn_gas_quality_param = gqp.idn_gas_quality_param
+              AND gqp.parameter_code = 'HV')) AS hv,
+       NVL(MIN((SELECT ngq.is_warned
+             FROM tpa_tnomination_gasq   ngq,
+                  tpa_tgas_quality_param gqp
+            WHERE ngq.idn_nomination_entity = ne.idn_nomination_entity
+              AND ngq.idn_nomination_concept = nc.idn_nomination_concept
+              AND ngq.idn_gas_quality_param = gqp.idn_gas_quality_param
+              AND gqp.parameter_code = 'HV')),'N') AS is_warned_hv,
+       MIN((SELECT ngq.quality_value
+             FROM tpa_tnomination_gasq   ngq,
+                  tpa_tgas_quality_param gqp
+            WHERE ngq.idn_nomination_entity = ne.idn_nomination_entity
+              AND ngq.idn_nomination_concept = nc.idn_nomination_concept
+              AND ngq.idn_gas_quality_param = gqp.idn_gas_quality_param
+              AND gqp.parameter_code = 'SG')) AS sg,
+       NVL(MIN((SELECT ngq.is_warned
+                 FROM tpa_tnomination_gasq   ngq,
+                      tpa_tgas_quality_param gqp
+                WHERE ngq.idn_nomination_entity = ne.idn_nomination_entity
+                  AND ngq.idn_nomination_concept = nc.idn_nomination_concept
+                  AND ngq.idn_gas_quality_param = gqp.idn_gas_quality_param
+                  AND gqp.parameter_code = 'SG')), 'N') AS is_warned_sg,
+       SUM(decode(ndq.gas_day - n.start_date, 0, ndq.day_matched_quantity * ucfd.conversion_factor, NULL)) AS day_1,
+       SUM(decode(ndq.gas_day - n.start_date, 1, ndq.day_matched_quantity * ucfd.conversion_factor, NULL)) AS day_2,
+       SUM(decode(ndq.gas_day - n.start_date, 2, ndq.day_matched_quantity * ucfd.conversion_factor, NULL)) AS day_3,
+       SUM(decode(ndq.gas_day - n.start_date, 3, ndq.day_matched_quantity * ucfd.conversion_factor, NULL)) AS day_4,
+       SUM(decode(ndq.gas_day - n.start_date, 4, ndq.day_matched_quantity * ucfd.conversion_factor, NULL)) AS day_5,
+       SUM(decode(ndq.gas_day - n.start_date, 5, ndq.day_matched_quantity * ucfd.conversion_factor, NULL)) AS day_6,
+       SUM(decode(ndq.gas_day - n.start_date, 6, ndq.day_matched_quantity * ucfd.conversion_factor, NULL)) AS day_7,
+       MIN(decode(ndq.gas_day - n.start_date, 0, ndq.is_warned, NULL)) AS is_warned_day_1,
+       MIN(decode(ndq.gas_day - n.start_date, 1, ndq.is_warned, NULL)) AS is_warned_day_2,
+       MIN(decode(ndq.gas_day - n.start_date, 2, ndq.is_warned, NULL)) AS is_warned_day_3,
+       MIN(decode(ndq.gas_day - n.start_date, 3, ndq.is_warned, NULL)) AS is_warned_day_4,
+       MIN(decode(ndq.gas_day - n.start_date, 4, ndq.is_warned, NULL)) AS is_warned_day_5,
+       MIN(decode(ndq.gas_day - n.start_date, 5, ndq.is_warned, NULL)) AS is_warned_day_6,
+       MIN(decode(ndq.gas_day - n.start_date, 6, ndq.is_warned, NULL)) AS is_warned_day_7,
+       MAX(ndq.is_warned) AS is_warned_quantity
+  FROM tpa_tnomination n,
+       tpa_vnomination_entity ne,
+       tpa_vnomination_excel_header neh,
+       tpa_vnomination_day_quantity ndq,
+       (SELECT * FROM tpa_vnomination_main_concepts UNION SELECT * FROM tpa_vnomination_other_concept) nc,
+       tpa_vunit_convert_from_default ucfd
+ WHERE n.idn_nomination =  #{idn_nomination}
+   AND ne.idn_nomination =  #{idn_nomination}
+   AND ndq.idn_nomination = #{idn_nomination}
+   AND ne.idn_zone = #{idn_zone}
+   AND neh.idn_nomination_entity = ne.idn_nomination_entity
+   AND neh.idn_nomination_concept = nc.idn_nomination_concept
+   AND ndq.idn_nomination_entity = ne.idn_nomination_entity
+   AND ndq.idn_nomination_concept = nc.idn_nomination_concept
+   AND neh.idn_nomination_entity = ndq.idn_nomination_entity
+   AND neh.idn_nomination_concept = ndq.idn_nomination_concept
+   AND neh.idn_unit = ucfd.idn_unit
+   AND nc.is_point_concept = ne.is_point_entity
+   AND nc.is_area_concept = ne.is_area_entity
+   AND nc.is_zone_concept = ne.is_zone_entity
+   AND n.is_intraday = 'N'
+ GROUP BY ne.zone_code,
+          neh.supply_demand,
+          neh.area,
+          decode(nc.type_code, 'OTHERS', NULL, nvl(ne.point_code, nc.concept_code)),
+          decode(nc.type_code, 'OTHERS', nc.concept_code, NULL),
+          neh.cust_type,
+          neh.area_code,
+          neh.subarea,
+          neh.unit,
+          neh.entry_exit,
+          decode(nc.concept_desc, 'COMMERCIAL', 1, 2),
+          nc.sort_value         
+		  ORDER BY is_warned_wi desc, 
+		  	is_warned_hv desc,
+			is_warned_sg desc,
+			is_warned_day_1 desc,
+			is_warned_day_2 desc,
+			is_warned_day_3 desc,
+			is_warned_day_4 desc,
+			is_warned_day_5 desc,
+			is_warned_day_6 desc,
+			is_warned_day_7 desc,
+			ne.zone_code,
+            neh.supply_demand DESC,
+            neh.area,
+            decode(nc.concept_desc, 'COMMERCIAL', 1, 2),
+            nc.sort_value,
+            decode(nc.type_code, 'OTHERS', NULL, nvl(ne.point_code, nc.concept_code))
+
+	</select>
+
+	<select id="selectParkUnparkNomination"  parameterType="com.atos.beans.nominations.NominationHeaderBean" resultType="com.atos.beans.nominations.NominationDetailBean">
+SELECT ne.zone_code AS "zone_code",
+       neh.supply_demand AS "supply_demand",
+       neh.area AS "area",
+       NULL AS "point_id",
+       NULL AS wi_hv,
+       nvl(ne.point_code, noc.concept_code) AS area_concept,
+       neh.cust_type AS "cust_type",
+       neh.area_code AS "area_code",
+       neh.subarea AS "subarea",
+       neh.unit AS "unit",
+       neh.entry_exit AS "entry_exit",
+       NULL AS wi,
+       NULL AS hv,
+       NULL AS sg,
+       ndq.day_matched_quantity * ucfd.conversion_factor AS total
+  FROM tpa_vnomination_entity         ne,
+       tpa_vnomination_excel_header   neh,
+       tpa_vnomination_day_quantity   ndq,
+       tpa_vnomination_other_concept  noc,
+       tpa_vunit_convert_from_default ucfd
+ WHERE ne.idn_nomination =  #{idn_nomination}
+   AND ndq.idn_nomination = #{idn_nomination}
+   AND ne.idn_zone = #{idn_zone}
+   AND neh.idn_nomination_entity = ne.idn_nomination_entity
+   AND neh.idn_nomination_concept = noc.idn_nomination_concept
+   AND ndq.idn_nomination_entity = ne.idn_nomination_entity
+   AND ndq.idn_nomination_concept = noc.idn_nomination_concept
+   AND neh.idn_nomination_entity = ndq.idn_nomination_entity
+   AND neh.idn_nomination_concept = ndq.idn_nomination_concept
+   AND neh.idn_unit = ucfd.idn_unit
+   AND noc.is_point_concept = ne.is_point_entity
+   AND noc.is_area_concept = ne.is_area_entity
+   AND noc.is_zone_concept = ne.is_zone_entity
+ ORDER BY ne.zone_code,
+          neh.supply_demand DESC,
+          neh.area,
+          noc.sort_value,
+          nvl(ne.point_code, noc.concept_code)
+	</select>
+
+	<select id="selectFormulaPoints" resultType="com.atos.beans.nominations.NominationFormulaBean">
+		SELECT nc.concept_code,
+		       gqp.parameter_code,
+		       (SELECT sp.point_code
+		          FROM tpa_tsystem_point sp
+		         WHERE sp.idn_system_point = gpi.idn_system_point
+		           AND gpi.idn_system_point IS NOT NULL
+		        UNION ALL
+		        SELECT co.concept_code
+		          FROM tpa_tnomination_concept co
+		         WHERE co.idn_nomination_concept = gpi.idn_nomination_concept
+		           AND gpi.idn_nomination_concept IS NOT NULL) AS used_point
+		  FROM tpa_tgasq_prorate       gp,
+		       tpa_tgasq_prorate_type  gpt,
+		       tpa_tgasq_prorate_item  gpi,
+		       tpa_tgas_quality_param  gqp,
+		       tpa_tnomination_concept nc
+		 WHERE gp.idn_nomination_concept = #{idn_nomination_concept}
+		   AND gp.idn_gasq_prorate_type = gpt.idn_gasq_prorate_type
+		   AND gpt.type_code = 'NOM.CALCULATION'
+		   AND gp.idn_gasq_prorate = gpi.idn_gasq_prorate
+		   AND trunc(SYSDATE) BETWEEN gp.start_date AND nvl(gp.end_date, to_date('9999-12-31', 'YYYY-MM-DD'))
+		   AND gp.idn_gas_quality_param = gqp.idn_gas_quality_param
+		   AND gp.idn_nomination_concept = nc.idn_nomination_concept
+	</select>
+
+	<resultMap id="resultMapQualityGasDayNomination" type="com.atos.beans.nominations.NominationQualityGasDayBean">
+		<result property="idn_zone" 	column="IDN_ZONE"/>
+		<result property="idn_nomination_entity" 	column="IDN_NOMINATION_ENTITY"/>
+		<result property="idn_nomination_concept" 	column="IDN_NOMINATION_CONCEPT"/>
+		<result property="zone_code" 	column="ZONE_CODE"/>
+		<result property="supply_demand" 	column="SUPPLY_DEMAND"/>
+		<result property="area" 	column="AREA"/>
+		<result property="point_id" 	column="POINT_ID"/>
+		<result property="concept" 	column="CONCEPT"/>
+		<result property="area_concept" 	column="AREA_CONCEPT"/>
+		<result property="cust_type" 	column="CUST_TYPE"/>
+		<result property="area_code" 	column="AREA_CODE"/>
+		<result property="subarea" 	column="SUBAREA"/>
+		<result property="unit" 	column="UNIT"/>
+		<result property="entry_exit" 	column="ENTRY_EXIT"/>
+		<result property="wi" 	column="WI"/>
+		<result property="hv" 	column="HV"/>
+		<result property="sg" 	column="SG"/>
+		<result property="hour_01" 	column="HOUR_01"/>
+		<result property="hour_02" 	column="HOUR_02"/>
+		<result property="hour_03" 	column="HOUR_03"/>
+		<result property="hour_04" 	column="HOUR_04"/>
+		<result property="hour_05" 	column="HOUR_05"/>
+		<result property="hour_06" 	column="HOUR_06"/>
+		<result property="hour_07" 	column="HOUR_07"/>
+		<result property="hour_08" 	column="HOUR_08"/>
+		<result property="hour_09" 	column="HOUR_09"/>
+		<result property="hour_10" 	column="HOUR_10"/>
+		<result property="hour_11" 	column="HOUR_11"/>
+		<result property="hour_12" 	column="HOUR_12"/>
+		<result property="hour_13" 	column="HOUR_13"/>
+		<result property="hour_14" 	column="HOUR_14"/>
+		<result property="hour_15" 	column="HOUR_15"/>
+		<result property="hour_16" 	column="HOUR_16"/>
+		<result property="hour_17" 	column="HOUR_17"/>
+		<result property="hour_18" 	column="HOUR_18"/>
+		<result property="hour_19" 	column="HOUR_19"/>
+		<result property="hour_20" 	column="HOUR_20"/>
+		<result property="hour_21" 	column="HOUR_21"/>
+		<result property="hour_22" 	column="HOUR_22"/>
+		<result property="hour_23" 	column="HOUR_23"/>
+		<result property="hour_24" 	column="HOUR_24"/>
+		<result property="total" 	column="TOTAL"/>
+		<result property="is_warned" 	column="is_warned"/>
+		<result property="is_warned_h01" 	column="is_warned_h01"/>
+		<result property="is_warned_h02" 	column="is_warned_h02"/>
+		<result property="is_warned_h03" 	column="is_warned_h03"/>
+		<result property="is_warned_h04" 	column="is_warned_h04"/>
+		<result property="is_warned_h05" 	column="is_warned_h05"/>
+		<result property="is_warned_h06" 	column="is_warned_h06"/>
+		<result property="is_warned_h07" 	column="is_warned_h07"/>
+		<result property="is_warned_h08" 	column="is_warned_h08"/>
+		<result property="is_warned_h09" 	column="is_warned_h09"/>
+		<result property="is_warned_h10" 	column="is_warned_h10"/>
+		<result property="is_warned_h11" 	column="is_warned_h11"/>
+		<result property="is_warned_h12" 	column="is_warned_h12"/>
+		<result property="is_warned_h13" 	column="is_warned_h13"/>
+		<result property="is_warned_h14" 	column="is_warned_h14"/>
+		<result property="is_warned_h15" 	column="is_warned_h15"/>
+		<result property="is_warned_h16" 	column="is_warned_h16"/>
+		<result property="is_warned_h17" 	column="is_warned_h17"/>
+		<result property="is_warned_h18" 	column="is_warned_h18"/>
+		<result property="is_warned_h19" 	column="is_warned_h19"/>
+		<result property="is_warned_h20" 	column="is_warned_h20"/>
+		<result property="is_warned_h21" 	column="is_warned_h21"/>
+		<result property="is_warned_h22" 	column="is_warned_h22"/>
+		<result property="is_warned_h23" 	column="is_warned_h23"/>
+		<result property="is_warned_h24" 	column="is_warned_h24"/>
+		<association property="points" select="com.atos.mapper.nominations.NominationMapper.selectFormulaPoints"
+				column="{idn_nomination_concept=IDN_NOMINATION_CONCEPT }" />
+	</resultMap>
+	
+	<select id="selectQualityGasDayNomination" parameterType="com.atos.beans.nominations.NominationHeaderBean" resultMap="resultMapQualityGasDayNomination">
+SELECT ne.idn_zone,
+       nhq.idn_nomination_entity,
+       nqc.idn_nomination_concept,
+       ne.zone_code AS "zone_code",
+       neh.supply_demand AS "supply_demand",
+       neh.area AS "area",
+       NULL AS "point_id",
+       nqc.concept_code AS concept,
+       NULL AS area_concept,
+       neh.cust_type AS "cust_type",
+       neh.area_code AS "area_code",
+       neh.subarea AS "subarea",
+       neh.unit AS "unit",
+       neh.entry_exit AS "entry_exit",
+       NULL AS wi,
+       NULL AS hv,
+       NULL AS sg,
+       SUM(decode(nhq.hour, 1, nhq.hour_matched_quantity, 0)) AS hour_01,
+       SUM(decode(nhq.hour, 2, nhq.hour_matched_quantity, 0)) AS hour_02,
+       SUM(decode(nhq.hour, 3, nhq.hour_matched_quantity, 0)) AS hour_03,
+       SUM(decode(nhq.hour, 4, nhq.hour_matched_quantity, 0)) AS hour_04,
+       SUM(decode(nhq.hour, 5, nhq.hour_matched_quantity, 0)) AS hour_05,
+       SUM(decode(nhq.hour, 6, nhq.hour_matched_quantity, 0)) AS hour_06,
+       SUM(decode(nhq.hour, 7, nhq.hour_matched_quantity, 0)) AS hour_07,
+       SUM(decode(nhq.hour, 8, nhq.hour_matched_quantity, 0)) AS hour_08,
+       SUM(decode(nhq.hour, 9, nhq.hour_matched_quantity, 0)) AS hour_09,
+       SUM(decode(nhq.hour, 10, nhq.hour_matched_quantity, 0)) AS hour_10,
+       SUM(decode(nhq.hour, 11, nhq.hour_matched_quantity, 0)) AS hour_11,
+       SUM(decode(nhq.hour, 12, nhq.hour_matched_quantity, 0)) AS hour_12,
+       SUM(decode(nhq.hour, 13, nhq.hour_matched_quantity, 0)) AS hour_13,
+       SUM(decode(nhq.hour, 14, nhq.hour_matched_quantity, 0)) AS hour_14,
+       SUM(decode(nhq.hour, 15, nhq.hour_matched_quantity, 0)) AS hour_15,
+       SUM(decode(nhq.hour, 16, nhq.hour_matched_quantity, 0)) AS hour_16,
+       SUM(decode(nhq.hour, 17, nhq.hour_matched_quantity, 0)) AS hour_17,
+       SUM(decode(nhq.hour, 18, nhq.hour_matched_quantity, 0)) AS hour_18,
+       SUM(decode(nhq.hour, 19, nhq.hour_matched_quantity, 0)) AS hour_19,
+       SUM(decode(nhq.hour, 20, nhq.hour_matched_quantity, 0)) AS hour_20,
+       SUM(decode(nhq.hour, 21, nhq.hour_matched_quantity, 0)) AS hour_21,
+       SUM(decode(nhq.hour, 22, nhq.hour_matched_quantity, 0)) AS hour_22,
+       SUM(decode(nhq.hour, 23, nhq.hour_matched_quantity, 0)) AS hour_23,
+       SUM(decode(nhq.hour, 24, nhq.hour_matched_quantity, 0)) AS hour_24,
+       MIN(ndq.day_matched_quantity) AS total,
+       MIN(ndq.IS_WARNED) AS is_warned,
+       MIN(decode(nhq.hour, 1, nhq.is_warned, NULL)) AS is_warned_h01,
+       MIN(decode(nhq.hour, 2, nhq.is_warned, NULL)) AS is_warned_h02,
+       MIN(decode(nhq.hour, 3, nhq.is_warned, NULL)) AS is_warned_h03,
+       MIN(decode(nhq.hour, 4, nhq.is_warned, NULL)) AS is_warned_h04,
+       MIN(decode(nhq.hour, 5, nhq.is_warned, NULL)) AS is_warned_h05,
+       MIN(decode(nhq.hour, 6, nhq.is_warned, NULL)) AS is_warned_h06,
+       MIN(decode(nhq.hour, 7, nhq.is_warned, NULL)) AS is_warned_h07,
+       MIN(decode(nhq.hour, 8, nhq.is_warned, NULL)) AS is_warned_h08,
+       MIN(decode(nhq.hour, 9, nhq.is_warned, NULL)) AS is_warned_h09,
+       MIN(decode(nhq.hour, 10, nhq.is_warned, NULL)) AS is_warned_h10,
+       MIN(decode(nhq.hour, 11, nhq.is_warned, NULL)) AS is_warned_h11,
+       MIN(decode(nhq.hour, 12, nhq.is_warned, NULL)) AS is_warned_h12,
+       MIN(decode(nhq.hour, 13, nhq.is_warned, NULL)) AS is_warned_h13,
+       MIN(decode(nhq.hour, 14, nhq.is_warned, NULL)) AS is_warned_h14,
+       MIN(decode(nhq.hour, 15, nhq.is_warned, NULL)) AS is_warned_h15,
+       MIN(decode(nhq.hour, 16, nhq.is_warned, NULL)) AS is_warned_h16,
+       MIN(decode(nhq.hour, 17, nhq.is_warned, NULL)) AS is_warned_h17,
+       MIN(decode(nhq.hour, 18, nhq.is_warned, NULL)) AS is_warned_h18,
+       MIN(decode(nhq.hour, 19, nhq.is_warned, NULL)) AS is_warned_h19,
+       MIN(decode(nhq.hour, 20, nhq.is_warned, NULL)) AS is_warned_h20,
+       MIN(decode(nhq.hour, 21, nhq.is_warned, NULL)) AS is_warned_h21,
+       MIN(decode(nhq.hour, 22, nhq.is_warned, NULL)) AS is_warned_h22,
+       MIN(decode(nhq.hour, 23, nhq.is_warned, NULL)) AS is_warned_h23,
+       MIN(decode(nhq.hour, 24, nhq.is_warned, NULL)) AS is_warned_h24
+  FROM tpa_vnomination_day_quantity   ndq,
+       tpa_vnomination_hour_quantity  nhq,
+       tpa_vnomination_qualty_concept nqc,
+       tpa_vnomination_entity         ne,
+       tpa_vnomination_excel_header   neh,
+       tpa_tunit                      u
+ WHERE ndq.idn_nomination = #{idn_nomination}
+   AND ne.idn_nomination = #{idn_nomination}
+   AND ne.idn_zone = #{idn_zone}
+   AND ndq.idn_nomination = ne.idn_nomination
+   AND ndq.idn_nomination_entity = ne.idn_nomination_entity
+   AND ndq.idn_nomination_entity = nhq.idn_nomination_entity
+   AND ndq.idn_nomination_entity = neh.idn_nomination_entity
+   AND ndq.idn_nomination_concept = nqc.idn_nomination_concept
+   AND ndq.idn_nomination_concept = neh.idn_nomination_concept
+   AND ndq.idn_nomination_concept = nhq.idn_nomination_concept
+   AND ndq.idn_nomination_day = nhq.idn_nomination_day
+   AND nhq.idn_nomination_entity = ne.idn_nomination_entity
+   AND nhq.idn_nomination_entity = neh.idn_nomination_entity
+   AND nhq.idn_nomination_concept = nqc.idn_nomination_concept
+   AND nhq.idn_nomination_concept = neh.idn_nomination_concept
+   AND nqc.idn_nomination_concept = neh.idn_nomination_concept
+   AND nqc.is_point_concept = ne.is_point_entity
+   AND nqc.is_area_concept = ne.is_area_entity
+   AND nqc.is_zone_concept = ne.is_zone_entity
+   AND ne.idn_nomination_entity = neh.idn_nomination_entity
+   AND u.idn_unit(+) = neh.idn_unit
+ GROUP BY ne.idn_zone,
+          nhq.idn_nomination_entity,
+          nqc.idn_nomination_concept,
+          ne.zone_code,
+          neh.supply_demand,
+          neh.area,
+          nqc.concept_code,
+          neh.cust_type,
+          neh.area_code,
+          neh.subarea,
+          neh.unit,
+          neh.entry_exit,
+          nqc.sort_value
+ ORDER BY is_warned desc,
+ 		  is_warned_h01 desc,
+ 		  is_warned_h02 desc,
+ 		  is_warned_h03 desc,
+ 		  is_warned_h04 desc,
+ 		  is_warned_h05 desc,
+ 		  is_warned_h06 desc,
+ 		  is_warned_h07 desc,
+ 		  is_warned_h08 desc,
+ 		  is_warned_h09 desc,
+ 		  is_warned_h10 desc,
+ 		  is_warned_h11 desc,
+ 		  is_warned_h12 desc,
+ 		  is_warned_h13 desc,
+ 		  is_warned_h14 desc,
+ 		  is_warned_h15 desc,
+ 		  is_warned_h16 desc,
+ 		  is_warned_h17 desc,
+ 		  is_warned_h18 desc,
+ 		  is_warned_h19 desc,
+ 		  is_warned_h20 desc,
+ 		  is_warned_h21 desc,
+ 		  is_warned_h22 desc,
+ 		  is_warned_h23 desc,
+ 		  is_warned_h24 desc,
+ 		  ne.zone_code,
+          neh.supply_demand DESC,
+          neh.area,
+          nqc.sort_value,
+          nqc.idn_nomination_concept
+
+	</select>
+
+	<resultMap id="resultMapQualityGasWeekNomination" type="com.atos.beans.nominations.NominationQualityGasWeekBean">
+		<result property="idn_zone" 	column="IDN_ZONE"/>
+		<result property="idn_nomination_entity" 	column="IDN_NOMINATION_ENTITY"/>
+		<result property="idn_nomination_concept" 	column="IDN_NOMINATION_CONCEPT"/>
+		<result property="zone_code" 	column="ZONE_CODE"/>
+		<result property="supply_demand" 	column="SUPPLY_DEMAND"/>
+		<result property="area" 	column="AREA"/>
+		<result property="point_id" 	column="POINT_ID"/>
+		<result property="concept" 	column="CONCEPT"/>
+		<result property="area_concept" 	column="AREA_CONCEPT"/>
+		<result property="cust_type" 	column="CUST_TYPE"/>
+		<result property="area_code" 	column="AREA_CODE"/>
+		<result property="subarea" 	column="SUBAREA"/>
+		<result property="unit" 	column="UNIT"/>
+		<result property="entry_exit" 	column="ENTRY_EXIT"/>
+		<result property="wi" 	column="WI"/>
+		<result property="hv" 	column="HV"/>
+		<result property="sg" 	column="SG"/>
+		<result property="day_1" 	column="DAY_1"/>
+		<result property="day_2" 	column="DAY_2"/>
+		<result property="day_3" 	column="DAY_3"/>
+		<result property="day_4" 	column="DAY_4"/>
+		<result property="day_5" 	column="DAY_5"/>
+		<result property="day_6" 	column="DAY_6"/>
+		<result property="day_7" 	column="DAY_7"/>
+		<result property="is_warned_day_1" 	column="is_warned_day_1"/>
+		<result property="is_warned_day_2" 	column="is_warned_day_2"/>
+		<result property="is_warned_day_3" 	column="is_warned_day_3"/>
+		<result property="is_warned_day_4" 	column="is_warned_day_4"/>
+		<result property="is_warned_day_5" 	column="is_warned_day_5"/>
+		<result property="is_warned_day_6" 	column="is_warned_day_6"/>
+		<result property="is_warned_day_7" 	column="is_warned_day_7"/>
+		<association property="points" select="com.atos.mapper.nominations.NominationMapper.selectFormulaPoints"
+				column="{idn_nomination_concept=IDN_NOMINATION_CONCEPT }" />
+	</resultMap>
+
+
+	<select id="selectQualityGasWeekNomination" parameterType="com.atos.beans.nominations.NominationHeaderBean" resultMap="resultMapQualityGasWeekNomination">
+SELECT ne.idn_zone,
+	   ne.idn_nomination_entity,
+	   nqc.idn_nomination_concept,
+	   ne.zone_code AS "zone_code",
+       neh.supply_demand AS "supply_demand",
+       neh.area AS "area",
+       NULL AS "point_id",
+       nqc.concept_code AS concept,
+       NULL AS area_concept,
+       neh.cust_type AS "cust_type",
+       neh.area_code AS "area_code",
+       neh.subarea AS "subarea",
+       neh.unit AS "unit",
+       neh.entry_exit AS "entry_exit",
+       NULL AS wi,
+       NULL AS hv,
+       NULL AS sg,
+       SUM(decode(ndq.gas_day - n.start_date, 0, ndq.day_matched_quantity, NULL)) AS day_1,
+       SUM(decode(ndq.gas_day - n.start_date, 1, ndq.day_matched_quantity, NULL)) AS day_2,
+       SUM(decode(ndq.gas_day - n.start_date, 2, ndq.day_matched_quantity, NULL)) AS day_3,
+       SUM(decode(ndq.gas_day - n.start_date, 3, ndq.day_matched_quantity, NULL)) AS day_4,
+       SUM(decode(ndq.gas_day - n.start_date, 4, ndq.day_matched_quantity, NULL)) AS day_5,
+       SUM(decode(ndq.gas_day - n.start_date, 5, ndq.day_matched_quantity, NULL)) AS day_6,
+       SUM(decode(ndq.gas_day - n.start_date, 6, ndq.day_matched_quantity, NULL)) AS day_7,
+       MIN(decode(ndq.gas_day - n.start_date, 0, ndq.is_warned, NULL)) AS is_warned_day_1,
+       MIN(decode(ndq.gas_day - n.start_date, 1, ndq.is_warned, NULL)) AS is_warned_day_2,
+       MIN(decode(ndq.gas_day - n.start_date, 2, ndq.is_warned, NULL)) AS is_warned_day_3,
+       MIN(decode(ndq.gas_day - n.start_date, 3, ndq.is_warned, NULL)) AS is_warned_day_4,
+       MIN(decode(ndq.gas_day - n.start_date, 4, ndq.is_warned, NULL)) AS is_warned_day_5,
+       MIN(decode(ndq.gas_day - n.start_date, 5, ndq.is_warned, NULL)) AS is_warned_day_6,
+       MIN(decode(ndq.gas_day - n.start_date, 6, ndq.is_warned, NULL)) AS is_warned_day_7
+  FROM tpa_tnomination                n,
+       tpa_vnomination_day_quantity   ndq,
+       tpa_vnomination_qualty_concept nqc,
+       tpa_vnomination_entity         ne,
+       tpa_vnomination_excel_header   neh,
+       tpa_tunit                      u
+ WHERE n.idn_nomination = #{idn_nomination}
+   AND ndq.idn_nomination =  #{idn_nomination}
+   AND ne.idn_nomination = #{idn_nomination}
+   AND ne.idn_zone = #{idn_zone}
+   AND n.idn_nomination = ne.idn_nomination
+   AND n.idn_nomination = ndq.idn_nomination
+   AND ndq.idn_nomination_entity = ne.idn_nomination_entity
+   AND ndq.idn_nomination_entity = neh.idn_nomination_entity
+   AND ndq.idn_nomination_concept = nqc.idn_nomination_concept
+   AND ndq.idn_nomination_concept = neh.idn_nomination_concept
+   AND nqc.idn_nomination_concept = neh.idn_nomination_concept
+   AND nqc.is_point_concept = ne.is_point_entity
+   AND nqc.is_area_concept = ne.is_area_entity
+   AND nqc.is_zone_concept = ne.is_zone_entity
+   AND ne.idn_nomination_entity = neh.idn_nomination_entity
+   AND n.is_intraday = 'N'
+   AND u.idn_unit(+) = neh.idn_unit
+GROUP BY  ne.idn_zone,
+          ne.idn_nomination_entity,
+          nqc.idn_nomination_concept,
+          ne.zone_code,
+          neh.supply_demand,
+          neh.area,
+          nqc.concept_code,
+          neh.cust_type,
+          neh.area_code,
+          neh.subarea,
+          neh.unit,
+          neh.entry_exit,
+          nqc.sort_value
+ ORDER BY is_warned_day_1 desc,
+ 		  is_warned_day_2 desc,
+ 		  is_warned_day_3 desc,
+ 		  is_warned_day_4 desc,
+ 		  is_warned_day_5 desc,
+ 		  is_warned_day_6 desc,
+ 		  is_warned_day_7 desc,
+ 		  ne.zone_code,
+          neh.supply_demand DESC,
+          neh.area,
+          nqc.sort_value,
+          nqc.idn_nomination_concept 
+	</select>
+	
+	<select id="selectQualityNominationTable"  parameterType="com.atos.beans.nominations.NominationHeaderBean" resultType="com.atos.beans.nominations.QualityTableBean">
+		SELECT ne.idn_nomination,
+		       ne.zone_code AS "zone",
+		       ne.idn_pipeline_system,
+		       nvl(ne.point_code, nmc.concept_code) AS "point",
+		       SUM(decode(gqp.parameter_code, 'CO2', ngq.quality_value, 0)) AS co2,
+		       SUM(decode(gqp.parameter_code, 'C1', ngq.quality_value, 0)) AS c1,
+		       SUM(decode(gqp.parameter_code, 'C2', ngq.quality_value, 0)) AS c2,
+		       SUM(decode(gqp.parameter_code, 'C3', ngq.quality_value, 0)) AS c3,
+		       SUM(decode(gqp.parameter_code, 'iC4', ngq.quality_value, 0)) AS ic4,
+		       SUM(decode(gqp.parameter_code, 'nC4', ngq.quality_value, 0)) AS nc4,
+		       SUM(decode(gqp.parameter_code, 'iC5', ngq.quality_value, 0)) AS ic5,
+		       SUM(decode(gqp.parameter_code, 'nC5', ngq.quality_value, 0)) AS nc5,
+		       SUM(decode(gqp.parameter_code, 'C6', ngq.quality_value, 0)) AS c6,
+		       SUM(decode(gqp.parameter_code, 'C7', ngq.quality_value, 0)) AS c7,
+		       SUM(decode(gqp.parameter_code, 'C2plus', ngq.quality_value, 0)) AS c8,
+		       SUM(decode(gqp.parameter_code, 'N2', ngq.quality_value, 0)) AS n2,
+		       SUM(decode(gqp.parameter_code, 'O2', ngq.quality_value, 0)) AS o2,
+		       SUM(decode(gqp.parameter_code, 'H2S', ngq.quality_value, 0)) AS h2s,
+		       SUM(decode(gqp.parameter_code, 'S', ngq.quality_value, 0)) AS s,
+		       SUM(decode(gqp.parameter_code, 'Hg', ngq.quality_value, 0)) AS hg,
+		       MIN(decode(gqp.parameter_code, 'CO2', ngq.is_warned, NULL)) AS is_warned_co2,
+		       MIN(decode(gqp.parameter_code, 'C1', ngq.is_warned, NULL)) AS is_warned_c1,
+		       MIN(decode(gqp.parameter_code, 'C2', ngq.is_warned, NULL)) AS is_warned_c2,
+		       MIN(decode(gqp.parameter_code, 'C3', ngq.is_warned, NULL)) AS is_warned_c3,
+		       MIN(decode(gqp.parameter_code, 'iC4', ngq.is_warned, NULL)) AS is_warned_ic4,
+		       MIN(decode(gqp.parameter_code, 'nC4', ngq.is_warned, NULL)) AS is_warned_nc4,
+		       MIN(decode(gqp.parameter_code, 'iC5', ngq.is_warned, NULL)) AS is_warned_ic5,
+		       MIN(decode(gqp.parameter_code, 'nC5', ngq.is_warned, NULL)) AS is_warned_nc5,
+		       MIN(decode(gqp.parameter_code, 'C6', ngq.is_warned, NULL)) AS is_warned_c6,
+		       MIN(decode(gqp.parameter_code, 'C7', ngq.is_warned, NULL)) AS is_warned_c7,
+		       MIN(decode(gqp.parameter_code, 'C2plus', ngq.is_warned, NULL)) AS is_warned_c8,
+		       MIN(decode(gqp.parameter_code, 'N2', ngq.is_warned, NULL)) AS is_warned_n2,
+		       MIN(decode(gqp.parameter_code, 'O2', ngq.is_warned, NULL)) AS is_warned_o2,
+		       MIN(decode(gqp.parameter_code, 'H2S', ngq.is_warned, NULL)) AS is_warned_h2s,
+		       MIN(decode(gqp.parameter_code, 'S', ngq.is_warned, NULL)) AS is_warned_s,
+		       MIN(decode(gqp.parameter_code, 'Hg', ngq.is_warned, NULL)) AS is_warned_hg
+		  FROM tpa_vnomination_entity        ne,
+		       tpa_vnomination_main_concepts nmc,
+		       tpa_tnomination_gasq          ngq,
+		       tpa_tgas_quality_param        gqp,
+		       tpa_tgas_quality_list         gql,
+		       tpa_tgasq_list_item           gqli
+		 WHERE ne.idn_nomination = #{idn_nomination}
+		   AND ne.idn_nomination_entity = ngq.idn_nomination_entity
+		   AND ngq.idn_nomination_concept = nmc.idn_nomination_concept
+		   AND gqp.idn_gas_quality_param = ngq.idn_gas_quality_param
+		   AND nmc.is_point_concept = ne.is_point_entity
+		   AND nmc.is_area_concept = ne.is_area_entity
+		   AND nmc.is_zone_concept = ne.is_zone_entity
+		   AND gqp.idn_gas_quality_param = gqli.idn_gas_quality_param
+		   AND gqli.idn_gas_quality_list = gql.idn_gas_quality_list
+		   AND gql.list_code = 'GQL-NOMINATION.COMPOSITION'
+		 GROUP BY ne.idn_nomination,
+		          ne.zone_code,
+		          ne.idn_pipeline_system,
+		          nvl(ne.point_code, nmc.concept_code)
+		 ORDER BY is_warned_co2 desc,
+		       	  is_warned_c1 desc,
+		       	  is_warned_c2 desc,
+		       	  is_warned_c3 desc,
+		          is_warned_ic4 desc,
+		          is_warned_nc4 desc,
+		          is_warned_ic5 desc,
+		          is_warned_nc5 desc,
+		          is_warned_c6 desc,
+		          is_warned_c7 desc,
+		          is_warned_c8 desc,
+		          is_warned_n2 desc,
+		          is_warned_o2 desc,
+		          is_warned_h2s desc,
+		          is_warned_s desc,
+		          is_warned_hg desc,
+		 		  ne.zone_code,
+		          nvl(ne.point_code, nmc.concept_code)
+	</select>
+	
+	<select id="selectGetFile" parameterType="java.util.TreeMap" resultType="com.atos.beans.nominations.OperationFileBean">
+		select idn_operation_file,
+	       idn_operation_category,
+	       idn_operation_term,
+	       file_name,
+	       version_date,
+	       binary_data
+	    from tpa_toperation_file o
+		where o.idn_operation_file = #{idn_operation_file}
+	</select>
+
+	<select id="getProcesssManagement" statementType="CALLABLE" parameterType="com.atos.beans.nominations.ProcessManagementBean">
+		{call #{integer_exit,jdbcType=INTEGER,mode=OUT} :=
+			pck_nomination_submission.process_management_xml(
+				#{term_code,jdbcType=VARCHAR,mode=IN},
+				#{idn_operation_file,jdbcType=NUMERIC,mode=IN},
+				#{action,jdbcType=VARCHAR,mode=IN},
+				#{idn_pipeline_system,jdbcType=NUMERIC,mode=IN},
+				#{start_date,jdbcType=DATE,mode=IN},
+				#{shipper_comments,jdbcType=VARCHAR,mode=IN},
+				#{comments,jdbcType=VARCHAR,mode=IN},
+				#{user_id,jdbcType=VARCHAR,mode=IN},
+				#{language,jdbcType=VARCHAR,mode=IN},
+				#{warnings,jdbcType=CLOB,mode=OUT},
+				#{error_desc,jdbcType=VARCHAR,mode=OUT})}
+	</select>
+
+<!-- 31/08/16 CH0036 PPM: Por peticion de cambios en FAT, se elimina boton "Open Renomination" en pantalla dailyNomination.xhtml. 	
+	<select id="getOpenRenominacion" statementType="CALLABLE" parameterType="com.atos.beans.nominations.ProcessManagementBean">
+		{call #{integer_exit,jdbcType=INTEGER,mode=OUT} :=
+			pck_nomination_tools.open_renomination_deadline(
+				#{user_id,jdbcType=VARCHAR,mode=IN},
+				#{language,jdbcType=VARCHAR,mode=IN},
+				#{error_desc,jdbcType=VARCHAR,mode=OUT})}
+	</select>
+-->
+</mapper>
+

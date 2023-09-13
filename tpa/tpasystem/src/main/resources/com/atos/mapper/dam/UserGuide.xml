@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<!-- Namespace 
+
+-->
+<mapper namespace="com.atos.mapper.dam.UserGuideMapper">
+    <resultMap type="com.atos.beans.dam.UserGuideBean" id="userGuide">
+        <id column="idn_document" property="idn_document"/>
+        <result property="type_desc" column="type_desc"/>
+        <result property="document_name" column="document_name"/>   
+        <result property="binary_data" column="binary_data"/>   
+        <result property="version_comment" column="version_comment"/>   
+        <result property="version_date" column="version_date"/>
+        <result property="idn_document_type" column="idn_document_type"/>   
+        <result property="idn_user_group_type" column="idn_user_group_type"/>  
+    </resultMap>
+     
+    <select id="selectUserGuides" resultMap="userGuide" >
+	  SELECT  ty.type_desc type_desc, 
+				doc.document_name document_name,
+				doc.version_comment version_comment,
+				doc.version_date version_date,
+				ty.idn_document_type idn_document_type, 
+				doc.idn_document idn_document
+		FROM TPA_TDOCUMENT doc, TPA_TDOCUMENT_TYPE ty
+		WHERE   doc.idn_document_type(+)=  ty.idn_document_type
+		AND ty.show_in_dam_ug = 'Y'
+		and doc.idn_document is not null
+		ORDER BY ty.sort_value
+    </select>
+    
+    <select id="selectUserGuideDocumentType" resultType="com.atos.beans.ComboFilterNS">
+   	SELECT a.idn_document_type as key, a.type_desc as value
+		FROM tpa_tdocument_type a   
+		WHERE a.show_in_dam_ug = 'Y'
+   	ORDER BY value
+    </select>
+        
+	<select id="selectUserGroupType"  resultType="com.atos.beans.ComboFilterNS">
+		SELECT ugr.idn_user_group_type as key, ugr.type_desc as value
+ 		FROM TPA_TUSER_GROUP_TYPE ugr
+ 		order by value   
+	</select>
+        
+	<insert id="insertUserGuide" useGeneratedKeys="true" keyProperty="idn_document" keyColumn="idn_document" parameterType="com.atos.beans.dam.UserGuideBean">
+		 INSERT INTO tpa_tdocument
+			(idn_document,idn_document_type,document_name, version_date,version_comment,binary_data,
+			aud_ins_user,aud_last_user)
+		VALUES
+			(tpa_sdocument.nextval,
+			 #{idn_document_type},
+			 #{document_name},
+			 #{version_date},
+			 #{version_comment},
+			 #{binary_data},
+			 #{username},
+			 #{username}) 
+	</insert>
+
+	<insert id="insertDocumentType" useGeneratedKeys="true" keyProperty="idn_document_type" keyColumn="idn_document_type" parameterType="com.atos.beans.dam.NewDocumentBean">
+	
+	     INSERT INTO tpa_tdocument_type
+      (idn_document_type, type_code, type_desc, idn_user_group_type, sort_value, aud_ins_date, aud_last_date, aud_ins_user,aud_last_user, is_user_guide, show_in_dam_ug)
+    VALUES
+      (tpa_sdocument_type.nextval,
+       #{code},
+       #{desc},
+       #{idn_user_group_type},
+       #{sort_value},
+       sysdate,
+       sysdate,
+       #{username},
+       #{username},
+       #{is_user_guide},
+       'Y') 
+	
+	</insert>
+
+	<delete id="deleteFile" parameterType="com.atos.beans.dam.NewDocumentBean">
+		delete from tpa_tdocument
+		where idn_document = #{idn_document}
+	
+	</delete>
+
+	<update id="updateUserGuide" parameterType="com.atos.beans.dam.UserGuideBean">
+		UPDATE tpa_tdocument set
+			document_name = #{document_name},
+		    version_date = #{version_date},
+		    version_comment = #{version_comment},
+		    binary_data = #{binary_data},
+		    aud_last_user=#{username}
+		WHERE idn_document = #{idn_document}
+	</update>
+	
+	<select id="getDocumentIdn" resultType="java.math.BigDecimal">
+		SELECT idn_document as idn_document
+		FROM tpa_tdocument
+		WHERE idn_document_type = #{idn_document_type}	
+	</select>
+	
+ 	<select id="selectUserGuideHeader" parameterType="com.atos.beans.dam.UserGuideBean" resultType="com.atos.beans.dam.UserGuideBean">
+		SELECT 	ugr.idn_user_group,
+     		 	ty.type_desc type_desc, 
+		        doc.document_name document_name,
+		        doc.binary_data binary_data,
+		        doc.version_comment version_comment,
+		        doc.version_date version_date,
+		        ty.idn_document_type idn_document_type, 
+		        doc.idn_document idn_document,
+           		ty.idn_user_group_type  idn_user_group_type
+		FROM TPA_TDOCUMENT doc, 
+			 TPA_TDOCUMENT_TYPE ty, 
+      		 tpa_tuser_group ugr, 
+      		 tpa_tuser_group_type utype
+		WHERE doc.idn_document_type=  ty.idn_document_type
+			      AND ty.idn_user_group_type = utype.idn_user_group_type
+			      AND utype.idn_user_group_type = ugr.idn_user_group_type
+			      AND ty.is_user_guide = 'Y'
+			      AND ugr.idn_user_group=#{idn_user_group}
+	</select>
+	
+	<select id="selectUserGuide" parameterType="com.atos.beans.dam.UserGuideBean" resultType="com.atos.beans.dam.UserGuideBean">
+		SELECT  ty.type_desc type_desc, 
+				doc.document_name document_name, doc.binary_data binary_data, 
+				doc.version_comment version_comment, doc.version_date version_date,
+				ty.idn_document_type idn_document_type, doc.idn_document idn_document
+		FROM TPA_TDOCUMENT doc, 
+			 TPA_TDOCUMENT_TYPE ty
+		WHERE doc.idn_document_type(+)=  ty.idn_document_type
+			  AND idn_document = #{idn_document}
+	</select>
+</mapper>
+		
+	

@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<!-- Namespace -->
+<mapper namespace="com.atos.mapper.dam.PimsGraphicMenuMapper">
+    <resultMap type="com.atos.beans.dam.PimsGraphicMenuBean" id="PimsGraphicMenuParameter">
+        <id column="idn_parameter" property="idn_parameter"/>
+        <result property="idn_parameter_value" column="idn_parameter_value"/>
+        <result property="parameter_desc" column="parameter_desc"/>   
+        <result property="parameter_value" column="parameter_value"/>   
+        <result property="startDate" column="start_date"/>   
+        <result property="endDate" column="end_date"/>   
+        <result property="parameter_code" column="parameter_code"/>   
+    </resultMap>
+     
+    <select id="selectPmisGraphicMenus" resultMap="PimsGraphicMenuParameter" >
+    WITH parameter_value AS
+     (SELECT p.idn_parameter,
+             p.parameter_desc,
+             pv.idn_parameter_value,
+             pv.parameter_value,
+             pv.start_date,
+             nvl(pv.end_date,
+                 nvl((SELECT MIN(pvy.start_date) - 1
+                       FROM tpa_tparameter_value pvy
+                      WHERE pv.idn_parameter = pvy.idn_parameter
+                        AND pvy.start_date > pv.start_date
+                        AND nvl(pvy.end_date, pvy.start_date) >= pvy.start_date
+                        AND pvy.version_date = (SELECT MAX(pvyx.version_date)
+                                                  FROM tpa_tparameter_value pvyx
+                                                 WHERE pvy.idn_parameter = pvyx.idn_parameter
+                                                   AND pvy.start_date = pvyx.start_date)),
+                     to_date('9999-12-31', 'YYYY-MM-DD'))) AS end_date
+        FROM tpa_tparameter       p,
+             tpa_tparameter_value pv
+       WHERE p.idn_parameter = pv.idn_parameter
+         AND p.parameter_code = 'URL.PIMS.GRAPHIC.MENU'
+         AND p.is_user_administrable = 'Y'
+         AND pv.version_date = (SELECT MAX(pvx.version_date)
+                                  FROM tpa_tparameter_value pvx
+                                 WHERE pv.idn_parameter = pvx.idn_parameter
+                                   AND pv.start_date = pvx.start_date))
+    SELECT *
+      FROM parameter_value v
+     WHERE 1=1
+      <if test="endDate != null">
+			and  #{endDate} >= v.start_date 
+		  </if>
+	<if test="startDate != null">
+       AND nvl(v.end_date, to_date('9999/12/31','yyyy/mm/dd')) >=  #{startDate}
+ 	</if>
+     ORDER BY v.start_date
+
+  </select>
+ 
+ <select id="selectPmisGraphicMenusValue" resultType="java.lang.String">
+
+SELECT pv.parameter_value
+  FROM tpa_tparameter       p,
+       tpa_tparameter_value pv
+ WHERE p.idn_parameter = pv.idn_parameter
+   AND p.parameter_code = 'URL.PIMS.GRAPHIC.MENU'
+   AND pv.version_date = (SELECT MAX(pvx.version_date)
+                            FROM tpa_tparameter_value pvx
+                           WHERE pv.idn_parameter = pvx.idn_parameter
+                             AND pv.start_date = pvx.start_date)
+   AND trunc(SYSDATE) BETWEEN pv.start_date AND
+       nvl(pv.end_date,
+           nvl((SELECT MIN(pvy.start_date) - 1
+                 FROM tpa_tparameter_value pvy
+                WHERE pv.idn_parameter = pvy.idn_parameter
+                  AND pvy.start_date > pv.start_date
+                  AND nvl(pvy.end_date, pvy.start_date) >= pvy.start_date
+                  AND pvy.version_date = (SELECT MAX(pvyx.version_date)
+                                            FROM tpa_tparameter_value pvyx
+                                           WHERE pvy.idn_parameter = pvyx.idn_parameter
+                                             AND pvy.start_date = pvyx.start_date)),
+               to_date('9999-12-31', 'YYYY-MM-DD'))) 
+ 
+ </select>
+    
+	<insert id="insertSystemParameter" useGeneratedKeys="true" keyProperty="idn_parameter_value" keyColumn="idn_parameter_value" parameterType="com.atos.beans.dam.PimsGraphicMenuBean">
+		 INSERT INTO tpa_tparameter_value
+			(idn_parameter_value,idn_parameter, start_date, parameter_value,
+			aud_ins_user,aud_last_user)
+		VALUES
+			(tpa_sparameter_value.nextval,
+			 #{idn_parameter},
+			 #{startDate}, 
+			 #{parameter_value},
+			 #{username},
+			 #{username})
+	</insert>
+	
+	<update id="deleteSystemParameter" parameterType="com.atos.beans.dam.PimsGraphicMenuBean">
+		UPDATE tpa_tparameter_value set
+			end_date = #{endDate},
+			aud_last_user=#{username}
+		WHERE idn_parameter_value = #{idn_parameter_value}
+	</update>
+	
+	<select id="getSystemParameterStarDate" resultType="java.util.Date">
+		SELECT  va.start_date as start_date
+	 	FROM tpa_tparameter_value va
+		WHERE idn_parameter_value = #{idn_parameter_value}
+			
+	</select>
+
+	<select id="getParameterCode" resultType="java.lang.String">
+		SELECT parameter_code
+   		 FROM tpa_tparameter pa
+    	WHERE pa.idn_parameter=#{idn_parameter}
+	</select>
+
+	<select id="getParameterDesc" resultType="java.lang.String">
+		SELECT parameter_desc
+   		 FROM tpa_tparameter pa
+    	WHERE pa.idn_parameter=#{idn_parameter}
+	</select>
+	
+	<select id="getCheckValueSystemParameter" statementType="CALLABLE" parameterType="com.atos.beans.dam.PimsGraphicMenuBean">				                        
+	{call #{valid,jdbcType=INTEGER,mode=OUT} :=
+		pck_parameter.check_value(
+				#{parameter_code,jdbcType=VARCHAR,mode=IN},
+				#{parameter_value,jdbcType=NUMERIC,mode=IN},
+				#{user,jdbcType=VARCHAR,mode=IN},
+				#{language,jdbcType=DATE,mode=IN},
+				#{error_desc,jdbcType=VARCHAR,mode=OUT})}                
+	</select>
+</mapper>

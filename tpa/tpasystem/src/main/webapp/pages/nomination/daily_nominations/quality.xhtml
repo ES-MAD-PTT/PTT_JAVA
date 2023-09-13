@@ -1,0 +1,315 @@
+<ui:composition
+	xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+<p:dataTable id="quality_table" var="quality" value="#{dayNom.quality}" editable="true" style="margin-bottom:20px;border-collapse:collapse;width:2000px"
+paginator="true" rows="15" rowsPerPageTemplate="5,10,15,20,25">
+<f:facet name="header">
+	 						<p:outputPanel style="height:30px">
+							<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+      						<p:columnToggler datasource="quality_table" trigger="toggler" style="width:200px"/>
+							</p:outputPanel>
+							</f:facet>
+<!-- Se permite editar con cualquiera de los dos permisos, Management o Modification -->
+<shiro:hasPermission name="#{changeSystemView.system}.NOMINATIONS.DAILY.MANAGEMENT.MAN">
+<!-- 	No hay que ejecutar acciones onRowEdit o onRowEditCancel, porque los datos que se prorratean en otras pantallas, no dependen
+	de los datos de calidad que se pueden modificar en esta. Solo hay que guardar los datos modificados y actualizar la vista. -->
+	<p:ajax event="rowEdit" update=":form:msgs,:#{p:component('quality_table')}" />
+	<p:ajax event="rowEditCancel" update=":form:msgs" />
+</shiro:hasPermission>
+<shiro:hasPermission name="#{changeSystemView.system}.NOMINATIONS.DAILY.MANAGEMENT.MOD">
+<!-- 	No hay que ejecutar acciones onRowEdit o onRowEditCancel, porque los datos que se prorratean en otras pantallas, no dependen
+	de los datos de calidad que se pueden modificar en esta. Solo hay que guardar los datos modificados y actualizar la vista. -->
+	<p:ajax event="rowEdit" update=":form:msgs,:#{p:component('quality_table')}" />
+	<p:ajax event="rowEditCancel" update=":form:msgs" />
+</shiro:hasPermission>
+
+	<p:column style="width:100px" headerText="#{msg['nom_zone']}">
+	<h:outputText value="#{quality.zone}" />
+	</p:column>
+	<p:column style="width:100px" headerText="#{msg['nom_point']}">
+	<h:outputText value="#{quality.point}" />
+	</p:column>
+	
+	<p:column headerText="#{msg['nom_co2']}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+		<h:outputText style="float:right" styleClass="#{quality.is_warned_co2 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{quality.co2}" >
+			<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+		</h:outputText>
+	</p:column>
+	<p:column headerText="#{msg['nom_co2']}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output">
+			<h:outputText style="float:right" styleClass="#{quality.is_warned_co2 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{quality.co2}" >
+				<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+			</h:outputText>		
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{quality.co2}" style="width:100%;text-align: right" 
+									styleClass="#{quality.is_warned_co2 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_co2']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+
+	<p:column headerText="#{msg['nom_c1']}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+		<h:outputText style="float:right" styleClass="#{quality.is_warned_c1 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{quality.c1}" >
+			<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+		</h:outputText>
+	</p:column>
+	<p:column headerText="#{msg['nom_c1']}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output">
+			<h:outputText style="float:right" styleClass="#{quality.is_warned_c1 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{quality.c1}" >
+				<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+			</h:outputText>		
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{quality.c1}" style="width:100%;text-align: right" 
+									styleClass="#{quality.is_warned_c1 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_c1']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+
+	<p:column headerText="#{msg['nom_c2']}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+		<h:outputText style="float:right" styleClass="#{quality.is_warned_c2 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{quality.c2}" >
+			<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+		</h:outputText>
+	</p:column>
+	<p:column headerText="#{msg['nom_c2']}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output">
+			<h:outputText style="float:right" styleClass="#{quality.is_warned_c2 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{quality.c2}" >
+				<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+			</h:outputText>		
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{quality.c2}" style="width:100%;text-align: right" 
+										styleClass="#{quality.is_warned_c2 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_c2']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+
+	<p:column headerText="#{msg['nom_c3']}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+		<h:outputText style="float:right" styleClass="#{quality.is_warned_c3 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{quality.c3}" >
+			<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+		</h:outputText>
+	</p:column>
+	<p:column headerText="#{msg['nom_c3']}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output">
+			<h:outputText style="float:right" styleClass="#{quality.is_warned_c3 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{quality.c3}" >
+				<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+			</h:outputText>		
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{quality.c3}" style="width:100%;text-align: right" 
+									styleClass="#{quality.is_warned_c3 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_c3']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+
+	<p:column headerText="#{msg['nom_ic4']}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+		<h:outputText style="float:right" styleClass="#{quality.is_warned_ic4 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{quality.ic4}" >
+			<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+		</h:outputText>
+	</p:column>
+	<p:column headerText="#{msg['nom_ic4']}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output">
+			<h:outputText style="float:right" styleClass="#{quality.is_warned_ic4 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{quality.ic4}" >
+				<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+			</h:outputText>		
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{quality.ic4}" style="width:100%;text-align: right" 
+									styleClass="#{quality.is_warned_ic4 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_ic4']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+
+	<p:column headerText="#{msg['nom_nc4']}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+		<h:outputText style="float:right" styleClass="#{quality.is_warned_nc4 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{quality.nc4}" >
+			<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+		</h:outputText>
+	</p:column>
+	<p:column headerText="#{msg['nom_nc4']}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output">
+			<h:outputText style="float:right" styleClass="#{quality.is_warned_nc4 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{quality.nc4}" >
+				<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+			</h:outputText>		
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{quality.nc4}" style="width:100%;text-align: right" 
+									styleClass="#{quality.is_warned_nc4 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_nc4']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	
+	<p:column headerText="#{msg['nom_ic5']}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+		<h:outputText style="float:right" styleClass="#{quality.is_warned_ic5 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{quality.ic5}" >
+			<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+		</h:outputText>
+	</p:column>
+	<p:column headerText="#{msg['nom_ic5']}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output">
+			<h:outputText style="float:right" styleClass="#{quality.is_warned_ic5 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{quality.ic5}" >
+				<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+			</h:outputText>		
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{quality.ic5}" style="width:100%;text-align: right" 
+									styleClass="#{quality.is_warned_ic5 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_ic5']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+
+	<p:column headerText="#{msg['nom_nc5']}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+		<h:outputText style="float:right" styleClass="#{quality.is_warned_nc5 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{quality.nc5}" >
+			<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+		</h:outputText>
+	</p:column>
+	<p:column headerText="#{msg['nom_nc5']}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output">
+			<h:outputText style="float:right" styleClass="#{quality.is_warned_nc5 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{quality.nc5}" >
+				<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+			</h:outputText>		
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{quality.nc5}" style="width:100%;text-align: right" 
+									styleClass="#{quality.is_warned_nc5 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_nc5']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	
+	<p:column headerText="#{msg['nom_c6']}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+		<h:outputText style="float:right" styleClass="#{quality.is_warned_c6 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{quality.c6}" >
+			<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+		</h:outputText>
+	</p:column>
+	<p:column headerText="#{msg['nom_c6']}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output">
+			<h:outputText style="float:right" styleClass="#{quality.is_warned_c6 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{quality.c6}" >
+				<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+			</h:outputText>		
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{quality.c6}" style="width:100%;text-align: right" 
+									styleClass="#{quality.is_warned_c6 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_c6']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+
+	<p:column headerText="#{msg['nom_c7']}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+		<h:outputText style="float:right" styleClass="#{quality.is_warned_c7 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{quality.c7}" >
+			<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+		</h:outputText>
+	</p:column>
+	<p:column headerText="#{msg['nom_c7']}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output">
+			<h:outputText style="float:right" styleClass="#{quality.is_warned_c7 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{quality.c7}" >
+				<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+			</h:outputText>		
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{quality.c7}" style="width:100%;text-align: right" 
+									styleClass="#{quality.is_warned_c7 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_c7']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+
+	<p:column headerText="#{msg['nom_c8']}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+		<h:outputText style="float:right" styleClass="#{quality.is_warned_c8 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{quality.c8}" >
+			<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+		</h:outputText>
+	</p:column>
+	<p:column headerText="#{msg['nom_c8']}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output">
+			<h:outputText style="float:right" styleClass="#{quality.is_warned_c8 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{quality.c8}" >
+				<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+			</h:outputText>		
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{quality.c8}" style="width:100%;text-align: right" 
+									styleClass="#{quality.is_warned_c8 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_c8']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+
+	<p:column headerText="#{msg['nom_n2']}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+		<h:outputText style="float:right" styleClass="#{quality.is_warned_n2 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{quality.n2}" >
+			<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+		</h:outputText>
+	</p:column>
+	<p:column headerText="#{msg['nom_n2']}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output">
+			<h:outputText style="float:right" styleClass="#{quality.is_warned_n2 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{quality.n2}" >
+				<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+			</h:outputText>		
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{quality.n2}" style="width:100%;text-align: right" 
+									styleClass="#{quality.is_warned_n2 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_n2']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+
+	<p:column headerText="#{msg['nom_o2']}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+		<h:outputText style="float:right" styleClass="#{quality.is_warned_o2 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{quality.o2}" >
+			<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+		</h:outputText>
+	</p:column>
+	<p:column headerText="#{msg['nom_o2']}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output">
+			<h:outputText style="float:right" styleClass="#{quality.is_warned_o2 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{quality.o2}" >
+				<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+			</h:outputText>		
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{quality.o2}" style="width:100%;text-align: right" 
+									styleClass="#{quality.is_warned_o2 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_o2']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+
+	<p:column headerText="#{msg['nom_h2s']}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+		<h:outputText style="float:right" styleClass="#{quality.is_warned_h2s eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{quality.h2s}" >
+			<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+		</h:outputText>
+	</p:column>
+	<p:column headerText="#{msg['nom_h2s']}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output">
+			<h:outputText style="float:right" styleClass="#{quality.is_warned_h2s eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{quality.h2s}" >
+				<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+			</h:outputText>		
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{quality.h2s}" style="width:100%;text-align: right" 
+									styleClass="#{quality.is_warned_h2s eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_h2s']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	
+	<p:column headerText="#{msg['nom_s']}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+		<h:outputText style="float:right" styleClass="#{quality.is_warned_s eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{quality.s}" >
+			<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+		</h:outputText>
+	</p:column>
+	<p:column headerText="#{msg['nom_s']}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output">
+			<h:outputText style="float:right" styleClass="#{quality.is_warned_s eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{quality.s}" >
+				<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+			</h:outputText>		
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{quality.s}" style="width:100%;text-align: right" 
+									styleClass="#{quality.is_warned_s eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_s']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+
+	<p:column headerText="#{msg['nom_hg']}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+		<h:outputText style="float:right" styleClass="#{quality.is_warned_hg eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{quality.hg}" >
+			<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+		</h:outputText>
+	</p:column>
+	<p:column headerText="#{msg['nom_hg']}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output">
+			<h:outputText style="float:right" styleClass="#{quality.is_warned_hg eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{quality.hg}" >
+				<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+			</h:outputText>		
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{quality.hg}" style="width:100%;text-align: right" 
+									styleClass="#{quality.is_warned_hg eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_hg']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+
+	<!-- Se permite editar con cualquiera de los dos permisos, Management o Modification -->
+	<p:column style="width:32px" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:rowEditor />
+	</p:column>
+	
+</p:dataTable>
+</ui:composition>

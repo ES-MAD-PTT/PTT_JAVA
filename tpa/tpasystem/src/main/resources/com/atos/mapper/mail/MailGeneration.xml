@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atos.mapper.mail.MailGenerationMapper">
+
+
+<select id="getShippers" resultType="java.math.BigDecimal" parameterType="java.util.HashMap">
+
+	SELECT tuser.idn_user_group as idn_user_group
+		 FROM tpa_tuser_group tuser
+		WHERE tuser.idn_user_group_type = (SELECT idn_user_group_type FROM tpa_tuser_group_type WHERE type_code = 'SHIPPER')		
+ 		
+		<if test="startDate != null">
+			AND nvl(tuser.end_date,to_date('9999/12/31','yyyy/mm/dd'))>=  #{startDate}
+		</if>
+		<if test="endDate != null">
+			AND #{endDate} >= tuser.start_date 
+		</if>
+		
+</select>
+
+	<select id="callForecastingDates" statementType="CALLABLE" parameterType="com.atos.beans.forecasting.ForecastingDatesBean">
+		{call #{valid,jdbcType=INTEGER,mode=OUT} :=
+			PCK_OPERATION_TOOLS.get_forecasting_dates(
+				#{term_code,jdbcType=VARCHAR,mode=IN},
+				#{valid_date,jdbcType=DATE,mode=IN},
+				#{user,jdbcType=VARCHAR,mode=IN},
+				#{language,jdbcType=VARCHAR,mode=IN},
+				#{submission_deadline,jdbcType=DATE,mode=OUT},
+				#{start_date,jdbcType=DATE,mode=OUT},
+				#{end_date,jdbcType=DATE,mode=OUT},
+				#{error_desc,jdbcType=VARCHAR,mode=OUT})}
+
+		
+	</select>
+
+</mapper>

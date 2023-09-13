@@ -1,0 +1,351 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core">
+
+	<p:dataTable widgetVar="w_balances1Offshore"  id="balances1Offshore" var="balanceOff" value="#{balReportView.itemsOffshore}"
+		reflow="true" style="margin-bottom:20px;border-collapse:collapse"
+		scrollable="true" scrollHeight="100%" scrollWidth="100%"
+		resizableColumns="true" tableStyle="width:auto"
+		paginator="true" rows="15" rowsPerPageTemplate="5,10,15,20,25, #{balReportView.itemsOffShoreSize}"
+		selectionMode="single" selection="#{balReportView.selectedOffshore}" rowKey="#{balanceOff.balanceId}">
+
+		<f:facet name="header">
+			<p:outputPanel style="height:25px">
+				<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.BALANCE.REPORT.QUERY">
+               		<h:outputText style="float:left" value="#{empty balReportView.itemsOffshore? '' : 'Balance generated on '}" >
+              		</h:outputText>
+              		<p:spacer style="float:left" height="10" width="10"/>
+               		<h:outputText style="float:left" value="#{empty balReportView.itemsOffshore? '' : balReportView.itemsOffshore.get(0).versionDate}" >
+              			<f:convertDateTime pattern="dd/MM/yyyy - HH:mm:ss" />
+              		</h:outputText>
+        			<h:commandLink style="float:right" rendered="#{not empty balReportView.itemsOffshore}">
+				       <p:graphicImage name="/images/excel.png" width="24"/>
+				       <p:dataExporter type="xlsx" target="balances1Offshore" fileName="balanceReport" 
+				       		preProcessor="#{balReportView.preProcessXLS}" postProcessor="#{balReportView.postProcessXLS}"/>
+				       <p:spacer width="10" height="10"/>
+					</h:commandLink>	 
+				</shiro:hasPermission>
+			</p:outputPanel>        										          
+	   	</f:facet>
+		
+		<p:columnGroup type="header" >
+			<p:row>
+				<!-- Para que funcione el rowspan en alguna de las celdas del grupo se tiene que llegar a 3 filas. -->
+				<p:column rowspan="3" headerText="&lt;br&gt;&lt;br&gt;#{msg['bal_rep_gas_day']}&lt;br&gt;&lt;br&gt;&lt;br&gt;"
+					style="min-width: 70px;max-width: 70px;font-size:16px;"/>
+				<p:column colspan="22" headerText="#{msg['bal_rep_sum_pane']}" style="font-size:15px;"/>
+				<p:column colspan="19" headerText="#{msg['bal_rep_det_pane']}" style="font-size:15px;"/>
+			</p:row>
+			<p:row>
+				<p:column rowspan="2" headerText="#{msg['bal_rep_shipper']}" style="min-width: 125px;max-width: 125px;font-size:15px;"/>
+				<p:column rowspan="2" headerText="#{msg['bal_rep_shipperName']}" style="min-width: 200px;max-width: 200px;font-size:15px;"/>				
+				<p:column rowspan="2" headerText="#{msg['bal_rep_contract']}" style="min-width: 100px;max-width: 100px;font-size:15px;"/>
+				<p:column rowspan="2" headerText="#{msg['bal_rep_total_entry']}&lt;br&gt;#{msg['bal_rep_mmbtu']}" style="min-width: 120px;max-width: 120px;font-size:15px;"/>
+				<p:column rowspan="2" headerText="#{msg['bal_rep_total_exit_offshore']}" style="font-size:15px;"/>
+				<p:column rowspan="2" headerText="#{msg['bal_rep_imbal_zone']}&lt;br&gt;#{msg['bal_rep_mmbtu']}" style="min-width: 120px;max-width: 120px;font-size:15px;"/>
+				<p:column rowspan="2" headerText="#{msg['bal_rep_inst_flow']}&lt;br&gt;#{msg['bal_rep_mmbtu']}" style="min-width: 120px;max-width: 120px;font-size:15px;"/>
+				<p:column rowspan="2" headerText="#{msg['bal_rep_shri_quan']}&lt;br&gt;#{msg['bal_rep_mmbtu']}" style="min-width: 120px;max-width: 120px;font-size:15px;"/>
+				<p:column rowspan="2" headerText="#{msg['bal_rep_strip_quan']}&lt;br&gt;#{msg['bal_rep_mmbtu']}" style="min-width: 120px;max-width: 120px;font-size:15px;"/>
+				<p:column rowspan="2" headerText="#{msg['bal_rep_park']}&lt;br&gt;#{msg['bal_rep_mmbtu']}" style="min-width: 120px;max-width: 120px;font-size:15px;"/>
+				<p:column rowspan="2" headerText="#{msg['bal_rep_unpark']}&lt;br&gt;#{msg['bal_rep_mmbtu']}" style="min-width: 120px;max-width: 120px;font-size:15px;"/>
+				<p:column rowspan="2" headerText="#{msg['bal_rep_sod_park']}&lt;br&gt;#{msg['bal_rep_mmbtu']}" style="min-width: 120px;max-width: 120px;font-size:15px;"/>
+				<p:column rowspan="2" headerText="#{msg['bal_rep_eod_park']}&lt;br&gt;#{msg['bal_rep_mmbtu']}" style="min-width: 120px;max-width: 120px;font-size:15px;"/>
+				<p:column rowspan="2" headerText="#{msg['bal_rep_min_inv']}&lt;br&gt;#{msg['bal_rep_mmbtu']}" style="min-width: 120px;max-width: 120px;font-size:15px;"/>
+				<p:column rowspan="2" headerText="#{msg['bal_rep_res_bal']}&lt;br&gt;#{msg['bal_rep_mmbtu']}" style="min-width: 120px;max-width: 120px;font-size:15px;"/>
+				<p:column rowspan="2" headerText="#{msg['bal_rep_adj_imb']}&lt;br&gt;#{msg['bal_rep_mmbtu']}" style="min-width: 120px;max-width: 120px;font-size:15px;"/>
+				<p:column rowspan="2" headerText="#{msg['bal_rep_stock_imb']}&lt;br&gt;#{msg['bal_rep_mmbtu']}" style="min-width: 120px;max-width: 120px;font-size:15px;"/>
+				<p:column rowspan="2" headerText="#{msg['bal_rep_aip']}&lt;br&gt;#{msg['bal_rep_mmbtu']}" style="min-width: 120px;max-width: 120px;font-size:15px;"/>
+				<p:column rowspan="2" headerText="#{msg['bal_rep_ain']}&lt;br&gt;#{msg['bal_rep_mmbtu']}" style="min-width: 120px;max-width: 120px;font-size:15px;"/>
+				<p:column rowspan="2" headerText="#{msg['bal_rep_perc_abs_imb']}" style="min-width: 120px;max-width: 120px;font-size:15px;"/>
+				<p:column rowspan="2" headerText="#{msg['bal_rep_acc_imb_month']}&lt;br&gt;#{msg['bal_rep_mmbtu']}" style="min-width: 120px;max-width: 120px;font-size:15px;"/>
+				<p:column rowspan="2" headerText="#{msg['bal_rep_acc_imb']}&lt;br&gt;#{msg['bal_rep_mmbtu']}" style="min-width: 120px;max-width: 120px;font-size:15px;"/>
+				<p:column rowspan="2" headerText="#{msg['bal_rep_used_cap']}" style="min-width: 120px;max-width: 120px;font-size:15px;"/>
+				<p:column colspan="15" headerText="#{msg['bal_rep_entry']}   #{msg['bal_rep_mmbtu']}" style="font-size:15px;"/>
+				<p:column colspan="4" headerText="#{msg['bal_rep_exit']}   #{msg['bal_rep_mmbtu']}" style="font-size:15px;"/>
+			</p:row>
+			<p:row>
+				<p:column headerText="#{msg['bal_rep_erawan']}" style="min-width: 120px;max-width: 120px;" />
+				<p:column headerText="#{msg['bal_rep_baanpot']}" style="min-width: 120px;max-width: 120px;" />
+				<p:column headerText="#{msg['bal_rep_satun']}" style="min-width: 120px;max-width: 120px;" />
+				<p:column headerText="#{msg['bal_rep_platong_ii']}" style="min-width: 120px;max-width: 120px;" />
+				<p:column headerText="#{msg['bal_rep_platong']}" style="min-width: 120px;max-width: 120px;" />
+				<p:column headerText="#{msg['bal_rep_funan']}" style="min-width: 120px;max-width: 120px;" />
+				<p:column headerText="#{msg['bal_rep_north_pailin']}" style="min-width: 120px;max-width: 120px;" />
+				<p:column headerText="#{msg['bal_rep_pailin']}" style="min-width: 120px;max-width: 120px;" />
+				<p:column headerText="#{msg['bal_rep_bongkot']}" style="min-width: 120px;max-width: 120px;" />
+				<p:column headerText="#{msg['bal_rep_tantawan']}" style="min-width: 120px;max-width: 120px;" />
+				<p:column headerText="#{msg['bal_rep_benchamas']}" style="min-width: 120px;max-width: 120px;" />
+				<p:column headerText="#{msg['bal_rep_arthit']}" style="min-width: 120px;max-width: 120px;" />
+				<p:column headerText="#{msg['bal_rep_gbs']}" style="min-width: 120px;max-width: 120px;" />
+				<p:column headerText="#{msg['bal_rep_jda18_dp2']}" style="min-width: 120px;max-width: 120px;" />
+				<p:column headerText="#{msg['bal_rep_jda_b_17']}" style="min-width: 120px;max-width: 120px;" />
+				<p:column headerText="#{msg['bal_rep_gas_rayong']}" style="min-width: 120px;max-width: 120px;" />
+				<p:column headerText="#{msg['bal_rep_liquid_rayong']}" style="min-width: 120px;max-width: 120px;" />
+				<p:column headerText="#{msg['bal_rep_gas_khanom']}" style="min-width: 120px;max-width: 120px;" />
+				<p:column headerText="#{msg['bal_rep_liquid_khanom']}" style="min-width: 120px;max-width: 120px;" />
+			</p:row>							
+		</p:columnGroup>
+		
+		 	<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.BALANCE.REPORT.QUERY">
+ 		 	
+	    	<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 70px;max-width: 70px;">
+             	<h:outputText value="#{balanceOff.isTotal eq 'Y'? '' : balanceOff.gasDay}" >
+            		<f:convertDateTime pattern="dd/MM/yyyy" />
+            	</h:outputText>
+	       	</p:column>
+
+	       	<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 125px;max-width: 125px;">
+	       		<h:outputText value="#{balanceOff.isTotal eq 'Y'? 'TOTAL: ' : ''}#{balanceOff.shipperCode}" />
+	       	</p:column>
+	       	
+	       	<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 200px;max-width: 200px;">
+	       		<h:outputText value="#{balanceOff.shipperName}" title="#{balanceOff.shipperName}"/>
+	       	</p:column>
+
+	       	<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 100px;max-width: 100px;">
+	       		<h:outputText value="#{balanceOff.isTotal eq 'Y'? '' : balanceOff.contractCode}" />
+	       	</p:column>
+
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.totalEntry}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+			
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.totalExit}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.imbalanceZone}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+			
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.instructedFlow}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+			
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.shrinkageQuantity}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+			
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.strippingQuantity}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+				
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.park}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+			
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.unpark}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+			
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.SOTDPark}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+			
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.EOTDPark}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+			
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.minInventory}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+			
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.resBalancingGas}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.monthAdjAlloc}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+			
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.imbalanceStock}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+			
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.totalAIP}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+			
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.totalAIN}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.imbalancePercentage}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="2" maxFractionDigits="2"/>
+				</h:outputText>
+			</p:column>
+
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.accImbalanceMonth}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.accImbalance}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.usedCapacity}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="2" maxFractionDigits="2"/>
+				</h:outputText>
+			</p:column>
+
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.erawan}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.baanpot}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.satun}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.platong_ii}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.platong}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.funan}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.n_pailin}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.pailin}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.bongkot}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.tantawan}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.benchamas}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+			
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.arthit}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.gbs}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.jda18_dp2}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.jda_b_17}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.rayongGas}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.rayongLiquid}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.khanomGas}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+
+			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 120px;max-width: 120px;">
+				<h:outputText style="float:right" value="#{balanceOff.khanomLiquid}">
+					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+				</h:outputText>
+			</p:column>
+	       
+		</shiro:hasPermission>
+   </p:dataTable>
+
+</ui:composition>

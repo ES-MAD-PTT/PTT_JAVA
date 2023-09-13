@@ -1,0 +1,151 @@
+<ui:composition
+	xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+<p:dataTable id="o_east_quality_table" var="o_east_quality" value="#{dayNom.o_east_quality}" style="margin-bottom:20px;border-collapse:collapse;width:#{dayNom.widthOEast2}"
+paginator="true" rows="15" rowsPerPageTemplate="5,10,15,20,25">
+<f:facet name="header">
+	<p:commandButton type="button" style="float: right" value="#{msg['day_nom_show_hide']}">
+		<p:ajax event="click" listener="#{dayNom.daysDetailOEast2}" update=":#{p:component('o_east_quality_table')}" 
+		onstart="PF('cargando').show()" onerror="PF('cargando').hide()" oncomplete="PF('cargando').hide()"/>
+	</p:commandButton>
+	 						<p:outputPanel style="height:30px">
+							<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+      						<p:columnToggler datasource="o_east_quality_table" trigger="toggler" style="width:200px"/>
+							</p:outputPanel>
+							</f:facet>
+	<p:column style="width:150px" headerText="#{msg['nom_concept']}">
+	<h:outputText value="#{o_east_quality.concept}" />
+	</p:column>
+	<p:column style="width:100px" headerText="#{msg['nom_unit']}">
+	<h:outputText value="#{o_east_quality.unit}" />
+	</p:column>
+	<p:column toggleable="false" visible="#{dayNom.showHideDaysOEast2}" headerText="#{msg['nom_hour_01']}">
+	<h:outputText style="float:right" value="#{o_east_quality.hour_01}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" visible="#{dayNom.showHideDaysOEast2}" headerText="#{msg['nom_hour_02']}">
+	<h:outputText style="float:right" value="#{o_east_quality.hour_02}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" visible="#{dayNom.showHideDaysOEast2}" headerText="#{msg['nom_hour_03']}">
+	<h:outputText style="float:right" value="#{o_east_quality.hour_03}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" visible="#{dayNom.showHideDaysOEast2}" headerText="#{msg['nom_hour_04']}">
+	<h:outputText style="float:right" value="#{o_east_quality.hour_04}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" visible="#{dayNom.showHideDaysOEast2}" headerText="#{msg['nom_hour_05']}">
+	<h:outputText style="float:right" value="#{o_east_quality.hour_05}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" visible="#{dayNom.showHideDaysOEast2}" headerText="#{msg['nom_hour_06']}">
+	<h:outputText style="float:right" value="#{o_east_quality.hour_06}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" visible="#{dayNom.showHideDaysOEast2}" headerText="#{msg['nom_hour_07']}">
+	<h:outputText style="float:right" value="#{o_east_quality.hour_07}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" visible="#{dayNom.showHideDaysOEast2}" headerText="#{msg['nom_hour_08']}">
+	<h:outputText style="float:right" value="#{o_east_quality.hour_08}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" visible="#{dayNom.showHideDaysOEast2}" headerText="#{msg['nom_hour_09']}">
+	<h:outputText style="float:right" value="#{o_east_quality.hour_09}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" visible="#{dayNom.showHideDaysOEast2}" headerText="#{msg['nom_hour_10']}">
+	<h:outputText style="float:right" value="#{o_east_quality.hour_10}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" visible="#{dayNom.showHideDaysOEast2}" headerText="#{msg['nom_hour_11']}">
+	<h:outputText style="float:right" value="#{o_east_quality.hour_11}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" visible="#{dayNom.showHideDaysOEast2}" headerText="#{msg['nom_hour_12']}">
+	<h:outputText style="float:right" value="#{o_east_quality.hour_12}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" visible="#{dayNom.showHideDaysOEast2}" headerText="#{msg['nom_hour_13']}">
+	<h:outputText style="float:right" value="#{o_east_quality.hour_13}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" visible="#{dayNom.showHideDaysOEast2}" headerText="#{msg['nom_hour_14']}">
+	<h:outputText style="float:right" value="#{o_east_quality.hour_14}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" visible="#{dayNom.showHideDaysOEast2}" headerText="#{msg['nom_hour_15']}">
+	<h:outputText style="float:right" value="#{o_east_quality.hour_15}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" visible="#{dayNom.showHideDaysOEast2}" headerText="#{msg['nom_hour_16']}">
+	<h:outputText style="float:right" value="#{o_east_quality.hour_16}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" visible="#{dayNom.showHideDaysOEast2}" headerText="#{msg['nom_hour_17']}">
+	<h:outputText style="float:right" value="#{o_east_quality.hour_17}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" visible="#{dayNom.showHideDaysOEast2}" headerText="#{msg['nom_hour_18']}">
+	<h:outputText style="float:right" value="#{o_east_quality.hour_18}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" visible="#{dayNom.showHideDaysOEast2}" headerText="#{msg['nom_hour_19']}">
+	<h:outputText style="float:right" value="#{o_east_quality.hour_19}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" visible="#{dayNom.showHideDaysOEast2}" headerText="#{msg['nom_hour_20']}">
+	<h:outputText style="float:right" value="#{o_east_quality.hour_20}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" visible="#{dayNom.showHideDaysOEast2}" headerText="#{msg['nom_hour_21']}">
+	<h:outputText style="float:right" value="#{o_east_quality.hour_21}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" visible="#{dayNom.showHideDaysOEast2}" headerText="#{msg['nom_hour_22']}">
+	<h:outputText style="float:right" value="#{o_east_quality.hour_22}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" visible="#{dayNom.showHideDaysOEast2}" headerText="#{msg['nom_hour_23']}">
+	<h:outputText style="float:right" value="#{o_east_quality.hour_23}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" visible="#{dayNom.showHideDaysOEast2}" headerText="#{msg['nom_hour_24']}">
+	<h:outputText style="float:right" value="#{o_east_quality.hour_24}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column headerText="#{msg['nom_total']}">
+	<h:outputText style="float:right" styleClass="#{o_east_quality.is_warned eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{o_east_quality.total}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+</p:dataTable>
+</ui:composition>

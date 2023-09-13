@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- Namespace -->
+<mapper
+	namespace="com.atos.mapper.allocation.AllocationReportPerPointMapper">
+
+	<resultMap
+		type="com.atos.beans.allocation.AllocationReportPerPointBean"
+		id="AllocationReportPerPointBean">
+
+		<id column="GAS_DAY" property="gasDay" />
+		<id column="SHIPPER_CODE" property="shipperCode" />
+		<id column="USER_GROUP_NAME" property="shipperName" />
+		<id column="NOMINATION_POINT" property="pointCode" />
+		<id column="POINT_TYPE" property="pointTypeCode" />
+		<id column="ALLOCATION_TPA" property="allocationTPA" />
+		<id column="SUM(ALLOCATION_REVIEW)" property="allocationReview" />
+		<id column="SUM(DIFFERENCE)" property="difference" />
+		<id column="USER_GROUP" property="idnShipperGroup" />
+		<id column="IS_TOTAL" property="isTotal" />
+
+	</resultMap>
+	
+	<select id="selectReportPerPoint"
+		parameterType="com.atos.filters.allocation.AllocationReportPerPointFilter"
+		resultMap="AllocationReportPerPointBean">
+			WITH
+
+			SHIPPER AS
+			
+			(
+			
+			select vs.user_group_id AS SHIPPER_CODE, vs.idn_user_group_type GROUP_TYPE,
+			
+			vs.idn_user_group AS USER_GROUP ,vs.user_group_name AS USER_GROUP_NAME
+			
+			from tpa_vuser vs, tpa_tuser_group_type b
+			
+			where b.type_code = 'SHIPPER'
+			
+			AND b.idn_user_group_type= vs.idn_user_group_type
+			
+			group by vs.user_group_id,vs.idn_user_group_type,vs.idn_user_group,vs.user_group_name),
+			
+			POINT AS
+			
+			(
+			
+			SELECT pt.type_code AS POINT_TYPE, pt.idn_system_point_type AS IDN
+			
+			from TPA_TSYSTEM_POINT_TYPE pt
+			
+			),
+			
+			NOMINATION AS
+			
+			(
+			
+			SELECT  sp.point_code AS NOMINATION_POINT, sp.IDN_SYSTEM_POINT AS IDN_NOM,
+			--nuevo
+			a.idn_area IDN_AREA ,a.idn_zone IDN_ZONA
+			
+			FROM tpa_vsystem_point sp,
+			
+			tpa_varea_tpa a,
+			
+			tpa_vzone_tpa z
+			
+			WHERE sp.group_code = 'NOMINATION'
+			
+			AND a.idn_area = sp.idn_area
+			
+			AND a.idn_zone = z.idn_zone
+			
+			ORDER BY sp.point_code
+			
+			),
+			
+			consulta
+			
+			AS
+			
+			(
+			
+			SELECT a.gas_day AS GAS_DAY,  
+			
+			    SHIPPER_CODE,
+			
+			    POINT_TYPE,
+			
+			    NOMINATION_POINT,
+			
+			    ad.allocated_value AS ALLOCATION_TPA,
+			
+			    re.reviewed_value AS ALLOCATION_REVIEW,
+			
+			    decode(re.reviewed_value,null,null,(ad.allocated_value -  re.reviewed_value)) AS Difference,
+			
+			    USER_GROUP,
+			
+			    USER_GROUP_NAME    
+			
+			    FROM tpa_tallocation         a,
+			
+			         tpa_tallocation_data   ad,
+			
+			         tpa_tallocation_review re,
+			
+			         
+			
+			         tpa_tnomination_concept nc,
+			         
+			         tpa_tcontract ct,
+			
+			         SHIPPER,
+			
+			         POINT,
+			
+			         NOMINATION
+			
+			    WHERE
+			        
+			        a.idn_allocation = ad.idn_allocation
+			
+			        AND ad.idn_nomination_concept = nc.idn_nomination_concept
+			
+			        AND  nc.IDN_NOMINATION_CONCEPT = re.IDN_NOMINATION_CONCEPT(+)
+			
+			        AND nc.concept_code IN ('ENERGY')    
+			
+			        AND ad.IDN_SYSTEM_POINT_TYPE = IDN
+			
+			        AND ad.IDN_ALLOCATION = a.IDN_ALLOCATION
+			
+			        AND ad.IDN_NOMINATION_POINT = IDN_NOM
+			
+			        AND a.gas_day = re.gas_day (+)
+			
+					and re.idn_zone(+) = IDN_ZONA 
+					AND  ad.IDN_ZONE = IDN_ZONA
+					AND ct.idn_contract = ad.idn_contract
+					AND ct.idn_user_group = USER_GROUP
+					
+			        AND nvl(re.STATUS, 'ALLOCATED') = 'ALLOCATED'
+			         <if test="isShipper==true">
+			            AND USER_GROUP = #{shipperId}
+			        </if>
+			        <choose>
+						<when test="nomPointId != null and nomPointId.length > 0">
+							<foreach item="item" index="index" collection="nomPointId" open=" and IDN_NOM in (" separator="," close=")">
+								#{item} 
+							</foreach>
+			
+						</when>
+				<otherwise> 
+					and IDN_NOM in (-1)
+				</otherwise>
+			</choose>  
+			
+			      <if test="dateFrom!= null">
+					AND a.gas_day >= #{dateFrom}
+				</if>
+			
+				<if test="dateTo!= null">
+			    <![CDATA[
+			   		AND a.gas_day <= #{dateTo}
+			    ]]>
+			
+				</if>
+			        --para todos los datos de allocation_data no tiene que haber datos en allocation_review,
+			
+			        AND ad.IDN_NOMINATION_CONCEPT  =re.IDN_NOMINATION_CONCEPT(+)
+			
+			        AND ad.IDN_CONTRACT  = re.IDN_CONTRACT (+)
+			
+			        AND ad.IDN_ZONE = re.IDN_ZONE (+)
+			 
+			        AND ad.IDN_NOMINATION_POINT   = re.IDN_SYSTEM_POINT (+)
+			        
+			        AND ad.IDN_ALLOCATION_REVIEW = re.IDN_ALLOCATION_REVIEW(+)
+			
+			        AND ct.IDN_USER_GROUP = USER_GROUP
+       				AND ct.IDN_CONTRACT = re.IDN_CONTRACT (+)
+			
+			        AND a.version_date = (SELECT MAX(ax.version_date)
+			
+			                                FROM tpa_tallocation ax
+			
+			                                WHERE ax.gas_day = a.gas_day
+			
+			                                AND ax.idn_pipeline_system = a.idn_pipeline_system
+			
+			                                AND ax.idn_allocation_type = a.idn_allocation_type
+			
+			                                AND ax.idn_allocation_origin IN
+			
+			                                    (SELECT o.idn_allocation_origin
+			
+			                                    FROM tpa_tallocation_origin o
+			
+			                                    WHERE o.origin_code IN ('BALANCE', 'CLOSING_PROCESS')))
+			
+			--hasta aqui consulta
+			
+			)
+			
+			--suma por dia, punto y shippeer
+			
+			SELECT GAS_DAY,  
+			
+			SHIPPER_CODE,
+			
+			POINT_TYPE,  
+			
+			NOMINATION_POINT,
+			
+			SUM(ALLOCATION_TPA) AS ALLOCATION_TPA,
+			
+			SUM(ALLOCATION_REVIEW),
+			
+			SUM(Difference),
+			
+			USER_GROUP,  
+			
+			USER_GROUP_NAME,
+			
+			'N' AS IS_TOTAL  
+			
+			 
+			
+			from consulta
+			
+			GROUP BY GAS_DAY, SHIPPER_CODE,
+			
+			POINT_TYPE,  NOMINATION_POINT
+			
+			,USER_GROUP,  
+			
+			USER_GROUP_NAME
+			
+			 
+			
+			UNION ALL
+			
+			--suma por dia y por punto
+			
+			SELECT GAS_DAY,  
+			
+			'TOTAL' AS SHIPPER_CODE,
+			
+			POINT_TYPE,  
+			
+			NOMINATION_POINT,
+			
+			SUM(ALLOCATION_TPA),
+			
+			SUM(ALLOCATION_REVIEW),
+			
+			SUM(Difference),
+			
+			0 AS USER_GROUP,  
+			
+			' ' AS USER_GROUP_NAME,
+			
+			'Y' AS IS_TOTAL
+			
+			 
+			
+			from consulta
+			
+			GROUP BY GAS_DAY, POINT_TYPE, NOMINATION_POINT
+			
+			ORDER BY GAS_DAY, POINT_TYPE,  NOMINATION_POINT, IS_TOTAL, SHIPPER_CODE
+		</select>
+
+		
+	<select id="selectPointId"
+		parameterType="com.atos.filters.allocation.AllocationReportPerPointFilter"
+		resultType="com.atos.beans.ComboFilterNS">
+		SELECT sp.idn_system_point AS key,
+		sp.point_code AS value
+		FROM tpa_vsystem_point sp,
+		tpa_varea_tpa a,
+		tpa_vzone_tpa z
+		WHERE sp.group_code = 'NOMINATION'
+		AND a.idn_area = sp.idn_area
+		AND a.idn_zone = z.idn_zone
+		AND z.idn_pipeline_system = #{systemId}
+		ORDER BY sp.point_code
+	</select>
+</mapper>

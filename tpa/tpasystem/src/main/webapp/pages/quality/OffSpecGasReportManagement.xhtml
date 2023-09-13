@@ -1,0 +1,808 @@
+
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_quality']}" url="#" />
+			<p:menuitem value="#{msg['menu_OSG_report_management']}" url="/pages/quality/OffSpecGasReportManagement.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+				
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="10000" />
+			
+            <p:layout widgetVar="OSGRManagementLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">	
+					
+				<p:panelGrid columns="2" style="width:100%">
+					
+						<p:panelGrid>
+							<p:row>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['osgr_man_incident_type']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['osgr_man_incident_id']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['osgr_man_quality_point']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['osgr_man_shipper']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['cr_man_status']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['osgr_man_start_date']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['osgr_man_end_date']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<p:selectOneMenu id="incidentTypeId" autoWidth="false" style="width:60px" value="#{OSGRManagementView.filters.incidentTypeId}" >
+      									<f:selectItems value="#{OSGRManagementView.incidentTypes.entrySet()}" var="entry" 
+      											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+										<p:ajax event="change" update="incidentTypeId,status" />
+					           		</p:selectOneMenu>							
+								</p:column>
+								
+								<p:column style="width:120px">
+									<p:inputText id="incidentCode" style="width:120px" value="#{OSGRManagementView.filters.incidentCode}" />
+								</p:column>
+
+								<p:column>
+									<p:selectOneMenu id="QualityPointId" autoWidth="false" style="width:100px" value="#{OSGRManagementView.filters.qualityPointId}" >
+ 										<f:selectItem itemLabel="" itemValue="" />
+      									<f:selectItems value="#{OSGRManagementView.qualityPoints.entrySet()}" var="entry" 
+      											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>							
+								</p:column>
+								
+								<p:column>
+									<p:selectOneMenu id="shipperId" style="width:100px" rendered="#{!OSGRManagementView.isShipper()}" value="#{OSGRManagementView.filters.shipperId}" >
+ 										<f:selectItem itemLabel="#{OSGRManagementView.filters.shipperCode}" itemValue="#{OSGRManagementView.filters.shipperId}" />
+      									<f:selectItems value="#{OSGRManagementView.shipperIds.entrySet()}" var="entry" 
+      											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>
+					           		<h:outputText value="#{OSGRManagementView.user.user_group_id}" style="float:left" rendered="#{OSGRManagementView.isShipper()}"/>
+								</p:column>
+
+								<p:column>
+									<p:selectCheckboxMenu id="status" autoWidth="false" style="width:100px" value="#{OSGRManagementView.filters.statusId}" 
+										label="#{msg['osgr_man_status']}" >
+      									<f:selectItems value="#{OSGRManagementView.statusIds}" var="entry" 
+      											itemValue="#{entry.statusId}" itemLabel="#{entry.statusDesc}" />
+					           		</p:selectCheckboxMenu>							
+								</p:column>
+								
+								<p:column>
+									<p:calendar id="fecInicio" size="12" pattern="dd/MM/yyyy HH:mm" value="#{OSGRManagementView.filters.startDate}"
+										mask="true" showButtonPanel="true" showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="fecFin"></p:ajax>
+										<p:ajax event="change" update="fecFin"></p:ajax>
+									</p:calendar>
+								</p:column>
+								
+								<p:column>
+									<p:calendar id="fecFin" size="12" pattern="dd/MM/yyyy HH:mm" value="#{OSGRManagementView.filters.endDate}"
+										mask="true" showButtonPanel="true" showOn="button" navigator="true" mindate="#{OSGRManagementView.filters.startDate}"/>
+								</p:column>							
+								
+							</p:row>
+						</p:panelGrid>
+						<p:panelGrid columns="1" style="float:right;top:0px">
+							<shiro:hasPermission name="#{changeSystemView.system}.QUALITY.OFFSPEC.REPORT_MANAGEMENT.QUERY">									
+								<p:commandButton value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{OSGRManagementView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,:#{p:component('incidents1')}"/>
+									
+								 <p:commandButton value="#{msg['clear']}"
+									actionListener="#{OSGRManagementView.onClear}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" 
+									process="@this"
+									update="msgs,@form"/>
+							</shiro:hasPermission>
+							<p:commandButton  onclick="PF('OSGRManagementLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" 
+								value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center" resizable="false" closable="false" collapsible="false" style="border: 0;">
+
+					<p:dataTable widgetVar="w_incidents1"  id="incidents1" var="incident" value="#{OSGRManagementView.items}"
+						selectionMode="single" selection="#{OSGRManagementView.selected}" rowKey="#{incident.incidentId}" 
+						reflow="true" style="margin-bottom:20px;border-collapse:collapse"
+						scrollable="true" scrollHeight="100%"
+					    paginator="true" rows="15" rowsPerPageTemplate="5,10,15,20,25, #{OSGRManagementView.itemsSize}" >
+ 
+						<f:facet name="header">
+							<p:outputPanel style="height:25px">
+								<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+	        					<p:columnToggler datasource="incidents1" trigger="toggler" style="width:200px"/>
+								
+								<shiro:hasPermission name="#{changeSystemView.system}.QUALITY.OFFSPEC.REPORT_MANAGEMENT.ADD_EVENT">
+	        						<p:commandButton id="newEvent" type="button"
+	        							value="#{msg['osgr_man_new_off_specification_event']}" 
+	        							icon="ui-icon fa fa-save" style="float:right;"
+	        							onclick="PF('newEventDlg').show();" />
+        						</shiro:hasPermission>
+        						
+								<shiro:hasPermission name="#{changeSystemView.system}.QUALITY.OFFSPEC.REPORT_MANAGEMENT.ADD_REQUEST">        							
+	        						<p:commandButton id="newRequest" type="button"
+	        							value="#{msg['osgr_man_new_off_specification_request']}" 
+	        							icon="ui-icon fa fa-save" style="float:right;"
+	        							onclick="PF('newRequestDlg').show();" />
+								</shiro:hasPermission>
+
+								<shiro:hasPermission name="#{changeSystemView.system}.QUALITY.OFFSPEC.REPORT_MANAGEMENT.QUERY">
+									<h:outputText value="&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;" escape="false" style="float:right;"/> 
+							        
+							       	<p:commandLink id="showEventFlow" value="#{msg['osgr_man_event_flow']}" style="float:right;" 
+							        	 ajax="false" oncomplete="PrimeFaces.monitorDownload(start, stop);">
+							        	<p:fileDownload value="#{OSGRManagementView.scEventFlowDiagFile}"/>
+							        </p:commandLink>
+								
+									<h:outputText value="&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;" escape="false" style="float:right;"/>
+								
+							       	<p:commandLink id="showRequestFlow" value="#{msg['osgr_man_request_flow']}" style="float:right;" 
+							        	 ajax="false" oncomplete="PrimeFaces.monitorDownload(start, stop);">
+							        	<p:fileDownload value="#{OSGRManagementView.scRequestFlowDiagFile}"/>
+							        </p:commandLink>
+						        </shiro:hasPermission>
+						        	        						
+							</p:outputPanel>        										          
+				        </f:facet>
+
+						<shiro:hasPermission name="#{changeSystemView.system}.QUALITY.OFFSPEC.REPORT_MANAGEMENT.QUERY">
+											        
+						<!-- evento del click del p:rowExpansion -->
+						<!-- <p:ajax event="rowToggle" listener="#{guestUserView.onRowToggle}" update=":form:msgs" /> -->   						 
+						<p:column style="width:16px">
+	         			   <p:rowToggler />
+	       				</p:column>
+				       
+				       	<p:column headerText="#{msg['osgr_man_incident_type']}" style="width: 50px;" sortBy="#{incident.incidentTypeDesc}">
+				       		<h:outputText value="#{incident.incidentTypeDesc}" />
+				       	</p:column>
+				       			       				 
+				       	<p:column headerText="#{msg['osgr_man_incident_id']}" style="width: 130px;" sortBy="#{incident.incidentCode}">
+				       		<h:outputText value="#{incident.incidentCode}" />
+				       	</p:column>
+				       
+				       	<p:column headerText="#{msg['osgr_man_quality_point']}" style="width: 80px;" sortBy="#{incident.qualityPointCode}">
+				       		<h:outputText value="#{incident.qualityPointCode}" />
+				       	</p:column>
+				       
+				       	<p:column headerText="#{msg['osgr_man_shipper']}" style="width: 80px;" sortBy="#{incident.originatorShipperCode}"
+				       		rendered="#{OSGRManagementView.hasOperatorManagPermission()}" >
+				       		<h:outputText value="#{incident.originatorShipperCode}" />
+				       	</p:column>
+				       
+				       	<p:column headerText="#{msg['osgr_man_start_date']}" style="width: 120px;" sortBy="#{incident.startDate}">
+		               		<h:outputText value="#{incident.startDate}" >
+		              				<f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+		              		</h:outputText>
+				       	</p:column>
+				       
+				       	<p:column headerText="#{msg['osgr_man_end_date']}" style="width: 120px;" sortBy="#{incident.endDate}">
+		               		<h:outputText value="#{incident.endDate}" >
+		              				<f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+		              		</h:outputText>
+				       	</p:column>
+				       
+				       	<p:column headerText="#{msg['osgr_man_reported_by']}" style="width: 110px;" sortBy="#{incident.firstUserCode}"
+				       		rendered="#{OSGRManagementView.isOperator}">
+				       		<h:outputText value="#{incident.firstUserCode}" />
+				       	</p:column>
+				       	
+				       	<p:column headerText="#{msg['osgr_man_last_modified']}" style="width: 120px;" sortBy="#{incident.lastModifiedDate}">
+		               		<h:outputText value="#{incident.lastModifiedDate}" >
+		              				<f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+		              		</h:outputText>
+				       	</p:column>
+
+				       	<p:column headerText="#{msg['osgr_man_status']}" style="width: 120px;" sortBy="#{incident.statusDesc}">
+				       		<h:outputText value="#{incident.statusDesc}" />
+				       	</p:column>
+				       
+				       	<p:column headerText="#{msg['osgr_man_comments']}" style="width: 100px;" sortBy="#{incident.comments}">
+ 					       	<p:commandButton icon="ui-icon fa fa-list" update=":commentsFormId" rendered="#{not empty incident.comments}"
+ 					       		onstart="PF('cargando').show()"	oncomplete="PF('cargando').hide(),PF('commentsDlg').show()">
+								<f:setPropertyActionListener value="#{incident}" target="#{OSGRManagementView.selected}" />
+							</p:commandButton>	
+				       		<h:outputText value="#{incident.comments.length() gt 40 ? incident.comments.substring(0,40).concat('...') : incident.comments}" 
+				       			escape="false"/>
+				       	</p:column>
+
+				       	<p:column headerText="#{msg['osgr_man_new_status']}" style="width: 120px;" >
+						    <p:menuButton ajax="false" value="#{msg['osgr_man_new_status']}" rendered="#{incident.canChangeStatus(userBean)}" model="#{incident.getModel(userBean)}"/>
+				       	</p:column>
+				       	
+						<p:column headerText="#{msg['osgr_man_attached_file']}" style="width: 100px;" sortBy="#{incident.fileName}"
+				       		rendered="#{OSGRManagementView.hasOperatorManagPermission()}" >
+	 					    <p:commandButton ajax="false" actionListener="#{OSGRManagementView.getFile(incident)}" rendered="#{not empty incident.fileName}"
+						    	oncomplete="PrimeFaces.monitorDownload(start, stop);" icon="ui-icon fa fa-save" title="#{incident.fileName}" >
+						        <p:fileDownload value="#{incident.scFile}"/>
+						    </p:commandButton>
+						    <p:spacer width="10"/>
+							<h:outputText value="#{incident.fileName}" title="#{incident.fileName}" rendered="#{not empty incident.fileName}"/>
+				       	</p:column>
+
+				       <p:column headerText="#{msg['osgr_man_shipper_responses']}" style="width: 70px; text-align: center;">
+ 					       	<p:commandButton icon="ui-icon fa fa-envelope-o" update=":shipperResponsesFormId"
+								onstart="PF('cargando').show()"	oncomplete="PF('cargando').hide(),PF('shipperResponsesDlg').show()"
+ 					       			rendered="#{incident.discloseResponses.size()!=0}">
+								<f:setPropertyActionListener value="#{incident}" target="#{OSGRManagementView.selected}" />
+							</p:commandButton>
+				       </p:column>
+					       				       	
+				        <p:rowExpansion >
+
+				        	<p:panelGrid style="width: 100%">
+				        		<p:row>
+					        		<p:column colspan="1"> 
+					        			<h:outputText value="#{msg['osgr_man_comments']}: " style="font-weight: bold;"/>
+									</p:column>
+									<p:column colspan="5">								 
+										<h:outputText value="#{incident.initialComments}" />
+									</p:column>
+								</p:row>
+								<p:row><!-- Linea vacia -->
+									<p:column><h:outputText value=""/></p:column>
+								</p:row>
+								<p:row><!-- Linea vacia -->
+									<p:column><h:outputText value=""/></p:column>
+								</p:row>
+								<p:row>
+									<p:column>								 
+										<h:outputText value="#{msg['osgr_man_parameter']}: " style="font-weight: bold;"/>
+									</p:column>
+									<p:column>								 
+										<h:outputText value="#{msg['osgr_man_value']}: " style="font-weight: bold;"/>
+									</p:column>
+									<p:column>								 
+										<h:outputText value="#{msg['osgr_man_parameter']}: " style="font-weight: bold;"/>
+									</p:column>
+									<p:column>								 
+										<h:outputText value="#{msg['osgr_man_value']}: " style="font-weight: bold;"/>
+									</p:column>
+									<p:column>								 
+										<h:outputText value="#{msg['osgr_man_parameter']}: " style="font-weight: bold;"/>
+									</p:column>
+									<p:column>								 
+										<h:outputText value="#{msg['osgr_man_value']}: " style="font-weight: bold;"/>
+									</p:column>
+								</p:row>
+	        				</p:panelGrid>
+						    <p:dataGrid var="gasParam" value="#{incident.gasParams}" columns="3" layout="grid" id="gasParams">
+								<p:panelGrid columns="2" style="width: 100%">
+						       		<h:outputText value="#{gasParam.paramDesc} (#{gasParam.unitDesc}): "/>
+									<p:inputNumber value="#{gasParam.value}" disabled="true" size="10" decimalSeparator="." thousandSeparator="," decimalPlaces="6"/>
+	     						</p:panelGrid>
+							</p:dataGrid>
+
+				      	</p:rowExpansion>
+
+						</shiro:hasPermission>
+				   </p:dataTable>
+				</p:layoutUnit>
+			</p:layout>
+		</h:form> 
+ 		
+ 		<p:dialog header="#{msg['osgr_man_comments']}" widgetVar="commentsDlg" modal="true" appendTo="@(body)" height="200" width="800">
+			<h:form id="commentsFormId" style="width:100%;height:98%;border-collapse:collapse">
+  				<h:inputTextarea value="#{OSGRManagementView.selected.comments}" readonly="true" rows="12" cols="105" style="border-color: white"/>
+			</h:form> 
+		</p:dialog>
+		
+ 		<p:dialog header="#{msg['osgr_man_shipper_responses']}" widgetVar="shipperResponsesDlg" modal="true" appendTo="@(body)" width="800" height="200">
+			<h:form id="shipperResponsesFormId" style="width:100%;height:98%;border-collapse:collapse" enctype="multipart/form-data">
+				<p:growl id="msgs" showDetail="true" life="10000" globalOnly="true" />
+				
+				<!-- Se definen estas variables para ahorrar llamadas a la vista java y mejorar el rendimiento. -->
+				<c:set var="resIncid" value="#{OSGRManagementView.selected}" scope="request" />
+
+				<p:dataTable widgetVar="w_responses1"  id="responses1" var="response" value="#{resIncid.discloseResponses}"
+					reflow="true" style="margin-bottom:20px;border-collapse:collapse" editable="true"
+					scrollable="true" scrollHeight="100%">
+					<f:facet name="header">
+							<p:outputPanel style="height:25px">
+								<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+	        					<p:columnToggler datasource="responses1" trigger="toggler" style="width:200px"/>
+					</p:outputPanel>
+					</f:facet>
+			       	<p:column headerText="#{msg['osgr_man_shipper']}" style="width: 100px;" sortBy="#{response.groupCode}">
+			       		<h:outputText value="#{response.groupCode}" />
+			       	</p:column>
+			       	
+			       	<p:column headerText="#{msg['osgr_man_comments']}" style="width: 100px;" sortBy="#{response.userComments}">
+			       		<h:outputText value="#{response.userComments}" />
+			       	</p:column>
+			       	
+			       	<p:column headerText="#{msg['osgr_man_response_date']}" style="width: 120px;" sortBy="#{response.responseDate}">
+			       		<h:outputText value="#{response.responseDate}">
+			       			<f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+			       		</h:outputText>
+			       	</p:column>
+			       	
+			       	<p:column headerText="#{msg['osgr_man_ok_ko']}" style="width: 50px;" sortBy="#{response.responseValue}">
+			       		<h:outputText value="#{response.responseValue}" />
+			       	</p:column>
+			       	
+			       	<p:column headerText="#{msg['osgr_man_fileName']}" style="width: 50px;" sortBy="#{response.fileName}">
+			       		<h:outputText value="#{response.fileName}" rendered="#{OSGRManagementView.showFile(response.fileOnResponse)}"/>
+			       	</p:column>
+		
+		
+			       	
+			       	<p:column headerText="#{msg['osgr_man_file']}" style="width: 50px;" sortBy="#{response.fileName}" >
+			       		<h:outputText value="#{response.fileName}" title="#{response.fileName}" rendered="#{response.fileName!=null and response.fileName!=''}" />
+			       		<p:commandButton ajax="false"
+										rendered="#{OSGRManagementView.showFile(response.fileOnResponse) and response.fileName!=null and response.fileName!=''}"
+										oncomplete="PrimeFaces.monitorDownload(start, stop);"
+										icon="ui-icon-document">
+										<p:fileDownload
+											value="#{response.scFile}" />
+									</p:commandButton>	
+			       	</p:column>
+				<!--CH706 NUEVA columna editable Transporter reponse comment  -->
+						 <shiro:hasPermission name="#{changeSystemView.system}.QUALITY.OFFSPEC.REPORT_RESPONSE.OPER_MOD">   
+					 		<p:ajax event="rowEditInit"  oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','hidden')});" />
+							<p:ajax event="rowEdit"    listener="#{OSGRManagementView.onRowEdit}" update=":form:msgs" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>   
+							<p:ajax event="rowEditCancel" listener="#{OSGRManagementView.onRowCancel}" update=":form:msgs" onstart="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>
+					 	</shiro:hasPermission>
+								
+					<p:column headerText="#{msg['osgr_man_operator_commets']}" style="width: 200px;" sortBy="#{response.operatorComments}" >
+					          <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{response.operatorComments}" /></f:facet>
+					               <f:facet name="input">
+					               		<h:inputTextarea value="#{response.operatorComments}" rows="5" cols="10" style="width:100%" maxlength="500" 
+					               			label="#{msg['osgr_man_operator_commets']}" 
+					               			validatorMessage="#{msg['osgr_man_operator_commets']}: #{msg['lenght_field']} 500">
+					               			<f:validateLength maximum="500"/>
+					               		</h:inputTextarea>
+					               </f:facet>
+					           </p:cellEditor>
+				  </p:column>
+				  
+				  
+				
+	 			  <shiro:hasPermission name="#{changeSystemView.system}.QUALITY.OFFSPEC.REPORT_RESPONSE.OPER_MOD"> 
+					       <p:column   style="width:32px">
+					            <p:rowEditor />
+					       </p:column>
+			     </shiro:hasPermission> 
+				
+				</p:dataTable>
+			</h:form> 	    
+		</p:dialog>
+		
+	
+ 		<p:dialog header="#{msg['osgr_man_new_off_specification_request']}" widgetVar="newRequestDlg" modal="true" appendTo="@(body)" minWidth="1000" minHeight="750">
+			<h:form id="newRequestFormId" style="width:100%;height:98%;border-collapse:collapse" enctype="multipart/form-data">
+ 				<p:growl id="msgs" showDetail="true" life="10000" globalOnly="true" />
+				
+				<c:set var="newRequest" value="#{OSGRManagementView.newRequest}" scope="request" />
+				
+	        	<p:panelGrid style="width: 100%">
+
+ 	        		<p:row>
+						<p:column styleClass="ui-g-2" style="font-weight: bold;">
+							<h:outputText value="#{msg['osgr_man_shipper']}" />
+						</p:column>
+						<p:column styleClass="ui-g-3">
+							<p:selectOneMenu id="newReqShipperId" style="width:100px" disabled="#{not OSGRManagementView.isOperator}" value="#{newRequest.originatorShipperId}" 
+								required="true" requiredMessage="#{msg['empty_field']}">
+								<f:selectItem itemLabel="#{newRequest.originatorShipperCode}" itemValue="#{newRequest.originatorShipperId}" />
+ 								<f:selectItems value="#{OSGRManagementView.shipperIds.entrySet()}" var="entry" 
+ 											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+								<p:ajax update="msgNewRequestQualityPointId" event="change" />
+			           		</p:selectOneMenu>							
+						</p:column>
+						<!-- Columna vacia -->
+ 						<p:column styleClass="ui-g-1"><h:outputText value=""/></p:column>
+ 														
+						<p:column styleClass="ui-g-2" style="font-weight: bold;">
+							<h:outputText value="#{msg['osgr_man_quality_point']}" style="font-weight: bold;"/>
+						</p:column>
+						<p:column styleClass="ui-g-3">
+							<p:selectOneMenu id="newRequestQualityPointId" autoWidth="false" style="width:120px" value="#{newRequest.qualityPointId}" 
+								required="true" requiredMessage="#{msg['empty_field']}">
+								<f:selectItem itemLabel="" itemValue="" />
+								<f:selectItems value="#{OSGRManagementView.qualityPointsForInsert.entrySet()}" var="entry" 
+ 									itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+								<p:ajax update="msgNewRequestQualityPointId" event="change" />
+			           		</p:selectOneMenu>
+						</p:column>
+ 	        		</p:row>
+
+ 	        		<p:row>					
+						<p:column styleClass="ui-g-6">
+							<p:message for="newReqShipperId" id="msgNewReqShipperId"/>
+						</p:column>
+						<p:column styleClass="ui-g-6">
+							<p:message for="newRequestQualityPointId" id="msgNewRequestQualityPointId"/>
+						</p:column>
+ 	        		</p:row>
+
+ 	        		<p:row>
+						<p:column styleClass="ui-g-2" style="font-weight: bold;">
+							<h:outputText value="#{msg['osgr_man_start_date']}" style="font-weight: bold;"/>
+						</p:column>
+						<p:column styleClass="ui-g-4">
+							<p:calendar id="newReqFecInicio" size="12" pattern="dd/MM/yyyy HH:mm" value="#{newRequest.startDate}"
+								mask="true" showButtonPanel="true" showOn="button" navigator="true"
+								required="true" requiredMessage="#{msg['empty_field']}"
+								mindate="#{OSGRManagementView.getYesterday()}">
+								<p:ajax event="dateSelect" update="msgNewReqFecInicio"></p:ajax>
+								<p:ajax event="change" update="msgNewReqFecInicio"></p:ajax>
+							</p:calendar>
+						</p:column>
+
+						<p:column styleClass="ui-g-2" style="font-weight: bold;">
+							<h:outputText value="#{msg['osgr_man_end_date']}" style="font-weight: bold;"/>
+						</p:column>
+						<p:column styleClass="ui-g-4">
+							<p:calendar id="newReqFecFin" size="12" pattern="dd/MM/yyyy HH:mm" value="#{newRequest.endDate}"
+								mask="true" showButtonPanel="true" showOn="button" navigator="true"
+								required="true" requiredMessage="#{msg['empty_field']}"
+								mindate="#{OSGRManagementView.getYesterday()}">
+								<p:ajax event="dateSelect" update="msgNewReqFecFin"></p:ajax>
+								<p:ajax event="change" update="msgNewReqFecFin"></p:ajax>
+							</p:calendar>
+						</p:column>
+ 	        		</p:row>
+
+ 	        		<p:row>					
+						<p:column styleClass="ui-g-6">
+							<p:message for="newReqFecInicio" id="msgNewReqFecInicio"/>
+						</p:column>
+						<p:column styleClass="ui-g-6">
+							<p:message for="newReqFecFin" id="msgNewReqFecFin"/>
+						</p:column>
+ 	        		</p:row>
+ 	        		
+ 	        		<p:row>
+						<p:column styleClass="ui-g-2"> 
+		        			<h:outputText value="#{msg['osgr_man_comments']}: " style="font-weight: bold;"/>
+						</p:column>
+						<p:column styleClass="ui-g-10">								 
+	 						<p:inputTextarea id="inputTxtNewRequestCommentId" rows="3" cols="87" value="#{newRequest.comments}" 
+	 							autoResize="false" maxlength="1020" style="float: left; ">
+	 							<f:validateLength maximum="1020" />
+							</p:inputTextarea>
+						</p:column>
+					</p:row>
+					<p:row><!-- Linea vacia -->
+						<p:column><h:outputText value=""/></p:column>
+					</p:row>
+					<p:row><!-- Linea vacia -->
+						<p:column><h:outputText value=""/></p:column>
+					</p:row>
+ 					<p:row>
+						<p:column styleClass="ui-g-2">								 
+							<h:outputText value="#{msg['osgr_man_parameter']}: " style="font-weight: bold;"/>
+						</p:column>
+						<p:column styleClass="ui-g-2">
+							<p:spacer width="25" height="10"/>						
+							<h:outputText value="#{msg['osgr_man_value']}: " style="font-weight: bold;"/>
+						</p:column>
+						<p:column styleClass="ui-g-2">
+							<h:outputText value="#{msg['osgr_man_parameter']}: " style="font-weight: bold;"/>
+						</p:column>
+						<p:column styleClass="ui-g-2">
+							<p:spacer width="25" height="10"/>
+							<h:outputText value="#{msg['osgr_man_value']}: " style="font-weight: bold;"/>
+						</p:column>
+						<p:column styleClass="ui-g-2">
+							<h:outputText value="#{msg['osgr_man_parameter']}: " style="font-weight: bold;"/>
+						</p:column>
+						<p:column styleClass="ui-g-2">
+							<p:spacer width="25" height="10"/>
+							<h:outputText value="#{msg['osgr_man_value']}: " style="font-weight: bold;"/>
+						</p:column>
+					</p:row>
+      			</p:panelGrid>
+			    <p:dataGrid var="newGasParam" value="#{newRequest.gasParams}" columns="3" layout="grid" id="newGasParams">
+					<p:panelGrid columns="2" style="width: 100%">
+						<p:column styleClass="ui-g-2">
+			       			<h:outputText value="#{newGasParam.paramDesc} (#{newGasParam.unitDesc}): " style="width: 100%"/>
+			       		</p:column>
+						<p:column styleClass="ui-g-2">
+							<p:inputNumber value="#{newGasParam.value}" size="10" decimalSeparator="." thousandSeparator="," decimalPlaces="6" style="float: right;"/>
+						</p:column>
+					</p:panelGrid>
+				</p:dataGrid>
+
+      			<p:panelGrid columns="6" style="width:100%">
+					<p:column><h:outputText value=""/></p:column>
+					<p:column><h:outputText value=""/></p:column>
+					<p:column><h:outputText value=""/></p:column>
+					<p:column><h:outputText value=""/></p:column>
+					<p:column><h:outputText value=""/></p:column>
+	       			<p:column>
+						<p:commandButton value="#{msg['save']}" style="float: right; vertical-align: bottom" 
+							actionListener="#{OSGRManagementView.onNewRequest}" 
+							update="#{p:component('incidents1')},newRequestFormId"
+ 			       			oncomplete="PF('newRequestDlg').hide()" validateClient="true" />
+					</p:column>
+				</p:panelGrid>
+			</h:form> 	    
+		</p:dialog>
+
+ 		<p:dialog header="#{msg['osgr_man_new_off_specification_event']}" widgetVar="newEventDlg" modal="true" appendTo="@(body)" minWidth="1000" minHeight="750">
+			<h:form id="newEventFormId" style="width:100%;height:98%;border-collapse:collapse" enctype="multipart/form-data">
+ 				<p:growl id="msgs" showDetail="true" life="10000" globalOnly="true" />
+				
+				<c:set var="newEvent" value="#{OSGRManagementView.newEvent}" scope="request" />
+				
+	        	<p:panelGrid style="width: 100%">
+
+ 	        		<p:row>
+						<p:column styleClass="ui-g-2" style="font-weight: bold;">
+							<h:outputText value="#{msg['osgr_man_quality_point']}" style="font-weight: bold;"/>
+						</p:column>
+						<p:column styleClass="ui-g-3">
+							<p:selectOneMenu id="newEventQualityPointId" autoWidth="false" style="width:120px" value="#{newEvent.qualityPointId}" 
+								required="true" requiredMessage="#{msg['empty_field']}">
+								<f:selectItem itemLabel="" itemValue="" />
+								<f:selectItems value="#{OSGRManagementView.qualityPointsForInsert.entrySet()}" var="entry" 
+ 									itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+								<p:ajax update="msgNewEventQualityPointId" event="change" />
+			           		</p:selectOneMenu>
+						</p:column>
+						<!-- Columna vacia -->
+ 						<p:column styleClass="ui-g-1"><h:outputText value=""/></p:column>
+
+						<p:column styleClass="ui-g-2" style="font-weight: bold;">
+							<p:spacer width="25" height="10"/>
+							<h:outputText value="#{msg['osgr_man_start_date']}" style="font-weight: bold;"/>
+						</p:column>
+						<p:column styleClass="ui-g-4">
+							<p:calendar id="newIncfecInicio" size="12" pattern="dd/MM/yyyy HH:mm" value="#{newEvent.startDate}"
+								mask="true" showButtonPanel="true" showOn="button" navigator="true"
+								required="true" requiredMessage="#{msg['empty_field']}"
+								mindate="#{OSGRManagementView.getYesterday()}">
+								<p:ajax event="dateSelect" update="msgNewIncfecInicio"></p:ajax>
+								<p:ajax event="change" update="msgNewIncfecInicio"></p:ajax>
+							</p:calendar>
+						</p:column>
+ 	        		</p:row>
+
+ 	        		<p:row>					
+						<p:column styleClass="ui-g-6">
+							<p:message for="newEventQualityPointId" id="msgNewEventQualityPointId"/>
+						</p:column>
+						<p:column styleClass="ui-g-6">
+							<p:message for="newIncfecInicio" id="msgNewIncfecInicio"/>
+						</p:column>
+ 	        		</p:row>
+
+ 	        		<p:row>
+						<p:column styleClass="ui-g-2"> 
+		        			<h:outputText value="#{msg['osgr_man_comments']}: " style="font-weight: bold;"/>
+						</p:column>
+						<p:column styleClass="ui-g-10">								 
+	 						<p:inputTextarea id="inputTxtNewEventCommentId" rows="3" cols="87" value="#{newEvent.comments}" 
+	 							autoResize="false" maxlength="1020" style="float: left; ">
+	 							<f:validateLength maximum="1020" />
+							</p:inputTextarea>
+						</p:column>
+					</p:row>
+					<p:row><!-- Linea vacia -->
+						<p:column><h:outputText value=""/></p:column>
+					</p:row>
+					<p:row><!-- Linea vacia -->
+						<p:column><h:outputText value=""/></p:column>
+					</p:row>
+ 					<p:row>
+						<p:column styleClass="ui-g-2">								 
+							<h:outputText value="#{msg['osgr_man_parameter']}: " style="font-weight: bold;"/>
+						</p:column>
+						<p:column styleClass="ui-g-2">
+							<p:spacer width="25" height="10"/>						
+							<h:outputText value="#{msg['osgr_man_value']}: " style="font-weight: bold;"/>
+						</p:column>
+						<p:column styleClass="ui-g-2">
+							<h:outputText value="#{msg['osgr_man_parameter']}: " style="font-weight: bold;"/>
+						</p:column>
+						<p:column styleClass="ui-g-2">
+							<p:spacer width="25" height="10"/>
+							<h:outputText value="#{msg['osgr_man_value']}: " style="font-weight: bold;"/>
+						</p:column>
+						<p:column styleClass="ui-g-2">
+							<h:outputText value="#{msg['osgr_man_parameter']}: " style="font-weight: bold;"/>
+						</p:column>
+						<p:column styleClass="ui-g-2">
+							<p:spacer width="25" height="10"/>
+							<h:outputText value="#{msg['osgr_man_value']}: " style="font-weight: bold;"/>
+						</p:column>
+					</p:row>
+      			</p:panelGrid>
+			    <p:dataGrid var="newGasParam" value="#{newEvent.gasParams}" columns="3" layout="grid" id="newGasParams">
+					<p:panelGrid columns="2" style="width: 100%">
+						<p:column styleClass="ui-g-2">
+			       			<h:outputText value="#{newGasParam.paramDesc} (#{newGasParam.unitDesc}): " style="width: 100%"/>
+			       		</p:column>
+						<p:column styleClass="ui-g-2">
+							<p:inputNumber value="#{newGasParam.value}" size="10" decimalSeparator="." thousandSeparator="," decimalPlaces="6" style="float: right;"/>
+						</p:column>
+					</p:panelGrid>
+				</p:dataGrid>
+
+      			<p:panelGrid columns="6" style="width:100%">
+					<p:column><h:outputText value=""/></p:column>
+					<p:column><h:outputText value=""/></p:column>
+					<p:column><h:outputText value=""/></p:column>
+					<p:column><h:outputText value=""/></p:column>
+					<p:column><h:outputText value=""/></p:column>
+	       			<p:column>
+						<p:commandButton value="#{msg['save']}" style="float: right; vertical-align: bottom" 
+							actionListener="#{OSGRManagementView.onNewEvent}" 
+							update="#{p:component('incidents1')},newEventFormId"
+ 			       			oncomplete="PF('newEventDlg').hide()" validateClient="true" />
+					</p:column>
+				</p:panelGrid>
+			</h:form> 	    
+		</p:dialog>
+
+ 		<p:dialog header="#{msg['osgr_man_status_change']}" widgetVar="nextStatusDlg" modal="true" appendTo="@(body)" minWidth="750" minHeight="500">
+			<h:form id="nextStatusFormId" style="width:100%;height:98%;border-collapse:collapse" enctype="multipart/form-data">
+				<p:growl id="msgs" showDetail="true" life="10000" globalOnly="true" />
+				
+				<!-- Se definen estas variables para ahorrar llamadas a la vista java y mejorar el rendimiento. -->
+				<c:set var="incid" value="#{OSGRManagementView.selected}" scope="request" />
+				<c:set var="statusRule" value="#{OSGRManagementView.selected.chosenNextStatusRule}" scope="request" />
+				<c:set var="noneIsVisible" value="#{OSGRManagementView.selected.chosenNextStatusRule.noneIsVisible()}" scope="request" />
+
+				<p:panelGrid id="nextStatusPanelGridId">
+
+				    <f:facet name="header">
+				    	<p:row>
+					    	<p:column colspan="2">
+								<h:outputText value="#{msg['osgr_man_from']}"/>
+								<p:spacer width="20" height="10"/>
+								<h:outputText value="&quot;#{statusRule.getCurrentStatusDesc()}&quot;"/>
+								<p:spacer width="20" height="10"/>
+								<h:outputText value="#{msg['osgr_man_to']}"/>
+								<p:spacer width="20" height="10"/>
+								<h:outputText value="&quot;#{statusRule.getNextStatusDesc()}&quot;"/>
+							</p:column>
+						</p:row>
+				    </f:facet>
+
+					<p:row>
+						<p:column><br/></p:column>
+						<p:column><br/></p:column>
+					</p:row>
+
+					<p:row>
+						<p:column  style="font-weight: bold;"  rendered="#{statusRule.shipperIsVisible()}">
+							<h:outputText value="#{msg['osgr_man_shipper']}" />
+						</p:column>
+						<p:column rendered="#{statusRule.shipperIsVisible()}">
+							<h:outputText value="#{incid.originatorShipperCode}" rendered="#{! statusRule.shipperIsEditable()}" />
+							<p:selectOneMenu id="newShipperId" style="width:100px" rendered="#{statusRule.shipperIsEditable()}" disabled="#{not OSGRManagementView.isOperator}" 
+										value="#{incid.newOriginatorShipperId}" >
+								<f:selectItem itemLabel="#{OSGRManagementView.filters.shipperCode}" itemValue="#{OSGRManagementView.filters.shipperId}" />
+								<f:selectItems value="#{OSGRManagementView.shipperIdsForInsert.entrySet()}" var="entry" 
+	   											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+			           		</p:selectOneMenu>
+						</p:column>
+					</p:row>
+
+					<p:row>
+						<p:column  style="font-weight: bold;" rendered="#{statusRule.commentIsVisible()}">
+							<h:outputText value="#{msg['osgr_man_comments']}" />
+						</p:column>
+						<p:column rendered="#{statusRule.commentIsVisible()}">
+							<h:outputText value="#{incid.comments}" rendered="#{! statusRule.commentIsEditable()}" />
+	 						<p:inputTextarea id="inputTxtNewCommentId" rows="10" cols="80" value="#{incid.newComments}" 
+	 							autoResize="false" maxlength="1020" style="float: left; " rendered="#{statusRule.commentIsEditable()}">
+	 							<f:validateLength maximum="1020" />
+							</p:inputTextarea>
+						</p:column>
+					</p:row>
+
+					<p:row>
+						<p:column  style="font-weight: bold;" rendered="#{statusRule.fileIsVisible()}">
+							<h:outputText value="#{msg['osgr_man_attached_file']}" />
+						</p:column>
+						<p:column rendered="#{statusRule.fileIsVisible()}">
+							<!-- Caso no editable - Solo descarga fichero. -->
+	 					    <p:commandButton ajax="false" actionListener="#{OSGRManagementView.getFile(incid)}" rendered="#{! statusRule.fileIsEditable()}"
+						    	oncomplete="PrimeFaces.monitorDownload(start, stop);" icon="ui-icon fa fa-save" title="#{incid.fileName}" >
+						        <p:fileDownload value="#{incid.scFile}"/>
+						    </p:commandButton>
+						    <p:spacer width="10" rendered="#{! statusRule.fileIsEditable()}" />
+							<h:outputText value="#{incid.fileName}" title="#{incid.fileName}" rendered="#{! statusRule.fileIsEditable()}" />
+							
+							<!-- Caso editable - Solo upload fichero. -->
+				       		<!-- No se limita el tipo de fichero ni el tamaño. -->
+	 						<p:fileUpload id="newFileUpload" value="#{incid.newUlFile}" style="width:100%" rendered="#{statusRule.fileIsEditable()}"
+	 							mode="simple" skinSimple="true" label="#{msg['choose_a_file']}" /> 
+						</p:column>
+					</p:row>
+
+					<p:row>
+						<p:column  style="font-weight: bold;" rendered="#{statusRule.endDateIsVisible()}">
+							<h:outputText value="#{msg['osgr_man_end_date']}" />
+						</p:column>
+						<p:column rendered="#{statusRule.endDateIsVisible()}">
+		               		<h:outputText value="#{incid.endDate}" rendered="#{! statusRule.endDateIsEditable()}" >
+		              				<f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+		              		</h:outputText>
+							<p:calendar id="newEndDateId" size="12" pattern="dd/MM/yyyy HH:mm" value="#{incid.newEndDate}"
+								mask="true" showButtonPanel="true" showOn="button" navigator="true" rendered="#{statusRule.endDateIsEditable()}" 
+								mindate="#{incid.startDate}">
+							</p:calendar>
+						</p:column>
+					</p:row>
+
+					<!-- Si ningun campo es visible, se muestra la pantalla de confirmacion. -->
+					<p:row rendered="#{noneIsVisible}">
+						<p:column colspan="2">
+							<h:outputText value="#{msg['osgr_man_are_you_sure']}" />			
+						</p:column >
+					</p:row>
+					
+					<p:row rendered="#{!noneIsVisible}">					
+				       	<p:column/>
+		       			<p:column>
+							<p:commandButton value="#{msg['save']}" style="float: right; vertical-align: bottom" 
+								actionListener="#{OSGRManagementView.onChangeStatus}" 
+								update="#{p:component('incidents1')},nextStatusFormId"
+	 			       			oncomplete="PF('nextStatusDlg').hide()" ajax="false"/>
+						</p:column>
+					</p:row>
+					
+					<!-- Si ningun campo es visible, se muestra la pantalla de confirmacion. -->
+ 					<p:row rendered="#{noneIsVisible}">
+						<p:column>
+							<p:commandButton value="#{msg['yes']}" style="float: right;" 
+								actionListener="#{OSGRManagementView.onChangeStatus}" 
+								update="#{p:component('incidents1')},nextStatusFormId"
+	 			       			oncomplete="PF('nextStatusDlg').hide()" ajax="false"/>
+						</p:column>
+						<p:column>
+							<p:commandButton value="#{msg['no']}" 
+	 			       			oncomplete="PF('nextStatusDlg').hide()" ajax="false"/>
+						</p:column>
+ 					</p:row>
+				</p:panelGrid>
+			</h:form> 	    
+		</p:dialog>
+
+	</ui:define>
+	
+	<script type="text/javascript">
+	function start() {
+	    PF('cargando').show();
+	}
+	 
+	function stop() {
+	    PF('cargando').hide();
+	}
+	</script>
+</ui:composition>

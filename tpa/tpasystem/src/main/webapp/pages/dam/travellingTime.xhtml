@@ -1,0 +1,280 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_dam']}" url="#" />
+			<p:menuitem value="#{msg['menu_parameters']}" url="#" />
+			<p:menuitem value="#{msg['menu_travelling_time']}" url="/pages/dam/travellingTime.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="5000"/>
+			
+            <p:layout widgetVar="travellingTimeLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">	
+					
+				<p:panelGrid columns="2" style="width:100%">
+					
+						<p:panelGrid>
+							<p:row>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['travellingTime_Origin_Point_ID']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['travellingTime_Destination_Point_ID']}" />
+								</p:column>
+								
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['travellingTime_Destination']}" />
+								</p:column>
+								
+								
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['travellingTime_Start_Date']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['travellingTime_End_Date']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								
+								<p:column>
+									<p:selectOneMenu id="idOrigin"  style="width:100px"   value="#{travellingTimeView.filters.idn_OriginPoint}" >
+							       		<f:selectItem itemLabel="" itemValue="" />
+        								<f:selectItems value="#{travellingTimeView.idsOriPointSystem.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>									
+								</p:column>
+								<p:column>
+									<p:selectOneMenu id="idDestination"  style="width:100px"   value="#{travellingTimeView.filters.idn_DestginPoint}" >
+							       		<f:selectItem itemLabel="" itemValue="" />
+        								<f:selectItems value="#{travellingTimeView.idsDestPointSystem.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>										
+								</p:column>
+								
+								
+								<p:column>
+									<p:selectOneMenu id="destination" style="width:100px"  value="#{travellingTimeView.filters.destination}" >
+							          	<f:selectItem itemLabel="" itemValue="" />
+										<f:selectItem itemLabel="Yes" itemValue="Y" />
+										<f:selectItem itemLabel="No" itemValue="N" />
+							            
+					               	</p:selectOneMenu>										
+								</p:column>
+								<p:column>
+									<p:calendar id="fecInicio"  size="10" pattern="dd/MM/yyyy" mask="true" value="#{travellingTimeView.filters.startDate}" 
+										showOn="button" navigator="true" >
+										<p:ajax event="dateSelect" update="fecInicio"></p:ajax>
+										<p:ajax event="change" update="fecInicio"></p:ajax>
+									</p:calendar>
+								</p:column>
+								<p:column>
+									<p:calendar id="fecFin"  size="10" pattern="dd/MM/yyyy" mask="true" value="#{travellingTimeView.filters.endDate}"
+										showOn="button" navigator="true"  >
+										<p:ajax event="dateSelect" update="fecFin"></p:ajax>
+										<p:ajax event="change" update="fecFin"></p:ajax>
+									</p:calendar>
+								</p:column>
+							</p:row>
+						</p:panelGrid>
+						<p:panelGrid columns="2" style="float:right;top:0px">
+							<shiro:hasPermission name="#{changeSystemView.system}.DAM.TRAVELLING_TIME.QUERY">
+								<p:commandButton value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{travellingTimeView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,:#{p:component('travellingTime1')}"/>
+							</shiro:hasPermission>
+							
+							<p:commandButton  onclick="PF('travellingTimeLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+							
+							<shiro:hasPermission name="#{changeSystemView.system}.DAM.TRAVELLING_TIME.QUERY">
+								<p:commandButton value="#{msg['clear']}"
+									actionListener="#{travellingTimeView.onClear}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" 
+									process="@this" 
+									update="form"/> 
+							</shiro:hasPermission>
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center"
+					resizable="false" closable="false" collapsible="false">
+
+					<p:dataTable widgetVar="w_travellingTime1"  id="travellingTime1" var="travellingTime" value="#{travellingTimeView.items}" reflow="true" editable="true" 
+						style="margin-bottom:20px;border-collapse:collapse"
+					    paginator="true" rows="15"
+					    scrollable="true"  scrollHeight="100%"
+					    rowsPerPageTemplate="5,10,15,20,25, #{travellingTimeView.itemsSize}" >
+
+							<f:facet name="header">
+								<p:outputPanel style="height:25px">
+									<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+	        						<p:columnToggler datasource="travellingTime1" trigger="toggler" style="width:200px"/>
+	        						<shiro:hasPermission name="#{changeSystemView.system}.DAM.TRAVELLING_TIME.ADD">      						
+		        						<p:commandButton id="new" type="button" value="New"  icon="ui-icon fa fa-save" style="float:right;"
+		        							onclick="PF('dlgNewTravellingTime').show();" >
+		        						</p:commandButton>	
+	        						</shiro:hasPermission>
+								</p:outputPanel>        										          
+					        </f:facet>
+					        <!-- NO HAY EDICION DE REGISTROS
+					       <shiro:hasPermission name="#{changeSystemView.system}.DAM.AREAS.MOD"> 
+						 		
+						 		<p:ajax event="rowEditInit" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','hidden')});" />
+								<p:ajax event="rowEdit" listener="#{travellingTimeView.onRowEdit}" update=":form:msgs"         oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>
+								<p:ajax event="rowEditCancel" listener="#{travellingTimeView.onRowCancel}" update=":form:msgs" onstart="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>   
+								    	
+					    	</shiro:hasPermission>
+					    	 -->
+					       <p:column headerText="#{msg['travellingTime_Origin_Point_ID']}" style="width: 100px;" sortBy="#{travellingTime.originPointCode}" filterMatchMode="contains" filterBy="#{travellingTime.originPointCode}">
+					       		<h:outputText value="#{travellingTime.originPointCode}" />
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['travellingTime_Destination_Point_ID']}"  style="width: 100px;" sortBy="#{travellingTime.destinationPointCode}" filterMatchMode="contains" filterBy="#{travellingTime.destinationPointCode}">
+					           <h:outputText value="#{travellingTime.destinationPointCode}" />
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['travellingTime_Destination']}" style="width: 100px;" sortBy="#{travellingTime.destination}" filterMatchMode="contains" filterBy="#{travellingTime.destination}">		       
+					       		<h:outputText value="#{travellingTime.destination}" />
+					       </p:column>
+					       
+					       
+					        <p:column headerText="#{msg['travellingTime_Travelling_Time']}" style="width: 100px;" sortBy="#{travellingTime.travelllingTime}" filterMatchMode="contains" filterBy="#{travellingTime.travelllingTime}">
+					       		<h:outputText value="#{travellingTime.travelllingTime}" />
+					       </p:column>
+					       
+					   	    <p:column headerText="#{msg['travellingTime_Start_Date']}" style="width: 100px;" sortBy="#{travellingTime.startDate}"  >
+					         
+						         <h:outputText value="#{travellingTime.startDate}" >
+						         	<f:convertDateTime pattern="dd/MM/yyyy" />
+						         </h:outputText>
+					         
+					       </p:column>
+					   </p:dataTable>
+				</p:layoutUnit>
+
+			</p:layout>
+		</h:form>
+		
+		<shiro:hasPermission name="#{changeSystemView.system}.DAM.TRAVELLING_TIME.ADD">
+		<p:dialog widgetVar="dlgNewTravellingTime" resizable="false"  closable="true" modal="true" appendTo="@(body)" header="New TravellingTime">
+		<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario
+		 <p:ajax event="close" update="formNewEntity"  process="@this" listener="#{travellingTimeView.cancel}" />	-->
+			<h:form id="formNewEntity">
+				<p:growl id="msgs" showDetail="true" life="5000" globalOnly="true"/>
+				<p:panelGrid columns="4" style="width:100%">
+					<p:panelGrid>
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['travellingTime_Origin_Point_ID']}" />
+							</p:column>
+							<p:column>
+								 <p:selectOneMenu id="originPointCode"   style="width:100px"  value="#{travellingTimeView.newTravellingTime.idn_origin_point}"
+								 requiredMessage="#{msg['travellingTime_Origin_Point_ID']}: #{msg['empty_field']}"  >
+							       		<f:selectItem itemLabel="" itemValue="" />
+        								<f:selectItems value="#{travellingTimeView.idsOriPointSystem.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+        								<p:ajax  event="change" update="travelllingTime"  listener="#{travellingTimeView.findTravellingTime(travellingTimeView.newTravellingTime)}" ></p:ajax>
+					          </p:selectOneMenu>	
+					           <p:message for="originPointCode" />	
+							</p:column>
+
+							<p:column>
+								<h:outputText value="#{msg['travellingTime_Destination_Point_ID']}" />
+							</p:column>
+							<p:column>
+								
+							  <p:selectOneMenu id="destinationPointCode" required="true" style="width:100px"  value="#{travellingTimeView.newTravellingTime.idn_destination_point}" 
+							  		requiredMessage="#{msg['travellingTime_Destination_Point_ID']}: #{msg['empty_field']}"   >
+							  		<f:selectItem itemLabel="" itemValue="" />
+        							<f:selectItems value="#{travellingTimeView.idsDestPointSystem.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					          </p:selectOneMenu>	
+					          <p:message for="destinationPointCode" />	
+							</p:column>
+						</p:row>
+
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['travellingTime_Destination']}" />
+							</p:column>
+							<p:column>
+			               		<p:selectOneMenu required="true"  id="destination" style="width:100px"   value="#{travellingTimeView.newTravellingTime.destination}" 
+			               			requiredMessage="#{msg['travellingTime_Destination']}: #{msg['empty_field']}" >
+			               			<f:selectItem itemLabel="" itemValue="" />
+		               				<f:selectItem itemLabel="Yes" itemValue="Y" />
+									<f:selectItem itemLabel="No" itemValue="N" />	
+									<p:ajax  event="change" update="travelllingTime"  listener="#{travellingTimeView.findTravellingTime(travellingTimeView.newTravellingTime)}"  ></p:ajax>
+			                   	</p:selectOneMenu>	
+								<p:message for="destination" />		
+							</p:column>
+							
+							<p:column>
+								<h:outputText value="#{msg['travellingTime_Travelling_Time']}" />
+							</p:column>
+							<p:column>
+						
+								<p:inputNumber required="true" id="travelllingTime" value="#{travellingTimeView.newTravellingTime.travelllingTime}"
+								disabled="#{travellingTimeView.enabledTravellingDay()}"
+								 minValue="0" decimalPlaces="0" thousandSeparator="," 
+								 decimalSeparator="." emptyValue="empty" 
+								 requiredMessage="#{msg['travellingTime_Travelling_Time']}: #{msg['empty_field']}" />
+					           	<p:message for="travelllingTime" />									
+							</p:column>
+					</p:row>
+					
+					
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['travellingTime_Start_Date']}"/>
+							</p:column>
+							<p:column>
+								<p:calendar required="true" id="startDate" value="#{travellingTimeView.newTravellingTime.startDate}" pattern="dd/MM/yyyy"
+									readonlyInput="true"  mindate="#{(travellingTimeView.sysdate).getTime()}" 
+									requiredMessage="#{msg['travellingTime_Start_Date']}: #{msg['empty_field']}" 
+									validatorMessage="#{msg['travellingTime_Start_Date']}: #{msg['lenght_field']}">
+								</p:calendar>
+								<p:message for="startDate" />
+							</p:column>
+						
+						</p:row>					
+						
+					</p:panelGrid>
+				</p:panelGrid>
+				
+				<p:separator/>
+				<p:panelGrid>
+					<p:row>
+						<p:column>
+							<p:commandButton value="#{msg['save']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" validateClient="true"
+								action="#{travellingTimeView.save}" update=":#{p:component('travellingTime1')},:formNewEntity"
+								onstart="PF('cargando').show()"
+								oncomplete="PF('dlgNewTravellingTime').hide(),PF('cargando').hide()" />
+			        	     	<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close"
+			        	     	update="formNewEntity" process="@this" actionListener="#{travellingTimeView.cancel}"  
+			        			oncomplete="PF('dlgNewTravellingTime').hide()"/>
+			        			
+						</p:column>					
+					</p:row>
+				</p:panelGrid>							
+			</h:form>			
+		</p:dialog>
+	</shiro:hasPermission>
+		
+	</ui:define>
+
+
+</ui:composition>

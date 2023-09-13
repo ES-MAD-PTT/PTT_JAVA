@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<!-- Namespace -->
+<mapper namespace="com.atos.mapper.balancing.ReserveBalancingGasContractsMapper">
+    
+    
+	<!-- Para hacer consultas, el shipper no tendria por que estar vigente. -->
+    <select id="selectShipperId" resultType="com.atos.beans.ComboFilterNS">
+		select tgr.idn_user_group as key, tgr.user_group_id as value
+		from tpa_tuser_group tgr
+		where tgr.idn_user_group_type = (select idn_user_group_type from tpa_tuser_group_type where type_code = 'SHIPPER')
+		order by upper(tgr.user_group_id) asc
+    </select>
+    
+    <select id="selectValidShipperId" resultType="com.atos.beans.ComboFilterNS">
+		select tgr.idn_user_group as key, tgr.user_group_id as value
+		from tpa_tuser_group tgr
+		where tgr.idn_user_group_type = (select idn_user_group_type from tpa_tuser_group_type where type_code = 'SHIPPER')
+			  and trunc(sysdate) between tgr.start_date and nvl(tgr.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+		order by upper(tgr.user_group_id) asc
+    </select>
+    
+ 	<select id="selectReserveContractCodesFromShipperId" resultType="com.atos.beans.ComboFilterNS">
+		select trc.idn_resbal_contract as key, trc.contract_code as value
+		  from tpa_tresbal_contract trc
+		  where
+          trc.idn_pipeline_system = #{idnSystem}
+		   	<if test="shipperId != null">
+			and trc.idn_user_group = #{shipperId}
+			</if>		 
+		 order by UPPER(trc.contract_code)
+
+	</select>
+     
+    <select id="selectZonesFromSystemCode" resultType="com.atos.beans.ComboFilterNS">
+	    select z.idn_zone as key, z.zone_code as value
+	      from TPA_VZONE_TPA z
+	     where z.idn_pipeline_system =
+	           (select tps.idn_pipeline_system
+	              from tpa_tpipeline_system tps
+	             where tps.pipeline_system_code = #{systemCode})
+	     order by UPPER(z.zone_code)
+    </select>
+    <select id="getAreas" parameterType="hashmap" resultType="com.atos.beans.ComboFilterNS">
+    SELECT a.idn_area as key,
+       a.area_code as value
+  FROM tpa_varea_tpa a,
+       tpa_vzone_tpa z
+ WHERE a.idn_zone = z.idn_zone
+   AND z.idn_pipeline_system =
+       (SELECT tps.idn_pipeline_system 
+         FROM tpa_tpipeline_system tps 
+     WHERE tps.pipeline_system_code = #{systemCode})    
+		   <if test="zoneId != null">
+       AND z.idn_zone = #{zoneId}
+       </if>
+ ORDER BY UPPER(a.area_code)
+    
+    </select>
+    
+    <!-- Cuando se generan nuevos registros, las zonas a escoger debe estar vigentes. -->
+    <select id="selectValidZonesFromSystemCode" resultType="com.atos.beans.ComboFilterNS">
+	    select z.idn_zone as key, z.zone_code as value
+	      from TPA_VZONE_TPA z
+	     where z.idn_pipeline_system =
+	           (select tps.idn_pipeline_system
+	              from tpa_tpipeline_system tps
+	             where tps.pipeline_system_code = #{systemCode})
+	     	   and trunc(sysdate) between z.start_date and nvl(z.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+	     order by UPPER(z.zone_code)
+    </select>
+    
+    <select id="selectPointTypes" resultType="com.atos.beans.ComboFilterNS">
+		select tpty.idn_system_point_type as key, tpty.type_code as value
+		  from tpa_tsystem_point_type tpty
+		  where tpty.type_code != 'CONNECTION'
+    </select>
+    
+    <select id="selectValidPoints" resultType="com.atos.beans.ComboFilterNS">
+		select tsp.idn_system_point as key, tsp.point_code as value
+		  from tpa_tsystem_point tsp,
+		       tpa_tarea ta, tpa_tzone tz
+		 where tsp.idn_system_point_group =
+		       (select tpgr.idn_system_point_group
+		          from tpa_tsystem_point_group tpgr
+		         where tpgr.group_code = 'NOMINATION')
+		   and ta.idn_area = tsp.idn_area
+		   <if test="zoneId != null">
+		   and ta.idn_zone = #{zoneId}
+		   </if>
+		   <if test="pointTypeId != null">
+		   and tsp.idn_system_point_type = #{pointTypeId}
+		   </if>
+
+		   <if test="areaId != null">
+		   and ta.idn_area = #{areaId}
+		   </if>
+   and tz.idn_zone = ta.idn_zone
+   and tz.idn_pipeline_system = #{idnSystem}
+		   and trunc(sysdate) between tsp.start_date and nvl(tsp.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+		order by tsp.point_code
+
+    </select>
+   	<select id="checkDeletableContract" parameterType="BigDecimal" resultType="integer">
+   	<![CDATA[
+SELECT SUM(data_found) AS data_found
+  FROM (SELECT COUNT(*) AS data_found
+          FROM tpa_tresbal_forecast_file rff
+         WHERE rff.idn_resbal_contract = #{idn_resbal_contract}
+           AND rownum <= 1
+        UNION ALL
+        SELECT COUNT(*) AS data_found
+          FROM tpa_tbalance_reserve_gas brg
+         WHERE brg.idn_resbal_contract = #{idn_resbal_contract}
+           AND rownum <= 1
+        UNION ALL
+        SELECT COUNT(*) AS data_found
+          FROM tpa_tresbal_contract_det rcd
+         WHERE rcd.idn_resbal_contract = #{idn_resbal_contract}
+           AND rcd.start_date <= trunc(SYSDATE)
+           AND rownum <= 1)
+   		]]>
+   	</select> 
+   	<delete id="deleteContractDetail" parameterType="BigDecimal">
+   		DELETE tpa_tresbal_contract_det rcd WHERE rcd.idn_resbal_contract = #{idn_resbal_contract}
+   	</delete>
+   	
+   	<delete id="deleteContract" parameterType="BigDecimal">
+   	DELETE tpa_tresbal_contract rc WHERE rc.idn_resbal_contract = #{idn_resbal_contract}
+   	</delete>
+
+
+
+    <resultMap type="com.atos.beans.balancing.ReserveBalancingGasContractBean" id="ReserveContracts">
+        <id property="contractId" column="idn_resbal_contract" />
+		<result property="contractCode" column="contract_code"/>
+		<result property="shipperId" column="idn_user_group"/>
+		<result property="shipperCode" column="user_group_id"/>
+		<result property="operatorComments" column="operator_comments"/>
+		<result property="fileName" column="file_name"/>
+		<collection property="details" ofType="com.atos.beans.balancing.ReserveBalancingGasContractDetailBean" resultMap="ReserveContractDetails"/>
+	</resultMap>
+
+    <resultMap type="com.atos.beans.balancing.ReserveBalancingGasContractDetailBean" id="ReserveContractDetails">
+        <id property="detailId" column="idn_resbal_contract_det" />
+		<result property="contractId" column="idn_resbal_contract_from_det"/>
+		<result property="pointId" column="idn_system_point"/>
+		<result property="pointCode" column="point_code"/>
+		<result property="pointTypeId" column="idn_system_point_type"/>
+		<result property="pointTypeCode" column="type_code"/>
+		<result property="zoneId" column="idn_zone"/>
+		<result property="zoneCode" column="zone_code"/>
+		<result property="startDate" column="start_date"/>
+		<result property="endDate" column="end_date"/>
+		<result property="dailyReservedCap" column="daily_reserve"/>
+	</resultMap> 
+    
+    <select id="selectReserveContracts" resultMap="ReserveContracts">
+		select *
+		  from (select trc.idn_resbal_contract,
+		               trc.contract_code,
+		               trc.idn_user_group,
+		               tgr.user_group_id,
+		               trc.operator_comments,
+		               trc.file_name
+		          from tpa_tresbal_contract trc, tpa_tuser_group tgr
+		         where tgr.idn_user_group = trc.idn_user_group
+		   		   <if test="resBalGasContractId != null">
+		           and trc.idn_resbal_contract = #{resBalGasContractId}
+                                          and trc.idn_pipeline_system = #{idnSystem}
+		           </if>
+		   		   <if test="shipperId != null">		           
+		           and trc.idn_user_group = #{shipperId}
+		           </if>
+		           ) trc2
+		  join (select tdet.idn_resbal_contract_det,
+		                          tdet.idn_resbal_contract as idn_resbal_contract_from_det,
+		                          tdet.idn_system_point,
+		                          tpo.point_code,
+		                          tpty.idn_system_point_type,
+		                          tpty.type_code,
+		                          tar.idn_zone,
+		                          tz.zone_code,
+		                          tdet.start_date,
+		                          tdet.end_date,
+		                          tdet.daily_reserve
+		                     from tpa_tresbal_contract_det tdet,
+		                          tpa_tsystem_point        tpo,
+		                          tpa_tsystem_point_type   tpty,
+		                          tpa_tarea                tar,
+		                          tpa_tzone                tz
+		                    where tpo.idn_system_point = tdet.idn_system_point
+		                      and tpty.idn_system_point_type =
+		                          tpo.idn_system_point_type
+		                      and tar.idn_area = tpo.idn_area
+		                      and tz.idn_zone = tar.idn_zone
+                                                     and tz.idn_pipeline_system = #{idnSystem}
+		                      <if test="startDate != null">
+		                      and nvl(tdet.end_date, to_date('31/12/9999', 'DD/MM/YYYY')) >= #{startDate}
+		                      </if>
+		                      <if test="endDate != null">
+		                      and #{endDate} >= tdet.start_date
+		                      </if>
+		                      <if test="zoneId != null">
+		                      and tar.idn_zone = #{zoneId}
+		                      </if>
+		                   ) tdet2
+		    on tdet2.idn_resbal_contract_from_det = trc2.idn_resbal_contract
+		 order by upper(trc2.contract_code) asc,
+		          upper(tdet2.zone_code) asc,
+		          tdet2.start_date asc,
+		          upper(tdet2.point_code) asc    
+  
+    </select>      
+    
+    <resultMap type="com.atos.beans.balancing.ReserveBalancingGasContractBean" id="ResBalGasContractFile">
+		<result property="binaryData" column="contract_document" jdbcType="BLOB" />
+	</resultMap>
+	
+	<select id="getFileFromResBalGasContractId" parameterType="java.math.BigDecimal" resultMap="ResBalGasContractFile">
+		select trbc.contract_document
+		  from tpa_tresbal_contract trbc
+		 where trbc.idn_resbal_contract =#{contractId}
+	</select>
+	
+	<resultMap type="com.atos.beans.balancing.ReserveBalancingGasContractBean" id="ReducedReserveContracts">
+        <id property="contractId" column="idn_resbal_contract" />
+		<result property="contractCode" column="contract_code"/>
+		<result property="shipperId" column="idn_user_group"/>
+		<result property="shipperCode" column="user_group_id"/>
+		<result property="operatorComments" column="operator_comments"/>
+		<result property="fileName" column="file_name"/>
+	</resultMap>
+	
+    <select id="selectReserveContractsFromCode" resultMap="ReducedReserveContracts">
+    	select * from tpa_tresbal_contract trc where trc.contract_code = #{contractCode}
+    </select>
+    
+	<insert id="insertResBalGasContract" useGeneratedKeys="true" keyProperty="contractId" keyColumn="idn_resbal_contract" parameterType="com.atos.beans.balancing.ReserveBalancingGasContractBean">
+		insert into tpa_tresbal_contract (idn_resbal_contract,
+		                                  contract_code,
+		                                  idn_user_group,
+		                                  operator_comments,
+		                                  file_name,
+		                                  contract_document,
+                                                                 idn_pipeline_system,
+	                                        aud_ins_user,
+	                                        aud_last_user)
+		values (tpa_sresbal_contract.nextval,
+				#{contractCode},
+				#{shipperId},
+				#{operatorComments},
+				#{fileName},
+				#{binaryData},
+                #{idnSystem},
+	      #{username},
+	      #{username})	
+
+	</insert>
+
+	<insert id="insertResBalGasContractDetail" useGeneratedKeys="true" keyProperty="detailId" keyColumn="idn_resbal_contract_det" parameterType="com.atos.beans.balancing.ReserveBalancingGasContractDetailBean">	
+		insert into tpa_tresbal_contract_det (idn_resbal_contract_det,
+	                                      idn_resbal_contract,
+	                                      idn_system_point,
+	                                      start_date,
+	                                      end_date,
+	                                      daily_reserve,
+	                                        aud_ins_user,
+	                                        aud_last_user)
+		values (tpa_sresbal_contract_det.nextval,
+				#{contractId},
+				#{pointId},
+				#{startDate},
+				#{endDate},
+				#{dailyReservedCap},
+	      #{username},
+	      #{username})
+	</insert>
+</mapper>

@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<!-- Namespace -->
+<mapper namespace="com.atos.mapper.booking.BulletinBoardMapper">
+
+    <resultMap type="com.atos.beans.booking.BulletinBoardBean" id="BulletinBoard">
+        <id property="operationTermCode" column="term_code" />
+        <result property="contractType" column="operation_desc" />
+		<result property="shipperSubmissionTime" column="shipper_submission_time"/>
+        <result property="submissionEnd" column="submission_end"/> 
+        <result property="announcement" column="announcement"/>
+        <result property="contractStart" column="contract_start"/> 
+    </resultMap>
+
+     <select id="selectBulletinBoard" parameterType="com.atos.beans.booking.BulletinBoardBean" resultMap="BulletinBoard">
+		SELECT * FROM TABLE(pck_operation_tools.bulletin_board_dates_query(#{user}, #{language}))
+    </select>
+    		
+	<!-- CH011 - 05/09/16 - Se anade a esta pagina la funcionalidad de CRSubmission de descarga de template y envio ficheros excel. -->
+    <select id="selectContractIdnOperationCategory" resultType="java.math.BigDecimal">
+		select idn_operation_category from tpa_toperation_category t where t.category_code='CONTRACT'
+    </select>
+
+    <select id="selectOperationTermIdFromCode" parameterType="java.lang.String" resultType="java.math.BigDecimal">
+		select t.idn_operation_term from tpa_toperation_term t where t.term_code=#{termCode} 
+    </select>
+          
+	<!-- No se inserta el status porque, por defecto, el registro queda con 'NEW'.  -->
+	<insert id="insertOperationfile" useGeneratedKeys="true" keyProperty="idnOperationFile" keyColumn="idn_operation_file" parameterType="com.atos.beans.booking.OperationFileBean">
+		insert into tpa_toperation_file (idn_operation_file,
+		                                 idn_operation_category,
+		                                 idn_operation_term,
+		                                 file_name,
+		                                 binary_data,
+	                                     aud_ins_user,
+	                                     aud_last_user)
+		values 
+			(tpa_soperation_file.nextval, 
+			#{idnOperationCategory}, 
+			#{idnOperationTerm},
+			#{fileName}, 
+			#{binaryData},
+			#{username},
+	        #{username}) 		  
+	</insert>
+	
+	<!-- No hace falta especificar jdbcType=CLOB, porque mybatis tiene un Type Handler String -> CLOB -->
+	<update id="updateXMLIntoOperationfile" parameterType="com.atos.beans.booking.OperationFileBean">
+		update tpa_toperation_file set
+			xml_data = #{xmlData},
+			aud_last_user = #{username}
+		where idn_operation_file  = #{idnOperationFile}		  
+	</update>
+    
+	<resultMap type="com.atos.beans.OpTemplateBean" id="OperationTemplate">
+		<result property="opTemplateId" column="idn_operation_template" />
+		<result property="opCategoryId" column="idn_operation_category" />
+		<result property="opTermId" column="idn_operation_term" />
+		<result property="fileType" column="file_type" />
+		<result property="binaryData" column="binary_data" jdbcType="BLOB" />
+		<result property="fileName" column="file_name" />
+		<result property="xmlMapId" column="idn_xml_map" />
+		<result property="systemId" column="idn_pipeline_system" />
+	</resultMap>
+	
+	<!-- Se ordena por start_date desc, por si no se hubieran especificado end_date, coger el ultimo registro vigente. -->
+	<select id="getOpTemplateByCatTermFiletypeSystem" parameterType="com.atos.beans.OpTemplateBean" resultMap="OperationTemplate">
+		select idn_operation_template,
+			idn_operation_category,
+			idn_operation_term,
+			file_type,
+			binary_data,
+			file_name,
+			idn_xml_map,
+			idn_pipeline_system
+		from tpa_toperation_template
+		where idn_operation_category=(select tcat.idn_operation_category
+										from tpa_toperation_category tcat
+										where tcat.category_code=#{opCategoryCode})
+			and idn_operation_term=(select tterm.idn_operation_term
+									from tpa_toperation_term tterm
+									where tterm.term_code=#{opTermCode})
+			and file_type=#{fileType}
+			and idn_pipeline_system=#{systemId}
+			and trunc(sysdate) between start_date and nvl(end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+		order by start_date desc
+	</select>
+	
+		<!-- Se consulta el identificador y codigo del sujeto asociado a un usuario. 
+	No se filtra para que el sujeto sea un shipper, porque se quiere
+	que si se trata de un usuario que no es un shipper se devuelva un codigo de sujeto, que no corresponda a
+	ningun shipper y asi falle la validacion en el procedimiento pck_contract_submission.pro_contract_submission. -->
+	<select id="selectShipperIdByUserId" parameterType="java.lang.String" resultType="com.atos.beans.ComboFilterNS">
+		select tgr.idn_user_group as key, tgr.user_group_id as value
+		     from tpa_tuser_group tgr, tpa_tuser tuser
+		     where tuser.user_id = #{userId}
+		     and tgr.idn_user_group = tuser.idn_user_group
+			 and trunc(sysdate) between tgr.start_date and nvl(tgr.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+			 and trunc(sysdate) between tuser.start_date and nvl(tuser.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+		order by tgr.start_date desc
+	</select>   
+	
+	<select id="getInfoMailBulletingBoard" parameterType="java.math.BigDecimal" resultType="com.atos.beans.booking.BulletinBoardMailBean">
+		SELECT u.user_group_id, r.request_code, o.term_desc, r.start_date, r.end_date 
+		FROM tpa_tcontract_request r, tpa_tuser_group u, tpa_voperation o
+		where r.idn_user_group = u.idn_user_group and r.idn_operation = o.idn_operation
+		and r.idn_contract_request = #{idn_contract_request}
+	</select>
+		
+	<select id="capacityRequestSubmission" statementType="CALLABLE" parameterType="com.atos.beans.booking.CapacityRequestSubmissionBean">
+		{call pck_contract_submission.pro_contract_submission(
+				#{shipperCode,jdbcType=VARCHAR,mode=IN},
+				#{systemId,jdbcType=INTEGER,mode=IN},
+				#{termCode,jdbcType=VARCHAR,mode=IN},
+				#{operationFileId,jdbcType=INTEGER,mode=IN},
+				#{userId,jdbcType=VARCHAR,mode=IN},
+				#{languageCode,jdbcType=VARCHAR,mode=IN},
+				#{idn_contract_request,jdbcType=INTEGER,mode=OUT},
+				#{warnings,jdbcType=CLOB,mode=OUT},
+				#{errorCode,jdbcType=INTEGER,mode=OUT},
+				#{errorDesc,jdbcType=VARCHAR,mode=OUT})}
+	</select>
+</mapper>

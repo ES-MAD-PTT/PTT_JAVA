@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+ <mapper namespace="com.atos.mapper.scadaAlarms.EmergencyDiffDayMapper">
+ 
+ <resultMap id="EmergencyDiffDay" type="com.atos.beans.scadaAlarms.EmergencyDiffDayBean">
+
+<result column="idn_tso_event" property="idn_tso_event"/>
+<result column="event_id" property="event_id"/>
+<result column="type_desc" property="type_desc"/>
+<result column="start_date" property="start_date"/>
+<result column="end_date" property="end_date"/>
+<result column="aud_last_date" property="aud_last_date"/>
+<result column="zone_desc" property="zone_desc"/>
+<result column="status" property="status"/>
+<result column="comments" property="comments"/>
+<result column="opening_file_name" property="opening_file_name"/>
+<result column="closing_file_name" property="closing_file_name"/>
+<association property="details" select="com.atos.mapper.scadaAlarms.EmergencyDiffDayMapper.selectEmergencyDiffDayDetails"
+				column="idn_tso_event=IDN_TSO_EVENT, idn_user_group=IDN_USER_GROUP, isShipper=ISSHIPPER}" />
+
+</resultMap>
+
+ <resultMap id="EmergencyDiffDayDetails" type="com.atos.beans.scadaAlarms.EmergencyDiffDayDetailsBean">
+<result column="idn_tso_event" property="idn_tso_event"/>
+<result column="idn_tso_event_shipper" property="idn_tso_event_shipper"/>
+<result column="user_group_id" property="user_group_id"/>
+<result column="idn_user_group" property="idn_user_group"/>
+<result column="user_group_name" property="user_group_name"/>
+<result column="comments" property="comments"/>
+<result column="opening_file_name" property="opening_file_name"/>
+<result column="opening_binary_data" property="opening_binary_data"/>
+<result column="closing_file_name" property="closing_file_name"/>
+<result column="closing_binary_data" property="closing_binary_data"/>
+</resultMap>
+
+ 
+     <select id="selectEventTypeCombo" resultType="com.atos.beans.ComboFilterNS">
+		select et.idn_tso_event_type as key, et.type_desc as value 
+		from tpa_ttso_event_type et
+	    order by UPPER(et.type_desc)
+    </select>
+    
+    <select id="selectEventTypeFromId" resultType="java.lang.String" parameterType="java.lang.String">
+   		select et.type_desc
+		from tpa_ttso_event_type et where idn_tso_event_type=#{idn_tso_event_tpe}
+    </select>
+    
+     <select id="selectZoneCombo" resultType="com.atos.beans.ComboFilterNS">
+    select z.idn_zone as key, z.zone_code as value 
+	from tpa_tzone z
+	WHERE z.idn_pipeline_system =#{idn_system}
+	</select>
+	
+	<select id="selectEmergencyDiffDay" parameterType="com.atos.filters.scadaAlarms.EmergencyDifficultDayFilter" resultMap="EmergencyDiffDay" >
+		  SELECT   e.idn_tso_event, 
+			  e.event_id, et.type_desc, 
+			  e.start_date, 
+			  e.end_date, 
+			  e.aud_last_date,
+			  nvl(z.ZONE_DESC, 'Others') as zone_desc, 
+			  e.status, e.comments, 
+			  e.opening_file_name, 
+			  e.closing_file_name,
+			  #{idn_user_group} as idn_user_group,
+			  #{isShipper} as isShipper
+  			FROM    tpa_ttso_event e, tpa_ttso_event_type et, TPA_VZONE_TPA z
+ 			 WHERE   e.idn_tso_event_type = et.idn_tso_event_type
+  			AND     z.idn_zone (+)= e.idn_zone
+  			 <if test="isShipper==true">
+  				AND EXISTS (select 1 from tpa_ttso_event_shipper es where e.idn_tso_event = es.idn_tso_event and es.idn_user_group = #{idn_user_group})
+  			</if> 
+  			<if test="zone== 0 ">
+    			 AND e.idn_zone is null 
+ 			   </if>
+  
+ 			 <if test="zone!= null and zone!=''">
+    			 AND e.idn_zone = #{zone}  
+ 			   </if>
+  
+   			 <if test="idn_tso_event_type!= null and idn_tso_event_type != ''">
+    			 AND et.idn_tso_event_type = #{idn_tso_event_type} 
+  			  </if>
+
+   			 <if test="status!= null and status != ''">
+    			 AND e.status = #{status} 
+ 			   </if>
+  
+  			   <if test="start_date!= null">
+   			 	 AND e.start_date >= #{start_date} 
+ 			   </if>  
+ 			   
+ 			    <if test="end_date!= null">
+ 			    	<![CDATA[
+    	 				AND e.end_date <= #{end_date} 
+    	 			]]>
+    			</if> 
+    </select>
+    
+    <select id="selectEmergencyDiffDayDetails" parameterType="com.atos.beans.scadaAlarms.EmergencyDiffDayIsShipperBean" resultMap="EmergencyDiffDayDetails" >
+    SELECT es.idn_tso_event, ug.idn_user_group, ug.user_group_id, ug.user_group_name, es.comments, es.opening_file_name, es.idn_tso_event_shipper,
+    null, es.closing_file_name, null
+  	FROM tpa_ttso_event_shipper es , tpa_tuser_group ug
+  	WHERE es.idn_tso_event =  #{idn_tso_event}
+ 	AND es.idn_user_group = ug.idn_user_group
+  	 <if test="isShipper==true">
+  		AND es.idn_user_group = #{idn_user_group}
+  	</if> 
+  </select>  
+  
+  <select id="selectEmergencyDiffDayAllDetails" parameterType="com.atos.beans.scadaAlarms.EmergencyDiffDayIsShipperBean" resultMap="EmergencyDiffDayDetails" >
+    SELECT es.idn_tso_event, ug.idn_user_group, ug.user_group_id, ug.user_group_name, es.comments, es.opening_file_name, es.idn_tso_event_shipper,
+    null, es.closing_file_name, null
+  	FROM tpa_ttso_event_shipper es , tpa_tuser_group ug
+  	WHERE es.idn_tso_event =  #{idn_tso_event}
+ 	AND es.idn_user_group = ug.idn_user_group
+  </select>  
+  
+  <select id="selectShippers" resultType="java.lang.String">
+		SELECT tuser.user_group_id 
+		FROM tpa_tuser_group tuser
+		WHERE tuser.idn_user_group_type = 
+		(SELECT idn_user_group_type FROM tpa_tuser_group_type WHERE type_code = 'SHIPPER')
+    </select>
+    
+    <select id="selectEmergencyDiffDayParent" parameterType="java.math.BigDecimal" resultMap="EmergencyDiffDay" >
+		  SELECT   e.idn_tso_event, 
+			  e.event_id, et.type_desc, 
+			  e.start_date, 
+			  e.end_date, 
+			  e.aud_last_date,
+			  nvl(z.ZONE_DESC, 'Others') as zone_desc, 
+			  e.status, e.comments, 
+			  e.opening_file_name, 
+			  e.closing_file_name,
+			  #{idn_user_group} as idn_user_group,
+			  #{isShipper} as isShipper
+  			FROM    tpa_ttso_event e, tpa_ttso_event_type et, TPA_VZONE_TPA z
+ 			 WHERE   e.idn_tso_event_type = et.idn_tso_event_type
+  			AND     z.idn_zone (+)= e.idn_zone
+  			 AND e.idn_tso_event = #{idn_tso_event}
+    </select>
+    
+    <select id="getSysdate" resultType="java.util.Date">
+		select sysdate from dual
+	</select>
+    
+    <select id="getIdEvent" statementType="CALLABLE" parameterType="com.atos.beans.scadaAlarms.IdEventBean">
+		{call #{valid,jdbcType=INTEGER,mode=OUT} :=
+		pck_id_generation.get_id(
+				#{type,jdbcType=VARCHAR,mode=IN},
+				#{date,jdbcType=DATE,mode=IN},
+				#{p_id,jdbcType=VARCHAR,mode=OUT},
+				#{error_desc,jdbcType=VARCHAR,mode=OUT})}
+	</select>
+    
+    <insert id="insertEvent" useGeneratedKeys="true" keyProperty="idn_tso_event" keyColumn="idn_tso_event" parameterType="com.atos.beans.scadaAlarms.EmergencyDiffDayBean">
+    insert into TPA_TTSO_EVENT 
+    (idn_tso_event,
+     EVENT_ID, 
+     Idn_Tso_Event_Type, 
+     Idn_Zone, 
+     start_date,
+     End_Date,
+     status, 
+     comments, 
+     OPENING_FILE_NAME,
+     Opening_Binary_Data, 
+     Closing_File_Name, 
+     Closing_Binary_Data,
+     AUD_INS_DATE, 
+     Aud_Last_Date, 
+     Aud_Ins_User, 
+     Aud_Last_User)
+    values
+    (tpa_stso_event.nextval,
+     #{event_id}, 
+     #{type_desc},
+     #{zone_desc},
+     #{start_date},
+     #{end_date},
+     'OPENED',
+     #{comments},
+     #{opening_file_name},
+     #{opening_binary_data},
+     NULL,
+     NULL,
+     sysdate,
+     sysdate,
+     user, user)
+  </insert>
+  
+  <insert id="insertEventShipper" parameterType="com.atos.beans.scadaAlarms.EmergencyDiffDayDetailsBean">
+  
+  insert into TPA_TTSO_EVENT_SHIPPER
+    (idn_tso_event_shipper, 
+    idn_tso_event, 
+    idn_user_group,
+    comments, 
+    opening_file_name,
+    opening_binary_data,
+    closing_file_name,
+    closing_binary_data, 
+    aud_ins_date, 
+    aud_last_date, 
+    aud_ins_user, 
+    aud_last_user)
+    values
+    (tpa_stso_event_shipper.nextval,
+     #{idn_tso_event},
+     #{idn_user_group},
+     NULL,
+     NULL,
+     NULL,
+     NULL,
+     NULL,
+     sysdate,
+     sysdate,
+     user, user)
+     </insert>
+     
+  <!-- <select id="selectIdnTsoEvent" resultType="java.math.BigDecimal" >
+  	select max(idn_tso_event) 
+	from tpa_ttso_event
+	</select>  -->
+	
+	<select id="selectIdnUserGroup" parameterType="java.lang.String" resultType="java.math.BigDecimal" >
+  	select idn_user_group 
+	from tpa_tuser_group
+	where user_group_id = #{user_group_id}
+	</select>
+	
+	<update id="updateEvent" parameterType="com.atos.beans.scadaAlarms.EmergencyDiffDayBean">
+	update tpa_ttso_event
+    set   start_date =#{start_date},
+    	  comments =  #{comments},
+          Closing_File_Name = #{closing_file_name},
+          Closing_Binary_Data = #{closing_binary_data},
+          opening_file_name = #{opening_file_name},
+		  opening_binary_data = #{opening_binary_data},
+          status = #{status},
+          end_date = #{end_date},
+          aud_last_date = sysdate,
+		  aud_last_user = user
+    where idn_tso_event = #{idn_tso_event}
+	</update>	
+	
+	<update id="updateStatusEvent" parameterType="com.atos.beans.scadaAlarms.EmergencyDiffDayBean">
+	update tpa_ttso_event
+    set   status = #{status},
+          aud_last_date = sysdate,
+		  aud_last_user = user
+    where idn_tso_event = #{idn_tso_event}
+	</update>	
+	
+	<update id="updateEventShipper" parameterType="com.atos.beans.scadaAlarms.EmergencyDiffDayDetailsBean">
+	update tpa_ttso_event_shipper 
+    set   comments =  #{comments},
+          opening_file_name = #{opening_file_name},
+          Opening_Binary_Data = #{opening_binary_data},
+		  Closing_File_Name = #{closing_file_name},
+          Closing_Binary_Data = #{closing_binary_data},
+		  aud_last_date = sysdate,
+		  aud_last_user = user		  
+    where idn_user_group = #{idn_user_group}
+    and   idn_tso_event_shipper = #{idn_tso_event_shipper}
+    and  idn_tso_event = #{idn_tso_event}
+	</update>
+	
+	<select id="selectOpenOperatorFile" parameterType="com.atos.beans.scadaAlarms.EmergencyDiffDayBean" resultType="com.atos.beans.scadaAlarms.EmergencyDiffDayBean">
+		select idn_tso_event,
+	       opening_file_name,
+	       opening_binary_data
+	    from tpa_ttso_event o
+		where o.idn_tso_event = #{idn_tso_event}
+	</select>
+	
+	<select id="selectCloseOperatorFile" parameterType="com.atos.beans.scadaAlarms.EmergencyDiffDayBean" resultType="com.atos.beans.scadaAlarms.EmergencyDiffDayBean">
+		select idn_tso_event,
+	       closing_file_name,
+	       closing_binary_data
+	    from tpa_ttso_event o
+		where o.idn_tso_event = #{idn_tso_event}
+	</select>
+	
+	<select id="selectOpenShipperFile" parameterType="com.atos.beans.scadaAlarms.EmergencyDiffDayDetailsBean" resultType="com.atos.beans.scadaAlarms.EmergencyDiffDayDetailsBean">
+		select idn_tso_event,
+	       opening_file_name,
+	       opening_binary_data
+	    from tpa_ttso_event_shipper o
+		where o.idn_tso_event_shipper = #{idn_tso_event_shipper}
+	</select>
+	
+	<select id="selectCloseShipperFile" parameterType="com.atos.beans.scadaAlarms.EmergencyDiffDayDetailsBean" resultType="com.atos.beans.scadaAlarms.EmergencyDiffDayDetailsBean">
+		select idn_tso_event,
+	       closing_file_name,
+	       closing_binary_data
+	    from tpa_ttso_event_shipper o
+		where o.idn_tso_event_shipper = #{idn_tso_event_shipper}
+	</select>
+	
+	<select id="getZoneDesc" parameterType="java.math.BigDecimal" resultType="java.lang.String" >
+		select zone_code
+	    from tpa_tzone
+		where idn_zone = #{zone}
+	</select>
+</mapper>    

@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+
+<mapper namespace="com.atos.mapper.dam.ContractNomPointMapper">
+
+
+	<select id="selectShippers" resultType="com.atos.beans.ComboFilterNS">
+		SELECT tuser.idn_user_group as key, tuser.user_group_id as value
+    	FROM tpa_tuser_group tuser
+    	WHERE tuser.idn_user_group_type = (SELECT idn_user_group_type FROM tpa_tuser_group_type WHERE type_code = 'SHIPPER')
+    </select>
+
+    <resultMap type="com.atos.beans.dam.ContractNomPointBean" id="ContractNomPoint">
+        <id column="idn_contract_nom_point" property="idn_contract_nom_point"  /> 
+        <result property="idn_contract" column="idn_contract"/>
+        <result property="idn_contract_point" column="idn_contract_point"/>
+        <result property="idn_nomination_point" column="idn_nomination_point"/>
+        <result property="contract_id" column="contract_id"/>
+        <result property="startDate" column="start_date"/>   
+        <result property="endDate" column="end_date"/>  
+       	<result property="contract_point" column="contract_point"/>
+       	<result property="nomination_point" column="nomination_point"/>
+    </resultMap>
+     
+    <select id="selectContractNomPoints" resultMap="ContractNomPoint">
+    
+select tcnp.idn_contract_nom_point as idn_contract_nom_point,
+      tcnp.idn_contract as idn_contract,
+      (select idn_system_point from tpa_tsystem_point 
+		where idn_system_point in
+		(select idn_contract_point from tpa_tsystem_point_param 
+		where idn_nomination_point = tcnp.idn_nom_point)) as idn_contract_point,
+      tcnp.idn_nom_point as idn_nomination_point,
+      tc.start_date as start_date,
+      tc.end_date as end_date,
+      tc.contract_code as contract_id,
+      (select point_code from tpa_tsystem_point 
+		where idn_system_point in
+		(select idn_contract_point from tpa_tsystem_point_param 
+		where idn_nomination_point = tcnp.idn_nom_point)) as contract_point,
+      (select t.point_desc from TPA_TSYSTEM_POINT t where t.idn_system_point = tcnp.idn_nom_point) as nomination_point
+  from TPA_TCONTRACT_NOM_POINT tcnp, TPA_TCONTRACT tc
+ where tcnp.idn_contract = tc.idn_contract
+   and tcnp.idn_contract = #{idn_contract}
+   <if test="idn_nomination_point !=null">
+   and idn_nom_point = #{idn_nomination_point}
+   </if>
+   <if test="startDate != null">
+    AND nvl(tc.end_date,to_date('9999/12/31','yyyy/mm/dd'))>=  #{startDate}
+    </if>
+    <if test="endDate != null">
+      AND #{endDate} >= tc.start_date
+    </if> 
+    <if test="idn_shipper != null">
+      AND tc.idn_user_group = #{idn_shipper}
+    </if> 
+order by tcnp.idn_contract, tc.start_date
+	</select>
+
+     <select id="selectContractIds" resultType="com.atos.beans.ComboFilterNS">
+
+		select t.idn_contract as key,
+	       t.CONTRACT_code as value
+ 		from TPA_TCONTRACT t
+		where 1 = 1
+		<if test="idn_shipper != null and idn_shipper != ''"> 
+			and t.idn_user_group = #{idn_shipper}
+		</if>
+		and t.idn_pipeline_system = #{idn_system}
+		   <if test="startDate != null">
+		    AND nvl(t.end_date,to_date('9999/12/31','yyyy/mm/dd'))>=  #{startDate}
+		    </if>
+		    <if test="startDate == null">
+		    and 1=0
+		    </if>
+		    <if test="endDate != null">
+		      AND #{endDate} >= t.start_date
+		    </if> 
+		    <if test="endDate == null">
+		    and 1=0
+		    </if>
+	</select>
+
+     <select id="selectContractForm" resultType="com.atos.beans.ComboFilterNS">
+
+		select t.idn_contract as key,
+         t.CONTRACT_code as value
+    from TPA_TCONTRACT t 
+       where 1=1
+<if test="startDate != null">
+        AND nvl(t.end_date,to_date('9999/12/31','yyyy/mm/dd'))>=  #{startDate}
+        </if>
+        <if test="endDate != null">
+          AND #{endDate} >= t.start_date
+		    </if> 
+	</select>
+
+     <select id="selectContractNomPointsForm" resultType="com.atos.beans.ComboFilterNS">
+
+select t1.idn_system_point as key, t1.point_code as value
+  from tpa_tsystem_point t1
+ where 1 = 1
+   <if test="startDate != null">
+   AND nvl(t1.end_date, to_date('9999/12/31', 'yyyy/mm/dd')) >= #{startDate}
+   </if>
+   <if test="endDate != null">
+   AND #{endDate} >= t1.start_date
+   </if> 
+   and t1.idn_system_point in
+       (select idn_contract_point
+          from tpa_tsystem_point_param t2
+         where 1 = 1
+          <if test="startDate != null">
+           AND nvl(t2.end_date, to_date('9999/12/31', 'yyyy/mm/dd')) >= #{startDate}
+		       </if>
+           <if test="endDate != null">
+           AND #{endDate} >= t2.start_date
+           </if> 
+           and idn_contract_point in
+               (select distinct idn_system_point
+                  from TPA_TCONTRACT_POINT t3
+                 where 1 = 1
+                and t3.idn_contract_agreement in
+                       (select idn_contract_agreement
+                          from tpa_tcontract_agreement t6
+                         where 1 = 1
+                         <if test="startDate != null">
+                          AND nvl(t6.end_date, to_date('9999/12/31', 'yyyy/mm/dd')) >=  #{startDate}
+		                      </if>
+                          <if test="endDate != null">
+                          AND #{endDate} >= t6.start_date
+                          </if> 
+                          and t6.idn_contract_request in
+                             (select idn_contract_request
+                                from tpa_tcontract_request t4
+                               where 1 = 1
+                                <if test="startDate != null">
+                                 AND nvl(t4.end_date, to_date('9999/12/31', 'yyyy/mm/dd')) >=  #{startDate}
+		                             </if>
+                                 <if test="endDate != null">
+                                 AND #{endDate} >= t4.start_date
+                                 </if> 
+                                 and t4.idn_contract in
+                                     (select idn_contract --idn_contract_request
+                                        from tpa_tcontract t5
+                                       where 1 = 1
+                                        <if test="startDate != null">
+                                         AND nvl(t5.end_date, to_date('9999/12/31', 'yyyy/mm/dd')) >=#{startDate}
+                                         </if>
+                                         <if test="endDate != null">
+                                         AND #{endDate} >= t5.start_date
+                                         </if> 
+                                         and t5.idn_contract = #{idn_contract}
+                                         and t5.idn_pipeline_system = #{idn_system}
+                                      )
+                              )
+                          )
+                 )
+         )
+ ORDER BY t1.point_code
+	</select>
+
+
+     <select id="selectNominationPointsForm" resultType="com.atos.beans.ComboFilterNS">
+
+
+
+select t1.idn_system_point as key,
+       t1.point_code as value
+  from tpa_tsystem_point t1
+ where t1.idn_system_point in
+       (select distinct idn_nomination_point
+          from TPA_TSYSTEM_POINT_PARAM t
+         where idn_contract_point = #{idn_contract_point})
+
+
+	</select>
+
+
+     <select id="selectContractPoints" resultType="com.atos.beans.ComboFilterNS">
+		  select t1.idn_system_point as key,
+       t1.point_code as value
+  from tpa_tsystem_point t1
+ where 1=1
+       <if test="startDate != null">
+		    AND nvl(t1.end_date,to_date('9999/12/31','yyyy/mm/dd'))>=  #{startDate}
+		    </if>
+        <if test="endDate != null">
+		      AND #{endDate} >= t1.start_date
+		    </if> 
+  and t1.idn_system_point in
+       (select idn_contract_point
+          from tpa_tsystem_point_param t2
+         where 1=1
+       <if test="startDate != null">
+		    AND nvl(t2.end_date,to_date('9999/12/31','yyyy/mm/dd'))>=  #{startDate}
+		    </if>
+        <if test="endDate != null">
+		      AND #{endDate} >= t2.start_date
+		    </if> 
+  and idn_contract_point in
+               (select distinct idn_system_point
+                  from TPA_TCONTRACT_POINT t3
+                 where 1=1
+  and t3.idn_contract_agreement in
+                       (select idn_contract_agreement
+                          from tpa_tcontract_request t4
+                         where 1=1
+       <if test="startDate != null">
+		    AND nvl(t4.end_date,to_date('9999/12/31','yyyy/mm/dd'))>=  #{startDate}
+		    </if>
+        <if test="endDate != null">
+		      AND #{endDate} >= t4.start_date
+		    </if> 
+  and t4.idn_contract_request in
+                               (select idn_contract_request
+                                  from tpa_tcontract t5
+                                 where 1=1
+       <if test="startDate != null">
+		    AND nvl(t5.end_date,to_date('9999/12/31','yyyy/mm/dd'))>=  #{startDate}
+		    </if>
+        <if test="endDate != null">
+		      AND #{endDate} >= t5.start_date
+		    </if> 
+  and t5.idn_contract = #{idn_contract}
+                                   and t5.idn_pipeline_system = #{idn_system}))))
+
+		 ORDER BY  t1.point_code
+    </select>
+  
+
+	<select id="selectNominationPoints" resultType="com.atos.beans.ComboFilterNS">
+select t1.idn_system_point as key,
+       t1.point_code as value
+  from tpa_tsystem_point t1
+ where t1.idn_system_point in
+       (select distinct idn_nomination_point
+          from TPA_TSYSTEM_POINT_PARAM t
+         where idn_contract_point = #{idn_contract_point})
+order by t1.point_code
+	</select>
+ 
+	<insert id="insertContractNomPoint" useGeneratedKeys="true" keyProperty="idn_contract_nom_point" keyColumn="idn_contract_nom_point" parameterType="com.atos.beans.dam.ContractNomPointBean">
+		INSERT INTO TPA_TCONTRACT_NOM_POINT
+			(idn_contract_nom_point,IDN_CONTRACT,IDN_NOM_POINT,
+			 aud_ins_user,aud_last_user)
+		VALUES
+			(tpa_scontract_nom_point.nextval,
+			 #{idn_contract},
+			 #{idn_nomination_point},
+		     #{username},
+			 #{username})
+	</insert>
+	
+	<update id="updateContractNomPoint" parameterType="com.atos.beans.dam.ContractNomPointBean">
+		UPDATE TPA_TCONTRACT_NOM_POINT set
+			IDN_NOM_POINT = #{idn_nomination_point}
+		WHERE idn_contract_nom_point = #{idn_contract_nom_point}
+	</update>
+	 	
+	<select id="getContractNomPointCode" resultType="java.math.BigDecimal">
+	    SELECT t.IDN_CONTRACT_NOM_POINT
+    FROM TPA_TCONTRACT_NOM_POINT t
+    WHERE t.IDN_CONTRACT = #{idn_contract}
+          AND  t.IDN_NOM_POINT = #{idn_nomination_point}    
+	</select>
+	
+	<delete id="deleteContractNomPoint" parameterType="com.atos.beans.dam.ContractNomPointBean">
+   		DELETE TPA_TCONTRACT_NOM_POINT tnp WHERE tnp.idn_contract_nom_point = #{idn_contract_nom_point}
+   	</delete>	
+</mapper>

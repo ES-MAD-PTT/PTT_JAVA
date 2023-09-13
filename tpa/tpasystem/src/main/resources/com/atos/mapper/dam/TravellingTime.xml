@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atos.mapper.dam.TravellingTimeMapper">
+
+
+	<resultMap type="com.atos.beans.dam.TravellingTimeBean" id="TravellingTime">
+		
+		
+		<result property="originPointCode" column="originPointCode" />
+		<result property="destinationPointCode" column="destinationPointCode" />
+
+		<result property="destination" column="destination" />
+		<result property="travelllingTime" column="travelllingTime" />
+		
+		<result property="startDate" column="start_date" />
+		<result property="endDate" column="end_date" />
+		
+		<result property="username" column="aud_ins_user" />
+		<result property="username" column="aud_last_user" />
+
+	</resultMap>
+
+	<select id="selectTravellingTimes" resultMap="TravellingTime">
+		WITH system_point AS
+		 (SELECT sp.idn_system_point,
+		         sp.point_code
+		    FROM tpa_tsystem_point sp,
+		         tpa_varea_tpa     a,
+		         tpa_vzone_tpa     z
+		   WHERE sp.idn_area = a.idn_area
+		     AND a.idn_zone = z.idn_zone
+		    AND z.idn_pipeline_system =  #{idn_system}
+		     AND sp.idn_system_point_group =
+		         (SELECT spg.idn_system_point_group FROM tpa_tsystem_point_group spg WHERE spg.group_code = 'NOMINATION'))
+		
+		SELECT tt.idn_travelling_time,
+		       tt.origin_point        AS idn_origin_point,
+		       tt.destination_point   AS idn_destination_point,
+		       sp_o.point_code        AS originPointCode,
+		       sp_d.point_code        AS destinationPointCode,
+		       decode(tt.is_valid_route, 'Y','Yes','NO')      AS destination, 
+		       tt.travelling_time	  AS travelllingTime,
+		       tt.start_date		  AS start_Date
+		  FROM tpa_ttravelling_time tt,
+		       system_point         sp_o,
+		       system_point         sp_d
+		 WHERE tt.origin_point = sp_o.idn_system_point
+		   AND tt.destination_point = sp_d.idn_system_point
+		   AND tt.version_date = (SELECT MAX(ttx.version_date)
+		                            FROM tpa_ttravelling_time ttx
+		                           WHERE ttx.origin_point = tt.origin_point
+		                             AND ttx.destination_point = tt.destination_point
+		                             AND ttx.start_date = tt.start_date)
+		                             
+		<if test="idn_OriginPoint != null and idn_OriginPoint != ''">
+			AND tt.origin_point = #{idn_OriginPoint}
+		</if>
+		
+		<if test="idn_DestginPoint != null and idn_DestginPoint != ''">
+			AND tt.destination_point = #{idn_DestginPoint}
+		</if>
+		   
+		<if test="destination != null and destination != ''">
+			AND tt.is_valid_route=#{destination}
+		</if>
+		
+		<if test="startDate != null">
+			 AND #{startDate} <![CDATA[ <= ]]> nvl(tt.end_date, nvl((SELECT MIN(tty.start_date) - 1
+                                                FROM tpa_ttravelling_time tty
+                                               WHERE tty.origin_point = tt.origin_point
+                                                 AND tty.destination_point = tt.destination_point
+                                                 AND tty.start_date > tt.start_date
+                                                 AND nvl(tty.end_date, tty.start_date) >= tty.start_date
+                                                 AND tty.version_date =
+                                                     (SELECT MAX(ttyx.version_date)
+                                                        FROM tpa_ttravelling_time ttyx
+                                                       WHERE ttyx.origin_point = tty.origin_point
+                                                         AND ttyx.destination_point = tty.destination_point
+                                                         AND ttyx.start_date = tty.start_date)), to_date('31/12/9999', 'DD/MM/YYYY')))
+		</if>
+		
+		<if test="endDate != null">
+			AND #{endDate} >= tt.start_date
+		</if>
+
+		 order by UPPER (originPointCode), upper(destinationPointCode), start_Date
+	</select>
+
+
+
+	<select id="getIdsOriPointSystem" resultType="com.atos.beans.ComboFilterNS">
+		  SELECT sp.idn_system_point AS key, 
+                 sp.point_code       AS value 
+	 	 FROM tpa_vsystem_point sp, 
+	       tpa_varea_tpa     a, 
+	       tpa_vzone_tpa     z 
+		 WHERE sp.group_code = 'NOMINATION' 
+	   		AND a.idn_area = sp.idn_area 
+	   		AND a.idn_zone = z.idn_zone 
+	   		AND z.idn_pipeline_system = #{idn_system} 
+	   		AND sp.type_code = 'ENTRY' 
+		 ORDER BY sp.point_code
+	</select>
+	
+	<select id="getIdsDestPointSystem" resultType="com.atos.beans.ComboFilterNS">
+		  SELECT sp.idn_system_point AS key, 
+                 sp.point_code       AS value 
+	 	 FROM tpa_vsystem_point sp, 
+	       tpa_varea_tpa     a, 
+	       tpa_vzone_tpa     z 
+		 WHERE sp.group_code = 'NOMINATION' 
+	   		AND a.idn_area = sp.idn_area 
+	   		AND a.idn_zone = z.idn_zone 
+	   		AND z.idn_pipeline_system = #{idn_system} 
+	   		AND sp.type_code = 'EXIT' 
+		 ORDER BY sp.point_code
+	</select>
+
+
+	<select id="getTravellingTimeId" resultType="java.lang.String">
+		SELECT  a.idn_travelling_time
+		FROM tpa_ttravelling_time a
+		WHERE a.origin_point = #{idn_origin_point}
+		and a.destination_point  = #{idn_destination_point}
+	</select>
+	
+	<select id="selectTravellingTimeDays" resultType="java.math.BigDecimal">
+		SELECT  a.travelling_time
+		FROM tpa_ttravelling_time a
+		WHERE a.origin_point = #{idn_origin_point}
+		order by a.travelling_time desc
+		<!--and a.travelling_time >0
+		 and a.destination_point  = #{idn_destination_point} -->
+	</select>
+	
+
+	<insert id="insertTravellingTime" useGeneratedKeys="true" keyProperty="idn_travelling_time"
+		keyColumn="idn_travelling_time" parameterType="com.atos.beans.dam.TravellingTimeBean">
+		INSERT INTO tpa_ttravelling_time
+		(idn_travelling_time, origin_point, destination_point, is_valid_route, travelling_time, start_date,
+		aud_ins_user,aud_last_user)
+		VALUES
+		(tpa_stravelling_time.nextval,
+		#{idn_origin_point},
+		#{idn_destination_point},
+		#{destination},
+		#{travelllingTime},
+		#{startDate},		
+		#{username},
+		#{username}
+		)
+	</insert>
+	
+	
+	<select id="getOriginCode" resultType="java.lang.String">
+		 SELECT   sp.point_code     
+	 	 FROM tpa_vsystem_point sp     
+		 WHERE sp.idn_system_point=#{idn_origin_point} 
+	</select>
+	
+	<select id="getDestCode" resultType="java.lang.String">
+		 SELECT   sp.point_code     
+	 	 FROM tpa_vsystem_point sp     
+		 WHERE sp.idn_system_point=#{idn_destination_point} 
+	</select>
+</mapper>

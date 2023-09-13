@@ -1,0 +1,66 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_forecast']}" url="#" />
+			<p:menuitem value="#{msg['menu_medium_term']}" url="#" />
+			<p:menuitem value="#{msg['menu_forecast_file']}" url="/pages/forecasting/shipperForecastingMediumSubmissionFile.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+		<h:form enctype="multipart/form-data" id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" sticky="true"/>
+			
+				<p:panelGrid columns="2" style="width:100%">
+					
+					<p:panelGrid id="filters">
+						<p:row>
+							<p:column  style="font-weight: bold;">
+								<h:outputText value="#{msg['from']}" />
+							</p:column>
+							<p:column  style="font-weight: bold;">
+								<h:outputText value="#{msg['to']}" />
+							</p:column>
+							<shiro:hasPermission name="#{changeSystemView.system}.FORECASTING.MEDIUM.SUB_SHIPPER.ADD">
+								<p:column rowspan="2" >
+									<p:fileUpload id="upload" style="width:100%" fileUploadListener="#{shipperForecastingMediumSubmissionFileView.handleFileUpload}" mode="advanced" dragDropSupport="true"
+	           							fileLimit="1" ajax="true" update="msgs,upload" sizeLimit="5000000" allowTypes="/(\.|\/)(xlsx|xlsm|xls)$/" 
+	           							onstart="PF('cargando').show()"
+		           						oncomplete="PF('cargando').hide()"/>
+								</p:column>
+							</shiro:hasPermission>
+						</p:row>
+						<p:row>
+						<p:column>
+							<p:calendar id="fecInicio" size="10" pattern="dd/MM/yyyy" value="#{shipperForecastingMediumSubmissionFileView.filters.start_date}"
+									showOn="button" navigator="true" 
+									readonlyInput="true"  mindate="#{(shipperForecastingMediumSubmissionFileView.sysdate).getTime()}" >
+									<p:ajax event="dateSelect" update="fecFin,msgs,fecInicio" listener="#{shipperForecastingMediumSubmissionFileView.handleKeyEvent}" />
+							</p:calendar>
+						</p:column>
+						<p:column>
+							<p:calendar id="fecFin"  size="10" pattern="dd/MM/yyyy"	 value="#{shipperForecastingMediumSubmissionFileView.filters.end_date}"
+									showOn="button" navigator="true" disabled="true">
+									<p:ajax event="dateSelect" update="fecFin"></p:ajax>
+									<p:ajax event="change" update="fecFin"></p:ajax>
+							</p:calendar>
+						</p:column>	
+							
+						</p:row>
+					</p:panelGrid>
+				</p:panelGrid>
+
+		</h:form>
+	</ui:define>
+
+
+</ui:composition>

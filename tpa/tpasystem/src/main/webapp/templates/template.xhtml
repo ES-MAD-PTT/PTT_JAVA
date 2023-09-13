@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html   xmlns="http://www.w3.org/1999/xhtml"
+		xmlns:ui="http://java.sun.com/jsf/facelets"
+		xmlns:h="http://java.sun.com/jsf/html"
+		xmlns:p="http://primefaces.org/ui"
+		xmlns:f="http://java.sun.com/jsf/core">
+
+<f:view contentType="text/html" id="fview" locale="#{languageBean.locale}">
+
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<title>PTT TPA</title>
+	<ui:debug />
+	<f:metadata>
+		<ui:insert name="metadata" />
+	</f:metadata>
+	
+	<h:head>
+		<ui:insert name="head_ext" />	
+	</h:head>
+
+	<h:body>
+
+	<p:ajaxExceptionHandler type="java.lang.Exception"
+							update="exceptionDialog"	
+                            onexception="PF('exceptionDialog').show();" />
+
+		<p:dialog id="exceptionDialog" header="An error has occurred while processing this page!" widgetVar="exceptionDialog"
+              height="100px">
+              <div style="text-align:center">
+        Please, reload this page and try again<br/>
+         <br />
+
+        <p:button onclick="PF('exceptionDialog').hide();" style="align:center"
+                  value="close"
+                  />
+
+         </div>
+    </p:dialog>
+	 		<f:facet name="last">
+				<h:outputStylesheet library="css" name="#{changeSystemView.system_css}" />
+				<h:outputStylesheet library="css" name="common.css" />
+			</f:facet>
+		
+			<p:layout widgetVar="layoutWdgt" fullPage="true" style="border-collapse:collapse">		
+			    <p:layoutUnit id="layoutHeader" position="north" size="92" resizable="true" closable="false" collapsible="true" style="border:0px;margin:0px;padding:0px !important">        			
+        			<ui:include src="header.xhtml" />
+    			</p:layoutUnit>
+ 
+				<p:layoutUnit id="centerLayout" position="center" gutter="0">										
+					<ui:insert name="content" />					
+				</p:layoutUnit>
+				
+			</p:layout>
+			
+			<ui:insert name="dialogs"/>
+			
+			<p:dialog widgetVar="cargando" resizable="false" width="200" height="25" closable="false" modal="true" showHeader="false" style="text-align:center;">
+				<p:outputLabel style="font-size:18;" value="#{msg['loading']}"/>
+			</p:dialog>
+
+			<p:dialog widgetVar="grabando" resizable="false" width="200" height="25" closable="false" modal="true" showHeader="false" style="text-align:center;">
+				<p:outputLabel style="font-size:18;" value="#{msg['saving']}" />
+			</p:dialog>
+
+			<p:dialog widgetVar="limpiando" resizable="false" width="200" height="25" closable="false" modal="true" showHeader="false" style="text-align:center;">
+				<p:outputLabel style="font-size:18;" value="#{msg['cleaning']}" />
+			</p:dialog>
+			
+			<p:dialog widgetVar="allocating" resizable="false" width="200" height="25" closable="false" modal="true" showHeader="false" style="text-align:center;">
+				<p:outputLabel style="font-size:18;" value="#{msg['allocating']}" />
+			</p:dialog>
+
+			<p:dialog widgetVar="executing" resizable="false" width="200" height="25" closable="false" modal="true" showHeader="false" style="text-align:center;">
+				<p:outputLabel style="font-size:18;" value="#{msg['executing']}" />
+			</p:dialog>
+
+			<p:dialog widgetVar="cancelando" resizable="false" width="200" height="25" closable="false" modal="true" showHeader="false" style="text-align:center;">
+				<p:outputLabel style="font-size:18;" value="#{msg['canceling']}" />
+			</p:dialog>
+	</h:body>
+
+</f:view>
+</html>		

@@ -1,0 +1,413 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_alarms']}" url="#" />
+			<p:menuitem value="#{msg['menu_scada_alarms']}" url="/pages/scadaAlarms/scadaAlarms.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="5000"/>
+			
+            <p:layout widgetVar="scadaAlarmsLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">	
+					
+				<p:panelGrid columns="2" style="width:100%">
+					
+						<p:panelGrid>
+							<p:row>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['scadaAlarms_Status']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['scadaAlarms_From']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['scadaAlarms_To']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['scadaAlarms_Origin']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								
+								<p:column>
+					           		<p:selectCheckboxMenu widgetVar="status_w" id="status" style="width:100px" 
+					           			label="Status" value="#{scadaAlarmView.filters.status}" >
+					           			
+										<f:selectItem itemLabel="NEW" itemValue="NEW" />
+										<f:selectItem itemLabel="PUBLISHED" itemValue="PUBLISHED" />
+										<f:selectItem itemLabel="DELETED" itemValue="DELETED" />
+										<f:selectItem itemLabel="FINISHED" itemValue="FINISHED" />
+																
+					           		</p:selectCheckboxMenu>									
+								</p:column>
+								
+							
+								<p:column>
+									<p:calendar id="fecInicio"  size="14" pattern="dd/MM/yyyy HH:mm:ss" mask="true" value="#{scadaAlarmView.filters.startDate}"
+										showOn="button" navigator="true">
+									</p:calendar>
+								</p:column>
+								<p:column>
+									<p:calendar id="fecFin"  size="14" pattern="dd/MM/yyyy HH:mm:ss" mask="true" value="#{scadaAlarmView.filters.endDate}"
+										showOn="button" navigator="true">
+									</p:calendar>
+								</p:column>
+							
+								<p:column>
+					           		<p:selectCheckboxMenu widgetVar="origin_w" id="origin" style="width:100px" 
+					           			label="Origin" value="#{scadaAlarmView.filters.origin}" >
+											<f:selectItem itemLabel="SCADA" itemValue="SCADA" />
+											<f:selectItem itemLabel="TPA" itemValue="TPA" />
+					           		</p:selectCheckboxMenu>									
+								</p:column>
+							</p:row>
+						</p:panelGrid>
+						<p:panelGrid columns="2" style="float:right;top:0px">
+							<shiro:hasPermission name="#{changeSystemView.system}.ALARMS.MANAGEMENT.QUERY">
+								<p:commandButton value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{scadaAlarmView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,:#{p:component('scadaAlarms1')}"/>
+							</shiro:hasPermission>
+							
+							<p:commandButton  onclick="PF('scadaAlarmsLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+							
+							<shiro:hasPermission name="#{changeSystemView.system}.ALARMS.MANAGEMENT.QUERY">									
+								<p:commandButton value="#{msg['clear']}"
+									actionListener="#{scadaAlarmView.onClear}"
+									process="@this" 
+									update="form"/> 
+							</shiro:hasPermission>
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center"
+					resizable="false" closable="false" collapsible="false">
+ 
+					<p:dataTable widgetVar="w_scadaAlarms"  id="scadaAlarms1" var="scadaAlarms" value="#{scadaAlarmView.items}" reflow="true" 
+						style="margin-bottom:20px;border-collapse:collapse" rowSelectMode="checkbox"
+						selection="#{scadaAlarmView.selecteds}" rowKey="#{scadaAlarms.idn_scada_alarm}"
+					    paginator="true" rows="15"
+					    scrollable="true"  scrollHeight="240" 
+					    rowsPerPageTemplate="5,10,15,20,25,50,100"
+					    
+					    editable="true">
+							<f:facet name="header">
+								<p:outputPanel style="height:25px">
+									<p:commandButton id="toggler" type="button" value="#{msg['columns']}" style="float:right" icon="ui-icon-calculator" />
+	        						<p:columnToggler datasource="scadaAlarms1" trigger="toggler" style="width:200px"/>
+									<p:commandButton value="#{msg['scadaAlarms_delete']}"  
+										actionListener="#{scadaAlarmView.delete}"
+										icon="ui-icon fa fa-remove" 
+										style="float:right"
+										onstart="PF('cargando').show()"
+										oncomplete="PF('cargando').hide()" 
+										update=":form:msgs,:#{p:component('scadaAlarms1')}"/>
+									<p:commandButton value="#{msg['publish']}" 
+	        							style="float:right"
+	        							icon="ui-icon fa fa-envelope-o" 
+										actionListener="#{scadaAlarmView.publish}"
+										onstart="PF('cargando').show()"
+										oncomplete="PF('cargando').hide()" 
+										update=":form:msgs,:#{p:component('scadaAlarms1')}"/>		
+										
+									<shiro:hasPermission name="#{changeSystemView.system}.ALARMS.MANAGEMENT.ADD">
+		        						<p:commandButton value="#{msg['scadaAlarms_New']}"  id="new" type="button"  icon="ui-icon fa fa-save" style="float:right;"
+		        							onclick="PF('dlgnewScadaAlarms').show();"
+		        					/>
+	        						</shiro:hasPermission>		
+										<!--  							
+	        						<p:commandButton value="#{msg['save']}" 
+	        							style="float:right"
+	        							icon="ui-icon fa fa-save"
+										actionListener="#{scadaAlarmView.saveMasivo}"
+										onstart="PF('cargando').show()"
+										oncomplete="PF('cargando').hide()" 
+										update=":form:msgs,:#{p:component('scadaAlarms1')}"/>
+										-->
+								</p:outputPanel>        										          
+					        </f:facet>
+					        
+					        <shiro:hasPermission name="#{changeSystemView.system}.ALARMS.MANAGEMENT.MOD">  
+								<p:ajax event="rowEdit" listener="#{scadaAlarmView.onRowEdit}" update=":form:msgs"/>
+								<p:ajax event="rowEditCancel" listener="#{scadaAlarmView.onRowCancel}" update=":form:msgs"/>		
+					 		</shiro:hasPermission>
+					 
+					 		<p:column headerText="Select" selectionMode="multiple" style="width:36px;text-align:center"/>
+					 		
+					       <p:column headerText="#{msg['scadaAlarms_ID']}"  style="width: 120px;" sortBy="#{scadaAlarms.alarm_id}" filterMatchMode="contains" filterBy="#{scadaAlarms.alarm_id}">
+					               <h:outputText value="#{scadaAlarms.alarm_id}" />
+					       </p:column>
+					       <p:column headerText="#{msg['scadaAlarms_Name']}"  style="width: 120px;" sortBy="#{scadaAlarms.scada_tag_name}" filterMatchMode="contains" filterBy="#{scadaAlarms.scada_tag_name}">
+					               <h:outputText value="#{scadaAlarms.scada_tag_name}" />
+					       </p:column>
+									
+						   <p:column headerText="#{msg['scadaAlarms_Time_Stamp']}" style="width: 140px;" sortBy="#{scadaAlarms.scada_timestamp}" filterMatchMode="contains"  filterBy="#{scadaAlarms.scada_timestamp}">
+					         <h:outputText value="#{scadaAlarms.scada_timestamp}" >
+					         	<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss"/>
+					         </h:outputText>
+					       </p:column>
+					       <p:column headerText="#{msg['scadaAlarms_Label']}" style="width: 100px;" sortBy="#{scadaAlarms.scada_label}" filterMatchMode="contains"  filterBy="#{scadaAlarms.scada_label}">
+					         <h:outputText value="#{scadaAlarms.scada_label}" />
+					       </p:column>
+					       <p:column headerText="#{msg['scadaAlarms_Metering_Point']}" style="width: 100px;" sortBy="#{scadaAlarms.metering_point}" filterMatchMode="contains"  filterBy="#{scadaAlarms.metering_point}">
+					         <h:outputText value="#{scadaAlarms.metering_point}" />
+					       </p:column>
+					       
+     						 <p:column headerText="#{msg['scadaAlarms_type']}" style="width: 120px;" sortBy="#{scadaAlarms.alarm_type}" filterMatchMode="contains"  filterBy="#{scadaAlarms.alarm_type}">              
+					            <h:outputText value="#{scadaAlarms.alarm_type}"  />
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['scadaAlarms_Capacity_Restriction']}" style="width: 100px;" sortBy="#{scadaAlarms.capacity_restriction}" filterMatchMode="contains" filterBy="#{scadaAlarms.capacity_restriction}">
+					           <p:cellEditor>
+					               <f:facet name="output">
+					               		<h:outputText value="#{scadaAlarms.capacity_restriction}" style="float:right">
+					               				<f:convertNumber pattern="##,##0.###" />
+					               		</h:outputText>
+					               
+					               </f:facet>
+					               <f:facet name="input">
+					              		  <p:inputNumber required="true" id="capacity_restriction" value="#{scadaAlarms.capacity_restriction}"  size="10"  
+												 disabled="#{scadaAlarmView.disabledField(scadaAlarms)}"
+												 requiredMessage="#{msg['scadaAlarms_Capacity_Restriction']}: #{msg['empty_field']}"
+												 validatorMessage="#{msg['scadaAlarms_Capacity_Restriction']}: #{msg['lenght_field']} "
+												 decimalSeparator="." thousandSeparator="," decimalPlaces="0"   >
+									    </p:inputNumber>
+					               	</f:facet>
+					           </p:cellEditor> 
+					       </p:column>
+					        <p:column headerText="#{msg['scadaAlarms_Area']}" style="width: 100px;" sortBy="#{scadaAlarms.area_code}" filterMatchMode="contains" filterBy="#{scadaAlarms.area_code}">
+					          <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{scadaAlarms.area_code}" /></f:facet>
+					               <f:facet name="input">
+					               		<p:selectOneMenu id="area" style="width:75%"  value="#{scadaAlarms.idn_area}" 
+					               			required="true" disabled="#{scadaAlarmView.disabledField(scadaAlarms)}"
+					               			requiredMessage="#{msg['scadaAlarms_Area_Affected']}: #{msg['empty_field']}">
+					               			<f:selectItem itemLabel="" itemValue="" />
+							               <!-- offshore
+							               	<f:selectItems value="#{scadaAlarmView.getAreas().entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" /> -->
+							               	<f:selectItems value="#{scadaAlarmView.getAreasSystem().entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					               		</p:selectOneMenu>
+					               	</f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       <p:column headerText="#{msg['scadaAlarms_Temp_Resolution_Time']}"  style="width: 100px;" sortBy="#{scadaAlarms.temp_resolution_time}" filterMatchMode="contains" filterBy="#{scadaAlarms.temp_resolution_time}">
+					          <p:cellEditor>
+					               <f:facet name="output">
+					               			<h:outputText value="#{scadaAlarms.temp_resolution_time}" >
+					              				<f:convertDateTime pattern="dd/MM/yyyy" />
+					              		 </h:outputText>
+					               </f:facet>
+					               <f:facet name="input"> <!--Al editar, se debe permitir elegir cualquier fecha (ahora no permite seleccionar fechas pasadas) quitamos readonlyInput y mindate -->
+					               		<p:calendar id="temp_resolution_time" value="#{scadaAlarms.temp_resolution_time}" pattern="dd/MM/yyyy" 
+						               		disabled="#{scadaAlarmView.disabledField(scadaAlarms)}"
+					               			
+											requiredMessage="#{msg['scadaAlarms_Temp_Resolution_Time']}: #{msg['empty_field']}" validatorMessage="#{msg['scadaAlarms_Temp_Resolution_Time']}: #{msg['empty_field']}">
+											<f:convertDateTime pattern="dd/MM/yyyy"/>
+										</p:calendar>
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       <p:column headerText="#{msg['scadaAlarms_Severity']}" style="width: 100px;" sortBy="#{scadaAlarms.severity}" filterMatchMode="contains" filterBy="#{scadaAlarms.severity}">
+					          <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{scadaAlarms.severity}" /></f:facet>
+					               <f:facet name="input">
+					               		<p:selectOneMenu   required="true" id="severity" style="width:100px" value="#{scadaAlarms.severity}" >
+					               			<f:selectItem itemLabel="" itemValue="" />
+											<f:selectItem itemLabel="MODERATE" itemValue="MODERATE" />
+											<f:selectItem itemLabel="HIGH" itemValue="HIGH" />
+					           			</p:selectOneMenu>	
+					               	</f:facet>
+					           </p:cellEditor>
+					       </p:column>  
+					        <p:column headerText="#{msg['scadaAlarms_Status']}"  style="width: 60px;" sortBy="#{scadaAlarms.status}" >
+					               <h:outputText value="#{scadaAlarms.status}" />
+					       </p:column>
+					       
+					        <p:column headerText="#{msg['scadaAlarms_Origin']}"  style="width: 60px;" sortBy="#{scadaAlarms.origin}" filterMatchMode="contains" filterBy="#{scadaAlarms.origin}">
+					               <h:outputText value="#{scadaAlarms.origin}" />
+					       </p:column>
+					       <p:column headerText="#{msg['scadaAlarms_Comments_and_Remarks']}" style="width: 120px;" sortBy="#{scadaAlarms.comments_remarks}">
+					          <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{scadaAlarms.comments_remarks}" /></f:facet>
+					               <f:facet name="input">
+					               		<p:inputTextarea cols="22" autoResize="true" value="#{scadaAlarms.comments_remarks}" style="width:100%;white-space:initial !important" label="#{msg['scadaAlarms_Comments_and_Remarks']}"
+					               			validatorMessage="#{msg['scadaAlarms_Comments_and_Remarks']}: #{msg['lenght_field']} 1000">
+					               			<f:validateLength maximum="1000"/>
+					               		</p:inputTextarea>	
+					               	</f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       <p:column headerText="#{msg['scadaAlarms_Comment_Shipper']}" style="width: 120px;" sortBy="#{scadaAlarms_Comment_Shipper}">
+					          <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{scadaAlarms.comments_shipper}" /></f:facet>
+					               <f:facet name="input">
+					               		<p:inputTextarea cols="22"  maxlength="100" autoResize="true" value="#{scadaAlarms.comments_shipper}" style="width:100%;white-space:initial !important" label="#{msg['scadaAlarms_Comment_Shipper']}"
+					               			validatorMessage="#{msg['scadaAlarms_Comment_Shipper']}: #{msg['lenght_field']} 100">
+					               			<f:validateLength maximum="100"/>
+					               		</p:inputTextarea>	
+					               	</f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					 
+					       <!-- no editable
+					       <p:column headerText="#{msg['scadaAlarms_Status']}" style="width: 100px;" sortBy="#{scadaAlarms.status}" filterMatchMode="contains" filterBy="#{scadaAlarms.status}">
+					          <p:cellEditor>
+					          
+					              <f:facet name="output"><h:outputText style="display: block;" value="#{scadaAlarms.status}" /></f:facet>
+					            
+					                <f:facet name="input">
+					               		<p:selectOneMenu id="status" style="width:100px" value="#{scadaAlarms.status}" >
+					               			<f:selectItem itemLabel="" itemValue="" />
+						           			<f:selectItem itemLabel="PUBLISHED" itemValue="PUBLISHED" />
+											<f:selectItem itemLabel="DELETED" itemValue="DELETED" />
+											<f:selectItem itemLabel="FINISHED" itemValue="FINISHED" />
+					           			</p:selectOneMenu>	
+					               	</f:facet>
+					       
+					           </p:cellEditor>
+					                   
+					       </p:column>	-->
+					       
+					      
+					       
+					      <shiro:hasPermission name="#{changeSystemView.system}.ALARMS.MANAGEMENT.MOD">
+					       <p:column style="width:32px">
+					            <p:rowEditor rendered="#{scadaAlarmView.renderItemEditor(scadaAlarms)}"/>
+					       </p:column>
+					       </shiro:hasPermission>      
+					</p:dataTable>
+				</p:layoutUnit>
+
+			</p:layout>
+		</h:form>
+		
+	<shiro:hasPermission name="#{changeSystemView.system}.ALARMS.MANAGEMENT.ADD">
+		<p:dialog widgetVar="dlgnewScadaAlarms" resizable="false"  closable="true" modal="true" appendTo="@(body)" header="#{msg['scadaAlarms_New_Events_submision']}">
+		<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario
+		 <p:ajax event="close" update="formNewEntity"  process="@this" listener="#{shipperView.cancel}" />	-->
+			<h:form id="formNewEntity">
+			<p:growl id="msgs" showDetail="true"  life="5000"/>
+				<p:panelGrid columns="4" style="width:100%">
+					<p:panelGrid>
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['scadaAlarms_Name']}" />
+							</p:column>
+							<p:column>
+								<p:selectOneMenu id="name"  style="width:90px"   value="#{scadaAlarmView.newScadaAlarms.idn_scada_tag_name}" 
+									required="true" requiredMessage="#{msg['scadaAlarms_Name']}: #{msg['empty_field']}">
+										  <f:selectItem  itemValue="-1" itemLabel="" /> 
+							             <!-- offshore 
+							              <f:selectItems value="#{scadaAlarmView.alarmName.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />-->
+							              <f:selectItems value="#{scadaAlarmView.alarmNameSystem.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+							              <p:ajax event="change" update="label,meteringPoint, binary, type"/>					               
+			               		</p:selectOneMenu>
+								<p:message for="name" />
+							</p:column>
+							<p:column>
+								<h:outputText  value="#{msg['scadaAlarms_Time_Stamp']}" />
+							</p:column>
+							<p:column><!-- Task 439212 se debe permitir elegir cualquier fecha (quitamos mindate) -->
+								<p:calendar required="true" id="timeStamp" showOn="button"
+									value="#{scadaAlarmView.newScadaAlarms.scada_timestamp}" pattern="dd/MM/yyyy HH:mm:ss"
+									readonlyInput="true"   
+									requiredMessage="#{msg['scadaAlarms_Time_Stamp']}: #{msg['empty_field']}" validatorMessage="#{msg['scadaAlarms_Time_Stamp']}: #{msg['lenght_field']}">
+								</p:calendar>
+								
+								<p:message for="timeStamp" />
+							</p:column>
+							
+						</p:row>
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['scadaAlarms_Label']}" />
+							</p:column>
+							<p:column> 
+								<p:selectOneMenu id="label"  style="width:90px"   value="#{scadaAlarmView.newScadaAlarms.scada_label}" 
+									required="true" requiredMessage="#{msg['scadaAlarms_Label']}: #{msg['empty_field']}">
+							              <f:selectItems value="#{scadaAlarmView.getAlarmLabel(scadaAlarmView.newScadaAlarms).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />         
+			               		</p:selectOneMenu>
+								
+								<p:message for="label" />
+							</p:column>
+							<p:column>
+								<h:outputText value="#{msg['scadaAlarms_Metering_Point']}" />
+							</p:column>
+							<p:column>
+								<p:selectOneMenu id="meteringPoint"  style="width:90px"   value="#{scadaAlarmView.newScadaAlarms.metering_point}" 
+									required="true" requiredMessage="#{msg['scadaAlarms_Metering_Point']}: #{msg['empty_field']}">
+							              <f:selectItems value="#{scadaAlarmView.getAlarmMetering(scadaAlarmView.newScadaAlarms).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+			               		</p:selectOneMenu>
+								<p:message for="meteringPoint" />
+							</p:column>
+							
+							</p:row>
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['scadaAlarms_binary']}" />
+							</p:column>
+							<p:column>
+								<p:selectOneMenu id="binary"  style="width:90px"   value="#{scadaAlarmView.newScadaAlarms.binary}" 
+									required="true" requiredMessage="#{msg['scadaAlarms_binary']}: #{msg['empty_field']}">
+							              <f:selectItems  value="#{scadaAlarmView.getAlarmBinary(scadaAlarmView.newScadaAlarms).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+			               		
+			               		 <p:ajax event="change" update="binary"></p:ajax>
+			               		</p:selectOneMenu>
+								<p:message for="meteringPoint" />
+							</p:column>
+							
+							<p:column>
+								<h:outputText value="#{msg['scadaAlarms_type']}" />
+							</p:column>
+							<p:column>
+								<p:selectOneMenu id="type"  style="width:90px"   value="#{scadaAlarmView.newScadaAlarms.alarm_type}" 
+									required="true" requiredMessage="#{msg['scadaAlarms_binary']}: #{msg['empty_field']}">
+							              <f:selectItems  value="#{scadaAlarmView.getAlarmType(scadaAlarmView.newScadaAlarms).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+			               		</p:selectOneMenu>
+								<p:message for="meteringPoint" />
+							</p:column>
+						</p:row>
+					</p:panelGrid>
+				</p:panelGrid>
+				
+				<p:separator/>
+				<p:panelGrid>
+					<p:row>
+						<p:column>
+							<p:commandButton value="#{msg['save']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" validateClient="true"
+								action="#{scadaAlarmView.save}" update=":#{p:component('scadaAlarms1')},:formNewEntity"
+								onstart="PF('cargando').show()"
+								oncomplete="PF('dlgnewScadaAlarms').hide(),PF('cargando').hide()" />
+			        		<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close" 
+			        			update="formNewEntity" process="@this" actionListener="#{scadaAlarmView.cancel}"
+			        			oncomplete="PF('dlgnewScadaAlarms').hide()"/>
+						</p:column>					
+					</p:row>
+				</p:panelGrid>							
+			</h:form>			
+		</p:dialog>
+	</shiro:hasPermission>
+		
+		
+	</ui:define>
+
+
+</ui:composition>

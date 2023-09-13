@@ -1,0 +1,648 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home"
+				style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_alarms']}" url="#" />
+			<p:menuitem value="#{msg['menu_Emergency_DificultDay']}"
+				url="/pages/tagnameManagement/emergency_DificultDay.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+		<h:form id="form"
+			style="width:100%;height:98%;border-collapse:collapse"
+			fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="5000" />
+
+			<p:layout widgetVar="emergencyDificultDayLayout"
+				style="width:100%;height:100%" showEffect="clip" hideEffect="clip">
+
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">
+
+					<p:panelGrid columns="2" style="width:100%">
+
+						<p:panelGrid>
+							<p:row>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['emergency_difficult_type']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['emergency_difficult_zone']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['emergency_difficult_status']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['emergency_difficult_start_date']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['emergency_difficult_end_date']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<p:selectOneMenu widgetVar="emergDifficType_w"
+										id="emergDifficType" style="width:150px"
+										value="#{emergencyDiffDayView.filters.type}">
+										<f:selectItem itemLabel=" " itemValue="" />
+										<f:selectItems
+											value="#{emergencyDiffDayView.eventType.entrySet()}"
+											var="entry" itemValue="#{entry.key}"
+											itemLabel="#{entry.value}" />
+									</p:selectOneMenu>
+								</p:column>
+								<p:column>
+									<p:selectOneMenu widgetVar="emergDifficZone_w"
+										id="emergDifficZone" style="width:100px"
+										value="#{emergencyDiffDayView.filters.zone}">
+										<f:selectItem itemLabel=" " itemValue="" />
+										<f:selectItem itemLabel="Others" itemValue="0" />
+										<f:selectItems value="#{emergencyDiffDayView.zone.entrySet()}"
+											var="entry" itemValue="#{entry.key}"
+											itemLabel="#{entry.value}" />
+									</p:selectOneMenu>
+								</p:column>
+
+								<p:column>
+									<p:selectOneMenu widgetVar="emergDifficStatus_w"
+										id="emergDifficStatus" style="width:50px"
+										value="#{emergencyDiffDayView.filters.status}">
+										<f:selectItem itemLabel="" itemValue="" />
+
+										<f:selectItem itemLabel="#{msg['emerDiff_opened']}"
+											itemValue="OPENED" />
+										<f:selectItem itemLabel="#{msg['emerDiff_pendingShipper']}"
+											itemValue="PENDING SHIPPERS" />
+										<f:selectItem itemLabel="#{msg['emerDiff_closed']}"
+											itemValue="CLOSED" />
+									</p:selectOneMenu>
+								</p:column>
+
+								<p:column>
+									<p:calendar required="false" id="emergDifficStartDate"
+										size="10" pattern="dd/MM/yyyy" mask="true"
+										value="#{emergencyDiffDayView.filters.start_date}"
+										showOn="button" navigator="true">
+									</p:calendar>
+								</p:column>
+								<p:column>
+									<p:calendar required="false" id="emergDifficEndtDate" size="10"
+										pattern="dd/MM/yyyy" mask="true"
+										value="#{emergencyDiffDayView.filters.end_date}"
+										showOn="button" navigator="true">
+									</p:calendar>
+								</p:column>
+							</p:row>
+						</p:panelGrid>
+						<p:panelGrid columns="2" style="float:right;top:0px">
+							<shiro:hasPermission
+								name="#{changeSystemView.system}.ALARMS.EMERGENCY_DIFICULTDAY.QUERY">
+								<p:commandButton value="#{msg['search']}"
+									icon="ui-icon fa fa-search"
+									actionListener="#{emergencyDiffDayView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()"
+									update="msgs,:#{p:component('emergencyDiffDay1')}" />
+							</shiro:hasPermission>
+
+							<p:commandButton
+								onclick="PF('emergencyDificultDayLayout').toggle('north')"
+								id="header_collapse" icon="fa fa-minus"
+								value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+
+							<shiro:hasPermission
+								name="#{changeSystemView.system}.ALARMS.EMERGENCY_DIFICULTDAY.QUERY">
+								<p:commandButton value="#{msg['clear']}"
+									actionListener="#{emergencyDiffDayView.onClear}"
+									process="@this" update="form" />
+							</shiro:hasPermission>
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center"
+					resizable="false" closable="false" collapsible="false">
+
+					<p:dataTable widgetVar="w_emergencyDiffDay" id="emergencyDiffDay1"
+						var="emergencyDiffDay" value="#{emergencyDiffDayView.items}"
+						reflow="true" style="margin-bottom:20px;border-collapse:collapse"
+						paginator="true" rows="15" scrollable="true" scrollHeight="440"
+						rowsPerPageTemplate="5,10,15,20,25,50,100" editable="true">
+						<f:facet name="header">
+							<p:outputPanel style="height:25px">
+								<p:commandButton id="toggler" type="button"
+									value="#{msg['columns']}" style="float:right"
+									icon="ui-icon-calculator" />
+								<p:columnToggler datasource="emergencyDiffDay1"
+									trigger="toggler" style="width:200px" />
+
+								<shiro:hasPermission
+									name="#{changeSystemView.system}.ALARMS.EMERGENCY_DIFICULTDAY.ADD">
+									<p:commandButton id="new" type="button" value="New"
+										icon="ui-icon fa fa-save" style="float:right;"
+										onclick="PF('dlgNewEvent').show();" />
+								</shiro:hasPermission>
+							</p:outputPanel>
+						</f:facet>
+
+						<shiro:hasPermission
+							name="#{changeSystemView.system}.ALARMS.EMERGENCY_DIFICULTDAY.MOD_TTSO_EVENT">
+							<p:ajax event="rowEditInit"
+								oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','hidden')});" />
+							<p:ajax event="rowEdit"
+								listener="#{emergencyDiffDayView.onRowEdit}" update=":form:msgs"
+								oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});" />
+							<p:ajax event="rowEditCancel"
+								listener="#{emergencyDiffDayView.onRowCancel}"
+								update=":form:msgs"
+								onstart="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});" />
+						</shiro:hasPermission>
+						<p:column style="width:16px">
+							<p:rowToggler />
+						</p:column>
+						<p:column headerText="#{msg['emergDiff_type']}"
+							style="width: 150px;" sortBy="#{emergencyDiffDay.type_desc}"
+							filterMatchMode="contains"
+							filterBy="#{emergencyDiffDay.type_desc}">
+							<h:outputText value="#{emergencyDiffDay.type_desc}" />
+						</p:column>
+
+						<p:column headerText="#{msg['emergDiff_id']}"
+							style="width: 150px;" sortBy="#{emergencyDiffDay.event_id}"
+							filterMatchMode="contains"
+							filterBy="#{emergencyDiffDay.event_id}">
+							<h:outputText value="#{emergencyDiffDay.event_id}" />
+						</p:column>
+
+						<p:column headerText="#{msg['emergDiff_startDate']}"
+							style="width: 150px;" sortBy="#{emergencyDiffDay.start_date}"
+							filterMatchMode="contains"
+							filterBy="#{emergencyDiffDay.start_date}">
+							<p:cellEditor>
+								<f:facet name="output">
+									<h:outputText value="#{emergencyDiffDay.start_date}">
+										<f:convertDateTime pattern="dd/MM/yyyy" />
+									</h:outputText>
+								</f:facet>
+								<f:facet name="input">
+									<p:calendar required="true" id="emergDifficStartDateEdit"
+										value="#{emergencyDiffDay.start_date}" pattern="dd/MM/yyyy"
+										readonlyInput="true">
+										<!-- mindate="#{emergencyDiffDayView.currentDate}"
+										requiredMessage="#{msg['nominationDeadline_Start_Date']}: #{msg['empty_field']}"
+										validatorMessage="#{msg['nominationDeadline_Start_Date']}: #{msg['lenght_field']}"> -->
+									</p:calendar>
+								</f:facet>
+							</p:cellEditor>
+						</p:column>
+
+						<p:column headerText="#{msg['emergDiff_endDate']}"
+							style="width: 150px;" sortBy="#{emergencyDiffDay.end_date}"
+							filterMatchMode="contains"
+							filterBy="#{emergencyDiffDay.end_date}">
+							<p:cellEditor>
+								<f:facet name="output">
+									<h:outputText value="#{emergencyDiffDay.end_date}">
+										<f:convertDateTime pattern="dd/MM/yyyy" />
+									</h:outputText>
+								</f:facet>
+								<f:facet name="input">
+									<p:calendar id="emergDifficEndDateEdit"
+										value="#{emergencyDiffDay.end_date}" pattern="dd/MM/yyyy"
+										mindate="#{emergencyDiffDayView.currentDate}"
+										readonlyInput="true">
+									</p:calendar>
+								</f:facet>
+							</p:cellEditor>
+						</p:column>
+
+						<p:column headerText="#{msg['emergDiff_zone']}"
+							style="width: 150px;" sortBy="#{emergencyDiffDay.zone_desc}"
+							filterMatchMode="contains"
+							filterBy="#{emergencyDiffDay.zone_desc}">
+							<h:outputText value="#{emergencyDiffDay.zone_desc}" />
+						</p:column>
+
+						<p:column headerText="#{msg['emergDiff_status']}"
+							style="width: 150px;" sortBy="#{emergencyDiffDay.status}"
+							filterMatchMode="contains" filterBy="#{emergencyDiffDay.status}">
+							<h:outputText value="#{emergencyDiffDay.status}" />
+						</p:column>
+
+						<p:column headerText="#{msg['emergDiff_comments']}"
+							style="width: 250px;" sortBy="#{emergencyDiffDay.comments}"
+							filterMatchMode="contains"
+							filterBy="#{emergencyDiffDay.comments}">
+							<p:cellEditor>
+								<f:facet name="output">
+									<h:outputText value="#{emergencyDiffDay.comments}" />
+								</f:facet>
+								<f:facet name="input">
+									<p:inputTextarea cols="22" autoResize="true"
+										value="#{emergencyDiffDay.comments}"
+										style="width:100%;white-space:initial !important"
+										label="#{msg['emergDiff_comments']}"
+										validatorMessage="#{msg['emergDiff_comments']}: #{msg['lenght_field']} 1000">
+										<f:validateLength maximum="1000" />
+									</p:inputTextarea>
+								</f:facet>
+							</p:cellEditor>
+						</p:column>
+
+						<p:column headerText="#{msg['emergDiff_openFile']}"
+							style="width: 550px;"
+							sortBy="#{emergencyDiffDay.opening_file_name}"
+							filterMatchMode="contains"
+							filterBy="#{emergencyDiffDay.opening_file_name}">
+							<p:commandButton ajax="false"
+										rendered="#{emergencyDiffDay.opening_file_name!=null and emergencyDiffDay.opening_file_name!=''}"
+										oncomplete="PrimeFaces.monitorDownload(start, stop);"
+										icon="ui-icon-document">
+										<f:setPropertyActionListener value="#{emergencyDiffDay}"
+											target="#{emergencyDiffDayView.selected}" />
+										<p:fileDownload
+											value="#{emergencyDiffDayView.selectOpenOperatorFile(emergencyDiffDay)}" />
+									</p:commandButton>														
+							 <p:cellEditor>
+								<f:facet name="output"> 
+									<h:outputText value="#{emergencyDiffDay.opening_file_name}"
+										title="#{emergencyDiffDay.opening_file_name}" />	
+							 	</f:facet>
+								<f:facet name="input"> 
+									<h:outputText value="Saved file: #{emergencyDiffDay.opening_file_name}" rendered="#{emergencyDiffDay.opening_file_name!=null and emergencyDiffDay.opening_file_name!=''}"/>
+									<p:fileUpload id="uploadOpenOperator" style="width:100%;"
+										fileUploadListener="#{emergencyDiffDayView.handleFileUpload}"
+										mode="advanced" dragDropSupport="true" fileLimit="1"
+										ajax="true" update="uploadOpenOperator,:#{p:component('fileUploadOO')}" sizeLimit="3000000"
+										allowTypes="/(\.|\/)(pdf|doc|docx)$/"
+										onstart="PF('cargando').show()"
+										oncomplete="PF('cargando').hide()" />
+										<br/>
+									<h:outputText id="fileUploadOO" value="#{emergencyDiffDayView.uploadFile.getFileName()}" />
+								 </f:facet>
+							</p:cellEditor>   
+						</p:column>
+
+						<p:column headerText="#{msg['emergDiff_closeFile']}"
+							style="width: 550px;"
+							sortBy="#{emergencyDiffDay.closing_file_name}"
+							filterMatchMode="contains"
+							filterBy="#{emergencyDiffDay.closing_file_name}">
+								<p:commandButton ajax="false"
+										rendered="#{emergencyDiffDay.closing_file_name!=null and emergencyDiffDay.closing_file_name!=''}"
+										oncomplete="PrimeFaces.monitorDownload(start, stop);"
+										icon="ui-icon-document">
+										<f:setPropertyActionListener value="#{emergencyDiffDay}"
+											target="#{emergencyDiffDayView.selected}" />
+										<p:fileDownload
+											value="#{emergencyDiffDayView.selectCloseOperatorFile(emergencyDiffDay)}" />
+									</p:commandButton>	
+								<p:cellEditor>
+								<f:facet name="output">
+									<h:outputText value="#{emergencyDiffDay.closing_file_name}" title="#{emergencyDiffDay.closing_file_name}" />
+								</f:facet>
+								<f:facet name="input">
+									<h:outputText value="Saved file: #{emergencyDiffDay.closing_file_name}" rendered="#{emergencyDiffDay.closing_file_name!=null and emergencyDiffDay.closing_file_name!=''}"/>
+									<p:fileUpload id="uploadCloseOperator" style="width:100%;"
+										fileUploadListener="#{emergencyDiffDayView.handleFileCloseUploadOperator}"
+										mode="advanced" dragDropSupport="true" fileLimit="1"
+										ajax="true" update="uploadCloseOperator,:#{p:component('fileUploadCO')}" sizeLimit="3000000"
+										allowTypes="/(\.|\/)(pdf|doc|docx)$/"
+										onstart="PF('cargando').show()"
+										oncomplete="PF('cargando').hide()" />
+										<br/>
+										<h:outputText id="fileUploadCO" value="#{emergencyDiffDayView.uploadFileCloseOperator.getFileName()}" />
+								</f:facet>
+							</p:cellEditor>
+						</p:column>
+
+						<p:rowExpansion>
+
+							<p:dataTable widgetVar="w_detail" id="detail" var="det"
+								value="#{emergencyDiffDay.details}"
+								style="margin-bottom:20px;border-collapse:collapse"
+								editable="true">
+								<shiro:hasPermission
+									name="#{changeSystemView.system}.ALARM.EMERGENCY_DIFICULTDAY.MOD_TTSO_EVENT_SHIPPER">
+									<p:ajax event="rowEditInit"
+										oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','hidden')});" />
+									<p:ajax event="rowEdit"
+										listener="#{emergencyDiffDayView.onRowEditShipper}"
+										update=":form:msgs"
+										oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});" />
+									<p:ajax event="rowEditCancel"
+										listener="#{emergencyDiffDayView.onRowCancelShipper}"
+										update=":form:msgs"
+										onstart="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});" />
+								</shiro:hasPermission>
+								<p:commandButton id="toggler" type="button"
+									value="#{msg['columns']}" style="float:right"
+									icon="ui-icon-calculator" />
+								<p:columnToggler datasource="detail" trigger="toggler"
+									style="width:200px" />
+								<p:column headerText="#{msg['shipper_id']}" style="width: 70px;">
+									<h:outputText value="#{det.user_group_id}" />
+								</p:column>
+								<p:column headerText="#{msg['shipper_Company_Name']}"
+									style="width: 100px;">
+									<h:outputText value="#{det.user_group_name}" />
+								</p:column>
+								<p:column headerText="#{msg['emergDiff_comments']}"
+									style="width: 100px;">
+									<h:outputText value="#{det.comments}" />
+
+								</p:column>
+		
+								<p:column headerText="#{msg['emergDiff_openFileShipper']}"
+									style="width: 100px;">
+									<p:commandButton icon="ui-icon-document" ajax="false"
+												action="#{emergencyDiffDayView.selectOpenShipperFile(det)}"
+												rendered="#{det.opening_file_name!=null and det.opening_file_name!=''}"
+												onstart="PF('cargando').show()"
+												oncomplete="PrimeFaces.monitorDownload(start, stop);">
+										<f:setPropertyActionListener value="#{det}"
+											target="#{emergencyDiffDayView.editEventShipper}" />
+										<p:fileDownload
+											value="#{emergencyDiffDayView.selectOpenShipperFile(det)}" />
+									</p:commandButton>	
+											
+											<h:outputText value="#{det.opening_file_name}" title="#{det.opening_file_name}"/>
+																			</p:column>
+																<p:column headerText="#{msg['emergDiff_closeFileShipper']}"
+									style="width: 100px;">
+									<p:commandButton icon="ui-icon-document" ajax="false"
+												action="#{emergencyDiffDayView.selectCloseShipperFile(det)}"
+												rendered="#{det.closing_file_name!=null and det.closing_file_name!=''}"
+												onstart="PF('cargando').show()"
+												oncomplete="PrimeFaces.monitorDownload(start, stop);">
+										<f:setPropertyActionListener value="#{det}"
+											target="#{emergencyDiffDayView.editEventShipper}" />
+										<p:fileDownload
+											value="#{emergencyDiffDayView.selectCloseShipperFile(det)}" />
+									</p:commandButton>	
+												
+												
+											
+											<h:outputText value="#{det.closing_file_name}" title="#{det.closing_file_name}"/>
+									
+								</p:column>
+								<shiro:hasPermission
+									name="#{changeSystemView.system}.ALARM.EMERGENCY_DIFICULTDAY.MOD_TTSO_EVENT_SHIPPER">
+									<p:column style="width:32px">
+									<p:commandButton  type="submit" validateClient="true" ajax="true" icon="ui-icon fa fa-pencil" 
+					               			actionListener="#{emergencyDiffDayView.setEditEventShipper(det)}" process="@this"
+					               			onclick="PF('dlgEditShipper').show();"
+					               			rendered="#{!emergencyDiffDay.status.equals('CLOSED')}"
+					               			onstart="PF('cargando').show()"
+					               			oncomplete="PF('cargando').hide()"
+					               			update=":formEditShipper"/>
+							</p:column>
+								</shiro:hasPermission>
+							</p:dataTable>
+						</p:rowExpansion>
+						<shiro:hasPermission
+							name="#{changeSystemView.system}.ALARMS.EMERGENCY_DIFICULTDAY.MOD_TTSO_EVENT">
+							<p:column style="width:32px">
+								<p:rowEditor rendered="#{emergencyDiffDay.status.equals('OPENED')}"/>
+							</p:column>
+						</shiro:hasPermission>
+					</p:dataTable>
+				</p:layoutUnit>
+
+			</p:layout>
+		</h:form>
+
+		<shiro:hasPermission
+			name="#{changeSystemView.system}.ALARMS.EMERGENCY_DIFICULTDAY.ADD">
+			<p:dialog widgetVar="dlgNewEvent" resizable="false" closable="true"
+				modal="true" appendTo="@(body)" header="New Event">
+				<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario
+		 <p:ajax event="close" update="formNewEntity"  process="@this" listener="#{nominationDeadlineView.cancel}" />	-->
+				<h:form id="formNewEntity">
+					<p:growl id="msgs" showDetail="true" life="5000" />
+					<p:panelGrid columns="4" style="width:100%">
+						<p:panelGrid>
+							<p:row>
+								<p:column>
+									<h:outputText value="#{msg['emergency_difficult_type']}" />
+								</p:column>
+
+
+								<p:column>
+									<p:selectOneMenu id="emergDifficTypeNew" style="width:150px"
+										value="#{emergencyDiffDayView.newEvent.type_desc}">
+										<f:selectItems
+											value="#{emergencyDiffDayView.eventType.entrySet()}"
+											var="entry" itemValue="#{entry.key}"
+											itemLabel="#{entry.value}" />
+									</p:selectOneMenu>
+									<p:message for="emergDifficTypeNew" />
+								</p:column>
+
+								<p:column>
+									<h:outputText value="#{msg['emergency_difficult_zone']}" />
+								</p:column>
+
+								<p:column>
+									<p:selectOneMenu id="emergDifficZoneNew" style="width:100px"
+										value="#{emergencyDiffDayView.newEvent.zone_desc}">
+										<f:selectItem itemLabel="Others" itemValue="0" />
+										<f:selectItems value="#{emergencyDiffDayView.zone.entrySet()}"
+											var="entry" itemValue="#{entry.key}"
+											itemLabel="#{entry.value}" />
+									</p:selectOneMenu>
+									<p:message for="emergDifficZoneNew" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<h:outputText value="#{msg['emergency_difficult_start_date']}" />
+								</p:column>
+
+								<p:column>
+									<p:calendar required="true" id="emergDifficStartDateNew"
+										value="#{emergencyDiffDayView.newEvent.start_date}"
+										pattern="dd/MM/yyyy" readonlyInput="true" onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()">
+										<!-- mindate="#{emergencyDiffDayView.currentDate}"
+										requiredMessage="#{msg['nominationDeadline_Start_Date']}: #{msg['empty_field']}"
+										validatorMessage="#{msg['nominationDeadline_Start_Date']}: #{msg['lenght_field']}">  -->
+										<p:ajax event="change" update="emergDifficEndDateNew"/>
+										<p:ajax event="dateSelect" update="emergDifficEndDateNew"/>
+										
+									</p:calendar>
+									<p:message for="emergDifficStartDateNew" />
+								</p:column>
+
+								<p:column>
+									<h:outputText value="#{msg['emergDiff_comments']}" />
+								</p:column>
+								<p:column>
+									<p:inputTextarea id="emergDifficCommentsNew"
+										value="#{emergencyDiffDayView.newEvent.comments}" cols="60"
+										autoResize="false" maxlength="1000" />
+									<p:message for="emergDifficCommentsNew" />
+								</p:column>
+							</p:row>
+
+							<p:row>
+								<p:column>
+									<h:outputText value="#{msg['emergency_difficult_end_date']}" />
+								</p:column>
+								<p:column>
+									<p:calendar id="emergDifficEndDateNew"
+										value="#{emergencyDiffDayView.newEvent.end_date}"
+										mindate="#{emergencyDiffDayView.currentDate}"
+										pattern="dd/MM/yyyy" readonlyInput="true"/>										
+									<p:message for="emergDifficEndDateNew" />
+								</p:column>
+							</p:row>
+
+							<p:row>
+								<p:column>
+									<h:outputText value="#{msg['emergency_difficult_shippers']}" />
+								</p:column>
+								<p:column>
+									<p:growl id="msg" showDetail="true" escape="false" />
+									<p:pickList id="pickList"
+										value="#{emergencyDiffDayView.newEvent.shippers}"
+										var="shippers" itemLabel="#{shippers}" itemValue="#{shippers}" />
+								</p:column>
+
+								<p:column>
+									<h:outputText value="#{msg['emergDiff_openFile']}" />
+								</p:column>
+								<p:column>
+									<p:fileUpload id="upload" style="width:100%;" required="true"
+										fileUploadListener="#{emergencyDiffDayView.handleFileUpload}"
+										mode="advanced" dragDropSupport="true" fileLimit="1"
+										ajax="true" update="msgs,upload,:#{p:component('fileUpload')}" sizeLimit="3000000"
+										allowTypes="/(\.|\/)(pdf|doc|docx)$/"
+										onstart="PF('cargando').show()"
+										oncomplete="PF('cargando').hide()" />
+									<p:message for="upload" />
+									<br/>
+									<h:outputText id="fileUpload" value="#{emergencyDiffDayView.uploadFile.getFileName()}" />
+								</p:column>
+
+							</p:row>
+
+						</p:panelGrid>
+					</p:panelGrid>
+
+					<p:separator />
+					<p:panelGrid>
+						<p:row>
+							<p:column>
+								<p:commandButton value="#{msg['save']}"
+									styleClass="ui-confirmdialog-yes" icon="ui-icon-check"
+									validateClient="true" action="#{emergencyDiffDayView.save}"
+									update=":#{p:component('emergencyDiffDay1')},:formNewEntity"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('dlgNewEvent').hide(),PF('cargando').hide()" />
+								<p:commandButton value="#{msg['cancel']}"
+									styleClass="ui-confirmdialog-no" icon="ui-icon-close"
+									update="formNewEntity" process="@this"
+									actionListener="#{emergencyDiffDayView.cancel()}"
+									oncomplete="PF('dlgNewEvent').hide()" />
+							</p:column>
+						</p:row>
+					</p:panelGrid>
+				</h:form>
+			</p:dialog>
+		</shiro:hasPermission>
+
+		<shiro:hasPermission
+			name="#{changeSystemView.system}.ALARM.EMERGENCY_DIFICULTDAY.MOD_TTSO_EVENT_SHIPPER">
+			<p:dialog widgetVar="dlgEditShipper" resizable="false" closable="true"
+				modal="true" appendTo="@(body)" header="Edit Event Shipper">
+				<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario
+		 <p:ajax event="close" update="formNewEntity"  process="@this" listener="#{nominationDeadlineView.cancel}" />	-->
+				<h:form id="formEditShipper">
+					<p:growl id="msgs" showDetail="true" life="5000" />
+					<p:panelGrid columns="3" style="width:100%">
+						<p:panelGrid>
+							<p:row>
+								
+								<p:column>
+									<h:outputText value="#{msg['emergDiff_comments']}" />
+								</p:column>
+								<p:column>
+									<p:inputTextarea id="emergDifficCommentsShipper" readonly="#{emergencyDiffDayView.disabledComment(det.idn_tso_event)}"
+										value="#{emergencyDiffDayView.editEventShipper.comments}" cols="60"
+										autoResize="false" maxlength="1000" />
+								</p:column>
+				
+								<p:column>
+									<h:outputText value="#{msg['emergDiff_openFileShipper']}" />
+								</p:column>
+								<p:column>
+									<h:outputText id="savedOpenEditShipper" value="Saved file: #{emergencyDiffDayView.editEventShipper.opening_file_name}" />
+									<p:fileUpload id="fileUploadOpenEditShipper" style="width:100%;" required="true" disabled="#{emergencyDiffDayView.disabledOpenFileShipper(det.idn_tso_event)}"
+										fileUploadListener="#{emergencyDiffDayView.handleFileOpenUploadShipper}"
+										mode="advanced" dragDropSupport="true" fileLimit="1"
+										ajax="true" update="msgs,fileUploadOpenEditShipper,:#{p:component('uploadOpenEditShipper')}" sizeLimit="3000000"
+										allowTypes="/(\.|\/)(pdf|doc|docx)$/"
+										onstart="PF('cargando').show()"
+										oncomplete="PF('cargando').hide()" />
+									<br/>
+									<h:outputText id="uploadOpenEditShipper" value="Pending file: #{emergencyDiffDayView.uploadFileOpenShipper.getFileName()}" />
+								</p:column>
+								<p:column>
+									<h:outputText value="#{msg['emergDiff_closeFileShipper']}" />
+								</p:column>
+								<p:column>
+									<h:outputText id="savedCloseEditShipper" value="Saved file: #{emergencyDiffDayView.editEventShipper.closing_file_name}" />
+									<p:fileUpload id="fileUploadCloseEditShipper" style="width:100%;" required="true" disabled="#{emergencyDiffDayView.disabledCloseFileShipper(det.idn_tso_event)}"
+										fileUploadListener="#{emergencyDiffDayView.handleFileCloseUploadShipper}"
+										mode="advanced" dragDropSupport="true" fileLimit="1"
+										ajax="true" update="msgs,fileUploadCloseEditShipper,:#{p:component('uploadCloseEditShipper')}" sizeLimit="3000000"
+										allowTypes="/(\.|\/)(pdf|doc|docx)$/"
+										onstart="PF('cargando').show()"
+										oncomplete="PF('cargando').hide()" />
+									<br/>
+									<h:outputText id="uploadCloseEditShipper" value="Pending file: #{emergencyDiffDayView.uploadFileCloseShipper.getFileName()}" />
+								</p:column>
+							</p:row>
+
+						</p:panelGrid>
+					</p:panelGrid>
+
+					<p:separator />
+					<p:panelGrid>
+						<p:row>
+							<p:column>
+								<p:commandButton value="#{msg['save']}"
+									styleClass="ui-confirmdialog-yes" icon="ui-icon-check"
+									validateClient="true" action="#{emergencyDiffDayView.saveEditShipper}"
+									update=":form:msgs,:#{p:component('emergencyDiffDay1')}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('dlgEditShipper').hide(),PF('cargando').hide()" />
+								<p:commandButton value="#{msg['cancel']}"
+									styleClass="ui-confirmdialog-no" icon="ui-icon-close"
+									process="@this"
+									actionListener="#{emergencyDiffDayView.cancelEditShipper}"
+									oncomplete="PF('dlgEditShipper').hide()" />
+							</p:column>
+						</p:row>
+					</p:panelGrid>
+				</h:form>
+			</p:dialog>
+		</shiro:hasPermission>
+
+	</ui:define>
+
+
+</ui:composition>

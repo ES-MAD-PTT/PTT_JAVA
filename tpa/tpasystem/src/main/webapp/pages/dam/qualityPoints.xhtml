@@ -1,0 +1,323 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define> 
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_dam']}" url="#" />
+			<p:menuitem value="#{msg['menu_assets']}" url="#" />
+			<p:menuitem value="#{msg['menu_quality_points']}" url="/pages/dam/qualityPoints.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="5000"/>
+			
+            <p:layout widgetVar="qualityPointLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">	
+					
+				<p:panelGrid columns="2" style="width:100%">
+					
+						<p:panelGrid>
+							<p:row>
+								<p:column  style="font-weight: bold;" >
+									<h:outputText value="#{msg['qualityPoint_ID']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['qualityPoint_Point_Type']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['qualityPoint_Start_Date']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['qualityPoint_End_Date']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<p:selectOneMenu id="id"  style="width:100px"   value="#{qualityPointView.filters.pointCode}" >
+							       		<f:selectItem itemLabel="" itemValue="" />
+        								
+        								<f:selectItems value="#{qualityPointView.getQualityPointSystem().entrySet()}"  var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+        								
+					           		</p:selectOneMenu>									
+								</p:column>
+								
+								<p:column>
+									<p:selectOneMenu id="pointType"  style="width:100px"   value="#{qualityPointView.filters.typeCode}" >
+							        	<f:selectItem itemLabel="" itemValue="" />
+        								<f:selectItems value="#{qualityPointView.pointTypes.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>									
+								</p:column>
+								<p:column>
+									<p:calendar id="fecInicio" size="8" pattern="dd/MM/yyyy" mask="true" value="#{qualityPointView.filters.startDate}"
+										showOn="button" navigator="true" style="width: 100%;">
+										<p:ajax event="dateSelect" update="fecInicio"></p:ajax>
+										<p:ajax event="change" update="fecInicio"></p:ajax>
+									</p:calendar>
+								</p:column>
+								<p:column>
+									<p:calendar id="fecFin" size="8" pattern="dd/MM/yyyy" mask="true" value="#{qualityPointView.filters.endDate}"
+										showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="fecFin"></p:ajax>
+										<p:ajax event="change" update="fecFin"></p:ajax>
+									</p:calendar>
+								</p:column>
+							</p:row>
+							
+							
+						</p:panelGrid>
+						<p:panelGrid columns="2" style="float:right;top:0px">
+							<shiro:hasPermission name="#{changeSystemView.system}.DAM.QUALITY_POINTS.QUERY">
+								<p:commandButton value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{qualityPointView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,:#{p:component('qualityPoints1')}"/>
+							</shiro:hasPermission>
+							
+							<p:commandButton  onclick="PF('qualityPointLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+							
+							<shiro:hasPermission name="#{changeSystemView.system}.DAM.QUALITY_POINTS.QUERY">
+								 <p:commandButton value="#{msg['clear']}"
+									actionListener="#{qualityPointView.onClear}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" 
+									process="@this" 
+									update="form"/>  
+							</shiro:hasPermission>								
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center" 
+					resizable="false" closable="false" collapsible="false">
+
+					<p:dataTable widgetVar="w_qualityPoint1"  id="qualityPoints1" var="qualityPoint" value="#{qualityPointView.items}" reflow="true" editable="true" 
+						style=" margin-bottom:20px;border-collapse:collapse"
+					    paginator="true" rows="25"
+					    scrollable="true"  scrollHeight="100%" 
+					    rowsPerPageTemplate="5,10,15,20,25, #{qualityPointView.itemsSize}" >
+
+
+
+							<f:facet name="header">
+								<p:outputPanel style="height:25px">
+									<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+	        						<p:columnToggler datasource="qualityPoints1" trigger="toggler" style="width:200px"/>
+	        						<shiro:hasPermission name="#{changeSystemView.system}.DAM.QUALITY_POINTS.ADD">
+		        						<p:commandButton id="new" type="button" value="New" icon="ui-icon fa fa-save" style="float:right;"
+		        							onclick="PF('dlgNewQualityPoint').show();"
+		        						/>
+	        						</shiro:hasPermission>
+	        						
+	        						<shiro:hasPermission name="#{changeSystemView.system}.DAM.QUALITY_POINTS.QUERY">
+					        			<h:commandLink style="float:right">
+										       <p:graphicImage name="/images/excel.png" width="24"/>
+										       <p:dataExporter type="xls" target="qualityPoints1" fileName="QualityPoints" postProcessor="#{qualityPointView.postProcessXLS}"/>
+										</h:commandLink>	 
+								  </shiro:hasPermission>
+								</p:outputPanel>        										          
+					        </f:facet>
+					        
+					        <shiro:hasPermission name="#{changeSystemView.system}.DAM.QUALITY_POINTS.MOD">
+						 		<p:ajax event="rowEditInit" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','hidden')});" />
+								<p:ajax event="rowEdit" listener="#{qualityPointView.onRowEdit}" update=":form:msgs" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>   
+								<p:ajax event="rowEditCancel" listener="#{qualityPointView.onRowCancel}" update=":form:msgs" onstart="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>
+							</shiro:hasPermission>
+					 
+					  	  
+					       <p:column headerText="#{msg['qualityPoint_ID']}" style="width: 130px;" sortBy="#{qualityPoint.pointCode}" filterMatchMode="contains" filterBy="#{qualityPoint.pointCode}">
+					       		<h:outputText value="#{qualityPoint.pointCode}" />
+					       </p:column>
+					 
+					       <p:column headerText="#{msg['qualityPoint_Name']}" style="width: 150px;" sortBy="#{qualityPoint.pointDesc}" filterMatchMode="contains" filterBy="#{qualityPoint.pointDesc}">
+					           <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{qualityPoint.pointDesc}" title="#{qualityPoint.pointDesc}" /></f:facet>
+					               <f:facet name="input">
+					               			<p:inputText value="#{qualityPoint.pointDesc}" style="width:100%" label="#{msg['qualityPoint_Name']}" disabled="#{qualityPointView.disabledField(qualityPoint)}"
+					               				 required="true"  
+					               				 requiredMessage="#{msg['qualityPoint_Name']}: #{msg['empty_field']}"  maxlength="120"
+					               				 validatorMessage="#{msg['qualityPoint_Name']}: #{msg['lenght_field']} 1200">
+					               				<f:validateLength maximum="250"/>
+					               				<f:validateRequired/>
+					               			</p:inputText>	
+					               	</f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					      	
+					       <p:column headerText="#{msg['qualityPoint_Point_Type']}" style="width: 70px;" sortBy="#{qualityPoint.typeDesc}" filterMatchMode="contains"  filterBy="#{qualityPoint.typeDesc}">
+					          <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{qualityPoint.typeDesc}" /></f:facet>
+					               <f:facet name="input">
+					               	
+					               		<p:selectOneMenu id="pointType" style="width:75%"  value="#{qualityPoint.idnSystemPointType}" 
+					               				required="true" disabled="#{qualityPointView.disabledField(qualityPoint)}"
+					               				requiredMessage="#{msg['qualityPoint_Point_Type']}: #{msg['empty_field']}">
+							               		<f:selectItems value="#{qualityPointView.pointTypes.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />			               		
+							               	
+							               		
+					               		</p:selectOneMenu>
+					               		
+					               	</f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					      				  	       
+					       <p:column headerText="#{msg['qualityPoint_Start_Date']}" style="width: 70px;" sortBy="#{qualityPoint.startDate}" >
+					          <p:cellEditor>
+					               <f:facet name="output">
+					               			<h:outputText value="#{qualityPoint.startDate}" >
+					              				<f:convertDateTime pattern="dd/MM/yyyy" />
+					              		 </h:outputText>
+					               </f:facet>
+					               <f:facet name="input">
+					               		<p:calendar required="true" id="startDate" 
+					               			value="#{qualityPoint.startDate}" pattern="dd/MM/yyyy"
+					               			readonlyInput="true"   mindate="#{(qualityPointView.sysdate).getTime()}"  
+					               			disabled="#{qualityPointView.disabledField(qualityPoint)}"
+											requiredMessage="#{msg['qualityPoint_Start_Date']}: #{msg['empty_field']}"	validatorMessage="#{msg['qualityPoint_Start_Date']}: #{msg['empty_field']}">
+											<f:convertDateTime pattern="dd/MM/yyyy"/>
+										</p:calendar>
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+	 				       
+					       <p:column headerText="#{msg['qualityPoint_End_Date']}"  style="width: 70px;" sortBy="#{qualityPoint.endDate}" >
+					          <p:cellEditor>
+					               <f:facet name="output">
+					               		<h:outputText value="#{qualityPoint.endDate}" >
+					              			<f:convertDateTime pattern="dd/MM/yyyy" />
+					              		 </h:outputText>
+					               </f:facet>
+					               <f:facet name="input">
+					            	    <p:calendar  id="endDate" value="#{qualityPoint.endDate}" pattern="dd/MM/yyyy" 
+						            	    mindate="#{(qualityPointView.sysdate).getTime()}" 
+						            	    disabled="#{qualityPointView.disabledEndDate(qualityPoint)}"
+											requiredMessage="#{msg['qualityPoint_End_Date']}: #{msg['empty_field']}" validatorMessage="#{msg['qualityPoint_End_Date']}: #{msg['empty_field']}">
+											<f:convertDateTime pattern="dd/MM/yyyy"/>
+										</p:calendar>
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					      <shiro:hasPermission name="#{changeSystemView.system}.DAM.QUALITY_POINTS.MOD">
+						       <p:column style="width:32px">
+						     		 <p:rowEditor rendered="#{qualityPointView.renderItemEditor(qualityPoint)}"/>
+						       </p:column>
+					       </shiro:hasPermission>
+					   </p:dataTable>
+				</p:layoutUnit>
+
+			</p:layout>
+		</h:form>
+
+	<shiro:hasPermission name="#{changeSystemView.system}.DAM.QUALITY_POINTS.ADD">
+		<p:dialog widgetVar="dlgNewQualityPoint"  resizable="false"  closable="true" modal="true" appendTo="@(body)" header="New Quality Points">
+		<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario
+		 <p:ajax event="close" update="formNewEntity"  process="@this" listener="#{qualityPointView.cancel}" />-->		 
+			<h:form id="formNewEntity">
+			<p:growl id="msgs" showDetail="true"  life="5000"/>
+				<p:panelGrid columns="4" style="width:100%">
+					<p:panelGrid>
+						<p:row>
+							
+							<p:column>
+								<h:outputText value="#{msg['qualityPoint_ID']}" />
+							</p:column>
+							<p:column>
+								<p:inputText required="true" id="id" style="width:130px" value="#{qualityPointView.newQualityPoint.pointCode}"  maxlength="20" 
+											requiredMessage="#{msg['qualityPoint_ID']}: #{msg['empty_field']}" 
+											validatorMessage="#{msg['qualityPoint_ID']}: #{msg['lenght_field']} 20">
+									<f:validateLength maximum="20"/>
+								</p:inputText>
+								<p:message for="id" />
+							</p:column>
+
+							<p:column>
+								<h:outputText value="#{msg['qualityPoint_Name']}" />
+							</p:column>
+							<p:column>
+								<p:inputText required="true" id="name" value="#{qualityPointView.newQualityPoint.pointDesc}"  maxlength="120"
+									requiredMessage="#{msg['qualityPoint_Name']}: #{msg['empty_field']}"
+									validatorMessage="#{msg['qualityPoint_Name']}: #{msg['lenght_field']} 120">
+									 <f:validateLength maximum="250"/>
+								</p:inputText>
+								<p:message for="name" />
+							</p:column>
+					
+							<p:column>
+								<h:outputText value="#{msg['qualityPoint_Point_Type']}" />
+							</p:column>
+							<p:column>
+								<p:selectOneMenu id="pointType"  style="width:90px"   value="#{qualityPointView.newQualityPoint.idnSystemPointType}" 
+									required="true" requiredMessage="#{msg['qualityPoint_Point_Type']}: #{msg['empty_field']}">
+										  <f:selectItem  itemValue="#{-1}" itemLabel="" />
+							              <f:selectItems value="#{qualityPointView.pointTypes.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+							              <p:ajax update=""/>					               
+			               		</p:selectOneMenu>
+							<p:message for="pointType" />
+							</p:column>
+
+						</p:row>
+					
+															
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['qualityPoint_Start_Date']}"/>
+							</p:column>
+							<p:column>
+								<p:calendar required="true" id="startDate" 
+									value="#{qualityPointView.newQualityPoint.startDate}" pattern="dd/MM/yyyy"
+									readonlyInput="true"  mindate="#{(qualityPointView.sysdate).getTime()}" 
+									requiredMessage="#{msg['qualityPoint_Start_Date']}: #{msg['empty_field']}" 
+									validatorMessage="#{msg['qualityPoint_Start_Date']}: #{msg['lenght_field']}">
+								</p:calendar>
+								<p:message for="startDate" />
+							</p:column>
+							<p:column>
+								<h:outputText value="#{msg['qualityPoint_End_Date']}"/>
+							</p:column>
+							<p:column>
+								<p:calendar  id="endDate" 
+									value="#{qualityPointView.newQualityPoint.endDate}" pattern="dd/MM/yyyy" 
+									mask="true" mindate="#{(qualityPointView.sysdate).getTime()}" 
+									validatorMessage="#{msg['qualityPoint_End_Date']}: #{msg['lenght_field']}">
+								</p:calendar>
+								<p:message for="endDate" />
+							</p:column>
+						</p:row>
+					</p:panelGrid>
+				</p:panelGrid>
+				
+				<p:separator/>
+				<p:panelGrid>
+					<p:row>
+						<p:column>
+							<p:commandButton value="#{msg['save']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" validateClient="true"
+								action="#{qualityPointView.save}" update=":#{p:component('qualityPoints1')},:formNewEntity,:#{p:component('id')}"
+								onstart="PF('cargando').show()"
+								oncomplete="PF('dlgNewQualityPoint').hide(),PF('cargando').hide()" />
+			        		<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close"
+			        			update="formNewEntity" process="@this" actionListener="#{qualityPointView.cancel}"
+			        			oncomplete="PF('dlgNewQualityPoint').hide()"/>
+			        		
+						</p:column>					
+					</p:row>
+				</p:panelGrid>							
+			</h:form>			
+		</p:dialog>
+	</shiro:hasPermission>
+	</ui:define>
+
+
+</ui:composition>

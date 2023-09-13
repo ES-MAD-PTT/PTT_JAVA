@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<!-- Namespace -->
+<mapper namespace="com.atos.mapper.utils.booking.SignedContractTemplateGeneratorMapper">
+
+	<resultMap type="com.atos.beans.booking.SignedContractTemplateBean" id="SignedContractTemplateDetails">
+		<id property="capacityRequestId" column="idn_contract_request" />
+		<result property="shipperName" column="user_group_name" />
+		<result property="shipperSAPId" column="sap_id" />
+		<result property="contractCode" column="contract_number" />
+		<result property="strCommencementDate" column="commencement_date" />
+		<result property="strEndDate" column="end_date" />
+		<result property="operationDesc" column="operation_desc" />
+		<result property="totalEntry" column="total_entry" />
+		<result property="totalExit" column="total_exit" />
+		<result property="minEntryTemp" column="min_entry_temp" />
+		<result property="maxEntryTemp" column="max_entry_temp" />
+		<result property="minExitTemp" column="min_exit_temp" />
+		<result property="maxExitTemp" column="max_exit_temp" />
+		<result property="renewalDeadline" column="renewal_deadline" />
+		<result property="contractType" column="contract_type" />
+		<association property="periods" select="selectSignedContractTempPeriods" column="idn_contract_request"/>
+	</resultMap>
+	
+	<select id="selectSignedContractTempDetails" resultMap="SignedContractTemplateDetails">
+		<!-- Puntos 1 y 2 del correo -->
+		<!-- REQUEST HEADER -->
+		WITH req_header AS
+		 (SELECT cr.idn_contract_request,
+		         cr.idn_contract,
+		         cr.start_date,
+		         cr.end_date,
+		         cr.idn_user_group,
+		         o.term_code,
+		         o.operation_desc
+		    FROM tpa_tcontract_request cr,
+		         tpa_voperation        o
+		   WHERE cr.idn_contract_request = #{capReqId}
+		     AND cr.idn_operation = o.idn_operation),
+		
+		<!-- REQUEST POINTS -->
+		req_points AS
+		 (SELECT cp.idn_contract_point,
+		         cp.quantity,
+		         ca.idn_contract_agreement,
+		         spt.type_code AS point_type
+		    FROM tpa_tcontract_agreement ca,
+		         tpa_tcontract_point     cp,
+		         tpa_tsystem_point       sp,
+		         tpa_tsystem_point_type  spt
+		   WHERE ca.idn_contract_request = #{capReqId}
+		     AND cp.idn_contract_agreement = ca.idn_contract_agreement
+		     AND cp.idn_system_point = sp.idn_system_point
+		     AND sp.idn_system_point_type = spt.idn_system_point_type),
+		
+		<!-- TEMPERATURE -->
+		temperature AS
+		 (SELECT rp.point_type,
+		         cpgq.min_value,
+		         cpgq.max_value
+		    FROM tpa_tcontract_point_gasq cpgq,
+		         tpa_tgas_quality_param   gqp,
+		         req_points               rp
+		   WHERE cpgq.idn_contract_point = rp.idn_contract_point
+		     AND cpgq.idn_gas_quality_param = gqp.idn_gas_quality_param
+		     AND gqp.parameter_code = 'Temperature')
+		
+		<!-- MAIN SELECT
+		CH728 CAMBIAMOS EL SUM POR MAX 
+		(SELECT SUM(rp.quantity) FROM req_points rp WHERE rp.point_type = 'ENTRY') AS total_entry,
+		(SELECT SUM(rp.quantity) FROM req_points rp WHERE rp.point_type = 'EXIT') AS total_exit
+		
+		14/02/2019 se vuelve a cambiar 
+		(SELECT MAX(rp.quantity) FROM req_points rp WHERE rp.point_type = 'ENTRY') AS total_entry,
+		(SELECT MAX(rp.quantity) FROM req_points rp WHERE rp.point_type = 'EXIT') AS total_exit,
+		    
+		,-->
+		SELECT rh.idn_contract_request,
+		       (select tgr.user_group_name from tpa_tuser_group tgr where tgr.idn_user_group=rh.idn_user_group) as user_group_name,
+		       (select tshi.sap_id from tpa_tshipper tshi where tshi.idn_user_group=rh.idn_user_group) as sap_id,
+			   (SELECT c.contract_code FROM tpa_tcontract c WHERE c.idn_contract = rh.idn_contract) AS contract_number,
+		       '00:01 on ' || to_char(rh.start_date, 'dd/mm/yyyy') AS commencement_date,
+		       '00:01 on ' || to_char(rh.end_date + 1, 'dd/mm/yyyy') AS end_date,
+		       rh.operation_desc,
+		       
+		       (SELECT MAX(quantity)
+          		FROM (SELECT SUM(rp.quantity) AS quantity
+                  FROM req_points rp
+                 WHERE rp.point_type = 'ENTRY'
+                 GROUP BY rp.idn_contract_agreement)) AS total_entry,
+       			(SELECT MAX(quantity)
+          		FROM (SELECT SUM(rp.quantity) AS quantity
+                  FROM req_points rp
+                 WHERE rp.point_type = 'EXIT'
+                 GROUP BY rp.idn_contract_agreement)) AS total_exit,
+		       
+		       (SELECT MIN(t.min_value)
+		          FROM temperature t
+		         WHERE t.min_value IS NOT NULL
+		           AND t.point_type = 'ENTRY') AS min_entry_temp,
+		       (SELECT MAX(t.max_value)
+		          FROM temperature t
+		         WHERE t.max_value IS NOT NULL
+		           AND t.point_type = 'ENTRY') AS max_entry_temp,
+		       (SELECT MIN(t.min_value)
+		          FROM temperature t
+		         WHERE t.min_value IS NOT NULL
+		           AND t.point_type = 'EXIT') AS min_exit_temp,
+		       (SELECT MAX(t.max_value)
+		          FROM temperature t
+		         WHERE t.max_value IS NOT NULL
+		           AND t.point_type = 'EXIT') AS max_exit_temp,
+		       decode(rh.term_code,
+		              'LONG',
+		              add_months(rh.end_date, -3 * 12),
+		              'SHORT_FIRM',
+		              (rh.end_date + 1) - 28,
+		              'MEDIUM',
+		              decode(sign(months_between(rh.end_date, rh.start_date) / 12 - 2),
+		                     1,
+		                     add_months(rh.end_date, -12),
+		                     add_months(rh.end_date, -3)),
+		              to_date(NULL)) AS renewal_deadline,
+		       decode((SELECT nvl(c.is_grandfathering, 'N') FROM tpa_tcontract c WHERE c.idn_contract = rh.idn_contract),
+		              'Y',
+		              'TPA Code 9.5 (Grandfathered)',
+		              decode(rh.term_code,
+		                     'LONG',
+		                     'TPA Code 9.10 (Long-term Firm)',
+		                     'MEDIUM',
+		                     'TPA Code 9.9 (Medium-term Firm)',
+		                     'SHORT_FIRM',
+		                     'TPA Code 9.8 (Short-term Firm)',
+		                     'SHORT_NON_FIRM',
+		                     'TPA Code 9.7 (Short-term Non Firm)')) AS contract_type
+		  FROM req_header rh	
+	</select>
+	
+	<resultMap type="com.atos.beans.booking.SignedContractTempPeriodBean" id="SignedContractTempPeriod">
+		<id property="contractAgreementId" column="idn_contract_agreement" />
+		<result property="pageDate" column="page_date" />
+		<result property="contractRequestId" column="idn_contract_request" />
+		<association property="entryPoints" select="selectSignedContractTempEntryPoints" column="idn_contract_agreement"/>
+		<association property="exitPoints" select="selectSignedContractTempExitPoints" column="{capReqId=idn_contract_request,pageDate=page_date,contractAgreementId=idn_contract_agreement}"/>
+	</resultMap>
+	
+	<select id="selectSignedContractTempPeriods" resultMap="SignedContractTempPeriod">
+		SELECT trunc(ca.start_date, decode(o.term_code, 'LONG', 'YYYY', 'MEDIUM', 'YYYY', 'MM')) AS page_date,
+		       ca.idn_contract_agreement,
+		       cr.idn_contract_request
+		  FROM tpa_tcontract_request   cr,
+		       tpa_tcontract_agreement ca,
+		       tpa_voperation          o
+		 WHERE cr.idn_contract_request = #{capReqId}
+		   AND ca.idn_contract_request = cr.idn_contract_request
+		   AND cr.idn_operation = o.idn_operation
+		 ORDER BY 1
+	</select>	
+	
+	<resultMap type="com.atos.beans.booking.SignedContractTempPointBean" id="SignedContractTempEntryPoint">
+		<id property="pointCode" column="point_code" />
+		<result property="zoneCode" column="zone_code" />
+		<result property="minPressure" column="min_pressure" />
+		<result property="maxPressure" column="max_pressure" />
+		<result property="volume" column="volume" />
+		<result property="quantity" column="quantity" />
+		<result property="maxHourQuantity" column="max_hour_qty" />
+	</resultMap>
+	
+	<select id="selectSignedContractTempEntryPoints" resultMap="SignedContractTempEntryPoint">
+		<!-- Punto 2 del correo - detalles - ENTRY -->
+		<!-- REQUEST POINTS -->
+		WITH req_points AS
+		 (SELECT cp.idn_contract_point,
+		         cp.quantity,
+		         cp.volume,
+		         cp.max_hour_qty,
+		         cp.max_hour_vol,
+		         sp.idn_system_point,
+		         sp.point_code,
+		         sp.idn_area
+		    FROM tpa_tcontract_point    cp,
+		         tpa_tsystem_point      sp,
+		         tpa_tsystem_point_type spt
+		   WHERE cp.idn_contract_agreement = #{contractAgreementId}
+		     AND cp.idn_system_point = sp.idn_system_point
+		     AND sp.idn_system_point_type = spt.idn_system_point_type
+		     AND spt.type_code = 'ENTRY'),
+		
+		<!-- PRESSURE -->
+		pressure AS
+		 (SELECT rp.idn_system_point,
+		         cpgq.min_value,
+		         cpgq.max_value
+		    FROM tpa_tcontract_point_gasq cpgq,
+		         tpa_tgas_quality_param   gqp,
+		         req_points               rp
+		   WHERE cpgq.idn_contract_point = rp.idn_contract_point
+		     AND cpgq.idn_gas_quality_param = gqp.idn_gas_quality_param
+		     AND gqp.parameter_code = 'Pressure')
+		
+		<!-- MAIN SELECT -->
+		SELECT z.zone_code,
+		       rp.point_code,
+		       (SELECT p.min_value FROM pressure p WHERE p.idn_system_point = rp.idn_system_point) AS min_pressure,
+		       (SELECT p.max_value FROM pressure p WHERE p.idn_system_point = rp.idn_system_point) AS max_pressure,
+		       rp.volume,
+		       rp.quantity,
+		       rp.max_hour_qty
+		  FROM req_points rp,
+		       tpa_tarea  a,
+		       tpa_tzone  z
+		 WHERE rp.idn_area = a.idn_area
+		   AND a.idn_zone = z.idn_zone
+		 ORDER BY z.zone_code,
+		          rp.point_code 
+	</select>
+	
+	<resultMap type="com.atos.beans.booking.SignedContractTempPointBean" id="SignedContractTempExitPoint">
+		<id property="pointCode" column="point_code" />
+		<result property="zoneCode" column="zone_code" />
+		<result property="customerCode" column="customer_type" />
+		<result property="minPressure" column="min_pressure" />
+		<result property="maxPressure" column="max_pressure" />
+		<result property="quantity" column="quantity" />
+		<result property="maxHourQuantity" column="max_hour_qty" />
+	</resultMap>
+	
+	<select id="selectSignedContractTempExitPoints" resultMap="SignedContractTempExitPoint">
+		<!-- Punto 2 del correo detalles EXIT -->
+		<!-- CONSTANTS -->
+		WITH constants AS
+		 (SELECT decode(o.term_code, 'LONG', 'YYYY', 'MEDIUM', 'YYYY', 'MM') AS trunc_format
+		    FROM tpa_tcontract_request cr,
+		         tpa_voperation        o
+		   WHERE cr.idn_contract_request = #{capReqId}
+		     AND cr.idn_operation = o.idn_operation),
+		
+		<!-- CUSTOMER TYPES -->
+		customer_types AS
+		 (SELECT spr.contract_point_idn AS idn_system_point,
+		         spp.idn_customer_type,
+		         (SELECT type_desc FROM tpa_tcustomer_type WHERE idn_customer_type = spp.idn_customer_type) AS customer_code
+		    FROM tpa_vsystem_point_relation spr,
+		         tpa_tsystem_point_param    spp
+		   WHERE spr.metered_point_idn = spp.idn_system_point
+		     AND trunc(#{pageDate}, (SELECT trunc_format FROM constants))
+		         BETWEEN trunc(spr.max_start_date, (SELECT trunc_format FROM constants)) AND
+		         trunc(spr.min_end_date, (SELECT trunc_format FROM constants))
+		   GROUP BY spr.contract_point_idn,
+		            spp.idn_customer_type),
+		
+		<!-- REQUEST POINT -->
+		req_points AS
+		 (SELECT cp.idn_contract_point,
+		         cp.quantity,
+		         cp.max_hour_qty,
+		         decode(ct.customer_code, 'IND', NULL, 'NGV', NULL, sp.idn_system_point) AS idn_system_point,
+		         decode(ct.customer_code, 'IND', NULL, 'NGV', NULL, sp.point_code) AS point_code,
+		         sp.idn_area,
+		         ct.idn_customer_type
+		    FROM tpa_tcontract_point    cp,
+		         tpa_tsystem_point      sp,
+		         tpa_tsystem_point_type spt,
+		         customer_types         ct
+		   WHERE cp.idn_contract_agreement = #{contractAgreementId}
+		     AND cp.idn_system_point = sp.idn_system_point
+		     AND cp.idn_system_point = ct.idn_system_point
+		     AND sp.idn_system_point_type = spt.idn_system_point_type
+		     AND sp.idn_system_point = ct.idn_system_point
+		     AND spt.type_code = 'EXIT'),
+		
+		<!-- PRESSURE -->
+		pressure AS
+		 (SELECT rp.idn_system_point,
+		         rp.idn_customer_type,
+		         cpgq.min_value,
+		         cpgq.max_value
+		    FROM tpa_tcontract_point_gasq cpgq,
+		         tpa_tgas_quality_param   gqp,
+		         req_points               rp
+		   WHERE cpgq.idn_contract_point = rp.idn_contract_point
+		     AND cpgq.idn_gas_quality_param = gqp.idn_gas_quality_param
+		     AND gqp.parameter_code = 'Pressure')
+		
+		<!-- MAIN SELECT -->
+		SELECT z.zone_code,
+		       ct.type_desc AS customer_type,
+		       rp.point_code,
+		       (SELECT MIN(p.min_value)
+		          FROM pressure p
+		         WHERE p.min_value IS NOT NULL
+		           AND p.idn_customer_type = rp.idn_customer_type
+		           AND nvl(p.idn_system_point, -1) = nvl(rp.idn_system_point, -1)) AS min_pressure,
+		       (SELECT MAX(p.max_value)
+		          FROM pressure p
+		         WHERE p.max_value IS NOT NULL
+		           AND p.idn_customer_type = rp.idn_customer_type
+		           AND nvl(p.idn_system_point, -1) = nvl(rp.idn_system_point, -1)) AS max_pressure,
+		       SUM(rp.quantity) AS quantity,
+		       SUM(rp.max_hour_qty) AS max_hour_qty
+		  FROM req_points         rp,
+		       tpa_tarea          a,
+		       tpa_tzone          z,
+		       tpa_tcustomer_type ct
+		 WHERE rp.idn_area = a.idn_area
+		   AND rp.idn_customer_type = ct.idn_customer_type
+		   AND a.idn_zone = z.idn_zone
+		 GROUP BY z.zone_code,
+		          rp.idn_customer_type,
+		          ct.type_desc,
+		          rp.point_code,
+		          rp.idn_system_point
+		 ORDER BY z.zone_code,
+		          ct.type_desc,
+		          rp.point_code
+	</select>	
+</mapper>

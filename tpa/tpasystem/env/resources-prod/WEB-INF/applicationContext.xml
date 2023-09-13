@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:mybatis="http://mybatis.org/schema/mybatis-spring"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:jee="http://www.springframework.org/schema/jee"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="
+       	http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd
+       	http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+	    http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+	    http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-4.0.xsd">
+
+     <context:component-scan base-package="com.atos"/>
+
+    <context:annotation-config/>
+    
+    <context:spring-configured/>
+    
+	<!-- Enables the Spring MVC @Controller programming model --> 
+	<mvc:annotation-driven /> 
+    
+  <!--   <jee:jndi-lookup expected-type="javax.sql.DataSource" id="dataSource" jndi-name="java:/jdbc/TPAds"/> -->
+    
+	<bean id="dataSource" class="org.springframework.jndi.JndiObjectFactoryBean">
+		<property name="resourceRef" value="true" /> 
+	    <property name="jndiName" value="jdbc/TPAds"/>
+	</bean>    
+	
+    <!-- Data Source Declaration 
+     <bean id="dataSource" class="oracle.jdbc.pool.OracleDataSource" destroy-method="close">
+        <property name="URL" value="jdbc:oracle:thin:@172.24.59.19:1522:TPA01" />
+        <property name="user" value="us_tpa"/>
+        <property name="password" value="US_TPA"/>
+        <property name="connectionCachingEnabled" value="true"/>
+    </bean>-->
+    
+ 	<tx:annotation-driven transaction-manager="transactionManager" />
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+  		<property name="dataSource" ref="dataSource" />
+	</bean>
+	  
+
+ 	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+	  	<property name="dataSource" ref="dataSource" />	  	
+	  	<property name="mapperLocations" value="classpath*:com/atos/mapper/**/*.xml" />
+	  	<property name="configLocation" value="/WEB-INF/mybatis-spring-config.xml" />
+	</bean> 
+	
+	<mybatis:scan base-package="com.atos.mapper"/>
+
+	<bean id="jaxb2MarshallerMetQuery" class="org.springframework.oxm.jaxb.Jaxb2Marshaller">
+        <property name="contextPath" value="com.atos.wsdl.pmisdwh.meteringQuery"/>
+    </bean>																	   
+   	<bean id="soapConfigMetQuery" class="com.atos.client.pmisdwh.meteringQuery.MetQueryWsClient">
+ 		<property name="defaultUri" value="http://10.104.239.127/TPAWS/MeteringQueryWs.svc"/> 
+        <property name="marshaller" ref="jaxb2MarshallerMetQuery" />
+        <property name="unmarshaller" ref="jaxb2MarshallerMetQuery" />
+        <property name="messageSender">
+	        <bean class="org.springframework.ws.transport.http.HttpComponentsMessageSender">
+	            <property name="connectionTimeout" value="600000" />
+	            <property name="readTimeout" value="600000" />
+	        </bean>
+	    </property>
+    </bean>	
+
+ 	<bean id="jaxb2MarshallerAcumInventory" class="org.springframework.oxm.jaxb.Jaxb2Marshaller">
+        <property name="contextPath" value="com.atos.wsdl.pmisdwh.acuminventory"/>
+    </bean>																	   
+   	<bean id="soapConfigAcumInventory" class="com.atos.client.pmisdwh.acuminventory.AcumInventoryWsClient">
+ 		<!-- <property name="defaultUri" value="http://www.pimstpa.com:7005/Application-MeteringService_v02-context-root/MeteringQueryWsImplPort"/>-->
+ 	    <!-- <property name="defaultUri" value="http://0.0.0.0:7003/tpa_ws/MeteringQuery"/> -->
+        <!--<property name="defaultUri" value="http://172.24.23.74:8080/tpa_ws/MeteringQuery"/>-->
+        <!--<property name="defaultUri" value="http://www.pimstpa.com:7005/TPA-Metering_v4-context-root/MeteringQueryWsImplPort"/>-->
+        
+ 		<property name="defaultUri" value="http://10.104.239.127/TPAWS2/AccumInventory.svc?singleWsdl"/> 
+ 		
+        <property name="marshaller" ref="jaxb2MarshallerAcumInventory" />
+        <property name="unmarshaller" ref="jaxb2MarshallerAcumInventory" />
+        <property name="messageSender">
+	        <bean class="org.springframework.ws.transport.http.HttpComponentsMessageSender">
+	            <property name="connectionTimeout" value="120000" />
+	            <property name="readTimeout" value="120000" />
+	        </bean>
+	    </property>
+    </bean>	
+    
+	<bean id="jaxb2MarshallerBaseInventory" class="org.springframework.oxm.jaxb.Jaxb2Marshaller">
+        <property name="contextPath" value="com.atos.wsdl.pmisdwh.baseinventory"/>
+    </bean>																	   
+   	<bean id="soapConfigBaseInventory" class="com.atos.client.pmisdwh.baseinventory.BaseInventoryWsClient">
+ 		<!-- <property name="defaultUri" value="http://www.pimstpa.com:7005/Application-MeteringService_v02-context-root/MeteringQueryWsImplPort"/>-->
+ 	    <!-- <property name="defaultUri" value="http://0.0.0.0:7003/tpa_ws/MeteringQuery"/> -->
+        <!--<property name="defaultUri" value="http://172.24.23.74:8080/tpa_ws/MeteringQuery"/>-->
+        <!--<property name="defaultUri" value="http://www.pimstpa.com:7005/TPA-Metering_v4-context-root/MeteringQueryWsImplPort"/>-->
+        
+ 		<property name="defaultUri" value="http://10.104.239.127/TPAWS2/BaseInventory.svc?singleWsdl"/> 
+ 		
+        <property name="marshaller" ref="jaxb2MarshallerBaseInventory" />
+        <property name="unmarshaller" ref="jaxb2MarshallerBaseInventory" />
+        <property name="messageSender">
+	        <bean class="org.springframework.ws.transport.http.HttpComponentsMessageSender">
+	            <property name="connectionTimeout" value="120000" />
+	            <property name="readTimeout" value="120000" />
+	        </bean>
+	    </property>
+    </bean>	
+
+	<!-- Para gestionar el thread que recoge y carga en BD mediciones desde PMISDWH.
+		Solo debe haber un thread en un momento dado que haga la carga de mediciones. 
+		Se hace bloqueo a partir de BD -->
+ 	<bean id="meteringTaskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+	    <property name="corePoolSize" value="5" />
+	    <property name="maxPoolSize" value="5" />
+	    <property name="queueCapacity" value="0" />
+	    <property name="keepAliveSeconds" value="0" />
+	</bean>
+	
+	<bean id="tariffTaskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+	    <property name="corePoolSize" value="5" />
+	    <property name="maxPoolSize" value="5" />
+	    <property name="queueCapacity" value="0" />
+	    <property name="keepAliveSeconds" value="0" />
+	</bean>
+	
+	<bean id="allocationBalanceTaskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+	    <property name="corePoolSize" value="5" />
+	    <property name="maxPoolSize" value="5" />
+	    <property name="queueCapacity" value="0" />
+	    <property name="keepAliveSeconds" value="0" />
+	</bean>
+		
+ 	
+   	<bean id="jaxb2Marshaller" class="org.springframework.oxm.jaxb.Jaxb2Marshaller">
+        <property name="contextPath" value="com.atos.wsdl"/>
+    </bean>
+   	<bean id="soapConfig" class="com.atos.client.ScadaClient">
+   		<property name="defaultUri" value="http://0.0.0.0:7005/Application-ALARM_v04-context-root/TestSOA"/>
+        <property name="marshaller" ref="jaxb2Marshaller" />
+        <property name="unmarshaller" ref="jaxb2Marshaller" />
+    </bean>		
+
+	<bean id="parameterMap" class="java.util.HashMap">
+	    <constructor-arg>
+	        <map key-type="java.lang.String" value-type="java.lang.String">
+	            <entry key="csv.folder" value="/home/tpa/csv/"/>
+	         </map>
+	    </constructor-arg>
+	</bean>
+
+</beans>

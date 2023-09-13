@@ -1,0 +1,69 @@
+:root {
+/*	--color1: #03daf1;*/
+/*	--color1: #62C9F4;*/
+	--color1: #3BC3F1;
+/*	--color1: #00B5EE;*/
+/*	--color1: #10BBEF;*/
+	/*--color1: #00adef;*/
+	/*--color1: #95e1fb*/
+	/*--color3: #00ADEF ;*/
+	/*--color2: #9CD9F6*/
+}
+.ui-layout-unit-header, .ui-layout-unit-footer {
+	padding: 0.4em 0.2em 0.4em 0.4em;
+	background-color: /*var(--color1)*/ #3BC3F1;
+}
+.ui-widget-header, td.headerColor {
+	background: #3BC3F1 /*var(--color1)*/ !important; /* For browsers that do not support gradients */    
+    background: #3BC3F1 /*var(--color1)*/ -webkit-linear-gradient(left top, left bottom, from(rgba(255, 255, 255,0.8)), to(rgba(255, 255, 255, 0))) !important; /* For Safari 5.1 to 6.0 */
+    background: #3BC3F1 /*var(--color1)*/ -o-linear-gradient(left, from(rgba(255, 255, 255,0.8)), to(rgba(255, 255, 255, 0))) !important; /* For Opera 11.1 to 12.0 */
+    background: #3BC3F1 /*var(--color1)*/ -moz-linear-gradient(left, from(rgba(255, 255, 255,0.8)), to(rgba(255, 255, 255, 0))) !important; /* For Firefox 3.6 to 15 */
+    background: #3BC3F1 /*var(--color1)*/ linear-gradient(to top right,rgba(255, 255, 255,0.8), rgba(255, 255, 255, 0)) !important; /* Standard syntax (must be last) */
+
+
+/*		-webkit-gradient(linear, left top, left bottom, from(rgba(255, 255, 255,0.8)), to(rgba(255, 255, 255, 0)))*/
+	/*	linear-gradient(to top right,rgba(255, 255, 255,0.8), rgba(255, 255, 255, 0))*/
+		
+}
+
+td.headerTotalColor {
+	background: #d9d556 /*var(--color1)*/ !important; /* For browsers that do not support gradients */    
+    background: #d9d556 /*var(--color1)*/ -webkit-linear-gradient(left top, left bottom, from(rgba(255, 255, 255,0.8)), to(rgba(255, 255, 255, 0))) !important; /* For Safari 5.1 to 6.0 */
+    background: #d9d556 /*var(--color1)*/ -o-linear-gradient(left, from(rgba(255, 255, 255,0.8)), to(rgba(255, 255, 255, 0))) !important; /* For Opera 11.1 to 12.0 */
+    background: #d9d556 /*var(--color1)*/ -moz-linear-gradient(left, from(rgba(255, 255, 255,0.8)), to(rgba(255, 255, 255, 0))) !important; /* For Firefox 3.6 to 15 */
+    background: #d9d556 /*var(--color1)*/ linear-gradient(to top right,rgba(255, 255, 255,0.8), rgba(255, 255, 255, 0)) !important; /* Standard syntax (must be last) */
+	/*color: #FFFFFF !important*/
+/*		-webkit-gradient(linear, left top, left bottom, from(rgba(255, 255, 255,0.8)), to(rgba(255, 255, 255, 0)))*/
+	/*	linear-gradient(to top right,rgba(255, 255, 255,0.8), rgba(255, 255, 255, 0))*/
+		
+}
+
+/* Hace referencia a los table header para los que se hay especificado la styleClass="darkColorHeader" */
+th.darkColorHeader {
+	background: #3b96f1 /*var(--color1)*/ !important; /* For browsers that do not support gradients */    
+    background: #3b96f1 /*var(--color1)*/ -webkit-linear-gradient(left top, left bottom, from(rgba(255, 255, 255,0.8)), to(rgba(255, 255, 255, 0))) !important; /* For Safari 5.1 to 6.0 */
+    background: #3b96f1 /*var(--color1)*/ -o-linear-gradient(left, from(rgba(255, 255, 255,0.8)), to(rgba(255, 255, 255, 0))) !important; /* For Opera 11.1 to 12.0 */
+    background: #3b96f1 /*var(--color1)*/ -moz-linear-gradient(left, from(rgba(255, 255, 255,0.8)), to(rgba(255, 255, 255, 0))) !important; /* For Firefox 3.6 to 15 */
+    background: #3b96f1 /*var(--color1)*/ linear-gradient(to bottom,rgba(255, 255, 255,0.8), rgba(255, 255, 255, 0)) !important; /* Standard syntax (must be last) */
+}
+
+th {
+	background-color: /*var(--color1)*/ #3BC3F1 !important;
+}
+.ui-menubar,.ui-menu {
+    background: /*var(--color1)*/ #3BC3F1 !important;
+    padding: 1px !important;
+}
+.button_header {
+	background-color:/*var(--color1)*/ #3BC3F1 !important;
+	border-radius: 100%;
+	float:right;
+	width:40px;
+	height:40px;
+	cursor: pointer;
+}
+.ui-growl-item-container {
+	background-color:#3BC3F1;
+	opacity:1;
+}
+

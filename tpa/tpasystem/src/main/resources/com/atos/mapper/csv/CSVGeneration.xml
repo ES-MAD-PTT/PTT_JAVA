@@ -1,0 +1,775 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atos.mapper.csv.CSVMapper">
+
+
+<select id="getCSVDailyNomination" resultType="com.atos.beans.csv.DailyNominationCSVBean" parameterType="java.util.HashMap">
+
+
+ with nomination as(         
+    SELECT n.idn_nomination,    
+    n.nomination_code,    
+    n.start_date,   
+    n.end_date, 
+    n.nomination_version,   
+    c.idn_contract,   
+    c.contract_code,    
+    ug.idn_user_group,   
+    ug.user_group_id,   
+    ug.user_group_name,
+    n.is_responsed,   
+    n.shipper_comments,   
+    n.operator_comments,    
+    n.submission_comments,    
+    n.idn_shipper_file,
+    (select file_name from tpa_toperation_file where n.idn_shipper_file = idn_operation_file) as shipper_file_name, 
+    n.idn_operator_file,  
+    (select file_name from tpa_toperation_file where n.idn_operator_file = idn_operation_file) as operator_file_name,   
+    n.is_valid,
+    n.is_renomination as is_renomination,   
+    n.aud_ins_date as aud_ins_date    
+    FROM tpa_tnomination n,   
+         tpa_tuser_group ug,   
+         tpa_tuser_group_type ugt,   
+         tpa_voperation o,   
+         tpa_tcontract c
+    WHERE n.idn_operation = o.idn_operation   
+    AND o.category_code = 'NOMINATION'    
+    AND o.term_code = 'DAILY'    
+    AND n.idn_user_group = ug.idn_user_group    
+    AND ug.idn_user_group_type = ugt.idn_user_group_type    
+    AND ugt.type_code = 'SHIPPER'    
+    AND n.is_contracted = 'Y'   
+    AND n.idn_contract = c.idn_contract   
+    AND n.start_date = #{start_date}    
+    AND n.end_date = #{end_date}  
+    AND EXISTS (SELECT 1 FROM tpa_vnomination_entity ne WHERE ne.idn_nomination = n.idn_nomination AND ne.idn_pipeline_system = #{idn_system} AND 1 >= ROWNUM)    
+    AND exists (select 1 from tpa_tnomination_day nd where nd.idn_nomination=n.idn_nomination)  
+    AND n.nomination_version =  
+    (SELECT MAX(nx.nomination_version) FROM tpa_tnomination nx WHERE nx.nomination_code = n.nomination_code AND n.is_intraday = 'N')  
+    AND n.is_intraday = 'N'   
+    ORDER BY ug.user_group_id,
+    c.contract_code),
+    
+nomination_detail_zone AS(
+SELECT nom.idn_nomination, nom.nomination_code, nom.nomination_version, nom.user_group_id, nom.user_group_name, nom.shipper_comments, nom.contract_code, nom.is_valid, nom.is_responsed, nom.operator_comments, nom.shipper_file_name, nom.is_renomination, nom.aud_ins_date, nom.start_date,
+       ne.zone_code,
+       neh.supply_demand AS "supply_demand",
+       neh.area AS "area",
+       nvl(ne.point_code, nmc.concept_code) AS point_id,
+       NULL AS area_concept,
+       neh.cust_type AS "cust_type",
+       neh.area_code AS "area_code",
+       neh.subarea AS "subarea",
+       neh.unit AS "unit",
+       neh.entry_exit AS "entry_exit",
+       MIN((SELECT ngq.quality_value
+             FROM tpa_tnomination_gasq   ngq,
+                  tpa_tgas_quality_param gqp
+            WHERE ngq.idn_nomination_entity = ne.idn_nomination_entity
+              AND ngq.idn_nomination_concept = nmc.idn_nomination_concept
+              AND ngq.idn_gas_quality_param = gqp.idn_gas_quality_param
+              AND gqp.parameter_code = 'WI')) AS wi,
+       MIN((SELECT ngq.quality_value
+             FROM tpa_tnomination_gasq   ngq,
+                  tpa_tgas_quality_param gqp
+            WHERE ngq.idn_nomination_entity = ne.idn_nomination_entity
+              AND ngq.idn_nomination_concept = nmc.idn_nomination_concept
+              AND ngq.idn_gas_quality_param = gqp.idn_gas_quality_param
+              AND gqp.parameter_code = 'HV')) AS hv,
+       MIN((SELECT ngq.quality_value
+             FROM tpa_tnomination_gasq   ngq,
+                  tpa_tgas_quality_param gqp
+            WHERE ngq.idn_nomination_entity = ne.idn_nomination_entity
+              AND ngq.idn_nomination_concept = nmc.idn_nomination_concept
+              AND ngq.idn_gas_quality_param = gqp.idn_gas_quality_param
+              AND gqp.parameter_code = 'SG')) AS sg,
+       SUM(decode(nhq.hour, 1, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_01,
+       SUM(decode(nhq.hour, 2, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_02,
+       SUM(decode(nhq.hour, 3, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_03,
+       SUM(decode(nhq.hour, 4, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_04,
+       SUM(decode(nhq.hour, 5, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_05,
+       SUM(decode(nhq.hour, 6, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_06,
+       SUM(decode(nhq.hour, 7, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_07,
+       SUM(decode(nhq.hour, 8, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_08,
+       SUM(decode(nhq.hour, 9, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_09,
+       SUM(decode(nhq.hour, 10, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_10,
+       SUM(decode(nhq.hour, 11, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_11,
+       SUM(decode(nhq.hour, 12, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_12,
+       SUM(decode(nhq.hour, 13, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_13,
+       SUM(decode(nhq.hour, 14, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_14,
+       SUM(decode(nhq.hour, 15, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_15,
+       SUM(decode(nhq.hour, 16, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_16,
+       SUM(decode(nhq.hour, 17, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_17,
+       SUM(decode(nhq.hour, 18, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_18,
+       SUM(decode(nhq.hour, 19, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_19,
+       SUM(decode(nhq.hour, 20, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_20,
+       SUM(decode(nhq.hour, 21, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_21,
+       SUM(decode(nhq.hour, 22, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_22,
+       SUM(decode(nhq.hour, 23, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_23,
+       SUM(decode(nhq.hour, 24, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_24,
+       MIN(ndq.day_matched_quantity * ucfd.conversion_factor) AS total
+  FROM nomination                     nom,
+       tpa_vnomination_entity         ne,
+       tpa_vnomination_excel_header   neh,
+       tpa_vnomination_day_quantity   ndq,
+       tpa_vnomination_hour_quantity  nhq,
+       (SELECT * FROM tpa_vnomination_main_concepts UNION SELECT * FROM tpa_vnomination_other_concept UNION SELECT * FROM TPA_VNOMINATION_QUALTY_CONCEPT)nmc,
+       tpa_vunit_convert_from_default ucfd
+ WHERE ne.idn_nomination =  nom.idn_nomination
+   AND ndq.idn_nomination = nom.idn_nomination
+   AND ne.idn_zone in (select idn_zone from tpa_tzone where zone_code in('EAST', 'WEST', 'EAST-WEST'))
+   AND neh.idn_nomination_entity = ne.idn_nomination_entity
+   AND neh.idn_nomination_concept = nmc.idn_nomination_concept
+   AND ndq.idn_nomination_entity = ne.idn_nomination_entity
+   AND ndq.idn_nomination_concept = nmc.idn_nomination_concept
+   AND nhq.idn_nomination_day(+) = ndq.idn_nomination_day
+   AND nhq.idn_nomination_entity(+) = ndq.idn_nomination_entity
+   AND nhq.idn_nomination_concept(+) = ndq.idn_nomination_concept
+   AND neh.idn_nomination_entity = ndq.idn_nomination_entity
+   AND neh.idn_nomination_concept = ndq.idn_nomination_concept
+   AND neh.idn_unit = ucfd.idn_unit
+   AND nmc.is_point_concept = ne.is_point_entity
+   AND nmc.is_area_concept = ne.is_area_entity
+   AND nmc.is_zone_concept = ne.is_zone_entity
+GROUP BY nom.idn_nomination, nom.nomination_code, nom.nomination_version, nom.user_group_id,  nom.user_group_name, nom.shipper_comments, nom.contract_code, nom.is_valid, nom.is_responsed, nom.operator_comments, nom.shipper_file_name, nom.is_renomination, nom.aud_ins_date, nom.start_date,
+          ne.zone_code,
+          neh.supply_demand,
+          neh.area,
+          nvl(ne.point_code, nmc.concept_code),
+          neh.cust_type,
+          neh.area_code,
+          neh.subarea,
+          neh.unit,
+          neh.entry_exit,
+          nmc.type_code,
+          nmc.sort_value
+ORDER BY ne.zone_code,
+            neh.supply_demand DESC,
+            neh.area,
+            nmc.type_code,
+            nmc.sort_value,
+            nvl(ne.point_code, nmc.concept_code)),
+            
+            
+entry_composition AS( 
+SELECT ne.idn_nomination,
+           ne.zone_code,
+           ne.idn_pipeline_system,
+           nvl(ne.point_code, nmc.concept_code) AS point_id,
+           SUM(decode(gqp.parameter_code, 'CO2', ngq.quality_value, 0)) AS co2,
+           SUM(decode(gqp.parameter_code, 'C1', ngq.quality_value, 0)) AS c1,
+           SUM(decode(gqp.parameter_code, 'C2', ngq.quality_value, 0)) AS c2,
+           SUM(decode(gqp.parameter_code, 'C3', ngq.quality_value, 0)) AS c3,
+           SUM(decode(gqp.parameter_code, 'iC4', ngq.quality_value, 0)) AS ic4,
+           SUM(decode(gqp.parameter_code, 'nC4', ngq.quality_value, 0)) AS nc4,
+           SUM(decode(gqp.parameter_code, 'iC5', ngq.quality_value, 0)) AS ic5,
+           SUM(decode(gqp.parameter_code, 'nC5', ngq.quality_value, 0)) AS nc5,
+           SUM(decode(gqp.parameter_code, 'C6', ngq.quality_value, 0)) AS c6,
+           SUM(decode(gqp.parameter_code, 'C7', ngq.quality_value, 0)) AS c7,
+           SUM(decode(gqp.parameter_code, 'C2plus', ngq.quality_value, 0)) AS c8,
+           SUM(decode(gqp.parameter_code, 'N2', ngq.quality_value, 0)) AS n2,
+           SUM(decode(gqp.parameter_code, 'O2', ngq.quality_value, 0)) AS o2,
+           SUM(decode(gqp.parameter_code, 'H2S', ngq.quality_value, 0)) AS h2s,
+           SUM(decode(gqp.parameter_code, 'S', ngq.quality_value, 0)) AS s,
+           SUM(decode(gqp.parameter_code, 'Hg', ngq.quality_value, 0)) AS hg  
+      FROM nomination nom,
+           tpa_vnomination_entity        ne,
+           tpa_vnomination_main_concepts nmc,
+           tpa_tnomination_gasq          ngq,
+           tpa_tgas_quality_param        gqp,
+           tpa_tgas_quality_list         gql,
+           tpa_tgasq_list_item           gqli
+     WHERE ne.idn_nomination = nom.idn_nomination
+       AND ne.idn_nomination_entity = ngq.idn_nomination_entity
+       AND ngq.idn_nomination_concept = nmc.idn_nomination_concept
+       AND gqp.idn_gas_quality_param = ngq.idn_gas_quality_param
+       AND nmc.is_point_concept = ne.is_point_entity
+       AND nmc.is_area_concept = ne.is_area_entity
+       AND nmc.is_zone_concept = ne.is_zone_entity
+       AND gqp.idn_gas_quality_param = gqli.idn_gas_quality_param
+       AND gqli.idn_gas_quality_list = gql.idn_gas_quality_list
+       AND gql.list_code = 'GQL-NOMINATION.COMPOSITION'
+     GROUP BY ne.idn_nomination,
+              ne.zone_code,
+              ne.idn_pipeline_system,
+              nvl(ne.point_code, nmc.concept_code)
+     ORDER BY ne.zone_code,
+              nvl(ne.point_code, nmc.concept_code))        
+
+   select 
+    nom.*,
+    ec.co2 as co2,
+    ec.c1 as c1,
+    ec.c2 as c2,
+    ec.c3 as c3,
+    ec.ic4 as ic4,
+    ec.nc4 as nc4,
+    ec.ic5 as ic5,
+    ec.nc5 as nc5,
+    ec.c6 as c6,
+    ec.c7 as c7,
+    ec.c8 as c8,
+    ec.n2 as n2,
+    ec.o2 as o2,
+    ec.h2s as h2s,
+    ec.s as s,
+    ec.hg as hg
+   
+   from  nomination_detail_zone nom left join 
+         entry_composition ec on nom.zone_code = ec.zone_code and nom.point_id = ec.point_id
+   order by nom.zone_code
+
+
+</select>
+
+<select id="getCSVAllocationReport" resultType="com.atos.beans.csv.AllocationReportCSVBean" parameterType="java.util.HashMap">
+
+WITH allocation AS
+ (SELECT a.gas_day,
+         a.idn_allocation
+    FROM tpa_tallocation a
+   WHERE a.gas_day BETWEEN #{start_date}
+                       AND #{end_date}
+                       AND a.idn_pipeline_system = #{idn_system}
+     AND a.idn_allocation_type =
+         (SELECT t.idn_allocation_type FROM tpa_tallocation_type t WHERE t.type_code = 'COMMERCIAL')
+     AND a.version_date = (SELECT MAX(ax.version_date)
+                             FROM tpa_tallocation ax
+                            WHERE ax.gas_day = a.gas_day
+                            AND ax.idn_pipeline_system = a.idn_pipeline_system
+                              AND ax.idn_allocation_type = a.idn_allocation_type
+                              AND ax.idn_allocation_origin IN
+                                  (SELECT o.idn_allocation_origin
+                                     FROM tpa_tallocation_origin o
+                                    WHERE o.origin_code IN ('BALANCE', 'CLOSING_PROCESS')))),
+
+allocation_data AS
+ (SELECT a.idn_allocation,
+         ad.idn_contract,
+         ad.idn_contract_point,
+         ad.idn_nomination_point,
+         a.gas_day,
+         ad.idn_system_point_type,
+         decode(nc.concept_code, 'ENERGY', ad.contracted_value) AS contracted_value,
+         decode(nc.concept_code, 'ENERGY', ad.nominated_value) AS nominated_value,
+         decode(nc.concept_code, 'ENERGY', ad.allocated_value) AS allocated_value,
+         decode(nc.concept_code, 'Balancing_gas', ad.allocated_value) AS balancing_gas
+    FROM allocation              a,
+         tpa_tallocation_data    ad,
+         tpa_tnomination_concept nc
+   WHERE a.idn_allocation = ad.idn_allocation
+     AND ad.idn_nomination_concept = nc.idn_nomination_concept
+     AND nc.concept_code IN ('ENERGY', 'Balancing_gas')
+  )
+
+SELECT ad.idn_allocation,
+       ad.idn_contract,
+       ad.idn_contract_point,
+       ad.gas_day,
+       ug.user_group_id AS shipper_code,
+       ug.user_group_name AS shipper_name,
+       c.contract_code,
+       spc.point_code AS POINT_CODE,
+       spn.point_code AS nomination_point,
+       (SELECT x.type_code FROM tpa_tsystem_point_type x WHERE x.idn_system_point_type = spc.idn_system_point_type) point_type_code,
+        1 * 
+       SUM(ad.contracted_value) AS contracted_value,
+        1 * 
+       SUM(ad.nominated_value) AS nominated_value,
+        1 * 
+       SUM(ad.allocated_value) AS allocated_value,
+        1 * 
+       SUM(ad.balancing_gas) AS balancing_gas,
+       greatest(SUM(nvl(ad.allocated_value, 0)) - SUM(nvl(ad.contracted_value, 0)) - SUM(nvl(ad.balancing_gas, 0)), 0) AS overusage
+  FROM allocation_data   ad,
+       tpa_tcontract     c,
+       tpa_tsystem_point spc,
+       tpa_tsystem_point spn,
+       tpa_tuser_group   ug
+ WHERE ad.idn_contract = c.idn_contract
+   AND ad.idn_contract_point = spc.idn_system_point
+   AND spn.idn_system_point = ad.idn_nomination_point
+   AND c.idn_pipeline_system = 1
+   AND c.idn_user_group = ug.idn_user_group
+ GROUP BY ad.idn_allocation,
+          ad.idn_contract,
+          ad.idn_contract_point,
+          ad.gas_day,
+          ug.user_group_id,
+          ug.user_group_name,
+          c.contract_code,
+          spc.point_code,
+          spn.point_code,
+          spc.idn_system_point_type
+ ORDER BY ad.gas_day,
+          upper(ug.user_group_id) ASC,
+          upper(ug.user_group_name) ASC,
+          upper(c.contract_code) ASC,
+          upper(spc.point_code) ASC,
+          upper(spn.point_code) ASC
+          
+          
+    
+
+</select>
+
+<select id="getCSVTariffOveruse" resultType="com.atos.beans.csv.TariffOveruseCSVBean" parameterType="java.util.HashMap">
+
+
+WITH w_tariff_charge AS
+(SELECT *
+    FROM tpa_ttariff_charge c
+   WHERE c.charge_date = #{gas_day}
+     AND c.idn_pipeline_system = #{idn_system}
+     AND c.version_date = (SELECT MAX(cx.version_date)
+                             FROM tpa_ttariff_charge cx
+                            WHERE cx.idn_user_group = c.idn_user_group
+                              AND cx.charge_date = c.charge_date
+                              AND cx.idn_pipeline_system = c.idn_pipeline_system)),
+                              
+w_tariff_charge_detail AS
+(SELECT IDN_TARIFF_CHARGE,
+      TARIFF_CHARGE_CODE,
+      IDN_USER_GROUP,
+      tc.IDN_PIPELINE_SYSTEM,
+      CHARGE_DATE,
+      VERSION_DATE,
+      IS_INVOICE_SENT,
+      INVOICE_TIMESTAMP,
+      IDN_TARIFF_CODE,
+      IDN_TARIFF_CODE_DETAIL,
+      DETAIL_CODE,
+      IDN_SYSTEM_POINT_TYPE,
+      IDN_OPERATION_TERM,
+      IS_ENABLED
+  FROM w_tariff_charge tc,
+       TABLE(pck_tariff_charge.fun_paramet_tariff_code_det(tc.idn_tariff_charge, tc.idn_pipeline_system)))  , 
+    
+w_tariff_data AS 
+(SELECT  tcd.*, tcode.tariff_desc, cmonth.fee, cmonth.REDUCTION/100 REDUCTION, csource.gas_day, cmonth.idn_contract, 
+   SUM(csource.BILLABLE_ENERGY) ENERGY, SUM(csource.ENERGY) original_ENERGY 
+FROM  w_tariff_charge_detail tcd, 
+      tpa_ttariff_charge_source csource,
+      TPA_TTARIFF_CHARGE_MONTH  cmonth,
+      (select distinct idn_tariff_code_detail, idn_tariff_source_detail 
+        from tpa_ttariff_code_det_calc 
+        where #{gas_day} between start_date and  nvl(end_date, to_date('31/12/9999', 'DD/MM/YYYY'))) dcalc,
+      tpa_ttariff_code tcode
+      
+WHERE tcd.idn_tariff_charge = csource.idn_tariff_charge
+AND   tcd.idn_tariff_charge = cmonth.idn_tariff_charge
+AND   tcd.idn_tariff_code_detail = dcalc.idn_tariff_code_detail
+AND   tcd.idn_tariff_code = tcode.idn_tariff_code
+AND   cmonth.idn_tariff_code_detail = tcd.idn_tariff_code_detail
+AND   dcalc.idn_tariff_source_detail = csource.idn_tariff_source_detail
+AND   COALESCE(cmonth.idn_contract, csource.idn_contract, -1) = COALESCE(csource.idn_contract, -1)
+GROUP BY tcd.IDN_TARIFF_CHARGE,
+      tcd.TARIFF_CHARGE_CODE,
+      tcd.IDN_USER_GROUP,
+      tcd.IDN_PIPELINE_SYSTEM,
+      tcd.CHARGE_DATE,
+      tcd.VERSION_DATE,
+      tcd.IS_INVOICE_SENT,
+      tcd.INVOICE_TIMESTAMP,
+      tcd.IDN_TARIFF_CODE,
+      tcd.IDN_TARIFF_CODE_DETAIL,
+      tcd.DETAIL_CODE,
+      tcd.IDN_SYSTEM_POINT_TYPE,
+      tcd.IDN_OPERATION_TERM,
+      tcd.IS_ENABLED, tcode.tariff_desc, cmonth.fee, cmonth.reduction,  csource.gas_day, cmonth.idn_contract)
+      
+SELECT to_char(tdata.charge_date,'YYYY-MM') as Month, ug.user_group_id as Shipper_code, tdata.gas_day as gas_day, tdata.tariff_desc as variable,
+       tc.contract_code as contract_code, spt.type_code as type,
+       CASE WHEN tdata.tariff_desc = 'Commodity Charge' or tdata.tariff_desc = 'Capacity Charge' THEN NULL
+         ELSE tdata.original_ENERGY
+       END AS energy_excl_tolerance,
+       tdata.ENERGY,
+       CASE WHEN tdata.tariff_desc = 'Commodity Charge'  THEN  ROUND(tdata.ENERGY * tdata.FEE, 2)
+            WHEN tdata.tariff_desc = 'Capacity Charge'  THEN  ROUND(tdata.ENERGY * tdata.FEE, 2)
+            WHEN tdata.tariff_desc = 'Capacity Overuse Charge' THEN ROUND(tdata.ENERGY * tdata.REDUCTION * tdata.FEE, 2)
+            ELSE            
+              ROUND(ABS(tdata.ENERGY) * CASE
+                WHEN tdata.ENERGY >= 0 AND tdata.DETAIL_CODE = 'IMBALANCE.PENALTY.POSITIVE' THEN
+                     tdata.FEE
+                WHEN tdata.DETAIL_CODE = 'IMBALANCE.PENALTY.NEGATIVE' THEN
+                     tdata.FEE                     
+                   END, 2)
+       END AS CHARGE    
+FROM w_tariff_data tdata
+INNER JOIN tpa_tuser_group ug
+	ON tdata.idn_user_group = ug.idn_user_group
+	LEFT JOIN tpa_tcontract tc
+	ON tdata.idn_contract = tc.idn_contract
+	LEFT JOIN tpa_tsystem_point_type spt
+	ON tdata.idn_system_point_type = spt.idn_system_point_type
+ORDER BY tdata.gas_day
+
+</select>
+
+<select id="getCSVWeeklyNomination" resultType="com.atos.beans.csv.WeeklyNominationCSVBean" parameterType="java.util.HashMap">
+
+ with nomination as(         
+    SELECT n.idn_nomination,    
+    n.nomination_code,    
+    n.start_date,   
+    n.end_date, 
+    n.nomination_version,   
+    c.idn_contract,   
+    c.contract_code,    
+    ug.idn_user_group,   
+    ug.user_group_id,   
+    ug.user_group_name,
+    n.is_responsed,   
+    n.shipper_comments,   
+    n.operator_comments,    
+    n.submission_comments,    
+    n.idn_shipper_file,
+    (select file_name from tpa_toperation_file where n.idn_shipper_file = idn_operation_file) as shipper_file_name, 
+    n.idn_operator_file,  
+    (select file_name from tpa_toperation_file where n.idn_operator_file = idn_operation_file) as operator_file_name,   
+    n.is_valid,   
+    n.is_renomination as is_renomination,   
+    n.aud_ins_date as aud_ins_date    
+    FROM tpa_tnomination n,   
+         tpa_tuser_group ug,   
+         tpa_tuser_group_type ugt,   
+         tpa_voperation o,   
+         tpa_tcontract c
+    WHERE n.idn_operation = o.idn_operation   
+    AND o.category_code = 'NOMINATION'    
+    AND o.term_code = 'WEEKLY'    
+    AND n.idn_user_group = ug.idn_user_group    
+    AND ug.idn_user_group_type = ugt.idn_user_group_type    
+    AND ugt.type_code = 'SHIPPER'    
+    AND n.is_contracted = 'Y'   
+    AND n.idn_contract = c.idn_contract   
+    AND n.start_date = #{start_date}   
+    AND n.end_date = #{end_date}   
+    AND EXISTS (SELECT 1 FROM tpa_vnomination_entity ne WHERE ne.idn_nomination = n.idn_nomination AND ne.idn_pipeline_system = #{idn_system} AND 1 >= ROWNUM)    
+    AND exists (select 1 from tpa_tnomination_day nd where nd.idn_nomination=n.idn_nomination)  
+    AND n.nomination_version =  
+    (SELECT MAX(nx.nomination_version) FROM tpa_tnomination nx WHERE nx.nomination_code = n.nomination_code AND n.is_intraday = 'N')  
+    AND n.is_intraday = 'N'   
+    ORDER BY ug.user_group_id,
+    c.contract_code),
+    
+nomination_detail_zone AS(
+ SELECT nom.idn_nomination, nom.nomination_code, nom.nomination_version, nom.user_group_id, nom.user_group_name, nom.shipper_comments, nom.contract_code, nom.is_valid, nom.is_responsed, nom.operator_comments, nom.shipper_file_name, nom.is_renomination, nom.aud_ins_date, nom.start_date, nom.end_date,
+       ne.zone_code ,
+       neh.supply_demand AS "supply_demand",
+       neh.area AS "area",
+       nvl(ne.point_code, nc.concept_code) AS point_id,
+       neh.cust_type AS "cust_type",
+       neh.area_code AS "area_code",
+       neh.subarea AS "subarea",
+       neh.unit AS "unit",
+       neh.entry_exit AS "entry_exit",
+       MIN((SELECT ngq.quality_value
+             FROM tpa_tnomination_gasq   ngq,
+                  tpa_tgas_quality_param gqp
+            WHERE ngq.idn_nomination_entity = ne.idn_nomination_entity
+              AND ngq.idn_nomination_concept = nc.idn_nomination_concept
+              AND ngq.idn_gas_quality_param = gqp.idn_gas_quality_param
+              AND gqp.parameter_code = 'WI')) AS wi,      
+       MIN((SELECT ngq.quality_value
+             FROM tpa_tnomination_gasq   ngq,
+                  tpa_tgas_quality_param gqp
+            WHERE ngq.idn_nomination_entity = ne.idn_nomination_entity
+              AND ngq.idn_nomination_concept = nc.idn_nomination_concept
+              AND ngq.idn_gas_quality_param = gqp.idn_gas_quality_param
+              AND gqp.parameter_code = 'HV')) AS hv,  
+       MIN((SELECT ngq.quality_value
+             FROM tpa_tnomination_gasq   ngq,
+                  tpa_tgas_quality_param gqp
+            WHERE ngq.idn_nomination_entity = ne.idn_nomination_entity
+              AND ngq.idn_nomination_concept = nc.idn_nomination_concept
+              AND ngq.idn_gas_quality_param = gqp.idn_gas_quality_param
+              AND gqp.parameter_code = 'SG')) AS sg,
+       SUM(decode(ndq.gas_day - n.start_date, 0, ndq.day_matched_quantity * ucfd.conversion_factor, NULL)) AS day_1,
+       SUM(decode(ndq.gas_day - n.start_date, 1, ndq.day_matched_quantity * ucfd.conversion_factor, NULL)) AS day_2,
+       SUM(decode(ndq.gas_day - n.start_date, 2, ndq.day_matched_quantity * ucfd.conversion_factor, NULL)) AS day_3,
+       SUM(decode(ndq.gas_day - n.start_date, 3, ndq.day_matched_quantity * ucfd.conversion_factor, NULL)) AS day_4,
+       SUM(decode(ndq.gas_day - n.start_date, 4, ndq.day_matched_quantity * ucfd.conversion_factor, NULL)) AS day_5,
+       SUM(decode(ndq.gas_day - n.start_date, 5, ndq.day_matched_quantity * ucfd.conversion_factor, NULL)) AS day_6,
+       SUM(decode(ndq.gas_day - n.start_date, 6, ndq.day_matched_quantity * ucfd.conversion_factor, NULL)) AS day_7
+  FROM nomination nom,
+       tpa_tnomination n,
+       tpa_vnomination_entity ne,
+       tpa_vnomination_excel_header neh,
+       tpa_vnomination_day_quantity ndq,
+       (SELECT * FROM tpa_vnomination_main_concepts UNION SELECT * FROM tpa_vnomination_other_concept UNION SELECT * FROM TPA_VNOMINATION_QUALTY_CONCEPT) nc,
+       tpa_vunit_convert_from_default ucfd
+ WHERE n.idn_nomination =  nom.idn_nomination
+   AND ne.idn_nomination =  nom.idn_nomination
+   AND ndq.idn_nomination = nom.idn_nomination
+   AND ne.idn_zone in (select idn_zone from tpa_tzone where zone_code in('EAST', 'WEST', 'EAST-WEST'))
+   AND neh.idn_nomination_entity = ne.idn_nomination_entity
+   AND neh.idn_nomination_concept = nc.idn_nomination_concept
+   AND ndq.idn_nomination_entity = ne.idn_nomination_entity
+   AND ndq.idn_nomination_concept = nc.idn_nomination_concept
+   AND neh.idn_nomination_entity = ndq.idn_nomination_entity
+   AND neh.idn_nomination_concept = ndq.idn_nomination_concept
+   AND neh.idn_unit = ucfd.idn_unit
+   AND nc.is_point_concept = ne.is_point_entity
+   AND nc.is_area_concept = ne.is_area_entity
+   AND nc.is_zone_concept = ne.is_zone_entity
+   AND n.is_intraday = 'N'
+ GROUP BY nom.idn_nomination, nom.nomination_code, nom.nomination_version, nom.user_group_id, nom.user_group_name, nom.shipper_comments, nom.contract_code, nom.is_valid, nom.is_responsed, nom.operator_comments, nom.shipper_file_name, nom.is_renomination, nom.aud_ins_date, nom.start_date, nom.end_date,ne.zone_code,
+          neh.supply_demand,
+          neh.area,
+          nvl(ne.point_code, nc.concept_code),
+          neh.cust_type,
+          neh.area_code,
+          neh.subarea,
+          neh.unit,
+          neh.entry_exit,
+          decode(nc.concept_desc, 'COMMERCIAL', 1, 2),
+          nc.sort_value         
+      ORDER BY nom.nomination_code, nom.nomination_version, nom.user_group_id, nom.contract_code, nom.start_date, nom.end_date,ne.zone_code, ne.zone_code,
+            neh.supply_demand DESC,
+            neh.area,
+            decode(nc.concept_desc, 'COMMERCIAL', 1, 2),
+            nc.sort_value,
+            nvl(ne.point_code, nc.concept_code)),
+            
+entry_composition AS( 
+SELECT ne.idn_nomination,
+           ne.zone_code,
+           ne.idn_pipeline_system,
+           nvl(ne.point_code, nmc.concept_code) AS point_id,
+           SUM(decode(gqp.parameter_code, 'CO2', ngq.quality_value, 0)) AS co2,
+           SUM(decode(gqp.parameter_code, 'C1', ngq.quality_value, 0)) AS c1,
+           SUM(decode(gqp.parameter_code, 'C2', ngq.quality_value, 0)) AS c2,
+           SUM(decode(gqp.parameter_code, 'C3', ngq.quality_value, 0)) AS c3,
+           SUM(decode(gqp.parameter_code, 'iC4', ngq.quality_value, 0)) AS ic4,
+           SUM(decode(gqp.parameter_code, 'nC4', ngq.quality_value, 0)) AS nc4,
+           SUM(decode(gqp.parameter_code, 'iC5', ngq.quality_value, 0)) AS ic5,
+           SUM(decode(gqp.parameter_code, 'nC5', ngq.quality_value, 0)) AS nc5,
+           SUM(decode(gqp.parameter_code, 'C6', ngq.quality_value, 0)) AS c6,
+           SUM(decode(gqp.parameter_code, 'C7', ngq.quality_value, 0)) AS c7,
+           SUM(decode(gqp.parameter_code, 'C2plus', ngq.quality_value, 0)) AS c8,
+           SUM(decode(gqp.parameter_code, 'N2', ngq.quality_value, 0)) AS n2,
+           SUM(decode(gqp.parameter_code, 'O2', ngq.quality_value, 0)) AS o2,
+           SUM(decode(gqp.parameter_code, 'H2S', ngq.quality_value, 0)) AS h2s,
+           SUM(decode(gqp.parameter_code, 'S', ngq.quality_value, 0)) AS s,
+           SUM(decode(gqp.parameter_code, 'Hg', ngq.quality_value, 0)) AS hg  
+      FROM nomination nom,
+           tpa_vnomination_entity        ne,
+           tpa_vnomination_main_concepts nmc,
+           tpa_tnomination_gasq          ngq,
+           tpa_tgas_quality_param        gqp,
+           tpa_tgas_quality_list         gql,
+           tpa_tgasq_list_item           gqli
+     WHERE ne.idn_nomination = nom.idn_nomination
+       AND ne.idn_nomination_entity = ngq.idn_nomination_entity
+       AND ngq.idn_nomination_concept = nmc.idn_nomination_concept
+       AND gqp.idn_gas_quality_param = ngq.idn_gas_quality_param
+       AND nmc.is_point_concept = ne.is_point_entity
+       AND nmc.is_area_concept = ne.is_area_entity
+       AND nmc.is_zone_concept = ne.is_zone_entity
+       AND gqp.idn_gas_quality_param = gqli.idn_gas_quality_param
+       AND gqli.idn_gas_quality_list = gql.idn_gas_quality_list
+       AND gql.list_code = 'GQL-NOMINATION.COMPOSITION'
+     GROUP BY ne.idn_nomination,
+              ne.zone_code,
+              ne.idn_pipeline_system,
+              nvl(ne.point_code, nmc.concept_code)
+     ORDER BY ne.zone_code,
+              nvl(ne.point_code, nmc.concept_code))        
+
+   SELECT nom.*, 
+   ec.co2, ec.c1, ec.c2, ec.c3, ec.ic4, ec.nc4, ec.ic5, ec.nc5, ec.c6, ec.c7, ec.c8, ec.n2, ec.o2, ec.h2s, ec.s, ec.hg
+   FROM  nomination_detail_zone nom LEFT JOIN 
+         entry_composition ec ON nom.zone_code = ec.zone_code 
+         AND nom.point_id = ec.point_id
+         ORDER BY nom.zone_code
+
+</select>
+
+<select id="getCSVContractQuery" resultType="com.atos.beans.csv.ContractQueryCSVBean" parameterType="java.util.HashMap">
+
+WITH 
+  w_cabecera AS
+    (SELECT tcreq.idn_contract_request,
+            tcreq.request_code,
+            tcreq.arriving_date,
+            tuser_group.idn_user_group,
+            tuser_group.user_group_id,
+            tuser_group.user_group_name,
+            toper.idn_operation,
+            toper.operation_desc,
+            tcreq.idn_contract,
+            tcreq.contract_code,
+            tcreq.status,
+            tcreq.start_date,
+            tcreq.end_date,
+            tcreq.shipper_warnings,
+            toperf.file_name,
+            tcreq.response_date,
+            tcreq.operator_comments,
+            csha.shadow_time,
+            csha.shadow_period
+       FROM (SELECT tcreq2.*, tcontr2.contract_code
+               FROM tpa_tcontract_request tcreq2,
+                    tpa_tcontract         tcontr2
+              WHERE tcontr2.idn_contract(+) = tcreq2.idn_contract
+                AND NVL(tcontr2.is_grandfathering(+), 'N') = 'N'
+                AND tcreq2.idn_pipeline_system = #{idn_system}
+                AND tcontr2.idn_pipeline_system(+) = tcreq2.idn_pipeline_system) tcreq
+      INNER JOIN tpa_tuser_group tuser_group
+         ON tcreq.idn_user_group = tuser_group.idn_user_group       
+      INNER JOIN tpa_toperation  toper
+         ON tcreq.idn_operation = toper.idn_operation
+      INNER JOIN tpa_toperation_file  toperf
+         ON tcreq.idn_operation_file = toperf.idn_operation_file
+       LEFT JOIN tpa_tcontract_shadow csha
+         ON tcreq.idn_contract = csha.idn_contract
+      WHERE tcreq.is_capacity_release = 'N'
+        AND tcreq.status = 'COMPLETED'
+           
+          <if test = "startDate != null" >
+             AND trunc(tcreq.end_date) >= #{startDate} 
+           </if>
+           <if test = "endDate != null" >
+             AND #{endDate} >= trunc(tcreq.start_date)
+           </if>
+    ),
+  w_quality AS
+    (SELECT cab.idn_contract_request,
+            cp.idn_system_point,
+            gqp.parameter_code,
+            MAX(cpg.min_value) AS min_value,
+            MIN(cpg.max_value) AS max_value
+       FROM w_cabecera               cab,
+            tpa_tcontract_agreement  ca,
+            tpa_tcontract_point      cp,
+            tpa_tcontract_point_gasq cpg,
+            tpa_tgas_quality_param   gqp
+      WHERE cab.idn_contract_request = ca.idn_contract_request
+        AND ca.idn_contract_agreement = cp.idn_contract_agreement
+        AND cp.idn_contract_point = cpg.idn_contract_point
+        AND cpg.idn_gas_quality_param = gqp.idn_gas_quality_param
+      GROUP BY cab.idn_contract_request, cp.idn_system_point, gqp.parameter_code
+    ),
+  w_quality_pivot AS 
+    (SELECT *
+       FROM w_quality
+      PIVOT (MAX(min_value) AS MIN, MIN(max_value) AS MAX FOR parameter_code IN('HV' AS hv,
+                                                                                'WI' AS wi,
+                                                                                'C2' AS c2,
+                                                                                'CO2' AS co2,
+                                                                                'O2' AS o2,
+                                                                                'N2' AS n2,
+                                                                                'H2S' AS h2s,
+                                                                                'S' AS s,
+                                                                                'Hg' AS hg,
+                                                                                'H2O' AS h2o,
+                                                                                'HCDewPoint' AS hcdewpoint,
+                                                                                'Pressure' AS press,
+                                                                                'Temperature' AS temp))
+    ),
+  w_system_points AS 
+    (SELECT cab.idn_contract_request,
+            cp.idn_system_point,
+            sp.point_code,
+            a.area_code,
+            z.zone_code,
+            xls.subarea,
+            xls.block_valve,
+            cp.is_new_connection,
+            cp.metering_point,
+            ct.type_code AS customer_type,
+            MIN(ca.start_date) AS from_date,
+            MAX(ca.end_date) AS to_date
+       FROM w_cabecera               cab
+      INNER JOIN tpa_tcontract_agreement  ca
+         ON cab.idn_contract_request = ca.idn_contract_request
+      INNER JOIN tpa_tcontract_point cp
+         ON ca.idn_contract_agreement = cp.idn_contract_agreement
+      INNER JOIN tpa_tsystem_point sp
+         ON cp.idn_system_point = sp.idn_system_point
+      INNER JOIN tpa_varea_tpa a
+         ON sp.idn_area = a.idn_area
+      INNER JOIN tpa_vzone_tpa z
+         ON a.idn_zone = z.idn_zone
+      INNER JOIN tpa_tsystem_point_type spt
+         ON sp.idn_system_point_type = spt.idn_system_point_type
+        AND spt.type_code IN ('ENTRY', 'EXIT')
+       LEFT JOIN tpa_tcontract_xls_headr xls
+         ON cab.idn_contract_request = xls.idn_contract_request
+        AND sp.idn_system_point = xls.idn_system_point
+       LEFT JOIN tpa_tcustomer_type ct
+         ON xls.idn_customer_type = ct.idn_customer_type
+      GROUP BY cab.idn_contract_request, cp.idn_system_point, sp.point_code, a.area_code, z.zone_code,
+               xls.subarea, xls.block_valve, cp.is_new_connection, cp.metering_point, ct.type_code
+    )
+SELECT cab.request_code,
+       cab.user_group_id  AS shipper,
+       cab.operation_desc AS contract_type,
+       cab.contract_code,
+       cab.start_date,
+       cab.end_date,
+       cab.shadow_time,
+       cab.shadow_period,
+       sp.zone_code AS zone,
+       sp.area_code AS area,
+       sp.subarea,
+       sp.block_valve,
+       sp.metering_point        AS entrymeterid,
+       sp.point_code            AS entrypoint,
+       sp.is_new_connection     AS new_connection,
+       qua.press_max            AS pr_max,
+       qua.press_min            AS pr_min,
+       qua.temp_max             AS temperature_range_max,
+       qua.temp_min             AS temperature_range_min,
+       cap.agreement_start_date AS year,
+       cab.user_group_name as shipperName,
+       cab.arriving_date as submittedTimestamp,
+       cab.file_name as xlsFileName,
+      <!--  SUBSTRB( DBMS_LOB.SUBSTR( cab.shipper_warnings, 4000, 1 ), 1, 4000) as submissionComments, -->
+       cab.idn_contract_request as idn_contract_request,
+       cab.response_date as acceptanceTimestamp,
+       cab.operator_comments as managementComments,
+       cap.quantity,
+      cap.max_hour_qty,
+       cap.volume,
+       cap.max_hour_vol,
+       qua.hv_min,
+       qua.hv_max,
+       qua.wi_min,
+       qua.wi_max,
+       qua.c2_min,
+       qua.c2_max,
+       qua.co2_min,
+       qua.co2_max,
+       qua.o2_min,
+       qua.o2_max,
+       qua.n2_min,
+       qua.n2_max,
+       qua.h2s_min,
+       qua.h2s_max,
+       qua.s_min,
+       qua.s_max,
+       qua.hg_min,
+       qua.hg_max,
+       qua.h2o_min,
+       qua.h2o_max,
+       qua.hcdewpoint_min,
+       qua.hcdewpoint_max
+  FROM w_cabecera cab
+INNER JOIN w_system_points sp
+    ON cab.idn_contract_request = sp.idn_contract_request
+INNER JOIN tpa_vcontract_request_capacity cap
+    ON cab.idn_contract_request = cap.idn_contract_request
+   AND sp.idn_system_point = cap.idn_system_point
+  LEFT JOIN w_quality_pivot qua
+    ON cab.idn_contract_request = qua.idn_contract_request
+   AND sp.idn_system_point = qua.idn_system_point
+ORDER BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 14, 20
+
+
+</select>
+
+</mapper>

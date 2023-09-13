@@ -1,0 +1,401 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_tariff']}" url="#" />
+			<p:menuitem value="#{msg['menu_tariff_daily_overview']}" url="/pages/tariff/tariffDailyOverview.xhtml" />
+			                           
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="5000"/>
+			
+            <p:layout widgetVar="tariffDailyOverviewLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">	
+					
+				<p:panelGrid columns="2" style="width:100%">
+					
+						<p:panelGrid>
+							<p:row>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['tariffDailyOverview_Shipper']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['tariffDailyOverview_Month_Year_Charge']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['tariffDailyOverview_Variable']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['tariffDailyOverview_Contract_Code']}" />
+								</p:column>
+								
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['tariffDailyOverview_SystemPointType']}" />
+								</p:column>
+							</p:row>
+							
+							<p:row>
+								<p:column>
+									<p:selectOneMenu id="shipper"  style="width:100px"   value="#{tariffDailyOverviewView.filters.idn_user_group}" 
+									rendered="#{!tariffDailyOverviewView.isShipper()}" >
+										<f:selectItem itemValue=" " itemLabel=" "> </f:selectItem>
+        								<f:selectItems value="#{tariffDailyOverviewView.shippers.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+        								<p:ajax event="change"  update="contract,variable"></p:ajax>
+					           		</p:selectOneMenu>
+					           		<h:outputText value="#{tariffDailyOverviewView.user.user_group_id}" style="float:left" rendered="#{tariffDailyOverviewView.isShipper()}"/>
+								</p:column>
+								<p:column>
+									<p:calendar id="shortDate"  size="10" pattern="MMMM/yyyy"  value="#{tariffDailyOverviewView.filters.shortDate}"
+												showOn="button" navigator="true"  locale="en_EN" >	
+									<p:ajax event="change"  update="contract,variable"></p:ajax>		
+									<p:ajax event="dateSelect"  update="contract,variable"></p:ajax>	
+									</p:calendar>
+								</p:column>
+								<p:column>
+									<p:selectOneMenu id="variable"  style="width:100px"   value="#{tariffDailyOverviewView.filters.idn_tariff_code}" >
+										<f:selectItem itemValue=" " itemLabel=" "> </f:selectItem>
+        								<f:selectItems value="#{tariffDailyOverviewView.variables.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+        								<p:ajax event="change" listener="#{tariffDailyOverviewView.onVariableChange()}" update="contract, systemPointType"></p:ajax>				
+					           		</p:selectOneMenu>									
+								</p:column>
+								
+								<p:column>
+									<p:selectOneMenu disabled="#{tariffDailyOverviewView.disabledContract()}" id="contract"  style="width:100px"   value="#{tariffDailyOverviewView.filters.idn_contract}" >
+										<f:selectItem itemValue=" " itemLabel=" "> </f:selectItem>
+        								<f:selectItems value="#{tariffDailyOverviewView.contracts.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+        								
+					           		</p:selectOneMenu>									
+								</p:column>
+								
+								<p:column>
+									<p:selectOneMenu   id="systemPointType"  style="width:100px"   value="#{tariffDailyOverviewView.filters.idn_system_point_type}" disabled="#{tariffDailyOverviewView.disabledSystemPointType()}">
+									<f:selectItem itemValue=" " itemLabel=" "> </f:selectItem>
+        								<f:selectItems value="#{tariffDailyOverviewView.systemPointTypes.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+        								<p:ajax event="change" listener="#{tariffDailyOverviewView.onTypeChange()}" ></p:ajax>		
+					           		</p:selectOneMenu>									
+								</p:column>
+							</p:row>
+					</p:panelGrid>
+						<p:panelGrid columns="2" style="float:right;top:0px">
+	  					 	<shiro:hasPermission name="#{changeSystemView.system}.TARIFF.DAILY.OVERVIEW.QUERY">
+								<p:commandButton value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{tariffDailyOverviewView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,:#{p:component('tariffDailyOverviews1')}"/>
+							</shiro:hasPermission>
+							
+							<p:commandButton  onclick="PF('tariffDailyOverviewLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+	  					 	
+	  					 	<shiro:hasPermission name="#{changeSystemView.system}.TARIFF.DAILY.OVERVIEW.QUERY">
+									<p:commandButton value="#{msg['clear']}"
+									actionListener="#{tariffDailyOverviewView.onClear}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" 
+									process="@this" 
+									update="form"/> 
+						</shiro:hasPermission>
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center"
+					resizable="false" closable="false" collapsible="false" >
+	  
+					<p:dataTable widgetVar="w_tariffDailyOverview1"  id="tariffDailyOverviews1" var="tariffDailyOverview" value="#{tariffDailyOverviewView.items}" 
+						editable="true" 
+						scrollable="true"  scrollHeight="100%"
+						style=" margin-bottom:20px;border-collapse:collapse"
+					    paginator="true" rows="25"			
+					    rowsPerPageTemplate="5,10,15,20,25, #{tariffDailyOverviewView.itemsSize}" 
+					    sortBy="#{tariffDailyOverview.sortBy}"> <!-- short by se usa para el campo sumary -->
+
+							<f:facet name="header">
+								<p:outputPanel style="height:25px">
+								
+								
+								<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+	        					<p:columnToggler datasource="tariffDailyOverviews1" trigger="toggler" style="width:200px"/>
+	 								
+	 						 
+								<shiro:hasPermission name="#{changeSystemView.system}.TARIFF.DAILY.OVERVIEW.QUERY">
+					        			<h:commandLink style="float:right">
+										       <p:graphicImage name="/images/excel.png" width="24"/>
+										       <p:dataExporter type="xls" target="tariffDailyOverviews1" fileName="TariffPublication" postProcessor="#{tariffDailyOverviewView.detailProcessXLS2}"/>
+										</h:commandLink>	 
+								</shiro:hasPermission>
+								</p:outputPanel>        										          
+					        </f:facet>
+					       
+						   	<p:column headerText="#{msg['tariffDailyOverview_Gas_Day']}" style="width: 55px; text-align: center;"  >
+			               		<h:outputText value="#{tariffDailyOverview.detailGasDay}" >
+			              				<f:convertDateTime pattern="dd/MM/yyyy" />
+			              		</h:outputText>
+					       	</p:column>
+							       
+					      <!-- Pestaña: ‘Daily Capacity Charge’ 
+						      private BigDecimal dailyBookedEntryCapacity;
+			  				  private BigDecimal dailyCapacityCharge;
+					      -->
+					       	<p:column	rendered="#{tariffDailyOverviewView.renderColumnDetail2(1)}"   
+					       		headerText="#{msg['tariffDailyOverview_Daily_Booked_Entry_Capacity']}" style="width: 100px; text-align: center;" >
+		
+		 						<h:outputText value="#{tariffDailyOverview.dailyBookedEntryCapacity}" style="float:right"  >
+							               			<f:convertNumber pattern="#,##0.0000" />
+							    </h:outputText>
+		 										
+					       	</p:column>
+					       	
+					       	<p:column rendered="#{tariffDailyOverviewView.renderColumnDetail2(2)}"  
+								headerText="#{msg['tariffDailyOverview_Daily_Capacity_Charge']}" style="width: 100px; text-align: center;" >
+		 						<h:outputText value="#{tariffDailyOverview.dailyCapacityCharge}" style="float:right"  >
+							               			<f:convertNumber pattern="#,##0.00" />
+							    </h:outputText>			
+					       	</p:column>
+					       	
+					        <!--Pestaña: ‘Daily Commodity Charge’
+					        	private BigDecimal dailyAllocatedExitValue;
+					        	ch715 nuevo label dailyAllocatedEntryValue
+		    					private BigDecimal dailyCommodityCharge;  -->
+							<p:column rendered="#{tariffDailyOverviewView.renderColumnDetail2(31)}"  headerText="#{msg['tariffDailyOverview_Daily_Allocated_Entry_Value']}" style="width: 100px; text-align: center;" >
+		 						<h:outputText value="#{tariffDailyOverview.dailyAllocatedEntryValue}" style="float:right"  >
+							        <f:convertNumber pattern="#,##0.0000" />
+							    </h:outputText>					
+					       	</p:column>
+					       	
+					       	<p:column rendered="#{tariffDailyOverviewView.renderColumnDetail2(32)}"  headerText="#{msg['tariffDailyOverview_Daily_Allocated_Exit_Value']}" style="width: 100px; text-align: center;" >
+		 						<h:outputText value="#{tariffDailyOverview.dailyAllocatedExitValue}" style="float:right"  >
+							        <f:convertNumber pattern="#,##0.0000" />
+							    </h:outputText>					
+					       	</p:column>
+					       	
+					       	<p:column rendered="#{tariffDailyOverviewView.renderColumnDetail2(4)}"  headerText="#{msg['tariffDailyOverview_Daily_Commodity_Charge']}" style="width: 100px; text-align: center;" >
+		 						<h:outputText value="#{tariffDailyOverview.dailyCommodityCharge}" style="float:right"  >
+							    	<f:convertNumber pattern="#,##0.00" />
+							    </h:outputText>					
+					       	</p:column>
+					
+							<!--Pestaña: ‘Daily Entry Capacity Over Used Charge’
+							
+							private BigDecimal dailyOriginalEntruCapacityOU; //CH710 SAT FASE III
+							private BigDecimal dailyEntryCapacityOverUsed;
+						
+						    private BigDecimal dailyReducedEntryCapacityOverUsed; => CH522 Quitar esta columna
+						    private BigDecimal dailyEntryCapacityOverUsedCharge;  -->
+
+					       <!--SAT CH710-->
+					       <p:column rendered="#{tariffDailyOverviewView.renderColumnDetail2(5)}"  headerText="#{msg['tariffDailyOverview_Daily_Entry_Capacity_Over_Used_Excl_Tolerance']}" style="width: 100px; text-align: center;" >
+		 						<h:outputText value="#{tariffDailyOverview.dailyOriginalEntryCapacityOU}" style="float:right"  >
+							        <f:convertNumber pattern="#,##0.0000" />
+							    </h:outputText>					
+					       </p:column>
+					       
+						    
+						   <p:column rendered="#{tariffDailyOverviewView.renderColumnDetail2(6)}"  headerText="#{msg['tariffDailyOverview_Daily_Entry_Capacity_Over_Used']}" style="width: 100px; text-align: center;" >
+		 						<h:outputText value="#{tariffDailyOverview.dailyEntryCapacityOU}" style="float:right"  >
+							        <f:convertNumber pattern="#,##0.0000" />
+							    </h:outputText>					
+					       </p:column>
+					       
+					       
+					       
+					       <!--SAT CH522 la vista no hace el render y no se pinta esta columna
+					       <p:column rendered="#{tariffDailyOverviewView.renderColumnDetail2(6)}"  headerText="#{msg['tariffDailyOverview_Daily_Reduced_Entry_Capacity_Over_Used']}" style="width: 100px; text-align: center;" >
+		 						<h:outputText value="#{tariffDailyOverview.dailyReducedEntryCapacityOU}" style="float:right"  >
+							        <f:convertNumber pattern="#,##0.000" />
+							    </h:outputText>					
+					       </p:column> -->
+					       
+					       <p:column rendered="#{tariffDailyOverviewView.renderColumnDetail2(7)}"   headerText="#{msg['tariffDailyOverview_Daily_Entry_Capacity_Over_Used_Charge']}" style="width: 100px; text-align: center;" >
+		 						<h:outputText value="#{tariffDailyOverview.dailyEntryCapacityOUCharge}" style="float:right"  >
+							        <f:convertNumber pattern="#,##0.00" />
+							    </h:outputText>					
+					       </p:column> 
+					       
+					       <!-- Pestaña: ‘Daily Exit Capacity Over Used Charge’
+					       private BigDecimal dailyOriginalExitCapacityOU; //CH710 SAT FASE III
+					       		private BigDecimal dailyExitCapacityOverUsed;
+					       		
+							    private BigDecimal dailyReducedExitCapacityOverUsed;  => CH522 Quitar esta columna
+		    					private BigDecimal dailyExitCapacityOverUsedCharge;  
+		    					
+		    					-->
+		    					       <!--SAT CH710-->
+					       <p:column rendered="#{tariffDailyOverviewView.renderColumnDetail2(8)}"  headerText="#{msg['tariffDailyOverview_Daily_Exit_Capacity_Over_Used_Excl_Tolerance']}" style="width: 100px; text-align: center;" >
+		 						<h:outputText value="#{tariffDailyOverview.dailyOriginalExitCapacityOU}" style="float:right"  >
+							        <f:convertNumber pattern="#,##0.0000" />
+							    </h:outputText>					
+					       </p:column>
+					
+					       <p:column rendered="#{tariffDailyOverviewView.renderColumnDetail2(9)}"  
+							 	     headerText="#{msg['tariffDailyOverview_Daily_Exit_Capacity_Over_Used']}" style="width: 100px; text-align: center;" >
+		 						
+		 						<h:outputText value="#{tariffDailyOverview.dailyExitCapacityOU}" style="float:right"  >
+							        <f:convertNumber pattern="#,##0.0000" />
+							    </h:outputText>	
+		 						                                 				
+					       </p:column>
+					       
+					       
+					     <!--SAT CH522
+					       <p:column rendered="#{tariffDailyOverviewView.renderColumnDetail2(9)}"  
+							 	     headerText="#{msg['tariffDailyOverview_Daily_Reduced_Exit_Capacity_Over_Used']}" style="width: 100px; text-align: center;" >
+		 						
+		 						<h:outputText value="#{tariffDailyOverview.dailyReducedExitCapacityOU}" style="float:right"  >
+							        <f:convertNumber pattern="#,##0.000" />
+							    </h:outputText>	
+		 						                                 				
+					       </p:column>
+					      -->
+					       <p:column rendered="#{tariffDailyOverviewView.renderColumnDetail2(10)}"  
+							 	     headerText="#{msg['tariffDailyOverview_Daily_Exit_Capacity_Over_Used_Charge']}" style="width: 100px; text-align: center;" >
+		 						
+		 						<h:outputText value="#{tariffDailyOverview.dailyExitCapacityOUCharge}" style="float:right"  >
+							        <f:convertNumber pattern="#,##0.00" />
+							    </h:outputText>					
+					       </p:column>
+						    
+						  <!--Pestaña: ‘Daily Imbalance Penalty Charge’
+						     private BigDecimal dailyOriginalImbalance; CH711 SAT FASE III  se añade dailyOriginalImbalance
+						     private BigDecimal dailyImbalance;
+		    				ivate BigDecimal dailyImbalanceCharge;  -->
+		    					
+		    				<p:column rendered="#{tariffDailyOverviewView.renderColumnDetail2(11)}"  
+							 	      headerText="#{msg['tariffDailyOverview_Daily_Imbalance_Excl']}" style="width: 100px; text-align: center;" >
+		 						<h:outputText value="#{tariffDailyOverview.dailyOriginalImbalance}"  style="float:right"  >
+							        <f:convertNumber pattern="#,##0.0000" />
+							    </h:outputText>				
+					        </p:column>	
+		    				<p:column rendered="#{tariffDailyOverviewView.renderColumnDetail2(12)}"  
+							 	      headerText="#{msg['tariffDailyOverview_Daily_Imbalance']}" style="width: 100px; text-align: center;" >
+		 						<h:outputText value="#{tariffDailyOverview.dailyImbalance}"  style="float:right"  >
+							        <f:convertNumber pattern="#,##0.0000" />
+							    </h:outputText>				
+					        </p:column>	
+					        <p:column rendered="#{tariffDailyOverviewView.renderColumnDetail2(13)}"  
+							 	      headerText="#{msg['tariffDailyOverview_Daily_Imbalance_Charge']}" style="width: 100px; text-align: center;" >
+		 						<h:outputText value="#{tariffDailyOverview.dailyImbalanceCharge}" style="float:right"  >
+							        <f:convertNumber pattern="#,##0.00" />
+							    </h:outputText>				
+					        </p:column>	
+						    
+							        
+							     
+					  
+					      
+ 						<p:summaryRow id="summary" >
+				            <p:column  style="text-align:right;">
+					                <h:outputText value="#{msg['day_nom_total']} :" />
+					            </p:column>
+					            <p:column rendered="#{tariffDailyOverviewView.renderColumnDetail2(1)}"  style="text-align:right">
+					                <h:outputText value="#{tariffDailyOverviewView.getTotal(1)}"   >
+					                    <f:convertNumber  pattern="#,##0.0000" />
+					                </h:outputText>
+					            </p:column>
+					            <p:column rendered="#{tariffDailyOverviewView.renderColumnDetail2(2)}"  style="text-align:right">
+					                <h:outputText value="#{tariffDailyOverviewView.getTotal(2)}">
+					                    <f:convertNumber  pattern="#,##0.00" />
+					                </h:outputText>
+					            </p:column>
+					            
+					            
+					            
+					            <p:column rendered="#{tariffDailyOverviewView.renderColumnDetail2(31)}" style="text-align:right">
+					                <h:outputText value="#{tariffDailyOverviewView.getTotal(31)}">
+					                    <f:convertNumber  pattern="#,##0.0000" />
+					                </h:outputText>
+					            </p:column>
+					             
+					            <p:column rendered="#{tariffDailyOverviewView.renderColumnDetail2(32)}" style="text-align:right">
+					                <h:outputText value="#{tariffDailyOverviewView.getTotal(32)}">
+					                    <f:convertNumber  pattern="#,##0.0000" />
+					                </h:outputText>
+					            </p:column>
+					           
+					            <p:column rendered="#{tariffDailyOverviewView.renderColumnDetail2(4)}"  style="text-align:right">
+					                <h:outputText value="#{tariffDailyOverviewView.getTotal(4)}">
+					                    <f:convertNumber  pattern="#,##0.00" />
+					                </h:outputText>
+					            </p:column>
+					            
+					            
+					             <p:column rendered="#{tariffDailyOverviewView.renderColumnDetail2(5)}" style="text-align:right">
+					                <h:outputText value="#{tariffDailyOverviewView.getTotal(5)}">
+					                    <f:convertNumber  pattern="#,##0.0000" />
+					                </h:outputText>
+					            </p:column>
+					            <p:column rendered="#{tariffDailyOverviewView.renderColumnDetail2(6)}"  style="text-align:right">
+					                <h:outputText value="#{tariffDailyOverviewView.getTotal(6)}">
+					                    <f:convertNumber  pattern="#,##0.0000" />
+					                </h:outputText>
+					            </p:column>
+					            
+					            <p:column rendered="#{tariffDailyOverviewView.renderColumnDetail2(7)}"  style="text-align:right">
+					                <h:outputText value="#{tariffDailyOverviewView.getTotal(7)}">
+					                    <f:convertNumber  pattern="#,##0.00" />
+					                </h:outputText>
+					            </p:column>
+					            
+					            
+					            
+					            
+					             <p:column rendered="#{tariffDailyOverviewView.renderColumnDetail2(8)}" style="text-align:right">
+					                <h:outputText value="#{tariffDailyOverviewView.getTotal(8)}">
+					                    <f:convertNumber  pattern="#,##0.0000" />
+					                </h:outputText>
+					            </p:column>
+					            <p:column rendered="#{tariffDailyOverviewView.renderColumnDetail2(9)}"  style="text-align:right">
+					                <h:outputText value="#{tariffDailyOverviewView.getTotal(9)}">
+					                    <f:convertNumber  pattern="#,##0.0000" />
+					                </h:outputText>
+					            </p:column>
+					            
+					            <p:column rendered="#{tariffDailyOverviewView.renderColumnDetail2(10)}"  style="text-align:right">
+					                <h:outputText value="#{tariffDailyOverviewView.getTotal(10)}">
+					                    <f:convertNumber  pattern="#,##0.00" />
+					                </h:outputText>
+					            </p:column>
+					            
+					            
+					            <p:column rendered="#{tariffDailyOverviewView.renderColumnDetail2(11)}"  style="text-align:right">
+					                <h:outputText value="#{tariffDailyOverviewView.getTotal(11)}">
+					                    <f:convertNumber  pattern="#,##0.0000" />
+					                </h:outputText>
+					            </p:column>
+					            <p:column rendered="#{tariffDailyOverviewView.renderColumnDetail2(12)}"  style="text-align:right">
+					                <h:outputText value="#{tariffDailyOverviewView.getTotal(12)}">
+					                    <f:convertNumber  pattern="#,##0.0000" />
+					                </h:outputText>
+					            </p:column>
+					            <p:column rendered="#{tariffDailyOverviewView.renderColumnDetail2(13)}"  style="text-align:right">
+					                <h:outputText value="#{tariffDailyOverviewView.getTotal(13)}">
+					                    <f:convertNumber  pattern="#,##0.00" />
+					                </h:outputText>
+					            </p:column>
+					     </p:summaryRow>
+					    							      
+					   </p:dataTable>
+					  
+				</p:layoutUnit>
+
+			</p:layout>
+		</h:form>
+
+	
+	</ui:define>
+
+</ui:composition>

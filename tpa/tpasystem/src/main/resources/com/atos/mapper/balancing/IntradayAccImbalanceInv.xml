@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atos.mapper.balancing.IntradayAccImbalanceInvMapper">
+
+
+	<resultMap type="com.atos.beans.balancing.IntradayAccImbalanceInventoryBean" id="IntradayAccImbalanceInventory">
+		
+		<result property="versionDate" column="version_date" />
+		<result property="e_total_inventory_val" column="e_total_inventory_val" />
+		<result property="e_total_inventory_colour" column="e_total_inventory_warn" />
+		<result property="w_total_inventory_val" column="w_total_inventory_val" />
+		<result property="w_total_inventory_colour" column="w_total_inventory_warn" />
+		
+		<result property="e_base_inventory_val" column="e_base_inventory_val" />
+		<result property="e_base_inventory_colour" column="e_base_inventory_warn" />
+		<result property="w_base_inventory_val" column="w_base_inventory_val" />
+		<result property="w_base_inventory_colour" column="w_base_inventory_warn" />
+		
+		<result property="e_inventory_operator_val" column="e_inventory_operator_val" />
+		<result property="e_inventory_operator_colour" column="e_inventory_operator_warn" />
+		<result property="w_inventory_operator_val" column="w_inventory_operator_val" />
+		<result property="w_inventory_operator_colour" column="w_inventory_operator_warn" />
+		
+		<result property="e_other_shippers_val" column="e_other_shippers_val" />
+		<result property="e_other_shippers_colour" column="e_other_shippers_warn" />
+		<result property="w_other_shippers_val" column="w_other_shippers_val" />
+		<result property="w_other_shippers_colour" column="w_other_shippers_warn" />
+		
+		<result property="e_others_val" column="e_others_val" />
+		<result property="e_others_colour" column="e_others_warn" />
+		<result property="w_others_val" column="w_others_val" />
+		<result property="w_others_colour" column="w_others_warn" />
+		
+		<result property="e_pttshipper_val" column="e_pttShipper_val" />
+		<result property="w_pttshipper_colour" column="e_pttShipper_warn" />
+		<result property="w_pttshipper_val" column="w_pttShipper_val" />
+		<result property="w_pttshipper_colour" column="w_pttShipper_warn" />
+		
+		<result property="e_zoneMode_val" column="e_base_inventory_mode_code" />
+		<result property="w_zoneMode_val" column="w_base_inventory_mode_code" />
+		
+	</resultMap>
+
+	<select id="selectIntradayAccImbalanceInv" resultMap="IntradayAccImbalanceInventory">
+WITH 
+  gas_day AS
+    (SELECT #{gasDay}  AS gas_day FROM dual),
+  all_concepts AS
+    (SELECT nc.idn_nomination_concept AS idn,
+            nc.concept_code           AS concept_code
+       FROM tpa_tnomination_concept nc
+      WHERE nc.concept_code IN ('Accumulated_Total_Inventory', 
+                                'Base_Inventory',
+                                'Acc_Imbalance_Inventory_Operator',
+                                'Acc_Imbalance_Others', 
+                                'Acc_Imbalance_Inventory_Others', 
+                                'Acc_Imbalance_Inventory_PTTShipper')
+    ),
+  intraday_balance AS
+    (SELECT t.idn_allocation, 
+            t.gas_day, 
+            t.version_date
+       FROM tpa_tallocation        t,
+            tpa_tallocation_origin ao        
+      WHERE t.gas_day = (SELECT gas_day FROM gas_day)
+        AND t.idn_pipeline_system = #{systemId}
+        AND ao.origin_code IN ('BALANCE', 'CLOSING_PROCESS')
+        AND t.idn_allocation_origin = ao.idn_allocation_origin
+        AND t.idn_allocation_type = (SELECT idn_allocation_type FROM TPA_TALLOCATION_TYPE  WHERE type_code = 'INTRADAY')
+        AND t.gas_day = trunc(t.version_date)
+		<if test="timestampVar != null and timestampVar != ''">
+               AND t.idn_allocation= #{timestampVar}              
+             </if>
+          <choose>
+             <when test='strLastVersion != null and "Y".equals(strLastVersion)'>
+                AND t.version_date = (SELECT MAX(ax.version_date)
+                                      FROM tpa_tallocation        ax,
+                                           tpa_tallocation_origin ao
+                                      WHERE ax.gas_day = t.gas_day
+                                       and trunc(ax.version_date) = ax.gas_day
+                                       AND ax.idn_pipeline_system = t.idn_pipeline_system
+                                       AND ax.idn_allocation_type = t.idn_allocation_type
+                                       AND ax.gas_day = trunc(ax.version_date)
+                                       AND ax.idn_allocation_origin = ao.idn_allocation_origin
+                                       AND ao.origin_code IN ('BALANCE', 'CLOSING_PROCESS'))
+              </when>
+            </choose> 
+
+    ),
+  data_global AS
+    (SELECT ad.idn_allocation_data_global,
+            ad.idn_allocation, 
+            ad.idn_zone, 
+            c.concept_code,
+            z.zone_code || '#' || c.concept_code AS aggregation,
+            ad.idn_nomination_concept,
+            ad.allocated_value,  
+            ib.version_date,
+            ib.gas_day
+       FROM intraday_balance ib,
+            tpa_tallocation_data_global ad,
+            all_concepts c,
+            tpa_vzone_tpa z 
+      WHERE ad.idn_allocation = ib.idn_allocation
+        AND ad.idn_zone = z.idn_zone
+        AND ad.idn_nomination_concept = c.idn
+    ),
+  base_intraday_setup AS
+    (SELECT ib.idn_allocation,
+            bi.idn_base_inv,
+            bi.gas_day,
+            bi.idn_zone,
+            bi.idn_base_inv_mode,
+            mo.mode_code,
+            z.zone_code,
+            bi.version_date,
+            bi.hv_value,
+            bi.base_inv_value,
+            bi.high_threshold_top,
+            bi.high_threshold_mid,
+            bi.high_threshold,
+            bi.low_threshold,
+            bi.low_threshold_mid,
+            bi.low_threshold_top
+       FROM tpa_tbase_inv       bi,
+            tpa_tbase_inv_setup bis,
+            tpa_tbase_inv_mode  mo,
+            tpa_tzone           z,
+            intraday_balance    ib
+      WHERE bi.gas_day BETWEEN bis.start_date AND
+                       COALESCE(bis.end_date,
+                                (SELECT MIN(bisx.start_date) - 1
+                                   FROM tpa_tbase_inv_setup bisx
+                                  WHERE bisx.idn_zone = bis.idn_zone
+                                    AND NVL(bisx.end_date, bisx.start_date) >= bisx.start_date
+                                    AND bisx.start_date > bis.start_date
+                                    AND bisx.version_date = (SELECT MAX(bisxy.version_date)
+                                                               FROM tpa_tbase_inv_setup bisxy
+                                                              WHERE bisxy.idn_zone = bisx.idn_zone
+                                                                AND bisxy.start_date = bisx.start_date
+                                                                AND bisxy.version_date <![CDATA[ <= ]]>  ib.version_date)),
+                                to_date('9999-12-31', 'YYYY-MM-DD'))
+        AND bis.version_date = (SELECT MAX(bisy.version_date)
+                                  FROM tpa_tbase_inv_setup bisy
+                                 WHERE bisy.idn_zone = bis.idn_zone
+                                   AND bisy.start_date = bis.start_date
+                                   AND bisy.version_date <![CDATA[ <= ]]> ib.version_date)
+        AND bi.idn_zone = bis.idn_zone
+        AND bi.idn_base_inv_mode = bis.idn_base_inv_mode
+        AND bi.version_date = (SELECT MAX(biy.version_date)
+                                 FROM tpa_tbase_inv biy
+                                WHERE biy.gas_day = bi.gas_day
+                                  AND biy.idn_zone = bi.idn_zone
+                                  AND biy.idn_base_inv_mode = bi.idn_base_inv_mode
+                                  AND biy.version_date <![CDATA[ <= ]]> ib.version_date)
+        AND bi.idn_base_inv_mode = mo.idn_base_inv_mode
+        AND z.idn_zone = bi.idn_zone
+    )                    
+SELECT * 
+  FROM (SELECT dgl.version_date, 
+               dgl.allocated_value, 
+               dgl.aggregation,
+               CASE 
+                 WHEN dgl.allocated_value > b.HIGH_THRESHOLD_TOP AND dgl.concept_code = 'Acc_Imbalance_Inventory_Operator' THEN
+                   'red'
+                 WHEN dgl.allocated_value > b.HIGH_THRESHOLD_MID AND dgl.concept_code = 'Acc_Imbalance_Inventory_Operator' THEN
+                   'orange'
+                 WHEN dgl.allocated_value > b.HIGH_THRESHOLD AND dgl.concept_code = 'Acc_Imbalance_Inventory_Operator' THEN
+                   'yellow'
+                 WHEN dgl.allocated_value <![CDATA[ < ]]> b.LOW_THRESHOLD_TOP AND dgl.concept_code = 'Acc_Imbalance_Inventory_Operator' THEN
+                   'red'
+                 WHEN dgl.allocated_value <![CDATA[ < ]]> b.LOW_THRESHOLD_MID AND dgl.concept_code = 'Acc_Imbalance_Inventory_Operator' THEN
+                   'orange'
+                 WHEN dgl.allocated_value <![CDATA[ < ]]> b.LOW_THRESHOLD AND dgl.concept_code = 'Acc_Imbalance_Inventory_Operator' THEN
+                   'yellow'
+                 ELSE
+                   'NO_WARN'
+               END AS colour,
+               b.mode_code
+          FROM data_global dgl
+          LEFT JOIN base_intraday_setup b  
+            ON dgl.idn_allocation = b.idn_allocation
+           AND b.idn_zone = dgl.idn_zone
+           AND dgl.gas_day = b.gas_day
+       )
+PIVOT(SUM(allocated_value) AS val, MIN(colour) AS warn, MIN(mode_code) AS mode_code
+       FOR aggregation IN ('EAST#Accumulated_Total_Inventory' AS e_total_Inventory, 
+                           'WEST#Accumulated_Total_Inventory' AS w_total_Inventory, 
+                           'EAST#Base_Inventory' AS e_base_Inventory,
+                           'WEST#Base_Inventory' AS w_base_Inventory,
+                           'EAST#Acc_Imbalance_Inventory_Operator' AS e_inventory_operator,
+                           'WEST#Acc_Imbalance_Inventory_Operator' AS w_inventory_operator,
+                           'EAST#Acc_Imbalance_Others' AS e_other_shippers, 
+                           'WEST#Acc_Imbalance_Others' AS w_other_shippers,
+                           'EAST#Acc_Imbalance_Inventory_Others' AS e_others,   
+                           'WEST#Acc_Imbalance_Inventory_Others' AS w_others, 
+                           'EAST#Acc_Imbalance_Inventory_PTTShipper' AS e_pttshipper,
+                           'WEST#Acc_Imbalance_Inventory_PTTShipper' AS w_pttshipper)
+      )
+	</select>
+	
+	<select id="selectTimestampIds" resultType="com.atos.beans.ComboFilterNS">
+		SELECT a.idn_allocation as key,
+		to_char(a.version_date, 'DD/MM/YY HH24:MI:SS FF9') AS value
+		FROM tpa_tallocation a,
+		tpa_tallocation_origin ao
+		WHERE a.idn_pipeline_system = #{systemId}
+		AND ao.origin_code IN ('BALANCE', 'CLOSING_PROCESS')
+		AND a.idn_allocation_type =
+		(SELECT t.idn_allocation_type FROM tpa_tallocation_type t WHERE t.type_code = 'INTRADAY')
+		AND a.idn_allocation_origin = ao.idn_allocation_origin
+		AND to_char(a.gas_day,'DD/MM/YY')
+             = to_char(#{gasDay},'DD/MM/YY')
+        AND trunc(a.version_date) = a.gas_day
+		GROUP BY idn_allocation, to_char(a.version_date, 'DD/MM/YY HH24:MI:SS FF9')
+		ORDER BY idn_allocation, to_char(a.version_date, 'DD/MM/YY HH24:MI:SS FF9')
+		</select>
+		
+		<resultMap type="com.atos.beans.ReportTemplateBean" id="ReportTemplate">
+		<id property="repTemplateId" column="idn_report_template" />
+		<result property="tempCode" column="template_code" />
+		<result property="tempDesc" column="template_desc" />
+		<result property="binaryData" column="binary_data" jdbcType="BLOB"/>		
+		<result property="fileName" column="file_name" />
+		<result property="systemId" column="idn_pipeline_system" />
+	</resultMap>
+		
+	<select id="selectReportTemplateFromCodeSystem" parameterType="com.atos.beans.ReportTemplateBean" resultMap="ReportTemplate">
+		select trep.idn_report_template,
+		       trep.template_code,
+		       trep.template_desc,
+		       trep.binary_data,
+		       trep.file_name
+		  from tpa_treport_template trep
+		 where trep.template_code = #{tempCode}
+		   and trep.idn_pipeline_system = #{systemId}
+		   and trunc(sysdate) between trep.start_date and
+		       nvl(trep.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+	</select>
+	
+	<select id="exclusiveLockRequest" statementType="CALLABLE" parameterType="com.atos.beans.LockBean">
+		{call #{integerExit,jdbcType=INTEGER,mode=OUT} :=
+			pck_lock.request_exclusive(
+				#{processCode,jdbcType=VARCHAR,mode=IN},
+				#{userId,jdbcType=VARCHAR,mode=IN})}
+	</select>
+	
+	<select id="exclusiveLockRelease" statementType="CALLABLE" parameterType="com.atos.beans.LockBean">
+		{call #{integerExit,jdbcType=INTEGER,mode=OUT} :=
+			pck_lock.release_exclusive(
+				#{processCode,jdbcType=VARCHAR,mode=IN},
+				#{userId,jdbcType=VARCHAR,mode=IN})}
+	</select>
+	
+	<select id="selectUserGroupByUserId" parameterType="java.lang.String" resultType="com.atos.beans.ComboFilterNS">
+		select tgr.idn_user_group as key, tgr.user_group_id as value
+			from tpa_tuser_group tgr, tpa_tuser tuser
+		    where tuser.user_id = #{userId}
+		    and tgr.idn_user_group = tuser.idn_user_group
+		 	and trunc(sysdate) between tgr.start_date and nvl(tgr.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+			and trunc(sysdate) between tuser.start_date and nvl(tuser.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+		order by tgr.start_date desc
+	</select>
+	
+	<insert id="insertRequestWebserviceLog" useGeneratedKeys="true" keyProperty="webserviceLogId" keyColumn="idn_webservice_logger" parameterType="com.atos.beans.WebserviceLogBean">
+		insert into tpa_twebservice_logger
+			(idn_webservice_logger, webservice, call_date, call_xml, status,
+	                                        aud_ins_user,
+	                                        aud_last_user)
+		values
+			(tpa_swebservice_logger.nextval,
+			#{webserviceName},
+			#{callDate},
+			#{callXml},
+			#{status},
+	      #{username},
+	      #{username})	  
+	</insert>
+</mapper>

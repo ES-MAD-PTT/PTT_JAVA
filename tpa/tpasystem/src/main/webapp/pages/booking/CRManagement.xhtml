@@ -1,0 +1,687 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_booking']}" url="#" />
+			<p:menuitem value="#{msg['menu_cr_management']}" url="/pages/booking/CRManagement.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+				
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="10000" />
+			
+            <p:layout widgetVar="CRManagementLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">	
+					
+				<p:panelGrid columns="2" style="width:100%">
+					
+						<p:panelGrid>
+							<p:row>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['cr_man_capacity_request_code']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['cr_man_shipper_id']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['cr_man_contract_type']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['cr_man_status']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['cr_man_submitted_from']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['cr_man_submitted_to']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<p:inputText id="capacityRequestCode" style="width:150px" value="#{CRManagementView.filters.capacityRequestCode}" />
+								</p:column>
+
+								<p:column>
+									<p:selectOneMenu id="shipperId" style="width:120px" value="#{CRManagementView.filters.shipperId}" 
+										rendered="#{!CRManagementView.isShipper()}">
+								   		<f:selectItem itemLabel="" itemValue="" />
+      									<f:selectItems value="#{CRManagementView.shipperIds.entrySet()}" var="entry" 
+      											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>
+					           		<h:outputText value="#{CRManagementView.user.user_group_id}" style="float:left" rendered="#{CRManagementView.isShipper()}"/>
+								</p:column>
+
+								<p:column>
+									<p:selectCheckboxMenu id="contractType" autoWidth="false" style="width:180px"   
+										   value="#{CRManagementView.filters.contractTypeId}" label="#{msg['cr_man_contract_type']}">
+      									<f:selectItems value="#{CRManagementView.contractTypes.entrySet()}" var="entry" 
+      										itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectCheckboxMenu>						
+								</p:column>
+
+								<p:column>
+									<p:selectCheckboxMenu id="status" autoWidth="false" style="width:75px" value="#{CRManagementView.filters.status}" 
+										label="#{msg['cr_man_status']}" >
+								   		<f:selectItem itemLabel="#{msg['cr_man_submitted']}" itemValue="SUBMITTED" />
+								   		<f:selectItem itemLabel="#{msg['cr_man_accepted']}" itemValue="ACCEPTED" />
+								   		<f:selectItem itemLabel="#{msg['cr_man_completed']}" itemValue="COMPLETED" />
+								   		<f:selectItem itemLabel="#{msg['cr_man_rejected']}" itemValue="PTT_REJECTED" />
+					           		</p:selectCheckboxMenu>	
+								</p:column>
+								
+								<p:column>
+									<p:calendar id="fecInicio" size="6" pattern="dd/MM/yyyy" mask="true" value="#{CRManagementView.filters.startDate}"
+										showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="fecInicio"></p:ajax>
+										<p:ajax event="change" update="fecInicio"></p:ajax>
+									</p:calendar>
+								</p:column>
+								<p:column>
+									<p:calendar id="fecFin" size="6" pattern="dd/MM/yyyy" mask="true" value="#{CRManagementView.filters.endDate}"
+										showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="fecFin"></p:ajax>
+										<p:ajax event="change" update="fecFin"></p:ajax>
+									</p:calendar>
+								</p:column>							
+								
+							</p:row>
+						</p:panelGrid>
+						<p:panelGrid columns="2" style="float:right;top:0px">
+
+							<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CR_MANAGEMENT.QUERY">									
+								<p:commandButton value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{CRManagementView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,:#{p:component('capRequests1')}"/>
+							</shiro:hasPermission>
+							
+							<p:commandButton  onclick="PF('CRManagementLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" 
+								value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+							
+							<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CR_MANAGEMENT.QUERY">											
+								 <p:commandButton value="#{msg['clear']}"
+									actionListener="#{CRManagementView.onClear}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" 
+									process="@this"
+									update="msgs,@form"/>
+							</shiro:hasPermission>
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center" resizable="false" closable="false" collapsible="false" style="border: 0;">
+
+					<p:dataTable widgetVar="w_capRequests1"  id="capRequests1" var="capRequest" value="#{CRManagementView.items}"
+						selectionMode="single" selection="#{CRManagementView.selected}" rowKey="#{capRequest.id}" 
+						reflow="true" style="margin-bottom:20px;border-collapse:collapse"
+						scrollable="true" scrollHeight="100%"
+					    paginator="true" rows="15" rowsPerPageTemplate="5,10,15,20,25, #{CRManagementView.itemsSize}" >
+						<f:facet name="header"> 
+								<p:outputPanel style="height:25px">
+									<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+									<p:columnToggler datasource="capRequests1" trigger="toggler" style="width:200px"/>
+								</p:outputPanel>        										          
+	 				        </f:facet>
+					       <p:column headerText="#{msg['cr_man_capacity_request_code']}" style="width: 130px;" sortBy="#{capRequest.id}">
+					       	<p:commandLink  actionListener="#{CRManagementView.linkAction}"  ajax="true" >
+					       		<h:outputText value="#{capRequest.requestCode}" style="float:right" />
+					       		<f:attribute name="request_code" value="#{capRequest.requestCode}"/>
+					       		<f:attribute name="contract_type" value="#{capRequest.contractTypeCode}"/>
+					       		<f:attribute name="shipper_name" value="#{capRequest.shipperCode}"/>
+					       		</p:commandLink>
+					       <ui:remove>
+					       		<h:outputText value="#{capRequest.requestCode}" style="float:right" />
+						</ui:remove>
+					       </p:column>
+					        					 
+					       <p:column headerText="#{msg['cr_man_submitted_timestamp']}" style="width: 75px;" sortBy="#{capRequest.submittedTimestamp}" >
+			               		<h:outputText value="#{capRequest.submittedTimestamp}" >
+			              				<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+			              		</h:outputText>
+					       </p:column>
+
+					       <p:column headerText="#{msg['cr_man_shipper_id']}" style="width: 100px;" sortBy="#{capRequest.shipperCode}">
+					       		<h:outputText value="#{capRequest.shipperCode}" />
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['cr_man_shipper_name']}" style="width: 100px;" sortBy="#{capRequest.shipperName}">
+					       		<h:outputText value="#{capRequest.shipperName}" />
+					       </p:column>
+
+					       <p:column headerText="#{msg['cr_man_contract_type']}" style="width: 100px;" sortBy="#{capRequest.contractTypeCode}">
+					       		<h:outputText value="#{capRequest.contractTypeCode}" />
+					       </p:column>
+
+					       <p:column headerText="#{msg['cr_man_contract_id']}" style="width: 140px;" sortBy="#{capRequest.contractCode}">
+					       		<h:outputText value="#{capRequest.contractCode}" />
+					       </p:column>
+
+					       <p:column headerText="#{msg['cr_man_status']}" style="width: 65px; text-align: center" sortBy="#{capRequest.status}">
+					       		<h:outputText value="#{CRManagementView.getStatusExternalCode(capRequest.status)}" />
+					       </p:column>
+
+					       <p:column headerText="#{msg['cr_man_contract_startdate']}" style="width: 70px;" sortBy="#{capRequest.contractStartDate}">
+			               		<h:outputText value="#{capRequest.contractStartDate}" >
+			              				<f:convertDateTime pattern="dd/MM/yyyy" />
+			              		</h:outputText>
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['cr_man_contract_enddate']}" style="width: 70px;" sortBy="#{capRequest.contractEndDate}">
+			               		<h:outputText value="#{capRequest.contractEndDate}" >
+			              				<f:convertDateTime pattern="dd/MM/yyyy" />
+			              		</h:outputText>
+					       </p:column>
+
+							<p:column headerText="#{msg['cr_man_xlsFile']}" style="width: 150px;" sortBy="#{capRequest.xlsFileName}">
+							    <p:commandButton ajax="false" actionListener="#{CRManagementView.getFile(capRequest)}" 
+							    	oncomplete="PrimeFaces.monitorDownload(start, stop);" icon="ui-icon fa fa-save" title="#{capRequest.xlsFileName}" >
+									<f:setPropertyActionListener value="#{capRequest}" target="#{CRManagementView.selected}" />
+							        <p:fileDownload value="#{CRManagementView.selected.xlsFile}"/>
+							    </p:commandButton>
+								<h:outputText value="#{capRequest.xlsFileName}" title="#{capRequest.xlsFileName}" />							    
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['cr_man_submission_comments']}" style="width: 80px;" sortBy="#{capRequest.submissionComments}">
+  					       		<p:commandButton value="#{msg['cr_man_details']}" onclick="PF('submissionCommentsDlg').show()" update=":subCommentsFormId" 
+  					       			rendered="#{not empty capRequest.submissionComments}">
+									<f:setPropertyActionListener value="#{capRequest}" target="#{CRManagementView.selected}" />
+								</p:commandButton>							
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['cr_man_accept_reject']}" style="width: 120px;">
+	        					<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CR_MANAGEMENT.ADD">
+	        					
+	        						<!-- Se definen distintos botones segun el estado de partida. -->					       
+								    <p:splitButton value="#{msg['cr_man_feasibility']}" rendered="#{capRequest.status=='SUBMITTED' and CRManagementView.isReadyForFeasibility(capRequest)}">
+								    	<p:menuitem value="#{msg['cr_man_accept']}" oncomplete="PF('acceptDlg').show()" update=":#{p:component('acceptPanelGridId')}">
+											<f:setPropertyActionListener value="#{capRequest}" target="#{CRManagementView.selected}" />
+										</p:menuitem>
+								    	<p:menuitem value="#{msg['cr_man_reject']}" action="#{CRManagementView.selectRequestedPoints(capRequest)}"
+								    		oncomplete="PF('rejectTechDlg').show()" update=":#{p:component('rejectTechPanelGridId')}">
+											<f:setPropertyActionListener value="#{capRequest}" target="#{CRManagementView.selected}" />
+										</p:menuitem>
+								    </p:splitButton>
+
+								    <p:splitButton value="#{msg['cr_man_feasibility']}" rendered="#{capRequest.status=='ACCEPTED' and CRManagementView.isReadyForFeasibility(capRequest)}">
+								    	<p:menuitem value="#{msg['cr_man_complete']}" oncomplete="PF('completeDlg').show()" update=":#{p:component('completePanelGridId')}">
+											<f:setPropertyActionListener value="#{capRequest}" target="#{CRManagementView.selected}" />
+										</p:menuitem>
+								    	<p:menuitem value="#{msg['cr_man_reject']}" action="#{CRManagementView.selectRequestedPoints(capRequest)}"
+								    		oncomplete="PF('rejectDefDlg').show()" update=":#{p:component('rejectDefPanelGridId')}">
+											<f:setPropertyActionListener value="#{capRequest}" target="#{CRManagementView.selected}" />
+										</p:menuitem>
+								    </p:splitButton>
+								    								    
+	        					</shiro:hasPermission>
+					       </p:column>
+
+					       <p:column headerText="#{msg['cr_man_additional_docs']}" style="width: 70px; text-align: center;">
+  					       		<p:commandButton icon="ui-icon-document" action="#{CRManagementView.selectAdditionalDocs(capRequest)}" update=":additionalDocsFormId"
+									onstart="PF('cargando').show()"	oncomplete="PF('cargando').hide(),PF('additionalDocsDlg').show()"
+  					       			rendered="true">
+									<f:setPropertyActionListener value="#{capRequest}" target="#{CRManagementView.selected}" />
+								</p:commandButton>
+					       </p:column>
+					       
+   							<p:column headerText="#{msg['cr_man_signed_contract_template']}" style="width: 70px; text-align: center;">
+							    <p:commandButton ajax="false" actionListener="#{CRManagementView.getSignedContractTemplateFile(capRequest)}" 
+							    	oncomplete="PrimeFaces.monitorDownload(start, stop);" icon="ui-icon fa fa-save">
+									<f:setPropertyActionListener value="#{capRequest}" target="#{CRManagementView.selected}" />
+							        <p:fileDownload value="#{CRManagementView.selected.signedContTemplDocxScFile}"/>
+							    </p:commandButton>
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['cr_man_rejected_points']}" style="width: 80px;">
+								<!-- Solo se muestra el boto de puntos rechazados en caso de que la CR haya sido rechazada por el operador. 
+					       		Si hubiera sido rechazada por el shipper, ni siquiera aparece en la consulta.
+					       		Ademas solo se muestra el boton en caso de rechazo tecnico del operador (cuando no se ha generado contrato todavia)
+					       		porque solo en la ventan de rechazo tecnico se especifican puntos rechazados. -->
+  					       		<p:commandButton value="#{msg['cr_man_details']}" action="#{CRManagementView.selectRejectedPoints(capRequest)}" update=":rejPointsFormId" 
+  					       			oncomplete="PF('rejectPointsDlg').show()" rendered="#{capRequest.status=='PTT_REJECTED' and empty capRequest.contractId}">
+									<f:setPropertyActionListener value="#{capRequest}" target="#{CRManagementView.selected}" />
+								</p:commandButton>	
+					       </p:column>
+
+					       <p:column headerText="#{msg['cr_man_management_comments']}" style="width: 80px;" sortBy="#{capRequest.managementComments}">
+  					       		<p:commandButton value="#{msg['cr_man_details']}" onclick="PF('managementCommentsDlg').show()" update=":manCommentsFormId" 
+  					       			rendered="#{not empty capRequest.managementComments}">
+									<f:setPropertyActionListener value="#{capRequest}" target="#{CRManagementView.selected}" />
+								</p:commandButton>							
+					       </p:column>
+
+							<!-- Se hace render cuando la Capacity Request tiene contrato, es decir, cuando ha pasado por Accept. Podria luego estar REJECTED. -->					       
+					       <p:column headerText="#{msg['cr_man_shadow_time']}" style="width: 100px;" sortBy="#{capRequest.shadowTime}">
+					       		<h:outputText value="#{capRequest.shadowTime}" style="float:right" rendered="#{not empty capRequest.contractId}" >
+			               			<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3" />
+			               		</h:outputText>
+					       </p:column>
+					       
+					       	<!-- Se hace render cuando la Capacity Request tiene contrato, es decir, cuando ha pasado por Accept. Podria luego estar REJECTED. -->
+					       <p:column headerText="#{msg['cr_man_shadow_period']}" style="width: 100px;" sortBy="#{capRequest.shadowPeriod}">
+					       		<h:outputText value="#{capRequest.shadowPeriod}" style="float:right" rendered="#{not empty capRequest.contractId}" >
+			               			<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3" />
+			               		</h:outputText>
+					       </p:column>
+
+					       <p:column headerText="#{msg['cr_man_acept_timestamp']}" style="width: 100px;" sortBy="#{capRequest.acceptanceTimestamp}">
+			               		<h:outputText value="#{capRequest.acceptanceTimestamp}" >
+			              				<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+			              		</h:outputText>
+					       </p:column>
+					   </p:dataTable>
+				</p:layoutUnit>
+			</p:layout>
+		</h:form> 
+
+	<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CR_MANAGEMENT.ADD">
+		<!-- Si no se usa appendTo="@(body)", la ventana modal bloquea toda la interfaz. -->
+		<p:dialog header="#{msg['cr_man_accept_dialog_header']}" widgetVar="acceptDlg" modal="true" appendTo="@(body)" minHeight="250">
+			<h:form id="acceptFormId" style="width:100%;height:98%;border-collapse:collapse">
+				<p:growl id="msgs" showDetail="true" life="10000" globalOnly="true" />
+				<p:panelGrid id="acceptPanelGridId" columns="2">
+					<p:panelGrid id="acceptPanelGridLeftId">
+						<p:row>
+							<p:column  style="font-weight: bold;">
+								<h:outputText value="#{msg['cr_man_shipper_id']}" />
+							</p:column>
+							<p:column>
+								<h:outputText value="#{CRManagementView.selected.shipperCode}" />
+							</p:column>
+						</p:row>
+						<p:row>
+							<p:column  style="font-weight: bold;">
+								<h:outputText value="#{msg['cr_man_submissionDate']}" />
+							</p:column>
+							<p:column>
+								<h:outputText id="myOutputText" value="#{CRManagementView.selected.submittedTimestamp}">
+									<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+								</h:outputText>
+							</p:column>
+						</p:row>
+					</p:panelGrid>
+					<p:panelGrid id="acceptPanelGridRightId" columns="3">
+						<h:outputLabel value="#{msg['cr_man_contract_id']}" />
+						<p:inputText id="inputTxtContractId" value="#{CRManagementView.selected.contractCode}" required="true"
+							requiredMessage="#{msg['empty_field']}">
+ 							<f:validateLength maximum="20" />
+							<p:ajax update="msgInputTxtContractId" event="change" />	 							
+						</p:inputText>
+						<p:message for="inputTxtContractId" id="msgInputTxtContractId"/> 
+						<h:outputLabel value="#{msg['cr_man_shadow_time']}" />
+  						<p:inputNumber id="inputShadowTime" value="#{CRManagementView.selected.shadowTime}" required="true" 
+							requiredMessage="#{msg['empty_field']}" minValue="0" decimalPlaces="0" thousandSeparator="," 
+							emptyValue="zero" >
+							<p:ajax update="msgInputShadowTime" event="change" />	
+ 						</p:inputNumber>
+ 						<p:message for="inputShadowTime" id="msgInputShadowTime"/> 
+						<h:outputLabel value="#{msg['cr_man_shadow_period']}" />
+ 						<p:inputNumber id="inputShadowPeriod" value="#{CRManagementView.selected.shadowPeriod}" required="true" 
+							requiredMessage="#{msg['empty_field']}" minValue="0" decimalPlaces="0" thousandSeparator="," 
+							emptyValue="zero" >
+							<p:ajax update="msgInputShadowPeriod" event="change" />							
+						</p:inputNumber>
+ 						<p:message for="inputShadowPeriod" id="msgInputShadowPeriod" /> 
+			       		<p:commandButton value="#{msg['save']}" validateClient="true"
+			       			actionListener="#{CRManagementView.onAcceptCapacityRequest}" 
+			       			update="#{p:component('capRequests1')},acceptFormId"
+			       			oncomplete="PF('acceptDlg').hide()"/>						
+					</p:panelGrid>
+				</p:panelGrid>
+			</h:form> 	    
+		</p:dialog> 
+	</shiro:hasPermission>
+
+	<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CR_MANAGEMENT.ADD">
+		<!-- Si no se usa appendTo="@(body)", la ventana modal bloquea toda la interfaz. -->
+		<p:dialog header="#{msg['cr_man_complete_dialog_header']}" widgetVar="completeDlg" modal="true" appendTo="@(body)" minHeight="250">
+			<h:form id="completeFormId" style="width:100%;height:98%;border-collapse:collapse">
+				<p:growl id="msgs" showDetail="true" life="10000" globalOnly="true" />
+				<p:panelGrid id="completePanelGridId" columns="2">
+					<p:panelGrid id="completePanelGridLeftId">
+						<p:row>
+							<p:column  style="font-weight: bold;">
+								<h:outputText value="#{msg['cr_man_shipper_id']}" />
+							</p:column>
+							<p:column>
+								<h:outputText value="#{CRManagementView.selected.shipperCode}" />
+							</p:column>
+						</p:row>
+						<p:row>
+							<p:column  style="font-weight: bold;">
+								<h:outputText value="#{msg['cr_man_submissionDate']}" />
+							</p:column>
+							<p:column>
+								<h:outputText id="myOutputText" value="#{CRManagementView.selected.submittedTimestamp}">
+									<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+								</h:outputText>
+							</p:column>
+						</p:row>
+						<p:row>
+							<p:column  style="font-weight: bold;">
+								<h:outputText value="#{msg['cr_man_contract_id']}" />
+							</p:column>
+							<p:column>
+								<h:outputText value="#{CRManagementView.selected.contractCode}" />
+							</p:column>
+						</p:row>
+						<p:row>
+							<p:column colspan="2">
+						 		<p:spacer height="80"/>
+							</p:column>
+						</p:row>
+						<p:row>
+							<p:column colspan="2" style="float: right; vertical-align: bottom">
+								<p:commandButton value="#{msg['save']}" validateClient="true"
+									actionListener="#{CRManagementView.onCompleteCapacityRequest}" 
+					       			update="#{p:component('capRequests1')},completeFormId"
+					       			oncomplete="PF('completeDlg').hide()"/>
+							</p:column>
+						</p:row>
+					</p:panelGrid>
+					<p:panelGrid id="completePanelGridRightId" columns="1">
+						<h:outputText value="#{msg['cr_man_comments_remarks']}" />
+ 						<p:inputTextarea id="inputTxtCommentsRemarks" rows="12" cols="33" value="#{CRManagementView.selected.managementComments}" 
+ 							autoResize="false" maxlength="250">
+ 							<f:validateLength maximum="250" />
+						</p:inputTextarea>
+						<p:message for="inputTxtCommentsRemarks" />
+					</p:panelGrid>
+				</p:panelGrid>
+			</h:form> 	    
+		</p:dialog> 
+	</shiro:hasPermission>
+	
+	<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CR_MANAGEMENT.ADD">				
+		<p:dialog header="#{msg['cr_man_reject_dialog_header']}" widgetVar="rejectTechDlg" modal="true" appendTo="@(body)" minHeight="250">
+			<h:form id="rejectTechFormId" style="width:100%;height:98%;border-collapse:collapse">
+				<p:growl id="msgs" showDetail="true" life="10000"/>
+				<p:panelGrid id="rejectTechPanelGridId" columns="2">
+					<p:panelGrid>
+						<p:row>
+							<p:column  style="font-weight: bold;">
+								<h:outputText value="#{msg['cr_man_shipper_id']}:" />
+							</p:column>
+							<p:column>
+								<h:outputText value="#{CRManagementView.selected.shipperCode}" />
+							</p:column>
+						</p:row>
+						<p:row>
+							<p:column  style="font-weight: bold;">
+								<h:outputText value="#{msg['cr_man_submissionDate']}:" />
+							</p:column>
+							<p:column>
+								<h:outputText value="#{CRManagementView.selected.submittedTimestamp}">
+									<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+								</h:outputText>
+							</p:column>
+						</p:row>
+						<p:row>
+							<p:column  style="font-weight: bold;" colspan="2">
+								<h:outputText value="#{msg['cr_man_select_contrated_points']}" />
+							</p:column>
+						</p:row>
+						<p:row>
+							<p:column colspan="2">
+   								<p:pickList id="rejectedPointsPicklist" value="#{CRManagementView.selected.dualListPointCodes}" 
+   									var="pointCodes" itemLabel="#{pointCodes}" itemValue="#{pointCodes}" />   									
+							</p:column>
+						</p:row>
+					</p:panelGrid>
+					<p:panelGrid id="rejectPanelGridRightId" columns="1">
+						<h:outputText value="#{msg['cr_man_comments_remarks']}" />
+ 						<p:inputTextarea id="inputTxtCommentsRemarks" rows="12" cols="33" value="#{CRManagementView.selected.managementComments}" 
+ 							autoResize="false" maxlength="250">
+ 							<f:validateLength maximum="250" />
+						</p:inputTextarea>
+						<p:message for="inputTxtCommentsRemarks" />
+						<p:commandButton value="#{msg['save']}" validateClient="true"
+							actionListener="#{CRManagementView.onRejectTechCapacityRequest}" 
+			       			update="#{p:component('capRequests1')},rejectTechFormId"
+			       			oncomplete="PF('rejectTechDlg').hide()"/>
+					</p:panelGrid>	
+				</p:panelGrid>
+			</h:form> 
+		</p:dialog> 
+	</shiro:hasPermission>
+
+	<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CR_MANAGEMENT.ADD">				
+		<p:dialog header="#{msg['cr_man_reject_dialog_header']}" widgetVar="rejectDefDlg" modal="true" appendTo="@(body)" minHeight="250">
+			<h:form id="rejectDefFormId" style="width:100%;height:98%;border-collapse:collapse">
+				<p:growl id="msgs" showDetail="true" life="10000"/>
+				<p:panelGrid id="rejectDefPanelGridId" columns="2">
+					<p:panelGrid>
+						<p:row>
+							<p:column  style="font-weight: bold;">
+								<h:outputText value="#{msg['cr_man_shipper_id']}:" />
+							</p:column>
+							<p:column>
+								<h:outputText value="#{CRManagementView.selected.shipperCode}" />
+							</p:column>
+						</p:row>
+						<p:row>
+							<p:column  style="font-weight: bold;">
+								<h:outputText value="#{msg['cr_man_submissionDate']}:" />
+							</p:column>
+							<p:column>
+								<h:outputText value="#{CRManagementView.selected.submittedTimestamp}">
+									<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+								</h:outputText>
+							</p:column>
+						</p:row>
+						<p:row>
+							<p:column  style="font-weight: bold;">
+								<h:outputText value="#{msg['cr_man_contract_id']}" />
+							</p:column>
+							<p:column>
+								<h:outputText value="#{CRManagementView.selected.contractCode}" />
+							</p:column>
+						</p:row>
+					</p:panelGrid>
+					<p:panelGrid id="rejectPanelGridRightId" columns="1">
+						<h:outputText value="#{msg['cr_man_comments_remarks']}" />
+ 						<p:inputTextarea id="inputTxtCommentsRemarks" rows="12" cols="33" value="#{CRManagementView.selected.managementComments}" 
+ 							autoResize="false" maxlength="250">
+ 							<f:validateLength maximum="250" />
+						</p:inputTextarea>
+						<p:message for="inputTxtCommentsRemarks" />
+						<p:commandButton value="#{msg['save']}" validateClient="true"
+							actionListener="#{CRManagementView.onRejectDefCapacityRequest}" 
+			       			update="#{p:component('capRequests1')},rejectDefFormId"
+			       			oncomplete="PF('rejectDefDlg').hide()"/>
+					</p:panelGrid>	
+				</p:panelGrid>
+			</h:form> 
+		</p:dialog> 
+	</shiro:hasPermission>
+	
+		<p:dialog header="#{msg['cr_man_submission_comments']}" widgetVar="submissionCommentsDlg" modal="true" appendTo="@(body)" height="200" width="800">
+			<h:form id="subCommentsFormId" style="width:100%;height:98%;border-collapse:collapse">
+  				<h:inputTextarea value="#{CRManagementView.selected.submissionComments}" readonly="true" rows="12" cols="105" style="border-color: white"/>
+			</h:form> 
+		</p:dialog>				
+
+		<p:dialog header="#{msg['cr_man_additional_docs']}" widgetVar="additionalDocsDlg" modal="true" appendTo="@(body)" height="300" width="900" >
+			<h:form id="additionalDocsFormId" style="width:100%;height:98%;border-collapse:collapse">
+				<p:dataTable widgetVar="w_additionalDocsTable1"  id="additionalDocs1" 
+					value="#{CRManagementView.selected.additionalDocs}" var="contractDoc" 
+					reflow="true" style="margin-bottom:20px;border-collapse:collapse"
+					scrollable="true" scrollHeight="100%" >
+
+					<f:facet name="header">
+ 						<p:outputPanel style="height:30px">
+ 							<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+							<p:columnToggler datasource="additionalDocs1" trigger="toggler" style="width:200px"/> 							
+							<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CR_MANAGEMENT.ADD">
+								<!-- Este boton solo se muestra cuando la CapRequest est en estado SUBMITTED o ACCEPTED. La Capacity Request a evaluar sera la guardada en selected. -->
+   					       		<p:commandButton value="#{msg['cr_man_add_doc']}" icon="ui-icon-plus" style="float:right;"
+									actionListener="#{CRManagementView.createNewDocFile}" update=":form:msgs,#{p:component('addDocFormId')}"
+									onstart="PF('cargando').show()"	oncomplete="PF('cargando').hide();PF('addDocDlg').show()"
+									rendered="#{CRManagementView.selected.status=='SUBMITTED' or CRManagementView.selected.status=='ACCEPTED'}" />
+									<!-- No es necesario pasar parametro a la ventana de añadir, porque ya se relleno selected previamente. -->	    									
+							</shiro:hasPermission>
+ 						</p:outputPanel>       										          
+			        </f:facet>
+
+
+			       	<p:column headerText="#{msg['cr_man_file_name']}" style="width: 60px;" sortBy="#{contractDoc.fileName}">
+ 					    <p:commandButton ajax="false" actionListener="#{CRManagementView.getDocFile(contractDoc)}" 
+					    	oncomplete="PrimeFaces.monitorDownload(start, stop);" icon="ui-icon fa fa-save" title="#{contractDoc.fileName}" >
+					        <p:fileDownload value="#{contractDoc.scFile}"/>
+					    </p:commandButton>
+					    <p:spacer width="10"/>
+						<h:outputText value="#{contractDoc.fileName}" title="#{contractDoc.fileName}" />
+			       	</p:column>
+
+			       	<p:column headerText="#{msg['cr_man_submitted_timestamp']}" style="width: 55px; text-align: center;" sortBy="#{contractDoc.submissionDate}" >
+	               		<h:outputText value="#{contractDoc.submissionDate}" >
+	              				<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+	              		</h:outputText>
+			       	</p:column>
+					       
+			       	<p:column headerText="#{msg['cr_man_doc_type']}" style="width: 40px; text-align: center;" sortBy="#{contractDoc.docTypeCode}">
+ 						<h:outputText value="#{CRManagementView.getDocTypeExternalCode(contractDoc.contractAttachTypeId)}" title="#{CRManagementView.getDocTypeExternalCode(contractDoc.contractAttachTypeId)}" />				
+			       	</p:column>
+
+			       	<p:column headerText="#{msg['cr_man_comments_remarks']}" style="width: 100px; text-align: center;" >
+ 						<h:outputText value="#{contractDoc.comments}" title="#{contractDoc.comments}" style="float:left" />				
+			       	</p:column>
+
+					<!-- Esta columna solo se muestra cuando la CapRequest est en estado SUBMITTED o ACCEPTED. La Capacity Request a evaluar sera la guardada en selected. -->
+					<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CR_MANAGEMENT.ADD">
+						<p:column headerText="#{msg['cr_man_delete_file']}" style="width: 10px; text-align: center;"
+							rendered="#{CRManagementView.selected.status=='SUBMITTED' or CRManagementView.selected.status=='ACCEPTED'}" >
+	  						<p:commandButton actionListener="#{CRManagementView.onConditionalDeleteDocFile(contractDoc)}" 
+						    	icon="ui-icon-trash" title="#{msg['cr_man_delete_file']}" />
+				       	</p:column>
+					</shiro:hasPermission>
+				</p:dataTable>
+			</h:form>
+		</p:dialog>	
+
+	<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CR_MANAGEMENT.ADD">
+		<!-- Si no se usa appendTo="@(body)", la ventana modal bloquea toda la interfaz. -->
+ 		<p:dialog header="#{msg['cr_man_confirmation_dialog_header']}" widgetVar="w_confirmDeleteDocDlg" id="confirmDeleteDocDlg" 
+			modal="true" appendTo="@(body)" minHeight="250" >
+			<h:form id="confirmDeleteDocFormId" style="width:100%;height:98%;border-collapse:collapse">
+				<p:panelGrid id="confirmDeleteDocPanelGridId" columns="2">
+
+					<p:row>
+						<p:column  style="font-weight: bold;">
+							<h:outputText value="#{msg['cr_man_delete_file_confirm']}" />
+						</p:column>
+					</p:row>
+
+ 					<p:row>
+						<p:column  style="font-weight: bold;">
+				       		<p:commandButton value="#{msg['yes']}"
+				       			actionListener="#{CRManagementView.deleteDocFile}" 
+				       			update="#{p:component('additionalDocs1')},#{p:component('msgs')}"
+								onstart="PF('grabando').show()" 
+								oncomplete="PF('grabando').hide();PF('w_confirmDeleteDocDlg').hide()" />						
+						</p:column>
+						<p:column  style="font-weight: bold;">
+				       		<p:commandButton value="#{msg['no']}"
+				       			oncomplete="PF('w_confirmDeleteDocDlg').hide()"/>
+						</p:column>
+					</p:row>
+				</p:panelGrid>
+			</h:form> 	    
+		</p:dialog>
+	</shiro:hasPermission>
+
+	<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CR_MANAGEMENT.ADD">
+		<p:dialog header="#{msg['cr_man_add_doc']}" widgetVar="addDocDlg" modal="true" appendTo="@(body)" height="250" width="620">
+			<h:form id="addDocFormId" style="width:100%;height:98%;border-collapse:collapse">
+				<p:panelGrid id="addDocPanelGridId" >
+					
+					<p:row>
+				     	<p:column style="width: 170px;">
+				       		<h:outputText value="#{msg['cr_man_choose_doc_type']}" />
+				       	</p:column>	
+				       	<p:column >
+				       		<h:outputText value="#{msg['cr_man_choose_file_upload']}" />
+				       	</p:column>
+					</p:row>
+					<p:row>
+				       	<p:column style="width: 170px;">
+ 							<p:selectOneMenu id="newDocTypeCode" style="width:50px" value="#{CRManagementView.newDocument.contractAttachTypeId}" >
+								<!-- Con el boton de FileUpload no se actualiza este campo de newDocument. Hay que actualizarlo con ajax. -->
+								<p:ajax event="change" update="newDocTypeCode" />
+								<f:selectItems value="#{CRManagementView.lDocTypes}" var="docType" 
+									itemValue="#{docType.contractAttachTypeId}" itemLabel="#{CRManagementView.getDocTypeExternalCode(docType.contractAttachTypeId)}" />
+			           		</p:selectOneMenu>
+				       	</p:column>	
+				       	<p:column >
+				       		<!-- No se limita el tipo de fichero ni el tamaño. -->
+							<p:fileUpload id="docUpload" style="width:100%" fileUploadListener="#{CRManagementView.handleDocFileUpload}" 
+								mode="advanced" dragDropSupport="true" fileLimit="1" ajax="true" update=":form:msgs,:addDocFormId,:#{p:component('additionalDocs1')}"
+		     					onstart="PF('cargando').show()" oncomplete="PF('cargando').hide();PF('addDocDlg').hide()"/>
+				       	</p:column>
+					</p:row>
+					
+					<p:row>
+						<p:column colspan="2">
+				       	<h:outputText value="#{msg['cr_man_write_comment']}" />
+						</p:column>
+					</p:row>
+					<p:row>
+						<p:column colspan="2">
+						<p:inputTextarea id="newDocComments" value="#{CRManagementView.newDocument.comments}" 
+							counter="display" maxlength="250" counterTemplate="#{msg['cr_man_char_remaining']}"
+							cols="75" >
+							<!-- Con el boton de FileUpload no se actualiza este campo de newDocument. Hay que actualizarlo con ajax. -->
+							<p:ajax event="change" update="newDocComments" />
+						</p:inputTextarea>
+						</p:column>
+					</p:row>
+					<p:row>
+						<p:column colspan="2">
+						<h:outputText id="display" />
+						</p:column>
+					</p:row>
+					
+				</p:panelGrid> 				
+			</h:form> 
+		</p:dialog>
+	</shiro:hasPermission>
+
+		<p:dialog header="#{msg['cr_man_rejected_points']}" widgetVar="rejectPointsDlg" modal="true" appendTo="@(body)" height="200">
+			<h:form id="rejPointsFormId" style="width:100%;height:98%;border-collapse:collapse">
+				<p:dataGrid value="#{CRManagementView.selected.rejectedPointCodes}" var="pointCode"  columns="1">
+				    <h:outputText value="#{pointCode}"/>
+      			</p:dataGrid>
+			</h:form> 
+		</p:dialog>	
+		
+		<p:dialog header="#{msg['cr_man_management_comments']}" widgetVar="managementCommentsDlg" modal="true" appendTo="@(body)" height="200" width="800">
+			<h:form id="manCommentsFormId" style="width:100%;height:98%;border-collapse:collapse">
+ 				<h:inputTextarea value="#{CRManagementView.selected.managementComments}" readonly="true" rows="12" cols="105" style="border-color: white"/>
+			</h:form> 
+		</p:dialog>				
+	</ui:define>
+	
+	<script type="text/javascript">
+	function start() {
+	    PF('cargando').show();
+	}
+	 
+	function stop() {
+	    PF('cargando').hide();
+	}
+	</script>
+</ui:composition>

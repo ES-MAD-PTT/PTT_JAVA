@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<!-- Namespace -->
+<mapper namespace="com.atos.mapper.allocation.AllocationAdjustMapper">
+<resultMap type="com.atos.beans.allocation.AdjustBeanQryResult" id="AdjustBeanQryResult">
+<result column="GAS_DAY" property="gasDay"/>
+<result column="ORIGIN_SHIPPER" property="originShipper"/>
+<result column="ORIGIN_CONTRACT" property="originContract"/>
+<result column="ORIGIN_ZONE" property="originZone"/>
+<result column="ORIGIN_VALUE" property="originValue"/>
+<result column="DESTINATION_SHIPPER" property="destinationShipper"/>
+<result column="DESTINATION_CONTRACT" property="destinationContract"/>
+<result column="DESTINATION_ZONE" property="destinationZone"/>
+<result column="DESTINATION_VALUE" property="destinationValue"/>
+<result column="STATUS" property="status"/>
+<result column="REVIEW_CODE" property="reviewCode"/>
+<result column="COMMENTS" property="comments"/>
+
+</resultMap>
+
+
+	<select id="getAdjustCode" statementType="CALLABLE" parameterType="com.atos.beans.allocation.AdjustBean">
+		{call #{errorCode,jdbcType=INTEGER,mode=OUT} :=pck_allocation_balance.get_month_adjust_code(
+				#{gasDay,jdbcType=DATE,mode=IN},
+				#{origContractId,jdbcType=INTEGER,mode=IN},
+				#{destContractId,jdbcType=INTEGER,mode=IN},
+				#{origZone,jdbcType=INTEGER,mode=IN},
+				#{destZone,jdbcType=INTEGER,mode=IN},
+				#{user,jdbcType=VARCHAR,mode=IN},
+				#{language,jdbcType=VARCHAR,mode=IN},
+				#{adjustCode,jdbcType=VARCHAR,mode=OUT},
+				#{errorDesc,jdbcType=VARCHAR,mode=OUT})}
+	</select>
+	<insert id="insertAdjust" parameterType="hashmap">
+		INSERT INTO tpa_tallocation_adjust
+   (idn_allocation_adjust,
+    adjust_code,
+    gas_day,
+    idn_contract,
+    idn_zone,
+    adjust_value,
+    operator_comments,
+    aud_ins_user,
+    aud_last_user)
+VALUES
+   (tpa_sallocation_adjust.nextval,
+   	#{adjustCode,jdbcType=VARCHAR},
+    #{gasDay,jdbcType=DATE},
+    #{idnContract,jdbcType=INTEGER}, 
+    #{idnZone,jdbcType=INTEGER}, 
+    #{adjustValue,jdbcType=INTEGER}, 
+    #{operatorComments,jdbcType=VARCHAR}, 
+    #{user,jdbcType=VARCHAR}, 
+    #{user,jdbcType=VARCHAR})
+		
+	</insert>
+    <select id="selectZoneIds" resultType="com.atos.beans.ComboFilterNS">
+SELECT DISTINCT z.idn_zone AS key,
+                z.zone_code
+  FROM tpa_tcontract_consolidate cc,
+       tpa_tcontract_agreement   ca,
+       tpa_tcontract_point       cp,
+       tpa_tsystem_point         sp,
+       tpa_varea_tpa             a,
+       tpa_vzone_tpa             z
+ WHERE cc.idn_contract_agreement = ca.idn_contract_agreement
+   AND cc.idn_contract = #{idn_contract}
+   AND ca.idn_contract_agreement = cp.idn_contract_agreement
+   AND cp.idn_system_point = sp.idn_system_point
+   AND sp.idn_area = a.idn_area
+   AND a.idn_zone = z.idn_zone
+ ORDER BY upper(z.zone_code)
+    </select>
+	<select id="selectContractId" resultType="com.atos.beans.allocation.ContractBean">
+		select tcon.idn_contract, tcon.contract_code, tcon.end_date as contract_end
+		  from tpa_tcontract tcon
+	     where EXISTS (SELECT 1
+	             FROM tpa_tcontract_consolidate tconso
+	            WHERE tconso.idn_contract = tcon.idn_contract)
+	            and tcon.idn_pipeline_system = (SELECT idn_pipeline_system FROM tpa_tpipeline_system WHERE pipeline_system_code = 'OFFSHORE')
+	            AND tcon.idn_pipeline_system = #{idnSystem}
+				<if test="enDate != null">
+				and #{enDate} >= tcon.start_date
+				</if>
+				<if test="startDate != null">
+				and tcon.end_date >= #{startDate}
+				</if>
+		       	<if test="shipperId != null">
+		       	and tcon.idn_user_group = #{shipperId}
+		       	</if>
+	     order by upper(tcon.contract_code) asc
+			
+	</select>
+	
+	<select id="selectDestinationContractId" resultType="com.atos.beans.allocation.ContractBean">
+		select tcon.idn_contract, tcon.contract_code, tcon.end_date as contract_end
+		  from tpa_tcontract tcon
+	     where EXISTS (SELECT 1
+	             FROM tpa_tcontract_consolidate tconso
+	            WHERE tconso.idn_contract = tcon.idn_contract)
+	            and tcon.idn_pipeline_system = (SELECT idn_pipeline_system FROM tpa_tpipeline_system WHERE pipeline_system_code = 'OFFSHORE')
+	            AND tcon.idn_pipeline_system = #{idnSystem}
+                   and tcon.idn_contract != #{origContractId}
+                   and tcon.end_date  >= #{origContractStartDate}
+                   and #{origContractEndDate} >= tcon.start_date
+				<if test="endDate != null">
+				and #{endDate} >= tcon.start_date
+				</if>
+				<if test="startDate != null">
+				and tcon.end_date >= #{startDate}
+				</if>
+		       	<if test="destShipperId != null">
+		       	and tcon.idn_user_group = #{destShipperId}
+		       	</if>
+	     order by upper(tcon.contract_code) asc
+			
+	</select>
+	
+
+	<select id="selectOriginContractId" resultType="com.atos.beans.allocation.ContractBean">
+	select tcon.idn_contract, tcon.contract_code, tcon.end_date as contract_end, tcon.start_date as contract_start
+		  from tpa_tcontract tcon
+	     where EXISTS (SELECT 1
+	             FROM tpa_tcontract_consolidate tconso
+	            WHERE tconso.idn_contract = tcon.idn_contract)
+	            and tcon.idn_pipeline_system = (SELECT idn_pipeline_system FROM tpa_tpipeline_system WHERE pipeline_system_code = 'OFFSHORE')
+	            AND tcon.idn_pipeline_system = #{idnSystem}
+				<if test="endDate != null">
+				and #{endDate} >= tcon.start_date
+				</if>
+				<if test="startDate != null">
+				and tcon.end_date >= #{startDate}
+				</if>
+		       	<if test="origShipperId != null">
+		       	and tcon.idn_user_group = #{origShipperId}
+		       	</if>
+	     order by upper(tcon.contract_code) asc
+	
+	</select>
+	<select id="search" resultMap="AdjustBeanQryResult">
+	WITH contract_shipper AS
+ (SELECT c.idn_contract,
+         c.contract_code,
+         ug.idn_user_group,
+         ug.user_group_id
+    FROM tpa_tcontract   c,
+         tpa_tuser_group ug
+   WHERE c.idn_user_group = ug.idn_user_group
+     AND c.idn_pipeline_system =
+         (SELECT p.idn_pipeline_system FROM tpa_tpipeline_system p WHERE p.pipeline_system_code = 'OFFSHORE')
+         AND c.idn_pipeline_system = #{idnSystem}
+     AND EXISTS (SELECT 1 FROM tpa_tcontract_consolidate cc WHERE cc.idn_contract = c.idn_contract))
+
+SELECT aa_o.gas_day AS gas_day,
+       cc_o.user_group_id AS origin_shipper,
+       cc_o.contract_code AS origin_contract,
+       (SELECT zone_code FROM tpa_tzone WHERE idn_zone = aa_o.idn_zone) AS origin_zone,
+       aa_o.adjust_value AS origin_value,
+       
+       cc_d.user_group_id AS destination_shipper,
+       cc_d.contract_code AS destination_contract,
+       (SELECT zone_code FROM tpa_tzone WHERE idn_zone = aa_d.idn_zone) AS destination_zone,
+       aa_d.adjust_value AS destination_value,
+       
+       aa_o.status AS status,
+       aa_o.adjust_code AS review_code,
+       nvl(aa_o.operator_comments, aa_d.operator_comments) AS comments
+
+  FROM tpa_tallocation_adjust aa_o,
+       tpa_tallocation_adjust aa_d,
+       contract_shipper       cc_o,
+       contract_shipper       cc_d
+ WHERE aa_o.adjust_code = aa_d.adjust_code
+  <if test="contractId != null"> 
+   AND #{contractId} IN (aa_o.idn_contract, aa_d.idn_contract)
+   </if>
+			<foreach item="item" index="index" collection="statusCode" open="AND(" separator="or" close=")">
+			 #{item} IN (aa_o.status, aa_d.status)
+			 </foreach>
+
+   <if test="shipperId != null">
+   AND #{shipperId} IN (cc_o.idn_user_group, cc_d.idn_user_group)
+   </if>
+      
+   <if test="adjustmentCode != null and adjustmentCode != ''">
+   AND aa_o.adjust_code = #{adjustmentCode}
+   AND aa_o.adjust_code = #{adjustmentCode}
+   </if>
+         
+   AND aa_o.version_date = (SELECT MAX(aa_ox.version_date)
+                              FROM tpa_tallocation_adjust aa_ox
+                             WHERE aa_ox.adjust_code = aa_o.adjust_code
+                               AND aa_ox.idn_contract = aa_o.idn_contract)
+   AND aa_d.version_date = (SELECT MAX(aa_dx.version_date)
+                              FROM tpa_tallocation_adjust aa_dx
+                             WHERE aa_dx.adjust_code = aa_d.adjust_code
+                               AND aa_dx.idn_contract = aa_d.idn_contract)
+   AND aa_o.gas_day = aa_d.gas_day
+   AND aa_o.gas_day &lt;= #{enDate}
+   AND aa_d.gas_day &lt;= #{enDate}
+   AND aa_o.gas_day >= #{startDate}
+   AND aa_d.gas_day >= #{startDate}
+   AND ((aa_o.adjust_value &lt; 0 AND aa_d.adjust_value > 0) OR
+       (aa_o.adjust_value = 0 AND aa_d.adjust_value = 0 AND aa_o.idn_allocation_adjust &lt; aa_d.idn_allocation_adjust))
+   AND aa_o.idn_contract = cc_o.idn_contract
+   AND aa_d.idn_contract = cc_d.idn_contract
+
+	</select>
+</mapper>

@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+
+<mapper namespace="com.atos.mapper.dam.AreaQualityPerShipperMapper">
+
+ <resultMap type="com.atos.beans.dam.AreaQualityPerShipperBean" id="AreaQualityPerShipperBean">
+        <id column="idn_zone" property="idn_zone"  />  
+        
+        <result property="idn_area" column="idn_area"/> 		
+		<result property="area_code" column="area_code"/>
+		<result property="area_desc" column="area_desc"/>
+		<result property="idn_area_gas_quality" column="idn_area_gas_quality"/>
+		<result property="start_date_gas_Quality" column="start_date_gas_Quality"/>
+		<result property="idn_user_group" column="idn_user_group"/>
+		<result property="user_group_id" column="user_group_id"/> 
+		<result property="user_group_name" column="user_group_name"/>
+		<result property="parameterCode1" column="parameterCode1"/>
+		<result property="parameterCode2" column="parameterCode2"/>
+		<association property="details" select="getMaxMin"
+				column="idn_area_gas_quality=idn_area_gas_quality, parameterCode=parameterCode1" />
+	<association property="details2" select="getMaxMin"
+				column="idn_area_gas_quality=idn_area_gas_quality, parameterCode=parameterCode2" />
+    </resultMap>
+    
+    <resultMap id="AreaQualityPerShipperDetailsBean" type="com.atos.beans.dam.AreaQualityPerShipperDetailsBean">
+<result column="idn_area" property="idn_area"/>
+<result column="min_value" property="min_value"/>
+<result column="max_value" property="max_value"/>
+</resultMap>
+     
+     
+    <select id="selectAreasIds" resultType="com.atos.beans.ComboFilterNS">
+		
+	 SELECT  a.idn_area as key, a.area_code as value
+		FROM tpa_varea_tpa a,
+      	TPA_VZONE_TPA z        
+		WHERE  z.idn_zone= a.idn_zone
+   		AND sysdate between  a.start_date and nvl(a.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+   		AND z.idn_pipeline_system = #{idn_system}
+   		AND a.idn_area in (SELECT ac.idn_area
+                      FROM tpa_tarea_capacity ac
+                      where sysdate between  ac.start_date and nvl(ac.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+                      AND ac.idn_area_capacity in (select cp.idn_area_capacity
+                                                   from tpa_tarea_capacity_point cp
+                                                   where cp.idn_system_point_type = (select spt.idn_system_point_type
+                                                                                     from tpa_tsystem_point_type spt
+                                                                                     where spt.type_code = 'ENTRY')))  
+   </select>
+   
+   <select id="selectShippersIds" resultType="com.atos.beans.ComboFilterNS">
+		
+	SELECT tuser.idn_user_group as key, tuser.user_group_id as value
+    FROM tpa_tuser_group tuser
+    WHERE tuser.idn_user_group_type = (SELECT idn_user_group_type 
+	         FROM tpa_tuser_group_type 
+			 WHERE type_code = 'SHIPPER')                      
+   </select>
+   
+   <select id="selectAreasShipper" parameterType="com.atos.filters.dam.AreaQualityPerShipperFilter" resultMap="AreaQualityPerShipperBean">
+	
+	  SELECT a.idn_area idn_area,
+          a.area_code area_code,
+          a.area_desc area_desc,
+          nvl(gq.idn_area_gas_quality, -1) idn_area_gas_quality,
+          nvl(gq.start_date, a.START_DATE) start_date_gas_Quality,
+          ug.idn_user_group idn_user_group,
+          ug.user_group_id user_group_id,
+          ug.user_group_name user_group_name,
+          #{parameterCode1} as parameterCode1,
+          #{parameterCode2} as parametercode2
+     FROM TPA_Varea_TPA a,
+          tpa_tpipeline_system ps, 
+          tpa_tarea_shipper_gasq gq,
+          tpa_tuser_group ug         
+     WHERE   gq.idn_area = a.idn_area
+         AND gq.idn_user_group = ug.idn_user_group
+         AND nvl(gq.end_date, gq.start_date) >= gq.start_date        
+         AND gq.version_date =(SELECT MAX(gqx.version_date) 
+                               FROM tpa_tarea_shipper_gasq gqx
+                              WHERE gq.idn_area = gqx.idn_area
+                               AND gq.idn_user_group = gqx.idn_user_group
+                               AND gq.start_date = gqx.start_date)
+         AND ps.idn_pipeline_system = #{idn_system}
+	                              
+    <if test="idn_area != null and idn_area != ''">
+    	 AND a.idn_area = #{idn_area} 
+    </if>
+    
+    <if test="idn_shipper != null and idn_shipper != ''">
+    	AND ug.idn_user_group = #{idn_shipper}
+    </if> 
+    
+    order by UPPER (area_code), start_date_gas_Quality DESC
+   
+   </select>
+   
+    <select id="getMaxMin" resultMap="AreaQualityPerShipperDetailsBean">
+		SELECT gq.idn_area,  gv.min_value min_value, gv.max_value max_value
+    FROM tpa_tarea_shipper_gasq_value gv,
+         tpa_tgas_quality_param qp,
+         tpa_tarea_shipper_gasq gq,
+         tpa_tuser_group ug         
+    WHERE gv.IDN_GAS_QUALITY_PARAM = qp.idn_gas_quality_param
+       AND gq.IDN_area_GAS_QUALITY = gv.idn_area_gas_quality
+       AND gq.idn_user_group = ug.idn_user_group
+				AND gq.idn_area_gas_quality = #{idn_area_gas_quality}
+				AND qp.idn_gas_quality_param = (SELECT idn_gas_quality_param 
+											   FROM tpa_tgas_quality_param 
+											   WHERE parameter_code =#{parameterCode})
+    </select> 
+    
+    <select id="areaDesc" parameterType="java.math.BigDecimal" resultType="java.lang.String">
+    	select area_desc FROM TPA_Varea_TPA a where a.idn_area = #{idn_area}
+ 	</select>
+    
+    <insert id="insert" useGeneratedKeys="true" keyProperty="idn_area_gas_quality" keyColumn="idn_area_gas_quality" parameterType="com.atos.beans.dam.AreaQualityPerShipperBean">
+    	INSERT INTO tpa_tarea_shipper_gasq
+			(idn_area_gas_quality, idn_area, idn_user_group, start_date, aud_ins_user, aud_last_user)
+			VALUES
+			(TPA_SAREA_SHIPPER_GASQ.nextval,
+			 #{idn_area},
+			 #{user_group_id}, 
+			 #{start_date_gas_Quality},
+			 #{username},
+			 #{username})
+    	
+    </insert>
+    
+    <insert id="insertParamsWi" keyProperty="idn_area_gasq_value" keyColumn="idn_area_gasq_value" parameterType="com.atos.beans.dam.AreaQualityPerShipperBean">
+    	INSERT INTO tpa_tarea_shipper_gasq_value
+			(idn_area_gasq_value, idn_area_gas_quality, idn_gas_quality_param, min_value, max_value, aud_ins_user, aud_last_user)
+			VALUES
+			(tpa_sarea_shipper_gasq_value.nextval,
+			 (SELECT gq.idn_area_gas_quality FROM tpa_tarea_shipper_gasq gq WHERE  gq.version_date =(SELECT MAX(odx.version_date) FROM tpa_tarea_shipper_gasq odx) AND gq. idn_area=#{idn_area}),
+		     (SELECT idn_gas_quality_param FROM tpa_tgas_quality_param WHERE parameter_code =#{parameterCode1}),
+			 #{wi_min},
+		     #{wi_max},
+		     #{username},
+			 #{username})
+    	
+    </insert>  
+    
+    <insert id="insertParamsHv" keyProperty="idn_area_gasq_value" keyColumn="idn_area_gasq_value" parameterType="com.atos.beans.dam.AreaQualityPerShipperBean">
+    	INSERT INTO tpa_tarea_shipper_gasq_value
+			(idn_area_gasq_value, idn_area_gas_quality, idn_gas_quality_param, min_value, max_value, aud_ins_user, aud_last_user)
+			VALUES
+			(tpa_sarea_shipper_gasq_value.nextval,
+			 (SELECT gq.idn_area_gas_quality FROM tpa_tarea_shipper_gasq gq WHERE  gq.version_date =(SELECT MAX(odx.version_date) FROM tpa_tarea_shipper_gasq odx) AND gq. idn_area=#{idn_area}),
+		     (SELECT idn_gas_quality_param FROM tpa_tgas_quality_param WHERE parameter_code =#{parameterCode2}),
+			 #{hv_min},
+		     #{hv_max},
+		     #{username},
+			 #{username})
+    	
+    </insert>  
+    
+    <update id="updateStartDateGasQuality" parameterType="com.atos.beans.dam.AreaQualityPerShipperBean">
+		UPDATE tpa_tarea_shipper_gasq 
+		SET start_date=#{start_date_gas_Quality}, 
+		aud_last_user=#{username} 
+		WHERE idn_area_gas_quality=#{idn_area_gas_quality}
+    </update>
+	
+</mapper>

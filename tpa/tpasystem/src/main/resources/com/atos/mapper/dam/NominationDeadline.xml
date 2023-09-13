@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+
+<mapper namespace="com.atos.mapper.dam.NominationDeadlineMapper">
+
+    <resultMap type="com.atos.beans.dam.NominationDeadlineBean" id="NominationDeadline">
+        <id column="idn_operation" 			property="idn_operation"  />
+		<result property="operation_desc" 			column="operation_desc"/>
+        <result property="idn_operation_category" 	column="idn_operation_category"/>   
+        <result property="category_code" 			column="category_code"/>   
+        <result property="idn_operation_term" 		column="idn_operation_term"/>   
+      
+                
+        <result property="idn_deadline_limit" 		column="idn_deadline_limit"/>   
+        <result property="idn_deadline_type" 		column="idn_deadline_type"/>
+        <result property="deadline_type"	 		column="deadline_type"/>   
+        <result property="idn_operation_deadline" 	column="idn_operation_deadline"/>
+        
+           
+        <result property="deadline_desc" 			column="deadline_desc"/>
+        <result property="type" 					column="term_code"/>
+        <result property="startDate" 				column="start_date"/>   
+        <result property="shour" 					column="hour_limit"/>   
+        <result property="gasDay" 					column="days_before"/>   
+        
+    </resultMap>
+     
+    <select id="selectNominationDeadlines" resultMap="NominationDeadline">
+			  
+      SELECT o.idn_operation idn_operation,
+			       o.operation_desc operation_desc,
+			       o.idn_operation_category idn_operation_category,
+			       o.category_code category_code,
+			       o.idn_operation_term idn_operation_term,
+			       o.term_code term_code,
+			       dl.idn_deadline_limit idn_deadline_limit,
+			       dt.idn_deadline_type idn_deadline_type,
+			       dt.deadline_desc deadline_desc,
+			       dt.deadline_type deadline_type,
+			       od.idn_operation_deadline idn_operation_deadline,
+			       od.start_date start_date,
+			       od.hour_limit hour_limit,
+			       od.days_before days_before
+			  FROM tpa_voperation          o,
+			       tpa_toperation_deadline od,
+			       tpa_tdeadline_limit     dl,
+			       tpa_tdeadline_type      dt
+			 WHERE o.idn_operation = od.idn_operation
+			   AND o.category_code = 'NOMINATION'
+			   AND od.idn_deadline_type = dt.idn_deadline_type
+			   AND od.idn_deadline_limit = dl.idn_deadline_limit
+			   AND dl.limit_code = 'MAX'
+         AND nvl(od.end_date, od.start_date) >= od.start_date
+			   AND od.version_date = (SELECT MAX(odx.version_date)
+			                            FROM tpa_toperation_deadline odx
+			                           WHERE odx.idn_operation = od.idn_operation
+			                             AND odx.idn_deadline_type = od.idn_deadline_type
+			                             AND odx.idn_deadline_limit = od.idn_deadline_limit
+			                             AND odx.start_date = od.start_date)
+			   AND od.is_enabled = 'Y'
+		<if test="submisionManage != null and submisionManage != ''">
+			   AND dt.idn_deadline_type = #{submisionManage}
+		</if>
+		<if test="type != null and type != ''">
+			   AND o.IDN_OPERATION_TERM = #{type}
+		</if>
+		<if test="startDate != null">
+			AND nvl(od.end_date,nvl((SELECT MIN (ody.start_date) - 1
+            		                FROM tpa_toperation_deadline ody
+                    		        WHERE ody.idn_operation = od.idn_operation
+                            		  AND ody.idn_deadline_type = od.idn_deadline_type
+		                              AND ody.idn_deadline_limit = od.idn_deadline_limit
+        		                      AND ody.start_date > od.start_date
+                                      AND nvl(ody.end_date, ody.start_date) >= ody.start_date
+                                      AND ody.is_enabled = 'Y'
+                                      AND ody.version_date = (SELECT MAX(odz.version_date)
+			                                                  FROM tpa_toperation_deadline odz
+			                                                  WHERE odz.idn_operation = ody.idn_operation
+			                             	                  AND odz.idn_deadline_type = ody.idn_deadline_type
+			                             	                  AND odz.idn_deadline_limit = ody.idn_deadline_limit
+			                             	                  AND odz.start_date = ody.start_date)) , to_date('9999/12/31','yyyy/mm/dd')))>=  #{startDate}
+		</if>
+  	<if test="endDate != null">
+			and #{endDate} >= od.start_date 
+	</if>
+    	 ORDER BY  UPPER (o.TERM_CODE), dt.execution_order, od.start_date DESC    </select>
+    
+    <select id="selectDeadlineType" resultType="com.atos.beans.ComboFilterNS">		
+		SELECT dt.idn_deadline_type as key, dt.deadline_desc as value
+   		FROM tpa_tdeadline_type dt
+   		ORDER BY execution_order
+    </select>
+    
+     <select id="selectTypes" resultType="com.atos.beans.ComboFilterNS">		
+		SELECT DISTINCT o.IDN_OPERATION_TERM as key, o.TERM_CODE as value 
+		FROM tpa_voperation o 
+		WHERE o.CATEGORY_CODE = 'NOMINATION'
+		order by o.IDN_OPERATION_TERM
+    </select>
+    
+    <select id="getIdnOperationNomination" resultType="java.math.BigDecimal">
+		SELECT o.idn_operation 
+		FROM tpa_voperation  o
+		WHERE o.category_code = 'NOMINATION'
+		AND o.idn_operation_term = #{idn_operation_term}	
+	</select>
+	
+	<insert id="insertNominationDeadline" useGeneratedKeys="true" keyProperty="idn_operation_deadline" keyColumn="idn_operation_deadline" parameterType="com.atos.beans.dam.NominationDeadlineBean">
+		 INSERT INTO tpa_toperation_deadline
+		 		(idn_operation_deadline, idn_operation,idn_deadline_type, idn_deadline_limit, 
+		 		start_date, 
+		 		hour_limit,
+		 		days_before,
+		 		aud_ins_user,aud_last_user)
+          VALUES (tpa_soperation_deadline.nextval,
+                 #{idn_operation},
+                 #{idn_deadline_type},
+                 (SELECT idn_deadline_limit FROM tpa_tdeadline_limit WHERE LIMIT_CODE = 'MAX'),
+                 #{startDate},
+                 #{shour},
+                 #{gasDay},
+                 #{username},
+				#{username})
+                 
+ 		</insert>
+ 		
+ <select id="getValidateNominationOrders" statementType="CALLABLE" parameterType="com.atos.beans.dam.NominationDeadlineBean">
+	{call #{valid,jdbcType=INTEGER,mode=OUT} :=
+		pck_operation_deadline.validate_nomination_orders(
+				#{idn_operation,jdbcType=VARCHAR,mode=IN},
+				#{idn_deadline_type,jdbcType=NUMERIC,mode=IN},
+				#{idn_deadline_limit,jdbcType=NUMERIC,mode=IN},
+				#{startDate ,jdbcType=DATE,mode=IN},
+				#{shour ,jdbcType=DATE,mode=IN},
+				#{gasDay,jdbcType=NUMERIC,mode=IN},
+				#{user,jdbcType=VARCHAR,mode=IN},
+				#{language,jdbcType=DATE,mode=IN},
+				#{error_desc,jdbcType=VARCHAR,mode=OUT})}
+	</select>
+	
+	<update id="deleteNominationDeadline" parameterType="com.atos.beans.dam.NominationDeadlineBean">
+		UPDATE tpa_toperation_deadline set
+			   end_date = #{endDate},
+			   aud_last_user=#{username}
+		WHERE idn_operation_deadline = #{idn_operation_deadline}
+	</update>
+	
+	<select id="getNominationDeadlineStarDate" resultType="java.util.Date">
+		SELECT od.start_date start_date
+	    FROM   tpa_toperation_deadline od
+		WHERE  idn_operation_deadline = #{idn_operation_deadline}
+	</select>
+  
+</mapper>

@@ -1,0 +1,37 @@
+<!DOCTYPE composition PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+                      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:f="http://java.sun.com/jsf/core">
+	
+	<h:form id="alertsForm">
+		<!-- NUMBER ALERTS -->
+		<h:inputHidden  id="alert_number_char" value="#{error.simem_alert_number_char}"/>
+		<h:inputHidden  id="alert_number_format" value="#{error.simem_alert_number_format}"/>
+		<h:inputHidden  id="alert_number_negative" value="#{error.simem_alert_number_negative}"/>
+		<h:inputHidden  id="alert_number_integer_num" value="#{error.simem_alert_number_integer_num}"/>
+		<h:inputHidden  id="alert_number_decimals" value="#{error.simem_alert_number_decimals}"/>
+		<h:inputHidden  id="alert_number_decimals_num" value="#{error.simem_alert_number_decimals_num}"/>
+		<h:inputHidden  id="alert_number_integer_msg" value="#{error.simem_alert_number_integer_msg}"/>
+		<h:inputHidden  id="alert_number_decimals_msg" value="#{error.simem_alert_number_decimals_msg}"/>
+		<h:inputHidden  id="alert_number_pos_neg" value="#{error.simem_alert_number_pos_neg}"/>
+		<h:inputHidden  id="alert_number_not_empty" value="#{error.simem_alert_number_not_empty}"/>
+		<h:inputHidden  id="alert_number_entMaxPrecision" value="#{error.simem_alert_number_ent_max_precision}"/>
+		
+		<!-- DATE ALERTS -->
+		<h:inputHidden  id="alert_format" value="#{error.simem_invalid_format}"/>
+		<h:inputHidden  id="alert_format_hour" value="#{error.simem_invalid_format_hour}"/>
+		<h:inputHidden  id="alert_hour_invalid" value="#{error.simem_hour_invalid}"/>
+		<h:inputHidden  id="alert_minute_invalid" value="#{error.simem_minute_invalid}"/>
+		<h:inputHidden  id="alert_month" value="#{error.simem_twelve_months}"/>
+		<h:inputHidden  id="alert_day_28" value="#{error.simem_twentyeight_days}"/>
+		<h:inputHidden  id="alert_day_29" value="#{error.simem_twentynine_days}"/>
+		<h:inputHidden  id="alert_day_30" value="#{error.simem_thirty_days}"/>
+		<h:inputHidden  id="alert_day_31" value="#{error.simem_thirtyone_days}"/>
+		<h:inputHidden  id="alert_end_start_date" value="#{error.simem_end_start_date}"/>
+	</h:form>
+	
+	
+</ui:composition>

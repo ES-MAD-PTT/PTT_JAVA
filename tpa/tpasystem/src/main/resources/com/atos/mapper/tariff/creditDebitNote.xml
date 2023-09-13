@@ -1,0 +1,367 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.atos.mapper.tariff.CreditDebitNoteMapper">
+
+	<resultMap id="CreditDebitNote"
+		type="com.atos.beans.tariff.CreditDebitNoteBean">
+
+		<result column="idn_tariff_note" property="noteId" />
+		<result column="shipper" property="shipper" />
+		<result column="idn_user_group" property="shipperId" />
+		<result column="month_year" property="monthYear" />
+		<result column="cndn_id" property="cndnId" />
+		<result column="type" property="type" />
+		<result column="idn_tariff_note_type" property="typeId" />
+		<result column="comments" property="comments" />
+		<result column="sent" property="sent" />
+
+		<association property="details"
+			select="com.atos.mapper.tariff.CreditDebitNoteMapper.selectCreditDebitNoteDetail"
+			column="idn_tariff_note" />
+
+	</resultMap>
+
+	<resultMap id="CreditDebitNoteDetail"
+		type="com.atos.beans.tariff.CreditDebitNoteDetailBean">
+		<result column="idn_tariff_note" property="noteId" />
+		<result column="idn_tariff_code" property="charge" />
+		<result column="tariff_desc" property="chargeDesc" />
+		<result column="original_period" property="originalPeriod" />
+		<result column="contract_type" property="contractType" />
+		<result column="contract_code" property="contractNum" />
+		<result column="idn_contract" property="contractNumId" />
+		<result column="idn_tariff_code_detail" property="chargeDetail" />
+		<result column="detail_desc" property="chargeDetailDesc" />
+		<result column="quantity" property="quantity" />
+		<result column="unit" property="unit" />
+		<result column="fee" property="fee" />
+		<result column="amount" property="amount" />
+		<result column="comments" property="remark" />
+	</resultMap>
+
+
+	<select id="selectShippersCombo"
+		resultType="com.atos.beans.ComboFilterNS">
+		SELECT tuser.idn_user_group as key, tuser.user_group_id as
+		value
+		FROM tpa_tuser_group tuser
+		WHERE tuser.idn_user_group_type =
+		(SELECT idn_user_group_type
+		FROM tpa_tuser_group_type
+		WHERE type_code =
+		'SHIPPER')
+		AND trunc(sysdate) between tuser.start_date AND
+		nvl(tuser.end_date,
+		to_date('31/12/9999', 'DD/MM/YYYY'))
+		order by
+		UPPER(value)
+	</select>
+
+	<select id="selectTypesCombo"
+		resultType="com.atos.beans.ComboFilterNS">
+		SELECT nt.idn_tariff_note_type as key, nt.note_desc as
+		value
+		FROM
+		tpa_ttariff_note_type nt
+		order by UPPER(value)
+	</select>
+	
+	<select id="selectTypeContract" parameterType="java.math.BigDecimal"
+		resultType="java.lang.String">
+	 		SELECT
+			operation_desc
+			FROM tpa_tcontract c, tpa_voperation o
+			WHERE c.idn_operation = o.idn_operation
+			AND c.idn_contract=#{contract}
+	</select>
+
+	<select id="selectCnDnIdsCombo"
+		resultType="com.atos.beans.ComboFilterNS">
+		select n.idn_tariff_note as key, n.tariff_note_code as value
+		from tpa_ttariff_note n
+		where n.version_date = (select max(n2.version_date)
+		from tpa_ttariff_note n2
+		where n.tariff_note_code = n2.tariff_note_code)
+		AND n.idn_user_group = #{idn_user_group}
+		AND n.note_date = #{monthYear}
+		<if test="isShipper==true">
+			AND n.is_invoice_sent = 'Y'
+		</if>
+		order by n.tariff_note_code asc
+	</select>
+
+	<select id="selectChargesCombo"
+		resultType="com.atos.beans.ComboFilterNS">
+		select nc.idn_tariff_code as key, tc.tariff_desc as value
+		from
+		tpa_ttariff_note_code nc, tpa_ttariff_code tc
+		where
+		nc.idn_tariff_code
+		= tc.idn_tariff_code
+	</select>
+
+	<select id="selectChargeDetailsCombo" parameterType="java.math.BigDecimal"
+		resultType="com.atos.beans.ComboFilterNS">
+		SELECT s.idn_tariff_code_detail AS KEY,
+		s.detail_desc ||
+		CASE WHEN t.idn_operation_term IS NOT NULL THEN
+		' ('|| t.term_desc ||
+		')'
+		ELSE
+		NULL
+		END AS value
+		FROM
+		tpa_ttariff_code_detail s
+		INNER JOIN tpa_ttariff_note_code n
+		ON
+		n.idn_tariff_code = s.idn_tariff_code
+		AND NVL(n.idn_tariff_code_detail,
+		s.idn_tariff_code_detail) =
+		s.idn_tariff_code_detail
+		LEFT JOIN
+		tpa_toperation_term t
+		ON s.idn_operation_term = t.idn_operation_term
+		WHERE s.idn_tariff_code = #{charge}
+	</select>
+	
+	<select id="selectOperationTerm" parameterType="com.atos.filters.tariff.CreditDebitNoteIdnOperTermFilter"
+		resultType="java.math.BigDecimal">
+		SELECT s.idn_operation_term
+		FROM
+		tpa_ttariff_code_detail s
+		INNER JOIN tpa_ttariff_note_code n
+		ON
+		n.idn_tariff_code = s.idn_tariff_code
+		AND NVL(n.idn_tariff_code_detail,
+		s.idn_tariff_code_detail) =
+		s.idn_tariff_code_detail
+		LEFT JOIN
+		tpa_toperation_term t
+		ON s.idn_operation_term = t.idn_operation_term
+		WHERE s.idn_tariff_code = #{charge}
+		and s.idn_tariff_code_detail=#{idn_tariff_code_detail}
+	</select>
+	
+	<select id="selectContractCombo" parameterType="com.atos.filters.tariff.CreditDebitNoteDetailFilter"
+		resultType="com.atos.beans.ComboFilterNS">
+		SELECT c.idn_contract as key, c.contract_code as value
+   		FROM tpa_tcontract c, tpa_voperation o
+ 		WHERE c.idn_operation = o.idn_operation
+    	AND c.idn_user_group = #{shipper}
+    	AND c.idn_pipeline_system = #{idn_system}
+    	AND #{originalPeriod} BETWEEN TRUNC(c.start_date) AND TRUNC(c.end_date)
+    	AND o.idn_operation_term = #{idnOperationTerm}
+	</select>
+	
+
+	<select id="selectCreditDebitNotes"
+		parameterType="com.atos.filters.tariff.CreditDebitNoteFilter"
+		resultMap="CreditDebitNote">
+		select tuser.idn_user_group idn_user_group, tuser.user_group_id Shipper,
+		tn.idn_tariff_note idn_tariff_note,
+		to_date('01/' || extract(month from tn.note_date) || '/' || extract (year from tn.note_date), 'DD/MM/YYYY') Month_Year,		
+		tn.tariff_note_code CNDN_ID,
+		tnt.idn_tariff_note_type idn_tariff_note_type, tnt.note_desc Type,
+		tn.comments comments, tn.is_invoice_sent Sent
+		from tpa_tuser_group tuser,
+		tpa_ttariff_note tn,
+		tpa_ttariff_note_type tnt
+		where tuser.idn_user_group = tn.idn_user_group
+		AND tn.idn_tariff_note_type = tnt.idn_tariff_note_type
+		AND tn.idn_pipeline_system = #{idn_system}
+		AND tn.version_date = (SELECT max(tn2.version_date)
+		FROM tpa_ttariff_note tn2
+		WHERE tn2.tariff_note_code = tn.tariff_note_code)
+		<if test="idn_user_group != null">
+		AND tn.idn_user_group = #{idn_user_group}
+		</if>
+		<if test="isShipper==true">
+			AND tn.idn_user_group = #{idn_user_group}
+			AND tn.is_invoice_sent = 'Y'
+		</if>
+		<if test="monthYear != null">
+		AND tn.note_date = #{monthYear}
+		</if>		
+		<if test="CNDNId != null and CNDNId != ''">
+		AND tn.idn_tariff_note = #{CNDNId}
+		</if>
+		<if test="type != null">
+		AND tnt.idn_tariff_note_type = #{type}
+		</if>
+		order by tn.tariff_note_code asc
+	</select>
+
+	<select id="selectCreditDebitNoteDetail"
+		resultMap="CreditDebitNoteDetail">
+		SELECT mo.idn_tariff_note idn_tariff_note,   
+			tc.idn_tariff_code idn_tariff_code,
+           tc.tariff_desc tariff_desc, 
+           de.idn_tariff_code_detail idn_tariff_code_detail,
+           de.detail_desc detail_desc, 
+           de.detail_code detail_code,            
+           mo.idn_contract idn_contract,     
+           CASE WHEN con.contract_code IS NOT NULL THEN
+             con.contract_code
+           ELSE 'All'
+           END AS contract_code,   
+           CASE WHEN op.operation_desc IS NOT NULL THEN
+              op.operation_desc
+           ELSE 'All'
+           END AS contract_type, 
+           to_date('01/' || extract(month from mo.original_note_date) || '/' || extract (year from mo.original_note_date), 'DD/MM/YYYY') Original_Period,           
+           mo.quantity quantity,
+           decode(un.unit_desc, 'MMBTU/D', 'MMBTU', un.unit_desc) Unit,             
+           mo.fee fee, 
+           mo.amount amount,
+           mo.comments
+        FROM tpa_ttariff_code tc,
+             tpa_ttariff_code_detail de, 
+             tpa_ttariff_note_month mo, 
+             tpa_tunit un,
+             tpa_tcontract con,
+             tpa_voperation op         
+        WHERE 
+            de.idn_unit = un.idn_unit
+            AND tc.idn_tariff_code = de.idn_tariff_code
+            AND mo.idn_tariff_code_detail = de.idn_tariff_code_detail               
+            AND con.idn_contract(+) = mo.idn_contract 
+            AND op.idn_operation(+) = con.idn_operation               
+            AND mo.idn_tariff_note = #{noteId}                             
+			order by idn_tariff_code, tc.sort_value, de.sort_value, con.contract_code
+
+	</select>
+	
+	<select id="selectBean" parameterType="java.math.BigDecimal"
+		resultMap="CreditDebitNote">
+		SELECT * from tpa_ttariff_note tn
+            WHERE tn.idn_tariff_note = #{id}                             			
+	</select>
+	
+	<select id="noteExists" parameterType="com.atos.beans.tariff.CreditDebitNoteBean"
+		resultType="java.math.BigDecimal" >
+		select count(*)
+		from tpa_ttariff_note tn 
+		where tn.tariff_note_code =  #{cndnId} and (tn.is_invoice_sent = 'Y' 
+		or not(tn.idn_user_group = #{shipper}  and tn.idn_tariff_note_type = #{type}
+        and TRUNC (tn.note_date, 'MM') = #{monthYear}))
+	</select>
+
+	<insert id="insertCreditDebitNote" useGeneratedKeys="true" keyProperty="noteId" keyColumn="idn_tariff_note" 
+		parameterType="com.atos.beans.tariff.CreditDebitNoteBean">
+		insert into tpa_ttariff_note
+		(idn_tariff_note,
+		tariff_note_code,
+		idn_user_group,
+		idn_pipeline_system,
+		idn_tariff_note_type,
+		note_date,
+		version_date,
+		comments,
+		idn_tariff_note_compare,
+		is_invoice_sent,
+		invoice_timestamp,
+		aud_ins_date,
+		aud_last_date,
+		aud_ins_user,
+		aud_last_user)
+		values(tpa_stariff_note.nextval,
+		#{cndnId},
+		#{shipperId},
+		#{idn_system},
+		#{typeId},
+		#{monthYear},
+		sysdate,
+		#{comments},
+		null,
+		#{sent},
+		null,
+		sysdate,sysdate, #{username}, #{username})
+	</insert>
+
+	<insert id="insertCreditDebitNoteDetails"
+		parameterType="com.atos.beans.tariff.CreditDebitNoteDetailBean">
+		insert into tpa_ttariff_note_month
+		(idn_tariff_note_month,
+		idn_tariff_note,
+		idn_tariff_code_detail,
+		idn_contract,
+		original_note_date,
+		quantity,
+		fee,
+		amount,		
+		comments,
+		aud_ins_date,
+		aud_last_date,
+		aud_ins_user,
+		aud_last_user)
+		values(tpa_stariff_note_month.nextval,
+		#{noteId},
+		#{chargeDetail},
+		#{contractNumId},
+		#{originalPeriod},
+		#{quantity},
+		#{fee},
+		#{amount},
+		#{remark},
+		sysdate,sysdate, #{username}, #{username})
+	</insert>
+	
+	<select id="getShipper" parameterType="java.math.BigDecimal" resultType="java.lang.String">
+		SELECT tuser.user_group_id 
+		FROM tpa_tuser_group tuser
+		WHERE tuser.idn_user_group_type =
+		(SELECT idn_user_group_type
+		FROM tpa_tuser_group_type
+		WHERE type_code =
+		'SHIPPER')
+		AND trunc(sysdate) between tuser.start_date AND
+		nvl(tuser.end_date,
+		to_date('31/12/9999', 'DD/MM/YYYY'))
+        and tuser.idn_user_group = #{shipperId}
+	</select>
+	
+	<select id="getType" parameterType="java.math.BigDecimal" resultType="java.lang.String">
+		select note_desc from tpa_ttariff_note_type
+		where idn_tariff_note_type=#{typeId}
+	</select>
+	
+	<select id="getChargeDesc" parameterType="java.math.BigDecimal" resultType="java.lang.String">
+		select tc.tariff_desc
+		from
+		tpa_ttariff_note_code nc, tpa_ttariff_code tc
+		where
+		nc.idn_tariff_code = tc.idn_tariff_code
+		and nc.idn_tariff_code=#{charge}
+	</select>
+	
+	<select id="getChargeDetailDesc" parameterType="java.math.BigDecimal" resultType="java.lang.String">
+		SELECT 
+		s.detail_desc ||
+		CASE WHEN t.idn_operation_term IS NOT NULL THEN
+		' ('|| t.term_desc ||
+		')'
+		ELSE
+		NULL
+		END AS value
+		FROM
+		tpa_ttariff_code_detail s
+		INNER JOIN tpa_ttariff_note_code n
+		ON
+		n.idn_tariff_code = s.idn_tariff_code
+		AND NVL(n.idn_tariff_code_detail,
+		s.idn_tariff_code_detail) =
+		s.idn_tariff_code_detail
+		LEFT JOIN
+		tpa_toperation_term t
+		ON s.idn_operation_term = t.idn_operation_term
+		WHERE s.idn_tariff_code_detail = #{chargeDetail}
+	</select>
+	
+	<select id="getContractDesc" parameterType="java.math.BigDecimal" resultType="java.lang.String">
+		SELECT c.contract_code as value
+   		FROM tpa_tcontract c where c.idn_contract=#{contract}
+	</select>
+
+</mapper>

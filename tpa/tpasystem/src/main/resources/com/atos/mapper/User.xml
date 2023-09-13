@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atos.mapper.UserMapper">
+
+<select id="getUserType" parameterType="java.lang.String" resultType="java.util.TreeMap">
+			SELECT u.idn_user as idn_user,
+				   ug.idn_user_group as idn_user_group,
+              		ugt.type_code as type_code,
+                  ugt.type_desc as type_desc,
+                  u.user_name as user_name_db,
+                  ug.user_group_id as user_group_id
+	          FROM tpa_tuser            u,
+	               tpa_tuser_group      ug,
+	               tpa_tuser_group_type ugt
+	         WHERE u.user_id = #{user_id}
+	           AND u.idn_user_group = ug.idn_user_group
+	           AND ug.idn_user_group_type = ugt.idn_user_group_type	
+	
+</select>
+
+</mapper>

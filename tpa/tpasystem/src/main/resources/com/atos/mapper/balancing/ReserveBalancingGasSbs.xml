@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- Namespace -->
+<mapper namespace="com.atos.mapper.balancing.ReserveBalancingGasSbsMapper">
+
+
+	<resultMap type="com.atos.beans.ReserveBalancingGasSbsDto"
+		id="ReserveBalancingGasSbsDto">
+
+		<id column="IDN_BALANCE_RESERVE_GAS" property="idnBalanceReserveGas" />
+		<id column="GAS_DAY" property="gasDay" />
+		<id column="IDN_USER_GROUP" property="idnUserGroup" />
+		<id column="USER_GROUP_ID" property="userGroupId" />
+		<id column="IDN_RESBAL_CONTRACT" property="idnResbalContract" />
+		<id column="CONTRACT_CODE" property="contractCode" />
+		<id column="IDN_CONTRACT" property="idnContract" />
+		<id column="capContractCode" property="capContractCode" />
+		<id column="COMMENTS" property="comments" />
+		<id column="IDN_ZONE" property="idnZone" />
+		<id column="ZONE_CODE" property="zoneCode" />
+		<id column="IDN_SYSTEM_POINT_TYPE" property="idnSystemPointType" />
+		<id column="TYPE_CODE" property="typeCode" />
+		<id column="IDN_SYSTEM_POINT" property="idnSystemPoint" />
+		<id column="POINT_CODE" property="pointCode" />
+		<id column="QUANTITY" property="quantity" />
+		<id column="OPERATOR_COMMENTS" property="operatorComments" />
+
+	</resultMap>
+
+	<select id="search" resultMap="ReserveBalancingGasSbsDto"
+		parameterType="com.atos.filters.balancing.ReserveBalancigGasSbsFilter">
+		SELECT brg.idn_balance_reserve_gas,
+		brg.gas_day,
+		ug.idn_user_group,
+		ug.user_group_id,
+		rbc.idn_resbal_contract,
+		rbc.contract_code,
+		c.idn_contract,
+		c.contract_code as capContractCode,
+		brg.comments,
+		brg.operator_comments,
+		z.idn_zone,
+		z.zone_code,
+		spt.idn_system_point_type,
+		spt.type_code,
+		sp.idn_system_point,
+		sp.point_code,
+		brg.quantity
+		FROM tpa_tbalance_reserve_gas brg,
+		tpa_tresbal_contract rbc,
+		tpa_tcontract c,
+		tpa_tuser_group ug,
+		tpa_tsystem_point sp,
+		tpa_tsystem_point_type spt,
+		tpa_tarea a,
+		tpa_tzone z
+		WHERE brg.idn_resbal_contract = rbc.idn_resbal_contract
+		AND brg.idn_system_point = sp.idn_system_point
+		AND brg.idn_contract = c.idn_contract
+		AND brg.version_date = (SELECT MAX(brgx.version_date)
+		FROM tpa_tbalance_reserve_gas brgx
+		WHERE brgx.idn_resbal_contract = brg.idn_resbal_contract
+		AND brgx.idn_system_point = brg.idn_system_point
+		AND brgx.gas_day = brg.gas_day)
+		AND rbc.idn_user_group = c.idn_user_group
+		AND rbc.idn_user_group = ug.idn_user_group
+                               AND rbc.idn_pipeline_system = #{idnSystem}
+		AND c.idn_user_group = ug.idn_user_group
+                               AND c.idn_pipeline_system = rbc.idn_pipeline_system
+		AND sp.idn_system_point_type = spt.idn_system_point_type
+		AND sp.idn_area = a.idn_area
+		AND a.idn_zone = z.idn_zone
+
+		AND brg.gas_day <![CDATA[>=]]> #{fromDate}
+		
+
+		<if test="toDate != null">
+			AND brg.gas_day <![CDATA[<=]]> #{toDate}
+		</if>
+
+		<if test="shipperId != null">
+			AND ug.idn_user_group = #{shipperId}
+		</if>
+
+		<if test="reserveBalId != null">
+			AND rbc.idn_resbal_contract = #{reserveBalId}
+		</if>
+
+		<if test="capContractId != null">
+			AND c.idn_contract = #{capContractId}
+		</if>
+
+		<if test="idnZone != null">
+			AND z.idn_zone = #{idnZone}
+		</if>
+                               AND z.idn_pipeline_system = c.idn_pipeline_system
+		ORDER BY brg.gas_day,
+		rbc.contract_code,
+		spt.type_code,
+		sp.point_code
+
+		
+	</select>
+	<insert id="insertOperation" parameterType="com.atos.beans.balancing.ReserveBalancingGasSbsBean">
+		INSERT INTO tpa_tbalance_reserve_gas(idn_balance_reserve_gas,
+                                     idn_resbal_contract,
+                                     idn_system_point,
+                                     gas_day,
+                                     quantity,
+                                     idn_contract,
+                                     comments,
+                                     operator_comments,
+	                                        aud_ins_user,
+	                                        aud_last_user)
+                                     VALUES(tpa_sbalance_reserve_gas.nextval,
+                                            #{contractId},
+                                            #{nominationPoint},          
+                                            #{insertDate},
+                                            #{quantity},
+                                            #{capContractCode},  	           
+                                            #{comments},
+                                            #{operatorComments},
+	      #{username},
+	      #{username}
+                                            )
+		
+	</insert>
+	
+	<select id="getPoints" resultType="com.atos.beans.ComboFilterNS"
+		parameterType="com.atos.beans.balancing.ReserveBalancingGasSbsBean">
+		SELECT sp.idn_system_point as key,
+       sp.point_code as value
+  FROM tpa_tresbal_contract_det rcd,
+       tpa_tsystem_point        sp,
+       tpa_tarea                a,
+tpa_tzone z
+ WHERE rcd.idn_resbal_contract = #{contractId} 
+   AND rcd.idn_system_point = sp.idn_system_point
+   AND sp.idn_area = a.idn_area
+   AND a.idn_zone = #{zoneId}
+   AND sp.idn_system_point_group =
+       (SELECT spg.idn_system_point_group FROM tpa_tsystem_point_group spg WHERE spg.group_code = 'NOMINATION')
+   AND z.idn_zone = a.idn_zone
+   AND z.idn_pipeline_system = #{idnSystem}
+ GROUP BY sp.idn_system_point,
+          sp.point_code
+ ORDER BY sp.point_code
+
+		</select>
+		<select id="getInvalidDates" resultType="java.util.Date" 
+		parameterType="com.atos.beans.balancing.ReserveBalancingGasSbsBean">
+		SELECT days.gas_day
+  FROM (SELECT  #{startDate,jdbcType=DATE} 
+               + (LEVEL - 1) AS gas_day
+          FROM dual
+        CONNECT BY LEVEL <![CDATA[<=]]>  (#{endDate,jdbcType=DATE}
+                   - #{startDate,jdbcType=DATE} 
+                   + 1)) days
+ WHERE NOT EXISTS (SELECT 1
+          FROM tpa_tresbal_contract_det rcd
+         WHERE rcd.idn_resbal_contract = #{contractId} 
+           AND rcd.idn_system_point = #{nominationPoint}
+           AND rcd.is_enabled = 'Y'
+           AND days.gas_day BETWEEN rcd.start_date AND rcd.end_date
+           AND rcd.version_date = (SELECT MAX(rcdx.version_date)
+                                     FROM tpa_tresbal_contract_det rcdx
+                                    WHERE rcdx.idn_resbal_contract = rcd.idn_resbal_contract
+                                      AND rcdx.idn_system_point = rcd.idn_system_point
+                                      AND rcdx.start_date = rcd.start_date))
+ ORDER BY 1
+		
+		</select>
+
+	<select id="getCapContractsIds" resultType="com.atos.beans.ComboFilterNS"
+		parameterType="com.atos.filters.balancing.ReserveBalancigGasSbsFilter">
+		SELECT c.idn_contract as key,
+		c.contract_code as value
+		FROM
+		tpa_tcontract c
+		WHERE c.idn_contract IN (SELECT DISTINCT
+		cc.idn_contract FROM
+		tpa_tcontract_consolidate cc)
+		<if test="shipperId != null">
+			AND c.idn_user_group =#{shipperId}
+		</if>
+        AND c.idn_pipeline_system = #{idnSystem}
+		ORDER BY c.contract_code
+
+	</select>
+
+	<select id="getZones" resultType="com.atos.beans.ComboFilterNS"
+		parameterType="HashMap">
+		SELECT z.idn_zone as key,
+		z.zone_code as value
+		FROM
+		tpa_tresbal_contract_det rcd,
+		tpa_tsystem_point sp,
+		tpa_tarea a,
+		tpa_tzone z
+		WHERE rcd.idn_resbal_contract = #{idnResbalContract}
+		AND
+		rcd.idn_system_point = sp.idn_system_point
+		AND sp.idn_area = a.idn_area
+		AND a.idn_zone = z.idn_zone
+        AND z.idn_pipeline_system = #{idnSystem}
+		GROUP BY z.idn_zone,
+		z.zone_code
+		ORDER BY
+		z.zone_code
+
+	</select>
+
+	<select id="getZonesForSearch" resultType="com.atos.beans.ComboFilterNS" parameterType="BigDecimal">
+		SELECT z.idn_zone as key,
+		z.zone_code as value
+		FROM tpa_vzone_tpa z
+		WHERE z.idn_pipeline_system = #{pipeline_system}
+		ORDER BY z.zone_code
+
+	</select>
+
+</mapper>

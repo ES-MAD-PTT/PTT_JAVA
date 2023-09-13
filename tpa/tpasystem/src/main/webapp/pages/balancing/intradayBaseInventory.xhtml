@@ -1,0 +1,243 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home"
+				style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_balancing']}" url="#" />
+			<p:menuitem value="#{msg['menu_intraday_base_inventory']}"
+				url="/pages/balancing/intradayBaseInventory.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+
+		<h:form id="form"
+			style="width:100%;height:98%;border-collapse:collapse"
+			fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="10000" />
+
+			<p:layout widgetVar="intradayBaseInventoryLayout"
+				style="width:100%;height:100%" showEffect="clip" hideEffect="clip">
+
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">
+
+					<p:panelGrid columns="2" style="width:100%">
+
+						<p:panelGrid>
+							<p:row>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['intraday_base_inv_date']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['intraday_base_inv_zone']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['intraday_base_inv_mode']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['intraday_base_inv_last_version']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['intraday_base_inv_timestamp']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<p:calendar id="date" size="6" pattern="dd/MM/yyyy"
+										mask="true"
+										value="#{intradayBaseInvView.filters.date}"
+										showOn="button" navigator="true">		
+										<p:ajax event="dateSelect" listener="#{intradayBaseInvView.updateTimestamp}" update=":#{p:component('timestampId')}"/>								
+									</p:calendar>
+								</p:column>
+								<p:column>
+									<p:selectOneMenu id="zoneId" style="width:70px" value="#{intradayBaseInvView.filters.zoneId}" >
+ 								   		<f:selectItem itemLabel="" itemValue="" />
+      									<f:selectItems value="#{intradayBaseInvView.zoneIds.entrySet()}" var="entry" 
+      											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+      											<p:ajax event="change" update="mode"></p:ajax>
+					           		</p:selectOneMenu>
+								</p:column>
+								<p:column>
+									<p:selectOneMenu id="mode"  style="width:100px"   value="#{intradayBaseInvView.filters.modeId}" >
+							       		<f:selectItem itemLabel="" itemValue="" />
+        								<f:selectItems value="#{intradayBaseInvView.modeIds.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>									
+								</p:column>
+								<p:column style="text-align:center">
+									<p:selectBooleanCheckbox id="lastVersionCheckbox" value="#{intradayBaseInvView.filters.lastVersion}" >
+ 										<p:ajax event="change" listener="#{intradayBaseInvView.updateTimestamp}" update=":#{p:component('timestampId')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								
+								<p:column>
+									<p:selectOneMenu id="timestampId" style="width:70px" value="#{intradayBaseInvView.filters.timestampVar}" 
+										disabled="#{intradayBaseInvView.filters.lastVersion}" >
+ 								   		<f:selectItem itemLabel="" itemValue="" />
+      									<f:selectItems value="#{intradayBaseInvView.timestampIds.entrySet()}" var="entry" 
+      											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>
+								</p:column>
+							</p:row>
+						</p:panelGrid>
+						<p:panelGrid columns="2" style="float:right;top:0px">
+							<shiro:hasPermission
+								name="#{changeSystemView.system}.BALANCING.INTRADAY.BASEINVENTORY.QUERY">
+								<p:commandButton id="btnSearch" value="#{msg['search']}"
+									icon="ui-icon fa fa-search"
+									actionListener="#{intradayBaseInvView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()"
+									update="msgs,:#{p:component('intradayBaseInv1')}" />
+							</shiro:hasPermission>
+
+							<p:commandButton
+								onclick="PF('intradayBaseInventoryLayout').toggle('north')"
+								id="header_collapse" icon="fa fa-minus"
+								value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+
+							<shiro:hasPermission
+								name="#{changeSystemView.system}.BALANCING.INTRADAY.BASEINVENTORY.QUERY">
+								<p:commandButton value="#{msg['clear']}"
+									actionListener="#{intradayBaseInvView.onClear}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" process="@this"
+									update="msgs,@form" />
+							</shiro:hasPermission>
+						</p:panelGrid>
+					</p:panelGrid>
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center"
+					resizable="false" closable="false" collapsible="false"
+					style="border: 0;">
+
+					<p:dataTable widgetVar="w_intradayBaseInv" id="intradayBaseInv1"
+						var="intradayBaseInv"
+						value="#{intradayBaseInvView.resultList}" reflow="true"
+						style="margin-bottom:20px;border-collapse:collapse"
+						scrollable="true" scrollHeight="100%" paginator="true" rows="15"
+						rowsPerPageTemplate="5,10,15,20,25, #{intradayBaseInvView.itemsSize}">
+
+						<f:facet name="header">
+							<p:outputPanel style="height:25px">
+								<p:commandButton id="toggler" type="button" value="Columns"
+									style="float:right" icon="ui-icon-calculator" />
+								<p:columnToggler datasource="intradayBaseInv1"
+									trigger="toggler" style="width:200px" />
+								<h:commandLink style="float:right">
+									<p:graphicImage name="/images/excel.png" width="24" />
+									<p:dataExporter type="xlsx" target="intradayBaseInv1"
+										fileName="intradayBaseInv1Report"
+										postProcessor="#{intradayBaseInvView.postProcessXLS}" />
+									<p:spacer width="10" height="10" />
+								</h:commandLink>
+							</p:outputPanel>
+						</f:facet>
+
+						<shiro:hasPermission
+							name="#{changeSystemView.system}.BALANCING.INTRADAY.BASEINVENTORY.QUERY">
+
+							<p:column headerText="#{msg['intraday_base_inv_date']}"								
+								style="width: 70px;"
+								sortBy="#{intradayBaseInv.gasDay}"
+								filterMatchMode="contains"
+								filterBy="#{intradayBaseInv.gasDay}">
+								<h:outputText value="#{intradayBaseInv.gasDay}">
+									<f:convertDateTime pattern="dd/MM/yyyy" />
+								</h:outputText>
+							</p:column>
+							
+							<p:column headerText="#{msg['intraday_base_inv_zone']}"								
+								style="width: 100px;" sortBy="#{intradayBaseInv.zoneCode}"
+								filterMatchMode="contains"
+								filterBy="#{intradayBaseInv.zoneCode}">
+								<h:outputText value="#{intradayBaseInv.zoneCode}"/>
+							</p:column>
+							<p:column headerText="#{msg['intraday_base_inv_mode']}"								
+								style="width: 100px;" sortBy="#{intradayBaseInv.modeCode}"
+								filterMatchMode="contains"
+								filterBy="#{intradayBaseInv.modeCode}">
+								<h:outputText value="#{intradayBaseInv.modeCode}"/>
+							</p:column>													
+							<p:column headerText="#{msg['intraday_base_inv_hv']}"								
+								style="width: 100px;" sortBy="#{intradayBaseInv.hv_value}"
+								filterMatchMode="contains"
+								filterBy="#{intradayBaseInv.hv_value}">
+								<h:outputText value="#{intradayBaseInv.hv_value}">
+									<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+								</h:outputText>
+							</p:column>	
+							<p:column headerText="#{msg['intraday_base_inv_value']}"								
+								style="width: 100px;" sortBy="#{intradayBaseInv.base_inv_value}"
+								filterMatchMode="contains"
+								filterBy="#{intradayBaseInv.base_inv_value}">
+								<h:outputText value="#{intradayBaseInv.base_inv_value}">
+									<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+								</h:outputText>
+							</p:column>							
+							<p:column headerText="#{msg['intraday_base_inv_high_threshold_top']}"								
+								style="width: 100px;background-color:#FF0000;" sortBy="#{intradayBaseInv.high_threshold_top}"
+								filterMatchMode="contains"
+								filterBy="#{intradayBaseInv.high_threshold_top}">
+								<h:outputText value="#{intradayBaseInv.high_threshold_top}" >
+									 <f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/> 
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['intraday_base_inv_high_threshold_mid']}"
+								style="width: 100px;background-color:#FF9E00" sortBy="#{intradayBaseInv.high_threshold_mid}"
+								filterMatchMode="contains"
+								filterBy="#{intradayBaseInv.high_threshold_mid}">
+								<h:outputText value="#{intradayBaseInv.high_threshold_mid}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/> 
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['intraday_base_inv_high_threshold']}"								
+								style="width: 100px;background-color:#FFFB00" sortBy="#{intradayBaseInv.high_threshold}"
+								filterMatchMode="contains"
+								filterBy="#{intradayBaseInv.high_threshold}">
+								<h:outputText value="#{intradayBaseInv.high_threshold}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/> 
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['intraday_base_inv_low_threshold']}"
+								style="width: 100px;background-color:#FFFB00" sortBy="#{intradayBaseInv.low_threshold}"
+								filterMatchMode="contains"
+								filterBy="#{intradayBaseInv.low_threshold}">
+								<h:outputText value="#{intradayBaseInv.low_threshold}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/> 
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['intraday_base_inv_low_threshold_mid']}"								
+								style="width: 100px;background-color:#FF9E00" sortBy="#{intradayBaseInv.low_threshold_mid}"
+								filterMatchMode="contains"
+								filterBy="#{intradayBaseInv.low_threshold_mid}">
+								<h:outputText value="#{intradayBaseInv.low_threshold_mid}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/> 
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['intraday_base_inv_low_threshold_top']}"
+								style="width: 100px;background-color:#FF0000" sortBy="#{intradayBaseInv.low_threshold_top}"
+								filterMatchMode="contains"
+								filterBy="#{intradayBaseInv.low_threshold_top}">
+								<h:outputText value="#{intradayBaseInv.low_threshold_top}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/> 
+								</h:outputText>
+							</p:column>
+						</shiro:hasPermission>
+					</p:dataTable>
+				</p:layoutUnit>
+			</p:layout>
+		</h:form>
+	</ui:define>
+</ui:composition>

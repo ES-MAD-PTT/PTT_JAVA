@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atos.mapper.nominations.ShipperSubmissionNominationsMapper">
+
+     <select id="selectContractCodeDayByUser" parameterType="com.atos.filters.nominations.ShipperSubmissionFileFilter" resultType="com.atos.beans.ComboFilterNS">
+		select c.idn_contract as key, c.contract_code as value
+		  from tpa_tcontract c, tpa_tuser_group ug, tpa_tuser u
+		 where c.idn_user_group = ug.idn_user_group
+		   and ug.idn_user_group_type =
+		       (select idn_user_group_type
+		          from tpa_tuser_group_type
+		         where type_code = 'SHIPPER')
+		   and u.idn_user_group = ug.idn_user_group
+		   and exists (select 1 from tpa_tcontract_consolidate cc where cc.idn_contract = c.idn_contract)
+		   and #{start_date} between c.start_date and c.end_date
+		   and u.user_id = #{user}
+		order by UPPER(value)
+    </select>
+
+     <select id="selectContractCodeWeekByUser" parameterType="com.atos.filters.nominations.ShipperSubmissionFileFilter" resultType="com.atos.beans.ComboFilterNS">
+		select c.idn_contract as key, c.contract_code as value
+		  from tpa_tcontract c, tpa_tuser_group ug, tpa_tuser u
+		 where c.idn_user_group = ug.idn_user_group
+		   and ug.idn_user_group_type =
+		       (select idn_user_group_type
+		          from tpa_tuser_group_type
+		         where type_code = 'SHIPPER')
+		   and u.idn_user_group = ug.idn_user_group
+		   and exists (select 1 from tpa_tcontract_consolidate cc where cc.idn_contract = c.idn_contract)
+		   and (#{start_date} between c.start_date and c.end_date
+		   or #{end_date} between c.start_date and c.end_date)
+		   and u.user_id = #{user}
+		order by UPPER(value)
+    </select>
+
+     <select id="selectIdnUserGroup" parameterType="com.atos.filters.nominations.ShipperSubmissionFileFilter" resultType="java.math.BigDecimal">
+    select u.idn_user_group
+      from tpa_tuser_group ug, tpa_tuser u
+     where ug.idn_user_group_type =
+           (select idn_user_group_type
+              from tpa_tuser_group_type
+             where type_code = 'SHIPPER')
+       and u.idn_user_group = ug.idn_user_group
+       and u.user_id = #{user}
+	order by u.idn_user_group
+    </select>
+    
+     <select id="selectShipperIdNominations" parameterType="com.atos.filters.nominations.IntermediateSubmissionFileFilter" resultType="com.atos.beans.ComboFilter">
+		select tuser.user_group_id as key, tuser.user_group_id as value
+		from tpa_tuser_group tuser
+		where tuser.idn_user_group_type = (select idn_user_group_type from tpa_tuser_group_type where type_code = 'SHIPPER')
+		and #{start_date} >= start_date
+		and nvl(end_date,#{start_date}) >= #{start_date}  
+		order by UPPER(value)
+    </select>
+
+     <select id="selectContractCodeByShipper" parameterType="com.atos.filters.nominations.IntermediateSubmissionFileFilter" resultType="com.atos.beans.ComboFilterNS">
+		select c.idn_contract as key, c.contract_code as value
+		  from tpa_tcontract c, tpa_tuser_group ug, tpa_tuser u
+		 where c.idn_user_group = ug.idn_user_group
+		   and ug.idn_user_group = #{shipper_code}
+		   and u.idn_user_group = ug.idn_user_group
+		   and #{start_date} between c.start_date and c.end_date
+		order by UPPER(value)
+	</select>
+
+	<select id="selectStartDayOfWeek" resultType="java.lang.String">
+		SELECT oi.start_weekday 
+			  FROM tpa_toperation_category oc, 
+			       tpa_toperation_term     ot, 
+			       tpa_toperation          o, 
+			       tpa_toperation_interval oi 
+			 WHERE oc.category_code = 'NOMINATION' 
+			   AND ot.term_code = 'WEEKLY' 
+			   AND o.idn_operation_category = oc.idn_operation_category 
+			   AND o.idn_operation_term = ot.idn_operation_term 
+			   AND oi.idn_operation = o.idn_operation 
+			   AND SYSDATE BETWEEN oi.start_date AND nvl(oi.end_date, to_date('9999-12-31', 'YYYY-MM-DD'))
+	</select>
+
+	<select id="selectOperationCategory" resultType="java.math.BigDecimal">
+		select idn_operation_category from tpa_toperation_category where category_code = #{type}
+	</select>
+	<select id="selectOperationTerm" resultType="java.math.BigDecimal">
+		select idn_operation_term from tpa_toperation_term where term_code = #{type}
+	</select>
+	<select id="selectOperation" parameterType="java.util.TreeMap" resultType="java.math.BigDecimal">
+		select idn_operation from tpa_toperation where idn_operation_category = #{idn_operation_category} and idn_operation_term = #{idn_operation_term}
+	</select>
+	
+	<select id="selectIdnNomination" parameterType="com.atos.beans.nominations.NominationBean" resultType="com.atos.beans.nominations.NominationBean">
+		select idn_nomination,
+	      nomination_code,
+	      nomination_version,
+	      idn_operation,
+	      idn_user_group,
+	      idn_contract,
+	      is_contracted,
+	      start_date,
+	      end_date,
+	      is_renomination,
+	      is_valid,
+	      is_responsed,
+	      feasibility_date,
+	      operator_comments,
+	      is_matched,
+	      matching_date,
+	      submission_comments,
+	      idn_shipper_file,
+	      idn_operator_file
+	  from tpa_tnomination
+	 where idn_contract = #{idn_contract}
+	   and idn_operation = #{idn_operation}
+	   and start_date = #{start_date}
+	   order by nomination_version desc
+	</select>
+	
+	<insert id="insertOperationFile" useGeneratedKeys="true" keyProperty="idn_operation_file" keyColumn="idn_operation_file" parameterType="com.atos.beans.nominations.OperationFileBean">
+		insert into tpa_toperation_file
+		  (idn_operation_file,
+		   IDN_OPERATION_CATEGORY,
+		   IDN_OPERATION_TERM,
+		   FILE_NAME,
+		   VERSION_DATE,
+		   BINARY_DATA,
+		   STATUS,
+		   XML_DATA, 
+		   aud_ins_user, 
+		   aud_last_user)
+		values
+		  (tpa_soperation_file.nextval,
+		   #{idn_operation_category},
+		   #{idn_operation_term},
+		   #{file_name},
+		   #{version_date},
+		   #{binary_data},
+		   'OK',
+		   #{xml_data},
+		   #{username},
+	       #{username})
+	</insert>
+	<insert id="insertNewNomination" useGeneratedKeys="true" keyProperty="idn_nomination,nomination_code" keyColumn="idn_nomination,nomination_code" parameterType="com.atos.beans.nominations.NominationBean">
+		insert into tpa_tnomination
+		  (idn_nomination,
+			nomination_code,
+			nomination_version,
+			idn_operation,
+			idn_user_group,
+			idn_contract,
+			is_contracted,
+			start_date,
+			end_date,
+			is_renomination,
+			is_valid,
+			is_responsed,
+			feasibility_date,
+			operator_comments,
+			is_matched,
+			matching_date,
+			submission_comments,
+			idn_shipper_file,
+			idn_operator_file, 
+			aud_ins_user, 
+			aud_last_user)
+		values
+		  (tpa_snomination.nextval,
+			to_char(tpa_snomination_nomcod.nextval),
+			#{nomination_version},
+			#{idn_operation},
+			#{idn_user_group},
+			#{idn_contract},
+			#{is_contracted},
+			#{start_date},
+			#{end_date},
+			#{is_renomination},
+			#{is_valid},
+			#{is_responsed},
+			#{feasibility_date},
+			#{operator_comments},
+			#{is_matched},
+			#{matching_date},
+			#{submission_comments},
+			#{idn_shipper_file},
+			#{idn_operator_file},
+			#{username},
+	        #{username})
+	</insert>
+
+	<insert id="insertVersionNomination" useGeneratedKeys="true" keyProperty="idn_nomination" keyColumn="idn_nomination" parameterType="com.atos.beans.nominations.NominationBean">
+		insert into tpa_tnomination
+		  (idn_nomination,
+			nomination_code,
+			nomination_version,
+			idn_operation,
+			idn_user_group,
+			idn_contract,
+			is_contracted,
+			start_date,
+			end_date,
+			is_renomination,
+			is_valid,
+			is_responsed,
+			feasibility_date,
+			operator_comments,
+			is_matched,
+			matching_date,
+			submission_comments,
+			idn_shipper_file,
+			idn_operator_file, 
+			aud_ins_user, 
+			aud_last_user)
+		values
+		  (tpa_snomination.nextval,
+			#{nomination_code},
+			#{nomination_version},
+			#{idn_operation},
+			#{idn_user_group},
+			#{idn_contract},
+			#{is_contracted},
+			#{start_date},
+			#{end_date},
+			#{is_renomination},
+			#{is_valid},
+			#{is_responsed},
+			#{feasibility_date},
+			#{operator_comments},
+			#{is_matched},
+			#{matching_date},
+			#{submission_comments},
+			#{idn_shipper_file},
+			#{idn_operator_file},
+			#{username},
+	        #{username})
+	</insert>
+
+    <resultMap type="com.atos.beans.nominations.NominationDeadlineBean" id="NominationDeadline">
+         <result property="sHour" 		column="hour_limit"/>   
+        <result property="daysBefore" 	column="days_before"/>   
+    </resultMap>
+     
+    <select id="selectNominationDeadlines" resultMap="NominationDeadline">
+        SELECT od.hour_limit hour_limit,
+             od.days_before days_before
+        FROM tpa_voperation          o,
+             tpa_toperation_deadline od,
+             tpa_tdeadline_limit     dl,
+             tpa_tdeadline_type      dt
+       WHERE o.idn_operation = od.idn_operation
+         AND o.category_code = 'NOMINATION'
+		<if test="termCode != null and termCode != ''">
+			AND o.term_code = #{termCode}
+		</if>
+         AND od.idn_deadline_type = dt.idn_deadline_type
+         AND od.idn_deadline_limit = dl.idn_deadline_limit
+         AND dl.limit_code = 'MAX'
+		<if test="deadlineTypeCode != null and deadlineTypeCode != ''">
+			AND dt.deadline_type = #{deadlineTypeCode}
+		</if>
+         AND od.version_date = (  SELECT MAX(odx.version_date)
+                                 FROM tpa_toperation_deadline odx
+                                 WHERE odx.idn_operation = od.idn_operation
+                                    AND odx.idn_deadline_type = od.idn_deadline_type
+                                    AND odx.idn_deadline_limit = od.idn_deadline_limit
+                                    AND odx.start_date = od.start_date)
+         AND od.is_enabled = 'Y'
+         AND od.start_date = (SELECT MAX(ody.start_date) 
+                                 FROM tpa_toperation_deadline ody 
+                                WHERE od.idn_operation = ody.idn_operation 
+                                  AND od.idn_deadline_type = ody.idn_deadline_type 
+                                  AND od.idn_deadline_limit = ody.idn_deadline_limit 
+                                  AND TRUNC(SYSDATE) BETWEEN ody.start_date AND NVL(ody.end_date, to_date('31-12-9999', 'dd-mm-yyyy')))
+       ORDER BY UPPER (o.TERM_CODE), dt.execution_order, od.start_date DESC
+    </select>
+</mapper>

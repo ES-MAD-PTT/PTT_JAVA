@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<!-- Namespace -->
+<mapper namespace="com.atos.mapper.dam.ShipperMapper">
+
+    <resultMap type="com.atos.beans.dam.ShipperBean" id="Shipper">
+        <id column="idn_shipper" property="idn_shipper"  />
+		<result property="idn_user_group" column="idn_user_group"/>
+        <result property="id" column="user_group_id"/>   
+        <result property="companyName" column="user_group_name"/>   
+        <result property="address" column="address"/>   
+        <result property="creditRating" column="credit_rating"/>   
+        <result property="eRCLicenseID" column="erc_license_id"/>   
+        <result property="telephone" column="phone"/>   
+        <result property="fax" column="fax"/>   
+        <result property="sapId" column="sap_id"/>   
+        <result property="bankAccount" column="bank_account"/>   
+        <result property="startDate" column="start_date"/>   
+        <result property="endDate" column="end_date"/>   
+    </resultMap>
+     
+    <select id="selectShippers" resultMap="Shipper">
+	 	SELECT tshipper.idn_shipper as idn_shipper,
+	 		   tuser.idn_user_group as idn_user_group,
+		       tuser.user_group_id as user_group_id,
+		       tuser.user_group_name as user_group_name,
+		       tuser.address as address,
+		       tshipper.credit_rating as credit_rating,
+		       tshipper.erc_license_id as erc_license_id,
+		       tuser.phone as phone,
+		       tuser.fax as fax,
+		       tshipper.sap_id as sap_id,
+		       tshipper.bank_account as bank_account,
+		       tuser.start_date as start_date,
+		       tuser.end_date as end_date
+		 FROM tpa_tuser_group tuser, tpa_tshipper tshipper
+		WHERE tuser.idn_user_group_type = (SELECT idn_user_group_type FROM tpa_tuser_group_type WHERE type_code = 'SHIPPER')
+		AND tshipper.idn_user_group = tuser.idn_user_group
+		
+ 		
+		<if test="startDate != null">
+			AND nvl(tuser.end_date,to_date('9999/12/31','yyyy/mm/dd'))>=  #{startDate}
+		</if>
+		<if test="endDate != null">
+			AND #{endDate} >= tuser.start_date 
+		</if>
+		
+		
+		<if test="id != null and id != ''">
+		AND tuser.user_group_id = #{id}
+		</if>
+		<if test="companyName != null and companyName != ''">
+		AND tuser.user_group_name = #{companyName}
+		</if> 
+    	order by UPPER (tuser.user_group_id)
+    </select>
+    
+     <select id="selectShipperId" resultType="com.atos.beans.ComboFilter">
+		SELECT tuser.user_group_id as key, tuser.user_group_id as value
+		FROM tpa_tuser_group tuser
+		WHERE tuser.idn_user_group_type = (SELECT idn_user_group_type FROM tpa_tuser_group_type WHERE type_code = 'SHIPPER')
+    </select>
+
+    <select id="selectCompanyName" resultType="java.lang.String">
+		SELECT tuser.user_group_name as user_group_name
+		FROM tpa_tuser_group tuser
+		WHERE tuser.idn_user_group_type = (SELECT idn_user_group_type FROM tpa_tuser_group_type WHERE type_code = 'SHIPPER')
+		AND tuser.user_group_name like #{query}
+    </select>
+    
+	<select id="getShipperId" resultType="java.lang.String">
+		SELECT tuser.user_group_id   
+		FROM tpa_tuser_group tuser 
+		WHERE tuser.idn_user_group_type = (SELECT idn_user_group_type FROM tpa_tuser_group_type WHERE type_code = 'SHIPPER')
+		AND tuser.user_group_id = #{id}	
+	</select>
+
+	<update id="updateUserGroup" parameterType="com.atos.beans.dam.ShipperBean">
+		UPDATE tpa_tuser_group set
+			start_date = #{startDate},
+		    end_date = #{endDate},
+		    user_group_name = #{companyName},
+		    address = #{address},
+		    phone = #{telephone},
+		    fax = #{fax},
+		    aud_last_user=#{username}
+		WHERE idn_user_group = #{idn_user_group}
+	</update>
+
+	<update id="updateShipper" parameterType="com.atos.beans.dam.ShipperBean">
+		UPDATE tpa_tshipper set
+			idn_user_group = #{idn_user_group},
+			bank_account= #{bankAccount}, 
+			credit_rating = #{creditRating},
+			erc_license_id = #{eRCLicenseID},
+			sap_id = #{sapId},
+			aud_last_user=#{username}
+		WHERE idn_shipper = #{idn_shipper}
+	</update>
+
+	<insert id="insertUserGroup" useGeneratedKeys="true" keyProperty="idn_user_group" keyColumn="idn_user_group" parameterType="com.atos.beans.dam.ShipperBean">
+		INSERT INTO tpa_tuser_group
+		      (idn_user_group, user_group_id, idn_user_group_type, start_date, end_date, 
+		      user_group_name, address, phone, fax,
+		      aud_ins_user,aud_last_user)
+		   VALUES
+		      (tpa_suser_group.nextval,
+		       #{id},
+		       (SELECT t.idn_user_group_type FROM tpa_tuser_group_type t WHERE t.type_code = 'SHIPPER'),
+		       #{startDate},
+		       #{endDate},
+		       #{companyName},
+		       #{address},
+		       #{telephone},
+		       #{fax},
+		       #{username},
+			   #{username})		  
+	</insert>
+	
+	<insert id="insertShipper" useGeneratedKeys="true" keyProperty="idn_shipper" keyColumn="idn_shipper" parameterType="com.atos.beans.dam.ShipperBean">
+		INSERT INTO tpa_tshipper
+			(idn_shipper,idn_user_group, bank_account, credit_rating, erc_license_id, sap_id,
+			aud_ins_user,aud_last_user)
+		VALUES
+			(tpa_sshipper.nextval,
+			 #{idn_user_group},
+			 #{bankAccount}, 
+			 #{creditRating},
+			 #{eRCLicenseID},
+			 #{sapId},
+			 #{username},
+		 	 #{username})
+	</insert>
+
+    <select id="selectAreas" resultType="com.atos.beans.ComboFilterNS">
+		SELECT
+		    tar.idn_area    AS key,
+		    tar.area_code   AS value
+		FROM
+		    tpa_tarea       tar,
+		    tpa_vzone_tpa   tz
+		WHERE
+		    tz.idn_zone = tar.idn_zone
+		    AND tz.idn_pipeline_system = #{idn_system}
+		ORDER BY
+		    upper(tar.area_code)
+    </select>
+    
+	<select id="selectContractPoints" resultType="com.atos.beans.ComboFilterNS">
+		SELECT sp.idn_system_point AS key, 
+		       sp.point_code       AS value 
+		  FROM tpa_vsystem_point sp 
+		       ,tpa_varea_tpa     a 
+		       ,tpa_vzone_tpa     z 
+		 WHERE sp.group_code = 'CONTRACT' 
+		   AND a.idn_area = sp.idn_area
+				<if test="areaIds != null and areaIds.length > 0">
+					<foreach item="item" index="index" collection="areaIds"
+			             open="and a.idn_area in (" separator="," close=")">
+			        		#{item}
+			    	</foreach>
+				</if> 
+		   AND a.idn_zone = z.idn_zone 
+		   AND z.idn_pipeline_system = #{systemId} 
+		 ORDER BY sp.point_code
+    </select>
+
+ 	<select id="selectShipperPoints" resultType="com.atos.beans.dam.ShipperPointBean">
+		SELECT
+		    tsp.idn_user_group     AS usergroupid,
+		    tsp.idn_system_point   AS syspointid,
+		    tsp.idn_version        AS version,
+		    vsysp.point_code       AS syspointcode,
+		    trunc(tsp.start_date)  AS startdate,
+		    trunc(tsp.end_date)    AS enddate
+		FROM
+		    us_tpa.tpa_tshipper_point   tsp,
+		    tpa_vsystem_point           vsysp
+		WHERE
+		    tsp.idn_user_group = #{userGroupId}
+		    <if test="nullEndDateFlag == true">
+		    AND tsp.end_date IS NULL
+		    </if>
+		    AND vsysp.idn_system_point = tsp.idn_system_point
+		    <if test="areaIds != null and areaIds.length > 0">
+				<foreach item="item" index="index" collection="areaIds"
+		             open="and vsysp.idn_area in (" separator="," close=")">
+		        		#{item}
+		    	</foreach>
+			</if> 
+            AND tsp.idn_version = (
+	            SELECT
+	                MAX(tsp2.idn_version)
+	            FROM
+	                us_tpa.tpa_tshipper_point tsp2
+	            WHERE
+	                tsp2.idn_user_group = tsp.idn_user_group
+	                AND tsp2.idn_system_point = tsp.idn_system_point
+        	)
+        ORDER BY vsysp.point_code		    
+	</select>
+		
+	<insert id="insertShipperPoint" parameterType="com.atos.beans.dam.ShipperPointBean">
+		INSERT INTO us_tpa.tpa_tshipper_point (
+		    idn_user_group,
+		    idn_system_point,
+		    idn_version,
+		    start_date
+		) VALUES (
+		    #{userGroupId},
+		    #{sysPointId},
+		    #{version},
+		    trunc(#{startDate})
+		)  
+	</insert>
+	
+	<update id="deleteShipperPoint" parameterType="com.atos.beans.dam.ShipperPointBean">
+		UPDATE us_tpa.tpa_tshipper_point set
+			   end_date = trunc(#{endDate})
+		WHERE  idn_user_group = #{userGroupId}
+		       AND idn_system_point = #{sysPointId}
+		       AND idn_version = #{version}
+	</update>
+	
+</mapper>

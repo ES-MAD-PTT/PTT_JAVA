@@ -1,0 +1,454 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_alarms']}" url="#" />
+			<p:menuitem value="#{msg['menu_tagname_management']}" url="/pages/tagnameManagement/tagnameManagement.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="5000"/>
+			
+            <p:layout widgetVar="tagnameManagementLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">	
+					
+				<p:panelGrid columns="2" style="width:100%">
+					
+						<p:panelGrid>
+							<p:row>
+							<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['tagname_tagname']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['tagname_point']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['tagname_label']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['tagname_binay']}" />
+								</p:column>
+														
+							</p:row>
+							<p:row>
+								<p:column>
+					           		<p:selectOneMenu widgetVar="idnScadaTagName_w" id="idnScadaTagName" style="width:150px" value="#{tagnameManagementView.filters.idnScadaTagName}" >
+											<f:selectItem itemLabel=" " itemValue="" />
+	        								<f:selectItems value="#{tagnameManagementView.scadaTagName.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />	
+						           	</p:selectOneMenu>									
+								</p:column>
+								<p:column>
+					           		<p:selectOneMenu widgetVar="idPoint_w" id="idPoint" style="width:100px" value="#{tagnameManagementView.filters.idPonit}" >
+											<f:selectItem itemLabel=" " itemValue="" />
+	        								<f:selectItems value="#{tagnameManagementView.points.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />	
+						           	</p:selectOneMenu>									
+								</p:column>
+								
+								<p:column>
+					           		<p:selectOneMenu widgetVar="idLabel_w" id="idLabel" style="width:100px"	 value="#{tagnameManagementView.filters.idLabel}" >
+										<f:selectItem itemLabel="" itemValue="" />
+        								<f:selectItems value="#{tagnameManagementView.labels.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>									
+								</p:column>
+								<p:column>
+					           		<p:selectOneMenu widgetVar="binary_w" id="binary" style="width:50px"	 value="#{tagnameManagementView.filters.binary}" >
+					           			<f:selectItem itemLabel="" itemValue="" />
+										<f:selectItem itemLabel="No" itemValue="N" />
+										<f:selectItem itemLabel="Yes" itemValue="Y" />
+					           		</p:selectOneMenu>									
+								</p:column>
+							</p:row>
+						</p:panelGrid>
+						<p:panelGrid columns="2" style="float:right;top:0px">
+							<shiro:hasPermission name="#{changeSystemView.system}.ALARMS.TAGNAME_MANAGEMENT.QUERY">
+								<p:commandButton value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{tagnameManagementView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,:#{p:component('tagnameManagement1')}"/>
+							</shiro:hasPermission>
+							
+							<p:commandButton  onclick="PF('tagnameManagementLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+							
+							<shiro:hasPermission name="#{changeSystemView.system}.ALARMS.TAGNAME_MANAGEMENT.QUERY">									
+								<p:commandButton value="#{msg['clear']}"
+									actionListener="#{tagnameManagementView.onClear}"
+									process="@this" 
+									update="form"/> 
+							</shiro:hasPermission>
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center"
+					resizable="false" closable="false" collapsible="false">
+ 
+					<p:dataTable widgetVar="w_tagnameManagement"  id="tagnameManagement1" var="tagnameManagement" value="#{tagnameManagementView.items}" reflow="true" 
+						style="margin-bottom:20px;border-collapse:collapse" rowSelectMode="checkbox"
+						selection="#{tagnameManagementView.selecteds}" rowKey="#{tagnameManagement.idn_scada_alarm}"
+					    paginator="true" rows="15"
+					    scrollable="true"  scrollHeight="240" 
+					    rowsPerPageTemplate="5,10,15,20,25,50,100"
+					    
+					    editable="true">
+							<f:facet name="header">
+								<p:outputPanel style="height:25px">
+									<p:commandButton id="toggler" type="button" value="#{msg['columns']}" style="float:right" icon="ui-icon-calculator" />
+	        						<p:columnToggler datasource="tagnameManagement1" trigger="toggler" style="width:200px"/>
+									
+									
+									<shiro:hasPermission name="#{changeSystemView.system}.ALARMS.MANAGEMENT.ADD">
+		        						<p:commandButton value="#{msg['NewTagname']}"  id="new" type="button"  icon="ui-icon fa fa-save" style="float:right;"
+		        							onclick="PF('dlgnewTagnameManagement').show();"	/>
+	        						</shiro:hasPermission>		
+								
+									<shiro:hasPermission name="#{changeSystemView.system}.ALARMS.MANAGEMENT.ADD">
+		        						<p:commandButton value="#{msg['NewLabel']}"  id="newLabel" type="button"  icon="ui-icon fa fa-save" style="float:right;"
+		        							onclick="PF('dlgnewLabel').show();"	/>
+	        						</shiro:hasPermission>
+	        						<shiro:hasPermission name="#{changeSystemView.system}.ALARMS.MANAGEMENT.ADD">
+		        						<p:commandButton value="#{msg['NewPoint']}"  id="newPoint" type="button"  icon="ui-icon fa fa-save" style="float:right;"
+		        							onclick="PF('dlgnewPoint').show();"	/>
+	        						</shiro:hasPermission>
+								</p:outputPanel>        										          
+					        </f:facet>
+					        
+					        <shiro:hasPermission name="#{changeSystemView.system}.ALARMS.MANAGEMENT.MOD">  
+								<p:ajax event="rowEdit" listener="#{tagnameManagementView.onRowEdit}" update=":form:msgs"/>
+								<p:ajax event="rowEditCancel" listener="#{tagnameManagementView.onRowCancel}" update=":form:msgs"/>		
+					 		</shiro:hasPermission>
+					 
+					 		<!--<p:column headerText="Select" selectionMode="multiple" style="width:36px;text-align:center"/> -->
+					 		<p:column headerText="#{msg['tagname_tagname']}"  style="width: 150px;" sortBy="#{tagnameManagement.scada_tag_name}" filterMatchMode="contains" filterBy="#{tagnameManagement.scada_tag_name}">
+					               <h:outputText value="#{tagnameManagement.scada_tag_name}" />
+					       </p:column>
+					 	   <p:column headerText="#{msg['tagname_point']}"  style="width: 150px;" sortBy="#{tagnameManagement.scada_point}" filterMatchMode="contains" filterBy="#{tagnameManagement.scada_point}">
+					               <h:outputText value="#{tagnameManagement.scada_point}" />
+					       </p:column>
+					 		
+					       <p:column headerText="#{msg['tagname_label']}"  style="width: 150px;" sortBy="#{tagnameManagement.scada_label}" filterMatchMode="contains" filterBy="#{tagnameManagement.scada_label}">
+					               <h:outputText value="#{tagnameManagement.scada_label}" />
+					       </p:column>
+									
+					        <p:column headerText="#{msg['tagname_isBinary']}" style="width: 50px;" sortBy="#{tagnameManagement.is_binary}" filterMatchMode="contains" >
+					          <p:cellEditor>
+						          <f:facet name="output">
+						           	       	 <h:outputText value="#{tagnameManagement.binary eq 'Y'? 'Yes' : 'No'}" />
+								  </f:facet>
+								  <f:facet name="input">
+								         <p:selectBooleanCheckbox id="cbxidBinary" value="#{tagnameManagement.is_binary}"   >
+								         	<p:ajax event="change" update="binary "></p:ajax>
+								         </p:selectBooleanCheckbox>
+								  </f:facet>
+					         </p:cellEditor>           
+					       </p:column>
+					       
+					          <p:column headerText="#{msg['tagname_valBinary']}" style="width: 80px;" sortBy="#{tagnameManagement.on_off_alarm_threshold}" filterMatchMode="contains" filterBy="#{tagnameManagement.on_off_alarm_threshold}">
+					           <p:cellEditor>
+					               <f:facet name="output">
+					               		  <h:outputText value="#{tagnameManagement.on_off_alarm_threshold}"  />
+					               
+					               </f:facet>
+					               <f:facet name="input">
+					              		 <p:selectOneMenu  id ="binary" style="width:100px"	label="Label"
+					              		   value="#{tagnameManagement.on_off_alarm_threshold}" 
+					              		    disabled="#{tagnameManagementView.disabledField_Threshold(tagnameManagement)}">
+						   					<f:selectItems value="#{tagnameManagementView.getBinary2(tagnameManagement.is_binary)}" />
+					  				    </p:selectOneMenu>
+
+					               	</f:facet>
+					           </p:cellEditor> 
+					       </p:column>
+					             <p:column headerText="#{msg['tagname_min']}" style="width: 100px;" sortBy="#{tagnameManagement.min_alarm_threshold}" filterMatchMode="contains" filterBy="#{tagnameManagement.min_alarm_threshold}">
+					           <p:cellEditor>
+					               <f:facet name="output">
+					               		<h:outputText value="#{tagnameManagement.min_alarm_threshold}" style="float:right">
+					               				<f:convertNumber pattern="##,##0.###" />
+					               		</h:outputText>
+					               
+					               </f:facet>
+					               <f:facet name="input">
+					              		  <p:inputNumber id="min_alarm_threshold" value="#{tagnameManagement.min_alarm_threshold}"  size="10"  
+												 disabled="#{tagnameManagementView.disabledField_Threshold(tagnameManagement)}"
+												 requiredMessage="#{msg['tagname_min']}: #{msg['empty_field']}"
+												 validatorMessage="#{msg['tagname_min']}: #{msg['lenght_field']} "
+												 decimalSeparator="." thousandSeparator="," decimalPlaces="3"   >
+									    </p:inputNumber>
+					               	</f:facet>
+					           </p:cellEditor> 
+					       </p:column>
+					        <p:column headerText="#{msg['tagname_max']}" style="width: 100px;" sortBy="#{tagnameManagement.max_alarm_threshold}" filterMatchMode="contains" filterBy="#{tagnameManagement.max_alarm_threshold}">
+					           <p:cellEditor>
+					               <f:facet name="output">
+					               		<h:outputText value="#{tagnameManagement.max_alarm_threshold}" style="float:right">
+					               				<f:convertNumber pattern="##,##0.###" />
+					               		</h:outputText>
+					               
+					               </f:facet>
+					               <f:facet name="input">
+					              		  <p:inputNumber  id="max_alarm_threshold" value="#{tagnameManagement.max_alarm_threshold}"  size="10"  
+												 disabled="#{tagnameManagementView.disabledField_Threshold(tagnameManagement)}"
+												 requiredMessage="#{msg['tagname_max']}: #{msg['empty_field']}"
+												 validatorMessage="#{msg['tagname_max']}: #{msg['lenght_field']} "
+												 decimalSeparator="." thousandSeparator="," decimalPlaces="3"   >
+									    </p:inputNumber>
+					               	</f:facet>
+					           </p:cellEditor> 
+					       </p:column>
+					         
+					      
+					     
+					        <p:column headerText="#{msg['tagname_isEnabled']}" style="width: 50px;" sortBy="#{tagnameManagement.is_enabled}" filterMatchMode="contains" >
+					        <!-- El permiso ALARMS.TAGNAME_MANAGEMENT.TAGNAME.MOD debe permitir editar la columna is_enabled. -->
+							 <p:cellEditor>
+						          <f:facet name="output">
+						           	       	 <h:outputText value="#{tagnameManagement.enabled eq 'Y'? 'Yes' : 'No'}" />
+								  </f:facet>
+								  <f:facet name="input">
+								         <p:selectBooleanCheckbox value="#{tagnameManagement.is_enabled}"  
+								         		disabled="#{tagnameManagementView.disabledField_Tagname(tagnameManagement)}" >
+								         </p:selectBooleanCheckbox>
+								  </f:facet>
+					         </p:cellEditor>  
+					       </p:column>
+					       
+					    
+					      <shiro:hasPermission name="#{changeSystemView.system}.ALARMS.MANAGEMENT.MOD">
+					       <p:column style="width:32px">
+					            <p:rowEditor rendered="#{tagnameManagementView.renderItemEditor(tagnameManagement)}"/>
+					       </p:column>
+					       </shiro:hasPermission>      
+					</p:dataTable>
+				</p:layoutUnit>
+
+			</p:layout>
+		</h:form>
+		
+	<shiro:hasPermission name="#{changeSystemView.system}.ALARMS.TAGNAME_MANAGEMENT.ADD">
+		<p:dialog widgetVar="dlgnewTagnameManagement" resizable="false"  closable="true" modal="true" appendTo="@(body)" header="#{msg['tagnameManagement_New']}">
+		<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario
+		 <p:ajax event="close" update="formNewEntity"  process="@this" listener="#{shipperView.cancel}" />	-->
+			<h:form id="formNewEntity">
+			<p:growl id="msgs" showDetail="true"  life="5000"/>
+				<p:panelGrid columns="4" style="width:100%">
+				<p:panelGrid>
+				<p:row>
+					<p:column>
+						<h:outputText value="#{msg['tagname_tagname']}" />
+					</p:column>
+					<p:column colspan="3">
+						<p:inputText required="true" id="tagname" value="#{tagnameManagementView.newTagnameManagement.scada_tag_name}" maxlength="250" size="50" 
+									requiredMessage="#{msg['tagname_tagname']}: #{msg['empty_field']}" validatorMessage="#{msg['tagname_tagname']}: #{msg['lenght_field']} 250">
+									<f:validateLength maximum="250"/>
+						</p:inputText>
+						<p:message for="tagname" />
+					</p:column>
+				</p:row>
+				<p:row>
+					<p:column>
+						<h:outputText value="#{msg['tagname_point']}" />
+					</p:column>
+					<p:column>
+						<p:selectOneMenu required="true"  widgetVar="point_w" id="point" style="width:100px" 	
+						label="Point" value="#{tagnameManagementView.newTagnameManagement.idn_scada_point}" 
+						requiredMessage="#{msg['tagname_tagname']}: #{msg['empty_field']}" >
+					   			<f:selectItem itemLabel="" itemValue="" />
+        						<f:selectItems value="#{tagnameManagementView.points.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+						</p:selectOneMenu>
+						<p:message for="point" />
+					</p:column>
+					
+					<p:column>
+								<h:outputText value="#{msg['tagname_label']}" />
+							</p:column>
+							<p:column>
+								<p:selectOneMenu required="true"  widgetVar="label_w" id="label" style="width:100px" 	
+								label="Label" value="#{tagnameManagementView.newTagnameManagement.idn_scada_label}" 
+								requiredMessage="#{msg['tagname_label']}: #{msg['empty_field']}" >
+					           			<f:selectItem itemLabel="" itemValue="" />
+        								<f:selectItems value="#{tagnameManagementView.labels.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>
+								<p:message for="point" />
+							</p:column>
+				</p:row>
+				<p:row>		
+					<p:column>
+						<h:outputText value="#{msg['tagname_isBinary']}" />
+					</p:column>
+			 	    <p:column>
+				         <p:selectBooleanCheckbox id="cbxidBinary" value="#{tagnameManagementView.newTagnameManagement.is_binary}" >   
+				         <p:ajax event="change" update="binary,min_alarm_threshold,max_alarm_threshold "></p:ajax>   
+				        </p:selectBooleanCheckbox>
+			       </p:column>
+				   <p:column>
+						<h:outputText value="#{msg['tagname_valBinary']}" />
+				   </p:column>
+				   <p:column>
+				   <!-- 
+					     <p:selectOneMenu  id="binary" style="width:100px"	label="Label" value="#{tagnameManagementView.newTagnameManagement.on_off_alarm_threshold}" >
+						 	<f:selectItem itemLabel="" itemValue=""  />
+							<f:selectItem itemLabel="0" itemValue="0"  itemDisabled="#{!tagnameManagementView.newTagnameManagement.is_binary }"/>
+							<f:selectItem itemLabel="1" itemValue="1" itemDisabled="#{!tagnameManagementView.newTagnameManagement.is_binary }"/>
+					      </p:selectOneMenu>
+					 -->      
+					       <p:selectOneMenu  id="binary" style="width:100px"	label="Label" value="#{tagnameManagementView.newTagnameManagement.on_off_alarm_threshold}" >
+						   		<f:selectItems value="#{tagnameManagementView.getBinary2(tagnameManagementView.newTagnameManagement.is_binary)}" />
+					      </p:selectOneMenu>
+					</p:column>
+							
+				</p:row>	
+				<p:row>
+					<p:column>
+						<h:outputText value="#{msg['tagname_min']}" />
+					</p:column>
+					<p:column>
+					
+					 	<p:inputNumber  id="min_alarm_threshold" value="#{tagnameManagementView.newTagnameManagement.min_alarm_threshold}"  size="13"  
+					 
+												 requiredMessage="#{msg['tagname_min']}: #{msg['empty_field']}, if not Binary"
+												 validatorMessage="#{msg['tagname_min']}: #{msg['lenght_field']} "
+												 decimalSeparator="." thousandSeparator="," decimalPlaces="3"   >
+						</p:inputNumber>
+					</p:column>
+					
+					<p:column>
+						<h:outputText value="#{msg['tagname_max']}" />
+					</p:column>
+					<p:column>
+						 <p:inputNumber  id="max_alarm_threshold" value="#{tagnameManagementView.newTagnameManagement.max_alarm_threshold}"  size="13" 
+						
+												 requiredMessage="#{msg['tagname_max']}: #{msg['empty_field']}, if not Binary"
+												 validatorMessage="#{msg['tagname_max']}: #{msg['lenght_field']} "
+												 decimalSeparator="." thousandSeparator="," decimalPlaces="3"   >
+						  </p:inputNumber>
+					</p:column>
+					
+				</p:row>
+				</p:panelGrid>	
+			</p:panelGrid>
+				
+				<p:separator/>
+				<p:panelGrid>
+					<p:row>
+						<p:column>
+							<p:commandButton value="#{msg['save']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" validateClient="true"
+								action="#{tagnameManagementView.save}" update=":#{p:component('idnScadaTagName')},:formNewEntity"
+								onstart="PF('cargando').show()"
+								oncomplete="PF('dlgnewTagnameManagement').hide(),PF('cargando').hide()" />
+			        		<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close" 
+			        			update="formNewEntity" process="@this" actionListener="#{tagnameManagementView.cancel}"
+			        			oncomplete="PF('dlgnewTagnameManagement').hide()"/>
+						</p:column>					
+					</p:row>
+				</p:panelGrid>							
+			</h:form>			
+		</p:dialog>
+	</shiro:hasPermission>
+	
+	
+	<shiro:hasPermission name="#{changeSystemView.system}.ALARMS.TAGNAME_MANAGEMENT.ADD">
+		<p:dialog widgetVar="dlgnewLabel" resizable="false"  closable="true" modal="true" appendTo="@(body)" header="New Label">
+		<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario
+		 <p:ajax event="close" update="formNewEntity"  process="@this" listener="#{shipperView.cancel}" />	-->
+			<h:form id="formNewEntitylabel">
+			<p:growl id="msgs" showDetail="true"  life="5000"/>
+				<p:panelGrid columns="4" style="width:100%">
+				<p:panelGrid>
+				<p:row>
+					<p:column>
+						<h:outputText value="#{msg['tagname_label']}" />
+					</p:column>
+					<p:column colspan="3">
+						<p:inputText required="true" id="newlabel" value="#{tagnameManagementView.newScadaLabel.scadaLabel}" maxlength="250" size="50" 
+									requiredMessage="#{msg['tagname_label']}: #{msg['empty_field']}" validatorMessage="#{msg['tagname_label']}: #{msg['lenght_field']} 250">
+									<f:validateLength maximum="250"/>
+						</p:inputText>
+						<p:message for="newlabel" />
+					</p:column>
+				</p:row>
+				
+			
+				</p:panelGrid>	
+			</p:panelGrid>
+				
+				<p:separator/>
+				<p:panelGrid>
+					<p:row>
+						<p:column>
+							<p:commandButton value="#{msg['save']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" validateClient="true"
+								action="#{tagnameManagementView.saveLabel}" update=":#{p:component('idLabel')},:formNewEntitylabel"
+								onstart="PF('cargando').show()"
+								oncomplete="PF('dlgnewLabel').hide(),PF('cargando').hide()" />
+			        		<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close" 
+			        			update="formNewEntitylabel" process="@this" actionListener="#{tagnameManagementView.cancelLabel}"
+			        			oncomplete="PF('dlgnewLabel').hide()"/>
+						</p:column>					
+					</p:row>
+				</p:panelGrid>							
+			</h:form>			
+		</p:dialog>
+	</shiro:hasPermission>
+		
+	<shiro:hasPermission name="#{changeSystemView.system}.ALARMS.TAGNAME_MANAGEMENT.ADD">
+		<p:dialog widgetVar="dlgnewPoint" resizable="false"  closable="true" modal="true" appendTo="@(body)" header="New Point">
+		<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario
+		 <p:ajax event="close" update="formNewEntity"  process="@this" listener="#{shipperView.cancel}" />	-->
+			<h:form id="formNewEntitypoint">
+			<p:growl id="msgs" showDetail="true"  life="5000"/>
+				<p:panelGrid columns="4" style="width:100%">
+				<p:panelGrid>
+				<p:row>
+					<p:column>
+						<h:outputText value="#{msg['tagname_point']}" />
+					</p:column>
+					<p:column colspan="3">
+						<p:inputText required="true" id="newpoint" value="#{tagnameManagementView.newScadaPoint.scadaPoint}" maxlength="250" size="50" 
+									requiredMessage="#{msg['tagname_point']}: #{msg['empty_field']}" validatorMessage="#{msg['tagname_point']}: #{msg['lenght_field']} 250">
+									<f:validateLength maximum="250"/>
+						</p:inputText>
+						<p:message for="newpoint" />
+					</p:column>
+				</p:row>
+				
+			
+				</p:panelGrid>	
+			</p:panelGrid>
+				
+				<p:separator/>
+				<p:panelGrid>
+					<p:row>
+						<p:column>
+							<p:commandButton value="#{msg['save']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" validateClient="true"
+								action="#{tagnameManagementView.savePoint}" update=":#{p:component('idPoint')},:formNewEntitypoint"
+								onstart="PF('cargando').show()"
+								oncomplete="PF('dlgnewPoint').hide(),PF('cargando').hide()" />
+			        		<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close" 
+			        			update="formNewEntitypoint" process="@this" actionListener="#{tagnameManagementView.cancelPoint}"
+			        			oncomplete="PF('dlgnewPoint').hide()"/>
+						</p:column>					
+					</p:row>
+				</p:panelGrid>							
+			</h:form>			
+		</p:dialog>
+	</shiro:hasPermission>
+		
+	
+		
+	</ui:define>
+
+
+</ui:composition>

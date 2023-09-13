@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="com.atos.mapper.dam.ForecastingDeadlineMapper">
+
+    <resultMap type="com.atos.beans.dam.ForecastingDeadlineBean" id="ForecastingDeadline">
+        <id column="idn_operation" 			property="idn_operation"  />
+		<result property="operation_desc" 			column="operation_desc"/>
+        <result property="idn_operation_category" 	column="idn_operation_category"/>   
+        <result property="category_code" 			column="category_code"/>   
+        <result property="idn_operation_term" 		column="idn_operation_term"/>           
+        <result property="idn_deadline_limit" 		column="idn_deadline_limit"/>   
+        <result property="idn_deadline_type" 		column="idn_deadline_type"/>
+        <result property="deadline_type"	 		column="deadline_type"/>   
+        <result property="idn_operation_deadline" 	column="idn_operation_deadline"/>
+           
+        <result property="type" 					column="term_code"/> 
+        <result property="startDate" 				column="start_date"/>   
+        <result property="shour" 					column="hour_limit"/>   
+        <result property="day" 						column="day_limit"/>   
+        <result property="month" 					column="months_before"/>   
+    </resultMap>
+     
+    <select id="selectForecastingDeadlines" resultMap="ForecastingDeadline">
+      SELECT o.idn_operation as idn_operation,
+			       o.operation_desc as operation_desc,
+			       o.idn_operation_category as idn_operation_category,
+			       o.category_code as category_code,
+			       o.idn_operation_term as idn_operation_term,
+			       o.term_code as term_code,
+			       dl.idn_deadline_limit as idn_deadline_limit,
+			       dt.idn_deadline_type as idn_deadline_type,
+			       dt.deadline_type     as deadline_type,
+			       od.idn_operation_deadline as idn_operation_deadline,
+			       od.start_date as start_date,
+			       od.hour_limit as hour_limit,
+			       od.day_limit as day_limit,
+			       od.months_before as  months_before
+			  FROM tpa_voperation          o,
+			       tpa_toperation_deadline od,
+			       tpa_tdeadline_limit     dl,
+			       tpa_tdeadline_type      dt
+			 WHERE o.idn_operation = od.idn_operation
+			   AND o.category_code = 'FORECASTING'
+			   AND od.idn_deadline_type = dt.idn_deadline_type
+			   AND od.idn_deadline_limit = dl.idn_deadline_limit
+			   AND dl.limit_code = 'MAX'
+         AND nvl(od.end_date, od.start_date) >= od.start_date
+			   AND od.version_date = (SELECT MAX(odx.version_date)
+			                            FROM tpa_toperation_deadline odx
+			                           WHERE odx.idn_operation = od.idn_operation
+			                             AND odx.idn_deadline_type = od.idn_deadline_type
+			                             AND odx.idn_deadline_limit = od.idn_deadline_limit
+			                             AND odx.start_date = od.start_date)
+			   AND od.is_enabled = 'Y'
+		<if test="type != null and type != ''">
+			   AND o.IDN_OPERATION_TERM = #{type}
+		</if>
+		<if test="startDate != null">
+			AND nvl(od.end_date,nvl((SELECT MIN (ody.start_date) - 1
+            		                FROM tpa_toperation_deadline ody
+                    		        WHERE ody.idn_operation = od.idn_operation
+                            		  AND ody.idn_deadline_type = od.idn_deadline_type
+		                              AND ody.idn_deadline_limit = od.idn_deadline_limit
+        		                      AND ody.start_date > od.start_date
+                                  AND nvl(ody.end_date, ody.start_date) >= ody.start_date
+                                  AND ody.is_enabled = 'Y'
+                                  AND ody.version_date = (SELECT MAX(odz.version_date)
+			                                                      FROM tpa_toperation_deadline odz
+			                                                     WHERE odz.idn_operation = ody.idn_operation
+			                             	                         AND odz.idn_deadline_type = ody.idn_deadline_type
+			                             	                         AND odz.idn_deadline_limit = ody.idn_deadline_limit
+			                             	                         AND odz.start_date = ody.start_date)) , to_date('9999/12/31','yyyy/mm/dd')))>=  #{startDate}
+		</if>
+		<if test="endDate != null">
+			  AND #{endDate} >= od.start_date 
+		</if>
+  	 ORDER BY  UPPER (o.TERM_CODE) DESC,  od.start_date DESC
+    
+    
+	</select>
+    
+     <select id="selectTypes" resultType="com.atos.beans.ComboFilterNS">		
+		SELECT DISTINCT o.IDN_OPERATION_TERM as key, o.TERM_CODE as value 
+		FROM tpa_voperation o 
+		WHERE o.CATEGORY_CODE = 'FORECASTING'
+		order by o.IDN_OPERATION_TERM
+    </select>
+
+	
+
+	<select id="getIdnOperationForecasting" resultType="java.math.BigDecimal">
+		select o.idn_operation 
+		from tpa_voperation  o
+		where o.category_code = 'FORECASTING'
+		and o.idn_operation_term = #{idn_operation_term}	
+	</select>
+	
+	<insert id="insertForecastingDeadline" useGeneratedKeys="true" keyProperty="idn_operation_deadline" keyColumn="idn_operation_deadline" parameterType="com.atos.beans.dam.ForecastingDeadlineBean">
+		 INSERT INTO tpa_toperation_deadline
+		 		(idn_operation_deadline, idn_operation,idn_deadline_type, idn_deadline_limit, start_date, 
+		 		hour_limit, day_limit,  months_before,
+		 		aud_ins_user,aud_last_user)
+          VALUES (tpa_soperation_deadline.nextval,
+                 #{idn_operation},
+                (SELECT idn_deadline_type FROM tpa_tdeadline_type a WHERE a.deadline_type = 'STANDARD.RECEPTION'),
+                (SELECT idn_deadline_limit FROM tpa_tdeadline_limit WHERE LIMIT_CODE = 'MAX'),
+                 #{startDate},
+                 #{shour},
+                 #{day},
+                 #{month},
+				#{username},
+				#{username})
+ 	</insert>
+  
+    <update id="deleteForecastingDeadline" parameterType="com.atos.beans.dam.LinePackRequirementBean">
+		UPDATE tpa_toperation_deadline set
+			end_date = #{endDate},
+			aud_last_user=#{username}
+		where idn_operation_deadline = #{idn_operation_deadline}
+	</update>
+	
+	<select id="getForecastingDeadlineStarDate" resultType="java.util.Date">
+		select  start_date as start_date
+	 	from tpa_toperation_deadline 
+		where idn_operation_deadline = #{idn_operation_deadline}
+			
+	</select>
+</mapper>

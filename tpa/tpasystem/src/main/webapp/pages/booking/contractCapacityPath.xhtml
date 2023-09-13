@@ -1,0 +1,296 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_booking']}" url="#" />
+			<p:menuitem value="#{msg['menu_contract_capacity_path']}" url="/pages/booking/contractCapacityPath.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" sticky="true"/>
+			
+            <p:layout widgetVar="contractCapacityPathLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">	
+					
+				<p:panelGrid columns="3" style="width:100%">
+					
+						<p:panelGrid>
+							<p:row>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['ccp_booking_id']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CONTRACT_CAPACITY_PATH.QUERY">
+										<p:selectOneMenu widgetVar="w_booking_id"  id="booking_id" style="width:100px" 
+												value="#{contractCapacityPathView.filters.idn_booking}">
+												<f:selectItem itemLabel="" itemValue="" />
+		        								<f:selectItems value="#{contractCapacityPathView.bookingIds.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+							           		</p:selectOneMenu>
+									</shiro:hasPermission> 
+									
+								</p:column>
+							</p:row>
+						</p:panelGrid>	
+						<p:panelGrid columns="2" style="float:right;top:0px">
+							<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CONTRACT_CAPACITY_PATH.QUERY">
+								<p:commandButton value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{contractCapacityPathView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,contractCapacityPath,:#{p:component('contractCapacityPath')}"/>
+							</shiro:hasPermission>
+
+							<p:commandButton  onclick="PF('contractCapacityPathLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+
+							<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CONTRACT_CAPACITY_PATH.QUERY">
+								<p:commandButton value="#{msg['clear']}"
+									actionListener="#{contractCapacityPathView.onClear}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" 
+									update=":form:msgs"/>
+							</shiro:hasPermission>
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center"
+					resizable="false" closable="false" collapsible="false">
+					
+					<p:panelGrid style="width:100%;border:none !important;padding:0px !important" columns="1" layout="grid">
+
+
+						<p:dataTable widgetVar="w_contractCapacityPath"  id="contractCapacityPath" var="contract" value="#{contractCapacityPathView.items}" reflow="true" 
+							style="margin-bottom:20px;border-collapse:collapse;width:100%" 
+						    paginator="true" rows="15" rowsPerPageTemplate="5,10,15,20,25">
+						    
+						    <shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CONTRACT_CAPACITY_PATH.QUERY">
+							    <p:columns style="width:120px" var="keySet2" value="#{contractCapacityPathView.columnNames}" headerText="#{keySet2}">
+							    	<h:outputText value="#{contract[keySet2]}" />
+							    </p:columns>
+							</shiro:hasPermission>
+						</p:dataTable>
+
+					</p:panelGrid>
+
+					<p:panelGrid columns="3" style="width:100%">
+					
+						<p:panelGrid>
+							<p:row>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['ccp_booking_id']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;" rendered="#{contractCapacityPathView.period_boolean}" >
+									<h:outputText  value="#{msg['ccp_period']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;" rendered="#{!contractCapacityPathView.period_boolean}">
+									<h:outputText   value="#{msg['ccp_start_date']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;" rendered="#{!contractCapacityPathView.period_boolean}">
+									<h:outputText   value="#{msg['ccp_end_date']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CONTRACT_CAPACITY_PATH.QUERY">
+										<p:selectOneMenu widgetVar="w_booking_id2"  id="booking_id2" style="width:100px" 
+												value="#{contractCapacityPathView.filters2.idn_booking}">
+												<p:ajax event="change" listener="#{contractCapacityPathView.searchPeriod}" update=":form" onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()"/>
+												
+												<f:selectItem itemLabel="" itemValue="" />
+		        								<f:selectItems value="#{contractCapacityPathView.bookingIds2.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+							           		</p:selectOneMenu>
+									</shiro:hasPermission> 
+									
+								</p:column>
+								<p:column rendered="#{contractCapacityPathView.period_boolean}">
+									<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CONTRACT_CAPACITY_PATH.QUERY">
+										<p:selectOneMenu widgetVar="w_period"  id="period" style="width:100px" 
+												value="#{contractCapacityPathView.filters2.period}">
+												<p:ajax event="change" update="period" onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()" />
+												<f:selectItem itemLabel="" itemValue="" />
+		        								<f:selectItems value="#{contractCapacityPathView.periods.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+							           		</p:selectOneMenu>
+									</shiro:hasPermission> 
+								</p:column>
+								<p:column rendered="#{!contractCapacityPathView.period_boolean}">
+									<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CONTRACT_CAPACITY_PATH.QUERY">
+										<p:selectOneMenu widgetVar="w_start_date"  id="start_date" style="width:100px" 
+												value="#{contractCapacityPathView.filters2.start_date_string}">
+												<p:ajax event="change" update="start_date" onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()"/>
+												<f:selectItem itemLabel="" itemValue="" />
+		        								<f:selectItems value="#{contractCapacityPathView.start_dates.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+							           		</p:selectOneMenu>
+									</shiro:hasPermission> 
+								</p:column>
+								<p:column rendered="#{!contractCapacityPathView.period_boolean}" >
+									<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CONTRACT_CAPACITY_PATH.QUERY">
+										<p:selectOneMenu widgetVar="w_end_date"  id="end_date" style="width:100px" 
+												value="#{contractCapacityPathView.filters2.end_date_string}">
+												<p:ajax event="change" update="end_date" onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()"/>
+												<f:selectItem itemLabel="" itemValue="" />
+		        								<f:selectItems value="#{contractCapacityPathView.end_dates.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+							           		</p:selectOneMenu>
+									</shiro:hasPermission> 
+									
+								</p:column>
+							</p:row>
+						</p:panelGrid>	
+						<p:panelGrid columns="2" style="float:right;top:0px">
+							<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CONTRACT_CAPACITY_PATH.QUERY">
+								<p:commandButton value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{contractCapacityPathView.onSearch2}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update=":form,entry,exit"/>
+							</shiro:hasPermission>
+
+							<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CONTRACT_CAPACITY_PATH.QUERY">
+								<p:commandButton value="#{msg['clear']}"
+									actionListener="#{contractCapacityPathView.onClear2}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" 
+									update=":form"/>
+							</shiro:hasPermission>
+						</p:panelGrid>
+					</p:panelGrid>
+
+					<p:panelGrid style="width:100%;border:none !important;padding:0px !important" columns="1" layout="grid">
+
+						<p:panelGrid style="margin-top:20px" id="contractCapacityPathDetail">
+							<f:facet name="header">
+								<p:row>
+									<p:column style="border: 1px solid grey !important;"></p:column>
+									<p:repeat value="#{contractCapacityPathView.tech_capacities}" var="tech">
+										<p:column style="border: 1px solid grey !important;">#{tech.area_code}</p:column>
+					            	</p:repeat>
+					            </p:row>
+							</f:facet>					             
+					            <p:row>
+					                <p:column style="border: 1px solid grey !important;">#{msg['ccp_tech_cap']}</p:column>
+					             	<p:repeat value="#{contractCapacityPathView.tech_capacities}" var="tech">
+					                	<p:column style="border: 1px solid grey !important;">#{tech.technical_capacity}</p:column>
+					             	</p:repeat>   
+					            </p:row>
+					            <p:row>
+					                <p:column style="border: 1px solid grey !important;">#{msg['ccp_remain_booked']}</p:column>
+					             	<p:repeat value="#{contractCapacityPathView.tech_capacities}" var="tech">
+					                	<p:column style="border: 1px solid grey !important;">
+					                		<h:outputText value="#{tech.remain_booked}"></h:outputText>
+					                		<p:repeat value="#{tech.list_values_remain_booked}" var="value">
+					                			<br/>-<h:outputText style="color:green" value="#{value}"></h:outputText>
+					                		</p:repeat>
+					                		<br/>
+					                		<h:outputText style="color:darkgreen" value="#{tech.total_remain_booked}"></h:outputText>
+					                	</p:column>
+					             	</p:repeat>   
+					            </p:row>
+					            <p:row>
+					                <p:column style="border: 1px solid grey !important;">#{msg['ccp_available']}</p:column>
+					             	<p:repeat value="#{contractCapacityPathView.tech_capacities}" var="tech">
+					                	<p:column style="border: 1px solid grey !important;">
+					                		<h:outputText value="#{tech.available}"></h:outputText>
+					                		<p:repeat value="#{tech.list_values_available}" var="value">
+					                			<br/>-<h:outputText style="color:green" value="#{value}"></h:outputText>
+					                		</p:repeat>
+					                		<br/>
+					                		<h:outputText style="color:darkgreen" value="#{tech.total_available}"></h:outputText>
+					                	</p:column>
+					             	</p:repeat>   
+					            </p:row>
+
+						</p:panelGrid>
+					</p:panelGrid>
+
+					<p:panelGrid columns="3" style="width:100%">
+					
+						<p:panelGrid>
+							<p:row>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['ccp_entry']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['ccp_exit']}" />
+								</p:column>
+								<p:column rowspan="2" >
+									<p:dataTable widgetVar="w_connectionPaths"  id="connectionPaths" var="paths" value="#{contractCapacityPathView.connectionPaths}" reflow="true" 
+										style="margin-bottom:20px;border-collapse:collapse;width:550px" editable="true"
+									     editMode="cell">
+									          										          
+			 				        
+									    <shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CONTRACT_CAPACITY_PATH.ADD">
+									 		<p:ajax event="cellEdit" listener="#{contractCapacityPathView.onCellEdit}"
+									 		onstart="PF('cargando').show()"
+											oncomplete="PF('cargando').hide()" 
+									 		update=":form:msgs,:form:contractCapacityPathDetail"/>
+										    
+											<p:column headerText="#{msg['ccp_booked']}" style="width: 150px;">
+									           <p:cellEditor>
+									               <f:facet name="output"><h:outputText value="#{paths.booked}" /></f:facet>
+									               <f:facet name="input">
+									               			<p:inputText value="#{paths.booked}" style="width:100%; border" readonly="#{paths.booked !=null}" label="#{msg['ccp_booked']}">
+									               			</p:inputText>	
+									               	</f:facet>
+									           </p:cellEditor>
+									       </p:column>									    
+									       <p:column headerText="#{msg['ccp_path']}" style="width: 300px;" >
+									       		<h:outputText value="#{paths.path_desc}" />
+									       </p:column>
+										    
+										</shiro:hasPermission>
+									</p:dataTable>
+								</p:column>
+								
+							</p:row>
+							<p:row>
+								<p:column>
+									<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CONTRACT_CAPACITY_PATH.ADD">
+										<p:selectOneMenu widgetVar="w_entry"  id="entry" style="width:100px" 
+												value="#{contractCapacityPathView.filters2.idn_area_orig}">
+												<p:ajax event="change" listener="#{contractCapacityPathView.onSearch3}" update="connectionPaths" onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()"/>
+												<f:selectItem itemLabel="" itemValue="" />
+		        								<f:selectItems value="#{contractCapacityPathView.entryPoints.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+							           		</p:selectOneMenu>
+									</shiro:hasPermission> 
+									
+								</p:column>
+								<p:column>
+									<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CONTRACT_CAPACITY_PATH.ADD">
+										<p:selectOneMenu widgetVar="w_exit"  id="exit" style="width:100px" 
+												value="#{contractCapacityPathView.filters2.idn_area_dest}">
+												<p:ajax event="change" listener="#{contractCapacityPathView.onSearch3}" update="connectionPaths" onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()"/>
+												<f:selectItem itemLabel="" itemValue="" />
+		        								<f:selectItems value="#{contractCapacityPathView.exitPoints.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+							           		</p:selectOneMenu>
+									</shiro:hasPermission> 
+									
+								</p:column>
+								
+							</p:row>
+						</p:panelGrid>	
+					</p:panelGrid>
+					
+				</p:layoutUnit>
+
+			</p:layout>
+		</h:form>
+
+	</ui:define>
+
+
+</ui:composition>

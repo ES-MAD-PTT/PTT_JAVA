@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="com.atos.mapper.dam.ContractDeadlineSpecialMapper">
+
+    <resultMap type="com.atos.beans.dam.ContractDeadlineSpecialBean" id="ContractDeadlineSpecial">
+    
+        <id column="idn_operation" 			property="idn_operation"  />
+	    <result property="idn_oper_deadline_contract" 			column="idn_oper_deadline_contract"/>  
+        <result property="type" 					column="term_code"/> 
+        <result property="operation_desc" 			column="operation_desc"/> 
+        <result property="idn_operation_term" 		column="idn_operation_term"/>        
+        <result property="startDate" 				column="start_date"/>
+        <result property="contract_min_start_date" 				column="contract_min_start_date"/>
+        <result property="contract_max_start_date" 				column="contract_max_start_date"/>
+     	<result property="submission_deadline" 				column="submission_deadline"/>
+     	<result property="management_deadline" 				column="management_deadline"/>
+      
+    </resultMap>
+     
+      <select id="selectContractDeadlineSpecials" resultMap="ContractDeadlineSpecial">
+		 SELECT 
+		 	   odc.idn_oper_deadline_contract,
+		 	   odc.term_code as term_code,
+		       odc.idn_operation,
+		       odc.operation_desc,
+		       odc.idn_operation_term, 
+		       odc.start_date,
+		       odc.contract_min_start_date,
+		       odc.contract_max_start_date,
+		       odc.submission_deadline,
+		       odc.management_deadline
+		       
+		  FROM tpa_voper_deadline_contract odc
+		WHERE 1 = 1
+		 
+		<if test="type != null and type != ''">
+			 AND odc.IDN_OPERATION_TERM = #{type}
+		</if>
+		
+		<if test="startDate != null">
+			AND odc.end_date >= #{startDate}
+		</if>
+		
+		<if test="endDate != null">
+			AND #{endDate} >= odc.start_date
+		</if>
+		
+		ORDER BY odc.operation_desc,
+		          odc.start_date
+    </select>
+    
+    
+     <select id="selectTypes" resultType="com.atos.beans.ComboFilterNS">		
+		SELECT DISTINCT o.IDN_OPERATION_TERM as key, o.TERM_CODE as value 
+		FROM tpa_voperation o 
+		WHERE o.CATEGORY_CODE = 'CONTRACT'
+		order by o.IDN_OPERATION_TERM
+    </select>
+
+	
+<!-- borrar -->
+	<select id="getIdnOperationForecasting" resultType="java.math.BigDecimal">
+		select o.idn_operation 
+		from tpa_voperation  o
+		where o.category_code = 'FORECASTING'
+		and o.idn_operation_term = #{idn_operation_term}	
+	</select>
+	
+	<select id="getIdnOperationContractDeadLine" resultType="java.math.BigDecimal">
+		select o.idn_operation 
+		from tpa_voperation  o
+		where o.category_code = 'CONTRACT'
+		and o.idn_operation_term = #{idn_operation_term}	
+	</select>
+	
+	
+	
+	<insert id="insertContractDeadlineSpecial" useGeneratedKeys="true" keyProperty="idn_oper_deadline_contract" keyColumn="idn_oper_deadline_contract" parameterType="com.atos.beans.dam.ContractDeadlineSpecialBean">
+		 INSERT INTO tpa_toper_deadline_contract
+		 		(idn_oper_deadline_contract, idn_operation, 
+		 		start_date,
+		 		contract_min_start_date, 
+		 		contract_max_start_date, 
+		 		submission_deadline, 
+		 		management_deadline, 
+		 		aud_ins_user,aud_last_user)
+          VALUES (tpa_soper_deadline_contract.nextval,
+                 #{idn_operation},
+                 #{startDate},
+                 #{contract_min_start_date},
+                 #{contract_max_start_date},
+                 #{submission_deadline},
+                 #{management_deadline},
+				#{username},
+				#{username})
+ 	</insert>
+  
+    <update id="deleteContractDeadlineSpecial" parameterType="com.atos.beans.dam.LinePackRequirementBean">
+		<!--UPDATE tpa_toperation_deadline set
+			end_date = #{endDate},
+			aud_last_user=#{username}
+		where idn_operation_deadline = #{idn_operation_deadline} -->
+		
+		UPDATE tpa_toper_deadline_contract set
+			end_date = #{endDate},
+			aud_last_user=#{username}
+		where idn_oper_deadline_contract = #{idn_oper_deadline_contract}
+	</update>
+	
+	<select id="getContractDeadlineSpecialStarDate" resultType="java.util.Date">
+		select  start_date as start_date
+	 	from tpa_toper_deadline_contract 
+		where idn_oper_deadline_contract = #{idn_oper_deadline_contract}
+			
+	</select>
+</mapper>

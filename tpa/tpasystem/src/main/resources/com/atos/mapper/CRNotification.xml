@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atos.mapper.CRNotificationMapper">
+
+	<select id="selectListNotification" parameterType="java.lang.Integer" resultType="com.atos.beans.CRNotificationBean">
+	SELECT (SELECT ug.user_group_id FROM tpa_tuser_group ug WHERE ug.idn_user_group = cr.idn_user_group) AS iDshipper,
+       cr.request_code as requestCode,
+       to_char(cr.arriving_date, 'DD/MM/YYYY HH24:MI:SS') AS arrivingDate,
+       cr.idn_pipeline_system as systemId
+  	FROM tpa_tcontract_request cr
+ 	WHERE cr.status NOT IN ('PTT_REJECTED', 'SHIPPER_REJECTED')
+   	AND cr.is_capacity_release = 'N'
+   	AND trunc(SYSDATE) - trunc(cr.arriving_date, 'DD') >= #{dif}
+   	AND NOT EXISTS
+ 	(SELECT 1
+          FROM tpa_tcontract_attachment ca
+         WHERE ca.idn_contract_request = cr.idn_contract_request
+           AND ca.idn_contract_attach_type =
+               (SELECT idn_contract_attach_type FROM tpa_tcontract_attach_type WHERE type_code = 'BANK_GUARANTEE')
+           AND ca.is_deleted = 'N')
+ 	ORDER BY cr.arriving_date,
+          cr.request_code
+	
+	</select>
+
+
+	   <!-- Se consulta cualquier grupo. No tiene por que estar vigente. -->
+	<select id="selectGroupIdFromGroupCode" parameterType="java.lang.String" resultType="java.math.BigDecimal">
+		select tgr.idn_user_group 
+		from tpa_tuser_group tgr
+		where tgr.user_group_id=#{groupCode}
+	</select>
+
+
+</mapper>

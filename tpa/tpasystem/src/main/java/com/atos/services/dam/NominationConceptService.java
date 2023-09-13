@@ -1,0 +1,19 @@
+package com.atos.services.dam;
+
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
+
+import com.atos.beans.dam.NominationConceptBean;
+import com.atos.filters.dam.NominationConceptFilter;
+
+public interface NominationConceptService extends Serializable {
+
+	public Map<BigDecimal, Object> selectNominationConceptCombo(BigDecimal system);
+	
+	public Map<BigDecimal, Object> selectNominationConceptTypeCombo(BigDecimal system);
+	
+	public List<NominationConceptBean> selectNominationConcept(NominationConceptFilter filter);
+
+}

@@ -1,0 +1,648 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<!-- Namespace -->
+<mapper namespace="com.atos.mapper.metering.MeteringManagementMapper">
+
+	<resultMap type="com.atos.beans.metering.PointDto" id="PointDto">
+		<id  column="point_code" property="pointCode"/>
+		<id column="point_desc" property="pointDesc"  />
+	</resultMap>
+
+	<!-- Se permitira la de carga de medidas desde el dia siguiente a la fecha minima de cierre de balances de los dos sistemas (Onshore y Offshore). -->
+    <select id="selectOpenPeriodFirstDay" resultType="java.util.Date">
+		WITH system_closing AS
+		 (SELECT MAX(bc.gas_day) + 1 AS first_date,
+		         (SELECT p.pipeline_system_code FROM tpa_tpipeline_system p WHERE p.idn_pipeline_system = bc.idn_pipeline_system) AS pipeline
+		    FROM tpa_tbalance_closing bc
+		   WHERE bc.idn_balance_closing_type =
+		         (SELECT bct.idn_balance_closing_type FROM tpa_tbalance_closing_type bct WHERE bct.type_code = 'DEFINITIVE')
+		     AND bc.version_date = (SELECT MAX(bcx.version_date)
+		                              FROM tpa_tbalance_closing bcx
+		                             WHERE bcx.gas_day = bc.gas_day
+		                               AND bcx.idn_pipeline_system = bc.idn_pipeline_system
+		                               AND bcx.idn_balance_closing_type = bc.idn_balance_closing_type)
+		   GROUP BY bc.idn_pipeline_system),
+		
+		parameter_date AS
+		 (SELECT to_date(tval.parameter_value, tpar.data_format) AS first_date,
+		         parameter_code
+		    FROM tpa_tparameter_value tval,
+		         tpa_tparameter       tpar
+		   WHERE tpar.idn_parameter = tval.idn_parameter
+		     AND tpar.parameter_code   IN ('ALLOCATION.START.DATE.ONSHORE', 'ALLOCATION.START.DATE.OFFSHORE')
+		     AND trunc(SYSDATE) BETWEEN tval.start_date AND nvl(tval.end_date, to_date('31/12/9999', 'DD/MM/YYYY')))
+		
+		SELECT MIN(first_date)
+		  FROM (SELECT nvl((SELECT first_date FROM system_closing sc WHERE sc.pipeline = 'ONSHORE'), first_date) AS first_date
+		          FROM parameter_date
+		         WHERE parameter_code =  'ALLOCATION.START.DATE.ONSHORE'
+		        
+		        UNION
+		        
+		        SELECT nvl((SELECT first_date FROM system_closing sc WHERE sc.pipeline = 'OFFSHORE'), first_date) AS first_date
+		          FROM parameter_date
+		         WHERE parameter_code =  'ALLOCATION.START.DATE.OFFSHORE'
+		        )
+    </select>
+
+    <select id="selectLastOKMeteringInputDate" resultType="java.util.Date">
+		select max(tmetin.aud_last_date) 
+		from tpa_tmetering_input tmetin
+		where tmetin.status = 'OK'
+    </select>
+
+    <select id="selectZonesFromSystemCode" resultType="com.atos.beans.ComboFilterNS">
+	    select z.idn_zone as key, z.zone_code as value
+	      from TPA_VZONE_TPA z
+	     where z.idn_pipeline_system =
+	           (select tps.idn_pipeline_system
+	              from tpa_tpipeline_system tps
+	             where tps.pipeline_system_code = #{systemCode})
+	     order by UPPER(z.zone_code)
+    </select>
+    
+    <select id="selectAreasFromZoneId" resultType="com.atos.beans.ComboFilterNS">
+	    select tar.idn_area as key, tar.area_code as value
+		from tpa_tarea tar
+	  	<where>
+			<choose>
+				<when test="zoneIds != null and zoneIds.length > 0">
+					<foreach item="item" index="index" collection="zoneIds"
+			             open="and tar.idn_zone in (" separator="," close=")">
+			        		#{item}
+			    	</foreach>
+				</when>
+				<otherwise>
+					and tar.idn_zone in (-1)
+				</otherwise>
+			</choose>
+		</where>
+		order by UPPER(tar.area_code)
+    </select>
+    
+	<!-- No se filtra por la vigencia del punto, porque se podrian consultar datos a pasado de puntos no vigentes. -->
+	<!-- La segunda parte de la query trata de sacar puntos de medida correspondientes a la entrada/salida de zonas. 
+		En BD estan configuradas como conceptos EAST y WEST. Se muestra el punto si es de entrada o salida de un area seleccionada en el combo.
+		Ejemplos: puntos 'RA6_EAST', 'RA6_WEST'-->
+     <select id="selectMeteringSystemPoints" resultType="com.atos.beans.ComboFilterNS">
+		 SELECT 	idn_system_point AS key,
+		       		point_code       AS value
+		 FROM (
+		       SELECT tsp.idn_system_point,
+		              tsp.point_code      
+		         FROM tpa_tsystem_point tsp
+		        WHERE tsp.idn_system_point_group =
+		              (SELECT tspgr.idn_system_point_group FROM tpa_tsystem_point_group tspgr WHERE tspgr.group_code = 'METERED') 
+		              <choose> 
+		                <when test="areaIds != null and areaIds.length > 0"> 
+		                  <foreach item="item" index="index"  collection="areaIds" open="and tsp.idn_area in (" separator="," close=")">
+		                    #{item} 
+		                  </foreach>
+		                </when> 
+		                <otherwise>
+		                  AND tsp.idn_area IN (-1) 
+		                </otherwise>
+		              </choose>
+		      UNION
+		       SELECT sp_met.idn_system_point,
+		              sp_met.point_code      
+		         FROM tpa_tnom_concept_metering ncm,
+		              tpa_tsystem_point         sp_met,
+		              tpa_tsystem_point_connect spc
+		        WHERE spc.idn_nomination_concept = ncm.idn_nomination_concept
+		          AND sp_met.idn_system_point = ncm.idn_system_point
+		          AND sp_met.idn_system_point_group =
+		              (SELECT tspgr.idn_system_point_group FROM tpa_tsystem_point_group tspgr WHERE tspgr.group_code = 'METERED')
+		              <choose> 
+		                <when test = "areaIds != null and areaIds.length > 0"> 
+		                  AND
+		                  (
+		                  <foreach item="item" index="index"  collection="areaIds" open=" spc.idn_area_from in (" separator="," close=")">
+		                    #{item} 
+		                  </foreach>
+		                  OR
+		                  <foreach item="item" index="index"  collection="areaIds" open=" spc.idn_area_to in (" separator="," close=")">
+		                    #{item} 
+		                  </foreach>
+		                  )
+		                </when> 
+		                <otherwise>
+		                  AND (-1) IN (spc.idn_area_to, spc.idn_area_from)
+		                </otherwise>
+		              </choose>    
+			  UNION
+		       SELECT sp_met.idn_system_point,
+		              sp_met.point_code      
+		         FROM tpa_tsystem_point         sp_met,
+		              tpa_tsystem_point_connect spc,
+					  tpa_tsystem_point_type    spt
+		        WHERE spt.type_code = 'CONNECTION'
+		          AND sp_met.idn_system_point = spc.idn_system_point
+		          AND sp_met.idn_system_point_group =
+		              (SELECT tspgr.idn_system_point_group FROM tpa_tsystem_point_group tspgr WHERE tspgr.group_code = 'CONNECTION')
+		              <choose> 
+		                <when test = "areaIds != null and areaIds.length > 0"> 
+		                  AND
+		                  (
+		                  <foreach item="item" index="index"  collection="areaIds" open=" spc.idn_area_from in (" separator="," close=")">
+		                    #{item} 
+		                  </foreach>
+		                  OR
+		                  <foreach item="item" index="index"  collection="areaIds" open=" spc.idn_area_to in (" separator="," close=")">
+		                    #{item} 
+		                  </foreach>
+		                  )
+		                </when> 
+		                <otherwise>
+		                  AND (-1) IN (spc.idn_area_to, spc.idn_area_from)
+		                </otherwise>
+		              </choose>  					  
+		)
+		ORDER BY upper(point_code) asc
+    </select>
+    
+     <select id="selectMeteringInputCodes" resultType="com.atos.beans.ComboFilterNS">
+		select distinct tmetin.idn_metering_input as key,
+		       tmetin.input_code as value
+		  from tpa_tmetering tmet, tpa_tmetering_input tmetin
+		 where tmetin.idn_metering_input = tmet.idn_metering_input
+  			<if test="gasDayFrom != null">
+			and trunc(tmet.gas_day) >= #{gasDayFrom}
+			</if>
+			<if test="gasDayTo != null">
+			and #{gasDayTo} >= trunc(tmet.gas_day) 
+			</if> 
+			<choose>
+				<when test="systemPointId != null and systemPointId.length > 0">
+					<foreach item="item" index="index" collection="systemPointId"
+			             open="and (tmet.idn_system_point = " separator=" or tmet.idn_system_point = " close=")">
+			        		#{item}
+			    	</foreach>
+				</when>
+				<otherwise>
+					and tmet.idn_system_point in (-1)
+				</otherwise>
+			</choose>
+		order by upper(tmetin.input_code) desc
+    </select>
+    
+    <resultMap type="com.atos.beans.metering.MeasurementBean" id="Measurement">
+        <id property="measurementId" column="idn_metering" />
+		<result property="gasDay" column="gas_day"/>
+		<result property="zoneCode" column="zone_code"/>
+		<result property="areaCode" column="area_code"/>
+		<result property="meteringPointCode" column="point_code"/>
+		<result property="customerTypeDesc" column="customer_type"/>
+        <result property="volume" column="volume"/> 
+        <result property="hv" column="hv_value"/>
+        <result property="energy" column="energy"/> 
+        <result property="registerTimestamp" column="insertion_date"/>   
+        <result property="versionDate" column="version_date"/>
+        <result property="metInputCode" column="input_code"/>
+        <result property="origin" column="origin"/>
+        <association property="gasParams" select="selectGasQualityParametersNonHVFromMeasurementId" column="idn_metering"/>
+    </resultMap>
+
+	<!-- No se filtra por la vigencia del punto, porque se podrian consultar datos a pasado de puntos no vigentes. -->
+	<!-- Si se filtra por codigo de carga (meteringInputId), se obtienen todas las medidas de esa carga.
+		 Si no solo se toma la ultima version por punto, dia y tipo de medida (volumen o calidad). -->
+	<select id="selectMeasurements" resultMap="Measurement">
+	      WITH gas_days AS
+	       (SELECT DISTINCT m.gas_day AS gas_day
+	          FROM tpa_tmetering m
+	         <where>
+		          <if test="gasDayFrom != null">
+		            and trunc(m.gas_day) >= #{gasDayFrom}
+		          </if>
+		          <if test="gasDayTo != null">
+		            and #{gasDayTo} >= trunc(m.gas_day) 
+		          </if>
+	          </where>
+	        ),
+	
+	      area_zone AS
+	       (SELECT a.idn_area,
+	               a.area_code,
+	               z.idn_zone,
+	               z.zone_code
+	          FROM tpa_tarea a,
+	               tpa_tzone z
+	         WHERE a.idn_zone = z.idn_zone),
+	
+	     point_param AS (
+
+SELECT xx.gas_day,
+
+       pa.idn_system_point,
+
+       pa.idn_customer_type,
+
+       pa.idn_nomination_point,
+
+       nomp.point_code,
+
+       nomp.idn_area
+
+  FROM gas_days xx
+
+  INNER JOIN tpa_tsystem_point_param pa
+
+    ON xx.gas_day BETWEEN pa.start_date AND nvl(pa.end_date,
+
+                     nvl((SELECT MIN(tsppy.start_date)-1
+
+                           FROM tpa_tsystem_point_param tsppy
+
+                          WHERE tsppy.idn_system_point = pa.idn_system_point
+
+                            AND nvl(tsppy.end_date, tsppy.start_date) >= tsppy.start_date
+
+                            AND tsppy.start_date > pa.start_date
+
+                            AND tsppy.version_date = (SELECT MAX(tsppyx.version_date)
+
+                                                        FROM tpa_tsystem_point_param tsppyx
+
+                                                       WHERE tsppyx.idn_system_point = tsppy.idn_system_point
+
+                                                         AND tsppyx.start_date = tsppy.start_date)),
+
+                                                        to_date('9999-12-31', 'YYYY-MM-DD')))
+
+   AND pa.version_date= (SELECT MAX(tsppx.version_date)
+
+                                        FROM tpa_tsystem_point_param tsppx
+
+                                       WHERE tsppx.idn_system_point = pa.idn_system_point
+
+                                         AND tsppx.start_date = pa.start_date)
+
+   AND NVL(pa.end_date, pa.start_date) >= pa.start_date
+
+  LEFT JOIN tpa_tsystem_point nomp
+
+ON nomp.idn_system_point = pa.idn_nomination_point),
+
+metering AS
+(SELECT gd.gas_day, me.idn_metering, me.volume, me.energy, me.insertion_date, me.version_date, me.datasource, me.idn_metering_input, me.idn_system_point
+  FROM tpa_tmetering me, gas_days gd
+WHERE me.gas_day = gd.gas_day
+
+<choose>
+            <when test="systemPointId != null and systemPointId.length > 0">
+              <foreach item="item" index="index" collection="systemPointId"
+                       open="and (me.idn_system_point = " separator=" or me.idn_system_point = " close=")">
+                      #{item}
+                </foreach>
+            </when>
+            <otherwise>
+              and me.idn_system_point in (-1)
+            </otherwise>
+</choose>
+
+<if test="meteringInputId != null and meteringInputId != ''">
+                    and me.idn_metering_input = #{meteringInputId}
+</if>
+<if test="meteringInputId == null or meteringInputId == ''">
+          and me.version_date = (select max(tmet2.version_date) from tpa_tmetering tmet2
+                                       where tmet2.gas_day=me.gas_day
+                                             and tmet2.idn_system_point=me.idn_system_point
+                                             and tmet2.idn_metering_type=me.idn_metering_type)
+</if>     
+          
+
+<if test="type_code == 'SHIPPER'">
+and me.idn_system_point in
+(select s.metered_point_idn       
+                 FROM (SELECT DISTINCT gd.gas_day, spr.metered_point_idn
+                        FROM tpa_vcontract              co,
+                             tpa_tuser_group            ug,
+                             tpa_tuser_group_type       ugt,
+                             gas_days                    gd,
+                             tpa_vsystem_point_relation spr,
+                             tpa_tuser                  usr
+                        WHERE co.idn_user_group = ug.idn_user_group
+                           AND usr.idn_user_group = ug.idn_user_group
+                           AND usr.idn_user = #{idn_user}
+                           AND ug.idn_user_group_type = ugt.idn_user_group_type
+                           AND ugt.type_code = 'SHIPPER'
+                           AND gd.gas_day BETWEEN co.agreement_start_date AND co.agreement_end_date
+                           AND co.idn_system_point = spr.contract_point_idn
+                           AND gd.gas_day BETWEEN spr.max_start_date AND spr.min_end_date) s        
+    where me.gas_day = s.gas_day)
+  </if>
+)
+
+SELECT m.idn_metering,
+
+               m.gas_day,
+
+               az.zone_code,
+
+               az.area_code,
+
+               sp.point_code,
+
+               tct.type_desc AS customer_type,
+
+               m.volume,
+
+               (SELECT tmg.value
+
+                  FROM tpa_tmetering_gasq     tmg,
+
+                       tpa_tgas_quality_param tgqp
+
+                 WHERE tgqp.idn_gas_quality_param = tmg.idn_gas_quality_param
+
+                   AND tgqp.parameter_code = 'HV'
+
+                   AND tmg.idn_metering = m.idn_metering) AS hv_value,
+
+               m.energy,
+
+               m.insertion_date,
+
+               m.version_date,
+
+               mi.input_code,
+
+               CASE WHEN m.datasource IS NOT NULL THEN m.datasource
+
+         ELSE decode(mi.file_name,null,'DWH','TPA')
+
+         END AS origin
+
+  FROM metering m
+
+INNER JOIN tpa_tmetering_input mi
+
+    ON mi.idn_metering_input = m.idn_metering_input
+
+INNER JOIN tpa_tsystem_point sp
+
+    ON sp.idn_system_point = m.idn_system_point   
+
+LEFT JOIN point_param pp
+
+   ON m.gas_day = pp.gas_day
+
+  AND m.idn_system_point = pp.idn_system_point
+
+LEFT JOIN tpa_tcustomer_type tct
+
+   ON pp.idn_customer_type = tct.idn_customer_type
+
+LEFT JOIN area_zone az
+
+   ON pp.idn_area = az.idn_area
+
+ORDER BY m.gas_day ASC,
+
+                      upper(pp.point_code) ASC,
+
+                      upper(az.zone_code) ASC,
+
+                      upper(az.area_code) ASC
+    </select>
+
+    <resultMap type="com.atos.beans.metering.MeasureGasQualityParamBean" id="MeasureGasQualityParameterFromId">
+        <id property="measureGasParamId" column="idn_metering_gasq" />
+        <result property="measurementId" column="idn_metering" />
+        <result property="paramId" column="idn_gas_quality_param" />
+		<result property="paramDesc" column="parameter_desc"/>
+		<result property="unitDesc" column="unit_desc"/>
+        <result property="value" column="value"/>
+    </resultMap>
+	
+	<!-- Sin incluir Heating Value (HV), ya que se carga en la consulta principal. -->
+    <select id="selectGasQualityParametersNonHVFromMeasurementId" resultMap="MeasureGasQualityParameterFromId">    
+	    select t2.idn_metering_gasq,
+	           t2.idn_metering,
+	           t1.idn_gas_quality_param,
+	           t1.parameter_desc,
+	           t1.unit_desc,
+	           t2.value
+	    from
+	          (select tpar.idn_gas_quality_param,
+	             tpar.parameter_desc,
+	             tun.unit_desc
+	          from tpa_tgas_quality_param tpar,
+	               tpa_tunit tun,
+	               tpa_tgas_quality_list tlist,
+	               tpa_tgasq_list_item tlitem
+	          where tun.idn_unit=tpar.idn_unit
+	          		and tpar.parameter_code != 'HV'
+	                and tlist.list_code='GQL-METERING'
+	                and tlitem.idn_gas_quality_list=tlist.idn_gas_quality_list
+	                and tlitem.idn_gas_quality_param=tpar.idn_gas_quality_param
+	          order by tlitem.sort_value asc) t1
+	          left outer join (select tmg.idn_metering_gasq,
+	                                  tmg.idn_metering,
+	                                  tmg.idn_gas_quality_param,
+	                                  tmg.value
+	                           from tpa_tmetering_gasq tmg
+	                           where tmg.idn_metering=#{measurementId}) t2
+	          on t1.idn_gas_quality_param = t2.idn_gas_quality_param
+    </select>
+
+    <select id="selectGasQualityParametersFromMeasurementId" resultMap="MeasureGasQualityParameterFromId">    
+	    select t2.idn_metering_gasq,
+	           t2.idn_metering,
+	           t1.idn_gas_quality_param,
+	           t1.parameter_desc,
+	           t1.unit_desc,
+	           t2.value
+	    from
+	          (select tpar.idn_gas_quality_param,
+	             tpar.parameter_desc,
+	             tun.unit_desc
+	          from tpa_tgas_quality_param tpar,
+	               tpa_tunit tun,
+	               tpa_tgas_quality_list tlist,
+	               tpa_tgasq_list_item tlitem
+	          where tun.idn_unit=tpar.idn_unit
+	                and tlist.list_code='GQL-METERING'
+	                and tlitem.idn_gas_quality_list=tlist.idn_gas_quality_list
+	                and tlitem.idn_gas_quality_param=tpar.idn_gas_quality_param
+	          order by tlitem.sort_value asc) t1
+	          left outer join (select tmg.idn_metering_gasq,
+	                                  tmg.idn_metering,
+	                                  tmg.idn_gas_quality_param,
+	                                  tmg.value
+	                           from tpa_tmetering_gasq tmg
+	                           where tmg.idn_metering=#{measurementId}) t2
+	          on t1.idn_gas_quality_param = t2.idn_gas_quality_param
+    </select>
+        
+	<select id="exclusiveLockRequest" statementType="CALLABLE" parameterType="com.atos.beans.LockBean">
+		{call #{integerExit,jdbcType=INTEGER,mode=OUT} :=
+			pck_lock.request_exclusive(
+				#{processCode,jdbcType=VARCHAR,mode=IN},
+				#{userId,jdbcType=VARCHAR,mode=IN})}
+	</select>
+
+	<select id="exclusiveLockRelease" statementType="CALLABLE" parameterType="com.atos.beans.LockBean">
+		{call #{integerExit,jdbcType=INTEGER,mode=OUT} :=
+			pck_lock.release_exclusive(
+				#{processCode,jdbcType=VARCHAR,mode=IN},
+				#{userId,jdbcType=VARCHAR,mode=IN})}
+	</select>
+
+	<insert id="insertRequestWebserviceLog" useGeneratedKeys="true" keyProperty="webserviceLogId" keyColumn="idn_webservice_logger" parameterType="com.atos.beans.WebserviceLogBean">
+		insert into tpa_twebservice_logger
+			(idn_webservice_logger, webservice, call_date, call_xml, status,
+	                                        aud_ins_user,
+	                                        aud_last_user)
+		values
+			(tpa_swebservice_logger.nextval,
+			#{webserviceName},
+			#{callDate},
+			#{callXml},
+			#{status},
+	      #{username},
+	      #{username})	  
+	</insert>
+	
+	<update id="updateResponseWebserviceLog" parameterType="com.atos.beans.WebserviceLogBean">
+		update tpa_twebservice_logger set
+	       response_date = #{responseDate},
+	       response_xml = #{responseXml},
+	       status = #{status},
+           aud_last_user=#{username}
+	    where idn_webservice_logger=#{webserviceLogId}
+	</update>
+      
+	<insert id="insertMeteringInput" useGeneratedKeys="true" keyProperty="meteringInputId" keyColumn="idn_metering_input" parameterType="com.atos.beans.metering.MeteringInputBean">
+		insert into tpa_tmetering_input 
+			(idn_metering_input, input_code, input_date, file_name, binary_data, xml_data, status, idn_webservice_logger,
+	                                        aud_ins_user,
+	                                        aud_last_user)
+		values
+			(tpa_smetering_input.nextval,
+			#{inputCode},
+			#{inputDate},
+			#{fileName},
+			#{binaryData},
+			#{xmlData},
+			#{status},
+			#{webserviceLogId},
+	      #{username},
+	      #{username})	  
+	</insert>
+
+	<select id="meteringSave" statementType="CALLABLE" parameterType="com.atos.beans.metering.MeteringProcBean">
+		{call pck_metering.pro_metering(
+				#{meteringInputId,jdbcType=INTEGER,mode=IN},
+				#{userId,jdbcType=VARCHAR,mode=IN},
+				#{languageCode,jdbcType=VARCHAR,mode=IN},
+				#{warningsFlag,jdbcType=VARCHAR,mode=OUT},
+				#{totalMeasurements,jdbcType=INTEGER,mode=OUT},
+				#{savedMeasurements,jdbcType=INTEGER,mode=OUT},
+				#{errorCode,jdbcType=INTEGER,mode=OUT},
+				#{errorDesc,jdbcType=VARCHAR,mode=OUT})}
+	</select>
+
+	<select id="selectUserGroupByUserId" parameterType="java.lang.String" resultType="com.atos.beans.ComboFilterNS">
+		select tgr.idn_user_group as key, tgr.user_group_id as value
+			from tpa_tuser_group tgr, tpa_tuser tuser
+		    where tuser.user_id = #{userId}
+		    and tgr.idn_user_group = tuser.idn_user_group
+		 	and trunc(sysdate) between tgr.start_date and nvl(tgr.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+			and trunc(sysdate) between tuser.start_date and nvl(tuser.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+		order by tgr.start_date desc
+	</select>
+	
+	
+	<select id="checkPoints" parameterType="java.util.Date" resultMap="PointDto">
+	WITH contracted_points AS
+ (SELECT DISTINCT c.idn_system_point AS idn_contracted_point
+    FROM tpa_vcontract c
+   WHERE trunc(#{gas_day})
+         BETWEEN c.start_date AND c.end_date
+     AND trunc(#{gas_day})
+         BETWEEN c.agreement_start_date AND c.agreement_end_date),
+
+missing_point AS
+ (SELECT sp.idn_system_point
+    FROM tpa_tsystem_point       sp,
+         tpa_tsystem_point_param spp,
+         contracted_points       cp
+   WHERE sp.idn_system_point = spp.idn_system_point
+     AND sp.idn_system_point_group =
+         (SELECT spg.idn_system_point_group FROM tpa_tsystem_point_group spg WHERE spg.group_code = 'METERED')
+     AND trunc(#{gas_day})
+         BETWEEN sp.start_date AND nvl(sp.end_date, to_date('31/12/9999', 'dd/mm/yyyy'))
+        --
+     AND spp.idn_contract_point = cp.idn_contracted_point
+     AND spp.version_date = (SELECT MAX(sppy.version_date)
+                               FROM tpa_tsystem_point_param sppy
+                              WHERE sppy.idn_system_point = spp.idn_system_point
+                                AND sppy.start_date = spp.start_date)
+     AND trunc(#{gas_day})
+         BETWEEN spp.start_date AND
+         nvl(spp.end_date,
+             nvl((SELECT MIN(sppx.start_date)
+                   FROM tpa_tsystem_point_param sppx
+                  WHERE sppx.idn_system_point = spp.idn_system_point
+                    AND sppx.start_date > spp.start_date
+                    AND nvl(sppx.end_date, sppx.start_date) >= sppx.start_date
+                    AND sppx.version_date = (SELECT MAX(sppxy.version_date)
+                                               FROM tpa_tsystem_point_param sppxy
+                                              WHERE sppxy.idn_system_point = sppx.idn_system_point
+                                                AND sppxy.start_date = sppx.start_date)),
+                 to_date('31/12/9999', 'dd/mm/yyyy')))
+
+  MINUS
+
+  SELECT m.idn_system_point
+    FROM tpa_tmetering m
+   WHERE m.gas_day = trunc(#{gas_day})
+     AND m.version_date = (SELECT MAX(mx.version_date)
+                             FROM tpa_tmetering mx
+                            WHERE mx.gas_day = m.gas_day
+                              AND mx.idn_system_point = m.idn_system_point
+                              AND mx.idn_metering_type = m.idn_metering_type))
+
+-- MAIN SELECT
+SELECT sp.point_code, sp.point_desc
+  FROM missing_point     mp,
+       tpa_tsystem_point sp
+ WHERE mp.idn_system_point = sp.idn_system_point order by upper(sp.point_code) 
+	</select>
+
+	<resultMap type="com.atos.beans.OpTemplateBean" id="OperationTemplate">
+		<result property="opTemplateId" column="idn_operation_template" />
+		<result property="opCategoryId" column="idn_operation_category" />
+		<result property="opTermId" column="idn_operation_term" />
+		<result property="fileType" column="file_type" />
+		<result property="binaryData" column="binary_data" jdbcType="BLOB" />
+		<result property="fileName" column="file_name" />
+		<result property="xmlMapId" column="idn_xml_map" />
+		<result property="systemId" column="idn_pipeline_system" />
+	</resultMap>
+	
+	<!-- Se ordena por start_date desc, por si no se hubieran especificado end_date, coger el ultimo registro vigente. -->
+	<select id="getOpTemplateByCatTermFiletypeSystem" parameterType="com.atos.beans.OpTemplateBean" resultMap="OperationTemplate">
+		select idn_operation_template,
+			idn_operation_category,
+			idn_operation_term,
+			file_type,
+			binary_data,
+			file_name,
+			idn_xml_map,
+			idn_pipeline_system
+		from tpa_toperation_template
+		where idn_operation_category=(select tcat.idn_operation_category
+										from tpa_toperation_category tcat
+										where tcat.category_code=#{opCategoryCode})
+			and idn_operation_term=(select tterm.idn_operation_term
+									from tpa_toperation_term tterm
+									where tterm.term_code=#{opTermCode})
+			and file_type=#{fileType}
+			and idn_pipeline_system=#{systemId}
+			and trunc(sysdate) between start_date and nvl(end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+		order by start_date desc
+	</select>
+</mapper>

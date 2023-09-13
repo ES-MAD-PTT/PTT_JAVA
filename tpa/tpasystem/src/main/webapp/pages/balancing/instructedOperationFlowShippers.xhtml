@@ -1,0 +1,313 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_balancing']}" url="#" />
+			<p:menuitem value="#{msg['menu_instructed_operation_flowshippers']}" url="/pages/balancing/instructedOperationFlowShippers.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+				
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="10000" />
+			
+            <p:layout widgetVar="BalInsOpFlowShippersLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">	
+					
+				<p:panelGrid columns="2" style="width:100%">
+					
+						<p:panelGrid>
+							<p:row>
+								<p:column  style="font-weight: bold;width=150px">
+									<h:outputText value="#{msg['ins_op_flow_shippers_date']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['ins_op_flow_shippers_shipper']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['ins_op_flow_shippers_zone']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['intradayAccImbInv_last_version']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['intradayAccImbInv_timestamp']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<p:calendar id="gasDay" size="6" pattern="dd/MM/yyyy" mask="true" value="#{insOpFlowShippersView.filters.date}"
+										showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="gasDay,:#{p:component('btnPublicate')}"></p:ajax>
+										<p:ajax event="change" update="gasDay,:#{p:component('btnPublicate')}"></p:ajax>
+									</p:calendar>
+								</p:column>
+								
+								<p:column>
+									<p:selectOneMenu id="shipperId" autoWidth="false" style="width:85px" value="#{insOpFlowShippersView.filters.shipperId}" 
+										rendered="#{!insOpFlowShippersView.isShipper}" >
+ 								   		<f:selectItem itemLabel="" itemValue=""  />
+      									<f:selectItems value="#{insOpFlowShippersView.shipperIds.entrySet()}" var="entry" 
+      											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>
+					           		<h:outputText value="#{insOpFlowShippersView.user.user_group_id}" style="float:left" rendered="#{insOpFlowShippersView.isShipper()}"/>
+								</p:column>
+
+								<p:column>
+									<p:selectOneMenu id="zoneId" autoWidth="false" style="width:100px" value="#{insOpFlowShippersView.filters.zoneId}" >
+								   		<f:selectItem itemLabel="" itemValue="" />
+      									<f:selectItems value="#{insOpFlowShippersView.zoneIds.entrySet()}" var="entry" 
+      										itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>						
+								</p:column>
+								<p:column style="text-align:center">
+									<p:selectBooleanCheckbox id="lastVersionCheckbox" value="#{insOpFlowShippersView.filters.lastVersion}" >
+ 										<p:ajax event="change" listener="#{insOpFlowShippersView.updateTimestamp}" update="@form,:#{p:component('timestampId')},:#{p:component('btnPublicate')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								
+								<p:column>
+									<p:selectOneMenu id="timestampId" style="width:70px" value="#{insOpFlowShippersView.filters.timestampVar}" 
+										disabled="#{insOpFlowShippersView.filters.lastVersion}" >
+ 								   		<f:selectItem itemLabel="" itemValue="" />
+      									<f:selectItems value="#{insOpFlowShippersView.timestampIds.entrySet()}" var="entry" 
+      											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>
+								</p:column>
+							</p:row>
+						</p:panelGrid>
+					<p:panelGrid columns="2" style="float:right;top:0px">
+
+							<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.INSTRUCTED_OPERATION_FLOW.QUERY">									
+								<p:commandButton value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{insOpFlowShippersView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,:#{p:component('insOpFlowShippers1')}"/> 
+							</shiro:hasPermission>
+
+							<p:commandButton  onclick="PF('BalInsOpFlowShippersLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" 
+								value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+
+							<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.INSTRUCTED_OPERATION_FLOW.PUBLICATION">
+								<p:commandButton value="#{msg['ins_op_flow_shippers_publicate']}" id="btnPublicate"
+        							actionListener="#{insOpFlowShippersView.onPublicate}"
+        							disabled="#{insOpFlowShippersView.disabledPublicate()}"
+									onstart="PF('publicating').show()"
+									oncomplete="PF('publicating').hide()" 
+									process="@this"
+									update="msgs,@form"/>
+							</shiro:hasPermission>
+							
+							<shiro:lacksPermission name="#{changeSystemView.system}.BALANCING.INSTRUCTED_OPERATION_FLOW.PUBLICATION">
+								<p:commandButton value="#{msg['ins_op_flow_shippers_publicate']}" id="btnPublicate"
+        							actionListener="#{insOpFlowShippersView.onPublicate}"
+        							disabled="#{insOpFlowShippersView.disabledPublicate()}"
+									onstart="PF('publicating').show()"
+									rendered="false"
+									oncomplete="PF('publicating').hide()" 
+									process="@this"
+									update="msgs,@form"/>
+							</shiro:lacksPermission>
+
+							<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.INSTRUCTED_OPERATION_FLOW.QUERY">
+								 <p:commandButton value="#{msg['clear']}"
+									actionListener="#{insOpFlowShippersView.onClear}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" 
+									process="@this"
+									update="msgs,@form"/>
+							</shiro:hasPermission>
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center" resizable="false" closable="false" collapsible="false" style="border: 0;">
+					
+					<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.INSTRUCTED_OPERATION_FLOW.QUERY">		
+					<p:dataTable widgetVar="w_insOpFlowShippers1"  id="insOpFlowShippers1" var="item" value="#{insOpFlowShippersView.resultList}"
+						reflow="true" editable="true" style="margin-bottom:20px;border-collapse:collapse" selectionMode="single"
+						scrollable="true" scrollHeight="400" selection="#{insOpFlowShippersView.selectedItem}" rowKey="#{item.idn_intraday_gas_flow}"
+					    paginator="true" rows="15" rowsPerPageTemplate="5,10,15,20,25, #{insOpFlowShippersView.itemsSize}">
+
+	  						<f:facet name="header"> 
+								<p:outputPanel style="height:25px">
+				        			<h:commandLink style="float:right">
+								       <p:graphicImage name="/images/excel.png" width="24"/>
+								       <p:dataExporter type="xlsx" target="insOpFlowShippers1" fileName="insOpFlowShippers" 
+								       			postProcessor="#{insOpFlowShippersView.postProcessXLS}"/>
+								       <p:spacer width="10" height="10"/>
+									</h:commandLink>
+								</p:outputPanel>        										          
+	 				        </f:facet>
+	 				        
+	 				         	<p:ajax event="rowEditInit" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','hidden')});" />
+								<p:ajax event="rowEdit" listener="#{insOpFlowShippersView.onRowEdit}" update=":form:msgs,:#{p:component('insOpFlowShippers1')}" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>   
+								<p:ajax event="rowEditCancel" listener="#{insOpFlowShippersView.onRowCancel}" update=":form:msgs,:#{p:component('insOpFlowShippers1')}" onstart="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>
+
+					       <p:column headerText="#{msg['ins_op_flow_shippers_timestamp']}" style="width: 100px;">
+					       		<h:outputText value="#{item.timestamp}" >
+					       			<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+								</h:outputText>
+					       </p:column>
+					       <p:column headerText="#{msg['ins_op_flow_shippers_shipper']}" style="width: 100px;">
+					       		<h:outputText value="#{item.shipperCode}" />
+					       </p:column>
+					       <p:column headerText="#{msg['ins_op_flow_shippers_zone']}" style="width: 100px;" >
+					       		<h:outputText value="#{item.zoneCode}" />
+					       </p:column>
+					       <p:column headerText="#{msg['ins_op_flow_shippers_accImb_inventory']}" style="width: 100px;" >
+					       		<h:outputText value="#{item.accImbalanceImbalanceInventory}" >
+					       			<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+					       		</h:outputText>
+					       </p:column>
+					       <p:column headerText="#{msg['ins_op_flow_shippers_accMargin']}" style="width: 100px;" >
+					       		<h:outputText value="#{item.accMargin}" >
+					       			<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+					       		</h:outputText>
+					       </p:column>
+							<p:column headerText="#{msg['ins_op_flow_shippers_flowType']}" style="width: 100px;" >
+								<h:outputText style="float:right" value="#{item.flowType}" rendered="#{insOpFlowShippersView.forPublicate(item)}"/>
+							</p:column>
+
+							<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.INSTRUCTED_OPERATION_FLOW.OPER_COM.MOD">
+					       <p:column style="width:200px" headerText="#{msg['ins_op_flow_shippers_file']}" >
+ 								<p:cellEditor rendered="#{item.timestamp!=null}">
+					               <f:facet name="output"> 
+					               		<p:commandButton  type="submit" validateClient="true" icon="ui-icon fa fa-save" ajax="true"
+					               			actionListener="#{insOpFlowShippersView.setSelectedItem(item)}" process="@this"
+					               			onclick="PF('dlgDownload').show();"/>
+					               		<h:outputText value="#{item.file_name}" />
+									</f:facet>
+ 					               <f:facet name="input">
+					               		<p:fileUpload id="uploadTable" fileUploadListener="#{insOpFlowShippersView.handleFileUpload}" mode="advanced" dragDropSupport="true"
+           									fileLimit="1" auto="true" sizeLimit="5000000" allowTypes="/(\.|\/)(doc|docx|xls|xlsx|pdf)$/" 
+           									onstart="PF('cargando').show()"
+	           								oncomplete="PF('cargando').hide()"/>
+					               	</f:facet> 
+					           </p:cellEditor>					       
+					       </p:column>
+					       </shiro:hasPermission>
+					       <shiro:lacksPermission name="#{changeSystemView.system}.BALANCING.INSTRUCTED_OPERATION_FLOW.OPER_COM.MOD">
+							<p:column style="width:200px" headerText="#{msg['ins_op_flow_shippers_file']}" >
+									<p:commandButton rendered="#{item.timestamp!=null}"  type="submit" validateClient="true" icon="ui-icon fa fa-save" ajax="true"
+					               			actionListener="#{insOpFlowShippersView.setSelectedItem(item)}" process="@this"
+					               			onclick="PF('dlgDownload').show();"/>
+					               	<h:outputText value="#{item.file_name}" />
+							</p:column>
+							</shiro:lacksPermission>
+							
+							<p:column headerText="#{msg['ins_op_flow_shippers_opInsFlowOrderMMBTU']}" style="width: 100px;">
+								<h:outputText style="float:right" value="#{item.opInsFlowOrderMMBTU}">
+									<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['ins_op_flow_shippers_opInsFlowOrderMMSCF']}" style="width: 100px;" >
+								<h:outputText style="float:right" value="#{item.opInsFlowOrderMMSCF}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+								</h:outputText>	
+							</p:column>
+							<p:column headerText="#{msg['ins_op_flow_shippers_opInsFlowOrderMMSCFH']}" style="width: 100px;" >
+								<h:outputText style="float:right" value="#{item.opInsFlowOrderMMSCFH}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['ins_op_flow_shippers_resolvedTime']}" style="width: 100px;" >
+								<h:outputText style="float:right" value="#{item.resolvedTime}" rendered="#{insOpFlowShippersView.forPublicate(item)}">
+									<f:convertNumber groupingUsed="true" minFractionDigits="0" maxFractionDigits="0"/>
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['ins_op_flow_shippers_hv']}" style="width: 100px;" >
+								<h:outputText style="float:right" value="#{item.hv}" rendered="#{insOpFlowShippersView.forPublicate(item)}">
+									<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['ins_op_flow_shippers_operatorComments']}" style="width: 100px;" >
+								<p:cellEditor>
+							               <f:facet name="output"><h:outputText style="float:right" value="#{item.operatorComments}" /></f:facet>
+							               <f:facet name="input">
+							               	<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.INSTRUCTED_OPERATION_FLOW.OPER_COM.MOD">		
+								               	<p:inputTextarea cols="22" autoResize="true"
+													value="#{item.operatorComments}"
+													style="width:100%;white-space:initial !important"
+													label="#{msg['ins_op_flow_shippers_operatorComments']}" >
+													<f:validateLength maximum="2000" />
+												</p:inputTextarea>
+												</shiro:hasPermission>
+												<shiro:lacksPermission name="#{changeSystemView.system}.BALANCING.INSTRUCTED_OPERATION_FLOW.OPER_COM.MOD">	
+													<h:outputText style="float:right" value="#{item.operatorComments}" />	
+												</shiro:lacksPermission>										
+							               	</f:facet>
+							             </p:cellEditor>
+							
+								
+							</p:column>
+							<p:column headerText="#{msg['ins_op_flow_shippers_shipperComments']}" style="width: 100px;" >
+								<p:cellEditor>
+					               <f:facet name="output"><h:outputText style="float:right" value="#{item.shipperComments}" /></f:facet>
+					    		   <f:facet name="input">
+					    		   		<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.INSTRUCTED_OPERATION_FLOW.SHIP_COM.MOD">		
+							               	<p:inputTextarea cols="22" autoResize="true"
+												value="#{item.shipperComments}"
+												style="width:100%;white-space:initial !important"
+												label="#{msg['ins_op_flow_shippers_shipperComments']}" >
+												<f:validateLength maximum="2000" />
+											</p:inputTextarea>
+										</shiro:hasPermission>
+										<shiro:lacksPermission name="#{changeSystemView.system}.BALANCING.INSTRUCTED_OPERATION_FLOW.SHIP_COM.MOD">
+											<h:outputText style="float:right" value="#{item.shipperComments}" />
+										</shiro:lacksPermission>
+					               	</f:facet>
+					            </p:cellEditor>
+							</p:column>
+							<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.INSTRUCTED_OPERATION_FLOW.PUBLICATION">
+							<p:column  headerText="#{msg['ins_op_flow_shippers_publicate']}" style="width: 100px;text-align:center">
+								<p:selectBooleanCheckbox  rendered="#{item.timestamp!=null}" value="#{item.checkPublicate}" />	
+							</p:column>
+							</shiro:hasPermission>
+							<p:column style="width:32px">
+								<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.INSTRUCTED_OPERATION_FLOW.OPER_COM.MOD">
+						           <p:rowEditor rendered="#{insOpFlowShippersView.renderItemEditor(item)}"/>
+						        </shiro:hasPermission>
+						    </p:column>
+						   
+					    </p:dataTable>
+					    </shiro:hasPermission> 
+				</p:layoutUnit>
+			</p:layout>
+		</h:form>
+		
+		<p:dialog widgetVar="dlgDownload" resizable="false" closeOnEscape="true" closable="true" modal="true" appendTo="@(body)" header="Download file">
+			<h:form>
+			<p:growl id="msgs" showDetail="true"  life="5000"/>
+				<p:panelGrid columns="4" style="width:100%">
+					<p:panelGrid>
+						<p:row>
+							<p:column>
+								<p:commandButton ajax="false" onclick="PF('dlgDownload').hide();" value="Click to download"
+							    	oncomplete="PrimeFaces.monitorDownload(start, stop);" icon="ui-icon fa fa-save">
+							    	<p:fileDownload value="#{insOpFlowShippersView.flowFile}" />
+								</p:commandButton>
+							</p:column>
+						</p:row>
+					</p:panelGrid>
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+		
+		
+	</ui:define>
+</ui:composition>

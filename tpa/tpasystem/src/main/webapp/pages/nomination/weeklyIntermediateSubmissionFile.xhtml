@@ -1,0 +1,106 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_nominations']}" url="#" />
+			<p:menuitem value="#{msg['menu_week_inter_file']}" url="/pages/nomination/weeklyIntermediateSubmissionFile.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+		<h:form enctype="multipart/form-data" id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="5000"/>
+			
+			<p:panelGrid style="width:100%">
+				<p:row>
+					<p:column>
+						<p:panelGrid id="shipperCommentsGrid">
+	 						<shiro:hasPermission name="#{changeSystemView.system}.NOMINATIONS.WEEKLY.SUB_INTERMEDIATE.ADD">
+								<p:row>
+									<p:column>
+								       	<h:outputText value="#{msg['day_nom_shipper_comment']}" style="font-weight: bold;"/>
+									</p:column>
+								</p:row>
+								<p:row>
+									<p:column>
+									<p:inputTextarea id="shipperComments" value="#{weeklyIntermediateSubmissionFileView.shipperComments}" 
+										rows="2" cols="75" maxlength="250" counter="display" counterTemplate="#{msg['char_remaining']}" >
+										<!-- Con el boton de FileUpload no se actualiza este campo de newDocument. Hay que actualizarlo con ajax. -->
+										<p:ajax event="change" update="shipperComments" />
+									</p:inputTextarea>
+									</p:column>
+								</p:row>
+								<p:row>
+									<p:column>
+										<h:outputText id="display" />
+									<br/>
+									</p:column>
+								</p:row>
+							</shiro:hasPermission>
+							<p:row><p:column><br/></p:column></p:row>
+						</p:panelGrid>
+					</p:column>
+					<p:column>
+ 						<p:panelGrid id="msgsGrid">
+ 							<p:row>
+								<p:column style="font-weight: bold;">						
+									<h:outputText value="#{weeklyIntermediateSubmissionFileView.nominationSubmissionDeadlinePhrase}" />
+								</p:column>
+							</p:row>
+  							<p:row>
+								<p:column style="font-weight: bold;">
+  									<h:outputText value="#{weeklyIntermediateSubmissionFileView.renominationSubmissionDeadlinePhrase}" />
+								</p:column>
+							</p:row>
+							<p:row><p:column><br/></p:column></p:row>							
+						</p:panelGrid>
+					</p:column>
+					<p:column style="float: right;">
+						<shiro:hasPermission name="#{changeSystemView.system}.NOMINATIONS.WEEKLY.SUB_INTERMEDIATE.QUERY">
+							<p:commandButton ajax="false" value="#{msg['download_template']}" style="vertical-align:top;top:10px;"
+										onstart="PF('cargando').show()"
+								    	oncomplete="PrimeFaces.monitorDownload(start, stop);PF('cargando').hide()" icon="ui-icon fa fa-download">
+								<p:fileDownload value="#{weeklyIntermediateSubmissionFileView.template}"/>
+							</p:commandButton>
+						</shiro:hasPermission>
+					</p:column>
+				</p:row>
+				</p:panelGrid>
+				
+				<p:panelGrid>
+				<p:row>
+					<p:column>
+						<p:panelGrid>
+							<p:row>
+							<p:column>
+	 						<shiro:hasPermission name="#{changeSystemView.system}.NOMINATIONS.WEEKLY.SUB_INTERMEDIATE.ADD">
+							<p:fileUpload id="upload"  style="width:100%;" fileUploadListener="#{weeklyIntermediateSubmissionFileView.handleFileUpload}" 
+										mode="advanced" dragDropSupport="true"
+	         							fileLimit="1" ajax="true" update="msgs,upload" sizeLimit="5000000" allowTypes="/(\.|\/)(xlsx|xlsm|xls)$/"	           							
+	         							onstart="PF('cargando').show()"
+	         							oncomplete="PF('cargando').hide()"/>
+	         				</shiro:hasPermission>
+							</p:column>
+							</p:row>
+         				</p:panelGrid>
+					</p:column>
+					<p:column>
+						<h:outputText value="#{msg['day_nom_files_supported']}" style="float:left;font-weight: bold;"/>
+						<p:graphicImage name="/images/excel.png" width="44"/>
+					</p:column>
+				</p:row>
+			</p:panelGrid>
+
+		</h:form>
+	</ui:define>
+
+
+</ui:composition>

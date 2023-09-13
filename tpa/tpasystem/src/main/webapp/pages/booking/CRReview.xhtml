@@ -1,0 +1,581 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:f="http://java.sun.com/jsf/core"
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_booking']}" url="#" />
+			<p:menuitem value="#{msg['menu_cr_management']}" url="/pages/booking/CRManagement.xhtml" rendered="#{cRReview.backFileter.origin eq 1}" />
+			<p:menuitem value="#{msg['menu_cr_query']}" url="/pages/booking/CapacityRequestQuery.xhtml" rendered="#{cRReview.backFileter.origin eq 2}"/>
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+		<style>
+.number {
+	float: right;
+}
+
+.subtotal {
+	font-weight: bold;
+}
+
+.bi-element {
+	width: 150px
+}
+
+.range {
+	width: 100;
+}
+
+.n-element {
+	width: #{cRReview.dynamicBlockSize}px
+}
+
+
+
+	
+.date {
+	width: 80px
+}
+
+.med-data {
+	width: 70px;
+}
+
+.small-data {
+	width: 30px
+}
+
+.filter {
+	padding-left: 5px;
+	padding-right: 5px;
+}
+
+.edited {
+	color: #07DE79;
+	font-weight: bold;
+}
+</style>
+		<p:panelGrid>
+		<h:form id="saveForm">
+			<p:row>
+				<p:column>
+					<h:outputText value="#{msg['crew_shipper_name']}"
+						styleClass="subtotal" />
+					<h:outputText value="#{cRReview.backFileter.shipperName}" styleClass="filter" />
+				</p:column>
+				<p:column>
+					<h:outputText value="#{msg['crew_contract_type']}"
+						styleClass="subtotal" />
+					<h:outputText value="#{cRReview.backFileter.contractType}" styleClass="filter" />
+				</p:column>
+
+			</p:row>
+			<p:row>
+				<p:column>
+					<h:outputText  value="#{msg['day_nom_comments']}" style="float:right"
+							
+					  />
+				</p:column>
+				<p:column>
+					<p:inputTextarea id="comments" value="#{cRReview.comments}" cols="40"  rows="5" maxlength="500" 
+					readonly="#{!cRReview.editableData}" 
+					 >
+					<p:ajax event="change" partialSubmit="true" process="@this" listener="#{cRReview.commentListener}"></p:ajax>
+					</p:inputTextarea>
+				</p:column>
+				<p:column>
+				<p:column>
+
+						<p:commandButton value="#{msg['save']}"
+							rendered="#{cRReview.editableData}"
+							action="#{cRReview.save}" 
+							process="@this"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs, :#{p:component('dtaEntry')},:#{p:component('dtaExit')}"/>
+									<br/>
+									<br/>
+						<p:commandButton value="#{msg['crew_back']}"
+							onclick="window.history.back()" />
+									<br/>
+									<br/>
+						<p:commandButton value="#{msg['crew_reset']}"
+							rendered="#{cRReview.editableData}"
+							actionListener="#{cRReview.reset}"
+							process="@this"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs, :#{p:component('dtaEntry')},:#{p:component('dtaExit')}, :#{p:component('comments')}"/>
+				</p:column>
+				</p:column>
+			</p:row>
+			<p:row>
+
+				<p:column>
+				
+				</p:column>
+				<p:column>
+				
+				</p:column>
+			</p:row>
+			</h:form>
+		</p:panelGrid>
+
+		<p:tabView id="tabs" rendered="#{cRReview.canRead}">
+			<p:tab title="#{msg['crew_entry']}" id="tabEntry">
+
+				<h:form>
+					<p:panel style="width:98%">
+						<p:dataTable var="it" value="#{cRReview.resultList}"
+							widgetVar="w_dtaEntry" paginator="true" rows="15"
+							rowsPerPageTemplate="5,10,15,20,25" scrollable="true"
+							scrollWidth="100%"
+							scrollHeight="100%" id="dtaEntry">
+						 <p:ajax event="page" listener="#{cRReview.onPageChangeEntry}"/>  
+							<f:facet name="header">
+								<p:outputPanel styleClass="ui-widget-header">
+
+									<h:outputText value="#{msg['crew_gas_cuantity_unit']}: " />
+									<p:commandLink id="switcher" update="dtaEntry"
+										actionListener="#{cRReview.entrySwitcher}">
+										<h:outputText value="#{cRReview.entryQuantityUnitText}" />
+									</p:commandLink>
+
+
+									<h:outputText value="#{msg['crew_from']}: " styleClass="filter" />
+
+									<p:selectOneMenu id="dateFromEntry"
+										value="#{cRReview.dateFromEntry}"
+										valueChangeListener="#{cRReview.dateFromEntryChange}">
+										<f:selectItem itemLabel="" itemValue="" />
+										<f:selectItems value="#{cRReview.datesFromEntry}" var="dat"
+											itemLabel="#{cRReview.getDateAsString(dat)}"
+											itemValue="#{cRReview.getDateAsString(dat)}" />
+										<p:ajax event="change" update="dtaEntry" />
+
+									</p:selectOneMenu>
+
+									<h:outputText value="#{msg['crew_to']}: " styleClass="filter" />
+									<p:selectOneMenu id="dateToEntry"
+										value="#{cRReview.dateToEntry}"
+										valueChangeListener="#{cRReview.dateToEntryChange}">
+										<f:selectItem itemLabel="" itemValue="" />
+										<f:selectItems value="#{cRReview.datesToEntry}" var="dat"
+											itemLabel="#{cRReview.getDateAsString(dat)}"
+											itemValue="#{cRReview.getDateAsString(dat)}" />
+										<p:ajax event="change" update="dtaEntry" />
+									</p:selectOneMenu>
+
+									<h:outputText value="#{msg['crew_new_conn']}: "
+										styleClass="filter" />
+									<p:selectOneMenu id="newConFilter"
+										value="#{cRReview.nConFilter}"
+										valueChangeListener="#{cRReview.newConnChange}">
+										<f:selectItem itemLabel="" itemValue="" />
+										<f:selectItem itemLabel="Y" itemValue="Y" />
+										<f:selectItem itemLabel="N" itemValue="N" />
+										<p:ajax event="change" update="dtaEntry" />
+
+									</p:selectOneMenu>
+								</p:outputPanel>
+							</f:facet>
+
+
+							<p:columnGroup type="header">
+								<p:row>
+									<p:column headerText="#{msg['crew_zone']}" rowspan="2"
+										styleClass="med-data" />
+									<p:column headerText="#{msg['crew_area']}" rowspan="2"
+										styleClass="med-data" />
+									<p:column headerText="#{msg['crew_sub_area']}" rowspan="2"
+										styleClass="med-data" />
+									<p:column headerText="#{msg['crew_entry_meter_id']}"
+										rowspan="2" styleClass="med-data" />
+									<p:column headerText="#{msg['crew_entry_point']}" rowspan="2"
+										styleClass="med-data" />
+									<p:column headerText="#{msg['crew_new_conn_a']}" rowspan="2"
+										styleClass="small-data" />
+
+									<p:column headerText="#{msg['crew_pres_rang']}" colspan="2"
+										styleClass="bi-element" />
+									<p:column headerText="#{msg['crew_temp_rang']}" colspan="2"
+										styleClass="bi-element" />
+
+
+									<p:column headerText="#{msg['crew_from']}" rowspan="2"
+										styleClass="date" />
+									<p:column headerText="#{msg['crew_to']}" rowspan="2"
+										styleClass="date" />
+
+									<p:column headerText="#{msg['crew_cap_day_book_mmbtu']}"
+										colspan="#{cRReview.period.size()}" styleClass="n-element"
+										rendered="#{cRReview.entryQuantityUnit eq 1 and cRReview.period.size() > 0}" />
+									<p:column headerText="#{msg['crew_max_hour_booking']}"
+										styleClass="n-element"
+										rendered="#{cRReview.entryQuantityUnit eq 1 and cRReview.period.size() > 0}"
+										colspan="#{cRReview.period.size()}" />
+
+									<p:column headerText="#{msg['crew_cap_day_booking']}"
+										styleClass="n-element"
+										rendered="#{cRReview.entryQuantityUnit eq 0 and cRReview.period.size() > 0}"
+										colspan="#{cRReview.period.size()}" />
+
+									<p:column headerText="#{msg['crew_max_hour_booking_mm']}"
+										styleClass="n-element"
+										rendered="#{cRReview.entryQuantityUnit eq 0 and cRReview.period.size() > 0}"
+										colspan="#{cRReview.period.size()}" />
+								</p:row>
+								<p:row>
+									<p:column headerText="#{msg['crew_min']}" />
+									<p:column headerText="#{msg['crew_max']}" />
+									<p:column headerText="#{msg['crew_min']}" />
+									<p:column headerText="#{msg['crew_max']}" />
+									<ui:repeat value="#{cRReview.period}" var="year">
+										<p:column headerText="#{year}" rowspan="2" style="width:100px" />
+									</ui:repeat>
+
+									<ui:repeat value="#{cRReview.period}" var="year">
+										<p:column headerText="#{year}" rowspan="2" />
+									</ui:repeat>
+
+								</p:row>
+							</p:columnGroup>
+
+							<p:column>
+								<h:outputText value="#{it.zone}" rendered="#{it.registerType eq 0}"/>
+							</p:column>
+							<p:column>
+								<h:outputText value="#{it.area}" />
+							</p:column>
+							<p:column>
+								<h:outputText value="#{it.subArea}" />
+							</p:column>
+
+							<p:column>
+								<h:outputText value="#{it.entryMeterId}" />
+							</p:column>
+							<p:column>
+								<h:outputText value="#{it.entryPoint}"
+									rendered="#{it.registerType eq 0}" />
+							</p:column>
+							<p:column>
+								<h:outputText value="#{it.newConnection}" />
+							</p:column>
+							<p:column>
+								<h:outputText value="#{it.prMin}" styleClass="number">
+									<f:convertNumber groupingUsed="true" minFractionDigits="1"
+										maxFractionDigits="3" />
+								</h:outputText>
+							</p:column>
+							<p:column>
+								<h:outputText value="#{it.prMax}" styleClass="number">
+									<f:convertNumber groupingUsed="true" minFractionDigits="1"
+										maxFractionDigits="3" />
+								</h:outputText>
+							</p:column>
+							<p:column>
+								<h:outputText value="#{it.temperatureRangeMin}"
+									styleClass="number">
+									<f:convertNumber groupingUsed="true" minFractionDigits="1"
+										maxFractionDigits="3" />
+								</h:outputText>
+							</p:column>
+							<p:column>
+								<h:outputText value="#{it.temperatureRangeMax}"
+									styleClass="number">
+									<f:convertNumber groupingUsed="true" minFractionDigits="1"
+										maxFractionDigits="3" />
+								</h:outputText>
+							</p:column>
+
+							<p:column rendered="#{it.registerType eq 0}">
+								<h:outputText value="#{it.dateFrom}">
+									<f:convertDateTime pattern="dd/MM/yyyy" locale="en" />
+								</h:outputText>
+							</p:column>
+
+							<p:column rendered="#{it.registerType eq 1}" colspan="2">
+								<h:outputText styleClassd="subtotal"
+									value="#{msg['crew_sum_entry']} #{it.zone}"
+									rendered="#{it.registerType eq 1}" />
+							</p:column>
+							<p:column rendered="#{it.registerType eq 2}" colspan="2">
+								<h:outputText styleClassd="subtotal"
+									value="#{msg['crew_sum_entry']}"
+									rendered="#{it.registerType eq 2}" />
+							</p:column>
+							<p:column rendered="#{it.registerType eq 0}">
+								<h:outputText value="#{it.dateTo}"
+									rendered="#{it.registerType eq 0}">
+
+									<f:convertDateTime pattern="dd/MM/yyyy" locale="en" />
+								</h:outputText>
+
+							</p:column>
+
+							<p:columns value="#{cRReview.period}" var="year"
+								rendered="#{cRReview.entryQuantityUnit eq 1}">
+
+								<c:set var="mkey" value="#{it.entryPoint}-#{year}" />
+
+
+										<h:outputText rendered="#{!cRReview.editableData}"
+											value="#{cRReview.capacityEntriesMap[mkey].dailyBookingmbtu}" styleClass="number #{cRReview.capacityEntriesMap[mkey].dailyBookingmbtEdited?'edited':''}">
+											<f:convertNumber groupingUsed="true" minFractionDigits="3"
+												maxFractionDigits="3" />
+										</h:outputText>
+								<p:inplace event="dblclick" emptyLabel="no value" styleClass="#{cRReview.capacityEntriesMap[mkey].dailyBookingmbtEdited?'edited':''}"
+								
+									rendered="#{it.registerType eq 0 and cRReview.editableData}">
+											<f:facet name="output">
+										<h:outputText
+											value="#{cRReview.capacityEntriesMap[mkey].dailyBookingmbtu}" styleClass="number #{cRReview.capacityEntriesMap[mkey].dailyBookingmbtEdited?'edited':''}">
+											<f:convertNumber groupingUsed="true" minFractionDigits="3"
+												maxFractionDigits="3" />
+										</h:outputText>
+									</f:facet>
+									<f:facet name="input">
+									<p:inputNumber id="ed1"
+										value="#{cRReview.capacityEntriesMap[mkey].dailyBookingmbtu}"
+										decimalPlaces="0" 
+										valueChangeListener="#{cRReview.mtuChange(year, it.entryPoint,1)}"
+										minValue="1"
+										>
+
+										<p:ajax event="change" update=":#{p:component('dtaEntry')}" oncomplete="refreshEntry()" onstart="getEntryScrollLeftPosition()"/>
+
+									</p:inputNumber>
+									</f:facet>
+								</p:inplace>
+								<h:outputText
+									value="#{it.getSubtotalValueForDailyBooking(year)}"
+									styleClass="number subtotal" rendered="#{it.registerType eq 1}">
+									<f:convertNumber groupingUsed="true" minFractionDigits="3"
+										maxFractionDigits="3" />
+								</h:outputText>
+								<h:outputText
+									value="#{it.getTotalValueForDailyBooking(year)}"
+									styleClass="number subtotal" rendered="#{it.registerType eq 2}">
+									<f:convertNumber groupingUsed="true" minFractionDigits="3"
+										maxFractionDigits="3" />
+								</h:outputText>
+							</p:columns>
+
+							<p:columns value="#{cRReview.period}" var="year"
+								rendered="#{cRReview.entryQuantityUnit eq 1}">
+										<h:outputText
+										rendered="#{!cRReview.editableData}"
+											value="#{cRReview.capacityEntriesMap[mkey].hourlyBookingMmbtu}" styleClass="number #{cRReview.capacityEntriesMap[mkey].hourlyBookingMmbtuEdited?'edited':''}">
+											<f:convertNumber groupingUsed="true" minFractionDigits="3"
+												maxFractionDigits="3" />
+										</h:outputText>
+								<p:inplace event="dblclick" emptyLabel="no value" 
+								
+									rendered="#{it.registerType eq 0 and cRReview.editableData}">
+											<f:facet name="output">
+										<h:outputText
+											value="#{cRReview.capacityEntriesMap[mkey].hourlyBookingMmbtu}" styleClass="number #{cRReview.capacityEntriesMap[mkey].hourlyBookingMmbtuEdited?'edited':''}">
+											<f:convertNumber groupingUsed="true" minFractionDigits="3"
+												maxFractionDigits="3" />
+										</h:outputText>
+									</f:facet>
+									<f:facet name="input">
+									<p:inputNumber id="ed2"
+										value="#{cRReview.capacityEntriesMap[mkey].hourlyBookingMmbtu}"
+										valueChangeListener="#{cRReview.mtuChange(year, it.entryPoint, 2)}"
+										decimalPlaces="0" 
+										minValue="1"
+										>
+									
+										<p:ajax event="change" update="@([id$=dtaEntry])" oncomplete="refreshEntry()" onstart="getEntryScrollLeftPosition()"/>
+									</p:inputNumber>
+									</f:facet>
+								</p:inplace>
+
+								<h:outputText
+									value="#{it.getSubtotalValueForMaxHourBooking(year)}"
+									styleClass="number subtotal" rendered="#{it.registerType eq 1}">
+									<f:convertNumber groupingUsed="true" minFractionDigits="3"
+										maxFractionDigits="3" />
+								</h:outputText>
+								<h:outputText
+									value="#{it.getTotalValueForMaxHourBooking(year)}"
+									styleClass="number subtotal" rendered="#{it.registerType eq 2}">
+									<f:convertNumber groupingUsed="true" minFractionDigits="3"
+										maxFractionDigits="3" />
+								</h:outputText>
+							</p:columns>
+							<p:columns value="#{cRReview.period}" var="year"
+								rendered="#{cRReview.entryQuantityUnit eq 0}">
+										<h:outputText rendered="#{!cRReview.editableData}"
+											value="#{cRReview.capacityEntriesMap[mkey].dailyBookingMmscfd}" styleClass="number #{cRReview.capacityEntriesMap[mkey].dailyBookingMmscfdEdited?'edited':''}">
+											<f:convertNumber groupingUsed="true" minFractionDigits="3"
+												maxFractionDigits="3" />
+										</h:outputText>
+								<p:inplace event="dblclick" emptyLabel="no value" 
+								
+									rendered="#{it.registerType eq 0 and cRReview.editableData}">
+											<f:facet name="output">
+										<h:outputText
+											value="#{cRReview.capacityEntriesMap[mkey].dailyBookingMmscfd}" styleClass="number #{cRReview.capacityEntriesMap[mkey].dailyBookingMmscfdEdited?'edited':''}">
+											<f:convertNumber groupingUsed="true" minFractionDigits="3"
+												maxFractionDigits="3" />
+										</h:outputText>
+									</f:facet>
+									<f:facet name="input">
+									<p:inputNumber id="ed2"
+										value="#{cRReview.capacityEntriesMap[mkey].dailyBookingMmscfd}"
+										valueChangeListener="#{cRReview.mtuChange(year, it.entryPoint, 3)}"
+										decimalPlaces="0" 
+										minValue="1"
+										>
+										<p:ajax event="change" update="@([id$=dtaEntry])" oncomplete="refreshEntry()" onstart="getEntryScrollLeftPosition()"/>
+
+									</p:inputNumber>
+									</f:facet>
+								</p:inplace>
+								
+
+								<h:outputText
+									value="#{it.getSubtotalValueForDailyBookingScf(year)}"
+									styleClass="number subtotal" rendered="#{it.registerType eq 1}">
+									<f:convertNumber groupingUsed="true" minFractionDigits="3"
+										maxFractionDigits="3" />
+								</h:outputText>
+								<h:outputText
+									value="#{it.getTotalValueForDailyBookingScf(year)}"
+									styleClass="number subtotal" rendered="#{it.registerType eq 2}">
+									<f:convertNumber groupingUsed="true" minFractionDigits="3"
+										maxFractionDigits="3" />
+								</h:outputText>
+							</p:columns>
+
+							<p:columns value="#{cRReview.period}" var="year"
+								rendered="#{cRReview.entryQuantityUnit eq 0}">
+										<h:outputText rendered="#{!cRReview.editableData}"
+											value="#{cRReview.capacityEntriesMap[mkey].hourlyBookingMmscfd}" styleClass="number #{cRReview.capacityEntriesMap[mkey].hourlyBookingMmscfdEdited?'edited':''}">
+											<f:convertNumber groupingUsed="true" minFractionDigits="3"
+												maxFractionDigits="3" />
+										</h:outputText>
+								<p:inplace event="dblclick" emptyLabel="no value" 
+								
+									rendered="#{it.registerType eq 0 and cRReview.editableData}">
+											<f:facet name="output">
+										<h:outputText
+											value="#{cRReview.capacityEntriesMap[mkey].hourlyBookingMmscfd}" styleClass="number #{cRReview.capacityEntriesMap[mkey].hourlyBookingMmscfdEdited?'edited':''}">
+											<f:convertNumber groupingUsed="true" minFractionDigits="3"
+												maxFractionDigits="3" />
+										</h:outputText>
+									</f:facet>
+									<f:facet name="input">
+									<p:inputNumber id="ed2"
+										value="#{cRReview.capacityEntriesMap[mkey].hourlyBookingMmscfd}"
+										valueChangeListener="#{cRReview.mtuChange(year, it.entryPoint, 4)}"
+										minValue="1"
+										decimalPlaces="0" 
+										>
+										<p:ajax event="change" update="@([id$=dtaEntry])" oncomplete="refreshEntry()" onstart="getEntryScrollLeftPosition()" />
+
+									</p:inputNumber>
+									</f:facet>
+								</p:inplace>
+
+								<h:outputText
+									value="#{it.getSubtotalValueForMaxHourBookingScf(year)}"
+									styleClass="number subtotal" rendered="#{it.registerType eq 1}">
+									<f:convertNumber groupingUsed="true" minFractionDigits="3"
+										maxFractionDigits="3" />
+								</h:outputText>
+								<h:outputText
+									value="#{it.getTotalValueForMaxHourBookingScf(year)}"
+									styleClass="number subtotal" rendered="#{it.registerType eq 2}">
+									<f:convertNumber groupingUsed="true" minFractionDigits="3"
+										maxFractionDigits="3" />
+								</h:outputText>
+							</p:columns>
+						</p:dataTable>
+					</p:panel>
+				</h:form>
+				<h:form id="chgForm">
+					<p:dialog header="New Value" widgetVar="w_chgVal" modal="true"
+						appendTo="@(body)" id="editor" height="50" width="130">
+						<p:inputNumber widgetVar="inputMtu" id="inputMtu"
+							value="#{cRReview.numericVal}" minValue="0" decimalPlaces="3"
+							thousandSeparator="," decimalSeparator="." emptyValue="empty"
+							size="10">
+						</p:inputNumber>
+						<p:remoteCommand name="setValue" action="#{cRReview.changeVal}"
+							update="inputMtu" />
+
+						<p:remoteCommand name="refreshEntry" action="#{cRReview.refreshEntryTable}"
+							update=":#{p:component('dtaEntry')}" oncomplete="restoreScrollLeftPosition()"/>
+
+
+						<script>
+						var scrollLeftPosition;
+						function getEntryScrollLeftPosition(){
+							scrollLeftPosition = $("[id$='dtaEntry'] .ui-datatable-scrollable-body").prop('scrollLeft');
+						}
+						function restoreScrollLeftPosition(){
+							$(".ui-datatable-scrollable-body").prop('scrollLeft', scrollLeftPosition);	
+						}
+						function recalculate(){
+						var pageNum = PF('w_dtaEntry').getPaginator();	
+						PF('w_dtaEntry').filter()
+						PF('w_dtaEntry').paginator = pageNum;
+
+						//PF('w_dtaEntry').getPaginator().setPage(pageNum)	
+
+						} 
+							function pruebaEntry(year, point, zvalue) {
+								setValue([ {
+									name : 'numvalue',
+									value : zvalue
+								} ])
+							}
+							function setTableLabels() {
+								$('.ui-datatable-data')
+										.children('tbody tr')
+										.each(
+												function() {
+													var nTds = $('td', this);
+													$(nTds)
+															.each(
+																	function() {
+																		this
+																				.setAttribute(
+																						'title',
+																						this.innerText);
+																	})
+												})
+
+							}
+							$(document).ready(function() {
+								setTableLabels();
+							});
+						</script>
+					</p:dialog>
+				</h:form>
+			</p:tab>
+			<p:tab title="#{msg['crew_exit']}" id="tabExit">
+				<ui:include src="/pages/booking/CRReview_exit.xhtml" />
+			</p:tab>
+
+			<p:tab title="#{msg['crew_gas_quality']}">
+
+				<ui:include src="/pages/booking/CRReview_gc.xhtml" />
+			</p:tab>
+		</p:tabView>
+
+		<p:growl id="msgs" showDetail="true" life="10000" />
+
+	</ui:define>
+</ui:composition>

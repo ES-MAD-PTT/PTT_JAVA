@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atos.mapper.nominations.QueryShipperNominationsMapper">
+
+     <select id="selectShipperIdNominations" parameterType="com.atos.filters.nominations.QueryShipperNominationFileFilter" resultType="com.atos.beans.ComboFilterNS">
+		SELECT a.idn_user_group as key, a.user_group_id as value
+		  FROM tpa_tuser_group a,
+		       tpa_tuser_group_type b,
+		       (SELECT ugt.type_code,
+		               ug.idn_user_group
+		          FROM tpa_tuser            u,
+		               tpa_tuser_group      ug,
+		               tpa_tuser_group_type ugt
+		         WHERE u.user_id = #{user}
+		           AND u.idn_user_group = ug.idn_user_group
+		           AND ug.idn_user_group_type = ugt.idn_user_group_type) c
+		 WHERE a.idn_user_group_type = b.idn_user_group_type
+		   AND b.type_code = 'SHIPPER'
+		   AND ((c.type_code = 'SHIPPER' AND c.idn_user_group = a.idn_user_group) OR c.type_code = 'OPERATOR')
+		order by UPPER(value)
+
+    </select>
+
+     <select id="selectContractCodeDayByShipper" parameterType="com.atos.filters.nominations.QueryShipperNominationFileFilter" resultType="com.atos.beans.ComboFilterNS">
+	    select c.idn_contract as key, c.contract_code as value
+	      from tpa_tcontract c, tpa_tuser_group ug
+	     where c.idn_pipeline_system = #{systemId}
+	       and c.idn_user_group = ug.idn_user_group
+	       <if test="shipper_code != null and shipper_code != ''">
+	       and ug.idn_user_group = #{shipper_code}
+	       </if>
+	       and exists (select 1
+	              from tpa_tcontract_consolidate cc
+	             where cc.idn_contract = c.idn_contract)
+	       and #{start_date} between c.start_date and c.end_date
+	     order by UPPER(value)
+	</select>
+
+     <select id="selectContractCodeWeekByShipper" parameterType="com.atos.filters.nominations.QueryShipperNominationFileFilter" resultType="com.atos.beans.ComboFilterNS">
+		select c.idn_contract as key, c.contract_code as value
+		  from tpa_tcontract c, tpa_tuser_group ug
+		 where c.idn_pipeline_system = #{systemId}
+		   and c.idn_user_group = ug.idn_user_group
+		   <if test="shipper_code != null and shipper_code != ''">
+		   and ug.idn_user_group = #{shipper_code}
+		   </if>
+		   and exists (select 1 from tpa_tcontract_consolidate cc where cc.idn_contract = c.idn_contract)
+		   and (#{start_date} between c.start_date and c.end_date or
+			 #{end_date} between c.start_date and c.end_date)
+		   order by UPPER(value)
+	</select>
+
+	<select id="selectQueryNomination" parameterType="com.atos.filters.nominations.QueryShipperNominationFileFilter" resultType="com.atos.beans.nominations.QueryShipperNominationFileBean">
+		select n.idn_nomination,
+		        n.nomination_code,
+		        n.nomination_version,
+		        n.idn_operation,
+		        n.idn_user_group,
+		        ug.user_group_id,
+		        n.idn_contract,
+		        c.contract_code,
+		        n.is_contracted,
+		        n.start_date,
+		        n.end_date,
+		        n.is_renomination,
+		        n.is_valid,
+		        n.is_responsed,
+		        n.feasibility_date,
+		        n.operator_comments,
+		        n.is_matched,
+		        n.matching_date,
+		        n.submission_comments,
+		        n.idn_operator_file,
+		        (select file_name from tpa_toperation_file where n.idn_operator_file = idn_operation_file) as operator_file_name
+		    from tpa_tnomination n, tpa_tuser_group ug, tpa_tcontract c
+		    where n.idn_user_group = ug.idn_user_group
+	        and n.idn_operation = (select idn_operation from tpa_toperation o, tpa_toperation_category oc, tpa_toperation_term ot
+	            where oc.idn_operation_category = o.idn_operation_category
+	                  and oc.category_code = #{category_code}
+	                  and ot.idn_operation_term = o.idn_operation_term
+	                  and ot.term_code = #{term_code}
+	        )
+		    and n.idn_contract = c.idn_contract
+		    and c.idn_pipeline_system = #{systemId}
+ 			and n.nomination_version = (select max(n2.nomination_version)
+                                      from tpa_tnomination n2
+                                      where n.nomination_code = n2.nomination_code AND n.is_intraday = 'N'	)
+            AND n.is_intraday = 'N'		    
+		    <if test="shipper_code != null and shipper_code != ''">
+		    	and ug.idn_user_group = #{shipper_code}
+		    </if>
+		    <if test="contract_code != null and contract_code != ''">
+		    	and n.idn_contract = #{contract_code}
+		    </if>
+		    and #{start_date} >= n.start_date
+				and nvl(n.end_date,#{start_date}) >= #{start_date}  
+		  order by ug.user_group_id, c.contract_code             
+  	</select>
+
+	<select id="selectGetFile" parameterType="java.util.TreeMap" resultType="com.atos.beans.nominations.OperationFileBean">
+		select idn_operation_file,
+	       idn_operation_category,
+	       idn_operation_term,
+	       file_name,
+	       version_date,
+	       binary_data
+	    from tpa_toperation_file o
+		where o.idn_operation_file = #{idn_operation_file}
+	</select>
+
+</mapper>

@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<!-- Namespace -->
+<mapper namespace="com.atos.mapper.dam.SystemParameterDamMapper">
+    <resultMap type="com.atos.beans.dam.SystemParameterDamBean" id="SystemParameter">
+        <id column="idn_parameter" property="idn_parameter"/>
+        <result property="idn_parameter_value" column="idn_parameter_value"/>
+        <result property="parameter_desc" column="parameter_desc"/>   
+        <result property="parameter_value" column="parameter_value"/>   
+        <result property="startDate" column="start_date"/>   
+        <result property="endDate" column="end_date"/>   
+        <result property="parameter_code" column="parameter_code"/>   
+    </resultMap>
+     
+    <select id="selectSystemParameters" resultMap="SystemParameter" >
+	    SELECT 	pa.idn_parameter idn_parameter,
+	    	   	pa.parameter_code parameter_code,
+			   	va.idn_parameter_value idn_parameter_value,
+		       	pa.parameter_desc parameter_desc,
+			   	va.parameter_value parameter_value,
+			   	va.start_date start_date
+		FROM	tpa_tparameter pa, tpa_tparameter_value va,
+			 	tpa_tparameter_module_rel re, tpa_tparameter_module mo
+		WHERE 	pa.idn_parameter = va.idn_parameter
+			AND pa.idn_parameter = re.idn_parameter
+		    AND re.idn_parameter_module = mo.idn_parameter_module
+		    AND mo.idn_parameter_module=#{idn_parameter_module}
+			AND pa.is_user_administrable= 'Y' 
+	    	AND NVL(va.END_DATE, va.START_DATE) >= va.START_DATE
+	        AND va.version_date = (SELECT MAX(vax.version_date)
+	                                  FROM tpa_tparameter_value vax
+	                                  WHERE vax.idn_parameter = va.idn_parameter
+	                                  AND vax.start_date = va.start_date) 
+		
+  <if test="startDate != null">
+		AND nvl(va.end_date,
+		nvl((SELECT MIN(pvy.start_date) - 1
+			FROM tpa_tparameter_value pvy
+			WHERE va.idn_parameter = pvy.idn_parameter
+			AND pvy.start_date >= nvl(pvy.end_date, pvy.start_date)
+			AND pvy.start_date > va.start_date
+			AND pvy.version_date = (SELECT MAX(pvz.version_date)
+									FROM tpa_tparameter_value pvz
+			 						WHERE pvz.idn_parameter = pvy.idn_parameter
+                                    AND pvz.start_date = pvy.start_date)),
+								    to_date('9999/12/31','yyyy/mm/dd'))) >=  #{startDate}
+   </if>
+   
+  <if test="endDate != null">
+      AND #{endDate} >= va.start_date 
+  </if>
+  
+  <if test="idn_parameter != null and idn_parameter != ''">
+      AND pa.idn_parameter = #{idn_parameter}
+  </if> 
+  
+ 	 ORDER BY  UPPER (parameter_desc), start_date DESC
+  </select>
+    
+    
+    <select id="selectSystemParameterModules" resultType="com.atos.beans.ComboFilterNS">
+		SELECT mo.idn_parameter_module as key, mo.module_desc as value
+		FROM TPA_TPARAMETER_MODULE mo
+		ORDER BY mo.module_desc
+    </select>
+
+    <select id="selectSystemParameterParameters" resultType="com.atos.beans.ComboFilterNS">
+		SELECT pa.idn_parameter as key, pa.parameter_desc  as value
+		FROM tpa_tparameter pa, tpa_tparameter_module_rel re, tpa_tparameter_module mo
+		WHERE pa.idn_parameter = re.idn_parameter
+		    AND re.idn_parameter_module = mo.idn_parameter_module
+		    AND mo.idn_parameter_module=#{idn_parameter_module}
+		    AND pa.is_user_administrable= 'Y' 
+		ORDER BY PARAMETER_DESC
+    </select>
+        
+	<insert id="insertSystemParameter" useGeneratedKeys="true" keyProperty="idn_parameter_value" keyColumn="idn_parameter_value" parameterType="com.atos.beans.dam.SystemParameterDamBean">
+		 INSERT INTO tpa_tparameter_value
+			(idn_parameter_value,idn_parameter, start_date, parameter_value,
+			aud_ins_user,aud_last_user)
+		VALUES
+			(tpa_sparameter_value.nextval,
+			 #{idn_parameter},
+			 #{startDate}, 
+			 #{parameter_value},
+			 #{username},
+			 #{username})
+	</insert>
+	
+	<update id="deleteSystemParameter" parameterType="com.atos.beans.dam.SystemParameterDamBean">
+		UPDATE tpa_tparameter_value set
+			end_date = #{endDate},
+			aud_last_user=#{username}
+		WHERE idn_parameter_value = #{idn_parameter_value}
+	</update>
+	
+	<select id="getSystemParameterStarDate" resultType="java.util.Date">
+		SELECT  va.start_date as start_date
+	 	FROM tpa_tparameter_value va
+		WHERE idn_parameter_value = #{idn_parameter_value}
+			
+	</select>
+	
+	<select id="obtenerModuloInicial" resultType="java.math.BigDecimal">
+		SELECT mo.idn_parameter_module 
+  		FROM tpa_tparameter_module mo 
+ 		WHERE mo.module_desc = (SELECT MIN(mox.module_desc) FROM tpa_tparameter_module mox)
+	</select>
+	
+	<select id="obtenerModuloTariff" resultType="java.math.BigDecimal">
+		SELECT mo.idn_parameter_module 
+  		FROM tpa_tparameter_module mo 
+ 		WHERE mo.module_code='TARIFF.FEES'
+	</select>
+	
+	<select id="getParameterCode" resultType="java.lang.String">
+		SELECT parameter_code
+   		 FROM tpa_tparameter pa
+    	WHERE pa.idn_parameter=#{idn_parameter}
+	</select>
+
+	<select id="getParameterDesc" resultType="java.lang.String">
+		SELECT parameter_desc
+   		 FROM tpa_tparameter pa
+    	WHERE pa.idn_parameter=#{idn_parameter}
+	</select>
+	
+	<select id="getCheckValueSystemParameter" statementType="CALLABLE" parameterType="com.atos.beans.dam.SystemParameterDamBean">				                        
+	{call #{valid,jdbcType=INTEGER,mode=OUT} :=
+		pck_parameter.check_value(
+				#{parameter_code,jdbcType=VARCHAR,mode=IN},
+				#{parameter_value,jdbcType=NUMERIC,mode=IN},
+				#{user,jdbcType=VARCHAR,mode=IN},
+				#{language,jdbcType=DATE,mode=IN},
+				#{error_desc,jdbcType=VARCHAR,mode=OUT})}                
+	</select>
+</mapper>

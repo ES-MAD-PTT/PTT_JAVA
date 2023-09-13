@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atos.mapper.AlarmMapper">
+<!-- //CH717 (1196114)  
+	 getScadaTagNameInfo se añade select is_binary y where is_enabled='Y'
+	 insertScadaAlarm    se añade el alarm_type
+ -->
+	<select id="getScadaTagNameInfo" resultType="com.atos.beans.ScadaAlarmTagNameBean">
+		select idn_scada_tag_name,
+	       scada_tag_name,
+	       min_alarm_threshold,
+	       max_alarm_threshold,
+	       on_off_alarm_threshold,
+	       is_binary
+	  from tpa_tscada_tag_name
+	 where is_enabled='Y'
+	</select>
+
+	<insert id="insertScadaAlarm" parameterType="com.atos.beans.AlarmBean">
+		insert into tpa_tscada_alarm
+		  (idn_scada_alarm,
+		   alarm_id,
+		   idn_scada_tag_name,
+		   scada_timestamp,
+		   scada_tag_value,
+		   alarm_type,
+	                                        aud_ins_user,
+	                                        aud_last_user)
+		values
+		  (tpa_sscada_alarm.nextval,
+		   #{alarm_id},
+		   #{idn_scada_tag_name},
+		   #{scada_timestamp},
+		   #{scada_tag_value},
+		   #{alarm_type},
+	       'WS_SCADA_ALARM',
+	      'WS_SCADA_ALARM')
+	</insert>
+
+	<select id="getAlarmIdSecuential" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT alarm_id from TPA_TSCADA_ALARM where alarm_id like #{query} order by 1 desc
+	</select>
+
+
+</mapper>

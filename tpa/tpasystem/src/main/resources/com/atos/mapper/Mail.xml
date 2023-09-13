@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atos.mapper.MailMapper">
+
+<select id="getEmailServer" resultType="com.atos.beans.MailServerBean" parameterType="java.util.Date">
+
+select idn_server,
+       server_code,
+       server_desc,
+       start_date,
+       end_date,
+       connection_url,
+       connection_port,
+       connection_user,
+       connection_pwd
+ from TPA_TSERVER t 
+ where t.server_code = 'SMTP_SERVER'
+       and #{start_date} >= t.start_date
+       AND NVL(t.end_date, #{start_date}) >= #{start_date}
+
+</select>
+
+<select id="getSendEmails" resultType="java.lang.String" parameterType="com.atos.beans.MailTypeBean">
+
+SELECT listagg(x.email, ';') WITHIN GROUP (ORDER BY 1) AS send_to
+    FROM (
+      SELECT DISTINCT u.email
+        FROM tpa_tpermission         pe,
+             tpa_tprofile_permission pp,
+             tpa_tprofile            pr,
+             tpa_tprofile_pipeline   pip,
+             tpa_tuser_profile       up,
+             tpa_tuser               u
+       WHERE pe.idn_permission = #{idn_permission}
+         AND TRUNC(SYSDATE) BETWEEN pe.start_date AND nvl(pe.end_date, to_date('9999-01-01','yyyy-mm-dd'))
+         AND pe.is_enabled = 'Y'
+         AND pp.idn_permission = pe.idn_permission
+         AND TRUNC(SYSDATE) BETWEEN pp.start_date AND nvl(pp.end_date, to_date('9999-01-01','yyyy-mm-dd'))
+         AND pp.is_enabled = 'Y'
+         AND pp.idn_profile = pr.idn_profile
+         AND TRUNC(SYSDATE) BETWEEN pr.start_date AND nvl(pr.end_date, to_date('9999-01-01','yyyy-mm-dd'))
+         AND pr.is_enabled = 'Y'
+         AND pr.idn_profile = pip.idn_profile
+         AND TRUNC(SYSDATE) BETWEEN pip.start_date AND nvl(pip.end_date, to_date('9999-01-01','yyyy-mm-dd'))
+         AND pip.idn_pipeline_system = nvl(#{idn_system}, pip.idn_pipeline_system)
+         AND pr.idn_profile = up.idn_profile
+         AND TRUNC(SYSDATE) BETWEEN up.start_date AND nvl(up.end_date, to_date('9999-01-01','yyyy-mm-dd'))
+         AND up.idn_user = u.idn_user
+         AND TRUNC(SYSDATE) BETWEEN u.start_date AND nvl(u.end_date, to_date('9999-01-01','yyyy-mm-dd'))
+         AND u.idn_user_group =
+             decode(#{is_group_restricted}, 'Y', #{idn_user_group}, u.idn_user_group)
+         AND u.email IS NOT NULL
+          ) x
+
+</select>
+
+<select id="getMailType" resultType="com.atos.beans.MailTypeBean" parameterType="com.atos.beans.MailTypeBean">
+
+select idn_email_type, 
+type_code, 
+type_desc, 
+start_date, 
+end_date, 
+email_module, 
+idn_permission, 
+idn_message_subject, 
+body_template, 
+is_enabled, 
+is_group_restricted
+ from TPA_TEMAIL_TYPE t 
+ where t.type_code = #{type_code}
+ 	and #{start_date} >= t.start_date
+    AND NVL(t.end_date, #{start_date}) >= #{start_date}
+    and t.is_enabled = 'Y'
+
+</select>
+
+<select id="getSubject" resultType="java.lang.String" parameterType="com.atos.beans.MailTypeBean">
+
+ select i.message_text as subject from TPA_TMESSAGE_i18n i, TPA_TLANGUAGE t 
+ where i.idn_message = #{idn_message_subject}
+ and i.idn_language = t.idn_language
+ and t.language_code = #{language} 
+</select>
+
+</mapper>

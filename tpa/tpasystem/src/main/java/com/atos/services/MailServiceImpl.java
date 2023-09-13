@@ -1,0 +1,137 @@
+package com.atos.services;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.StringTokenizer;
+
+import javax.faces.context.FacesContext;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jasypt.util.text.AES256TextEncryptor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.atos.beans.MailServerBean;
+import com.atos.beans.MailTypeBean;
+import com.atos.mapper.MailMapper;
+import com.atos.utils.Constants;
+import com.atos.utils.DateUtil;
+import com.atos.utils.email.MailSession;
+
+@Service("mailService")
+public class MailServiceImpl implements MailService {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3529361913376513457L;
+
+	private static final Logger log = LogManager.getLogger(MailServiceImpl.class);
+
+	@Autowired
+	private MailMapper mailMapper;
+
+	/**
+	 * This method will send compose and send the message
+	 */
+	public void sendSimpleMessage(List<String> to, String subject, String body) {
+
+		List<MailServerBean> servers = mailMapper.getEmailServer(DateUtil.getToday());
+
+		if (servers.size() == 0) {
+			log.error("Error sending email: not exits any email server configuration");
+			return;
+		}
+		MailServerBean bean = servers.get(0);
+		
+/*		System.out.println("to:" + to.get(0));
+		System.out.println("subject" + subject);
+		System.out.println("body:" + body);
+		System.out.println("server config:" + bean.toString());*/
+		
+		
+		MailSession mailSession = new MailSession(bean.getConnection_url(), bean.getConnection_user(),
+				bean.getConnection_user(), bean.getConnection_pwd()/* this.decriptPassword(bean.getConnection_pwd())*/);
+
+		try {
+			mailSession.sendTextMail(Collections.enumeration(to), null, null, subject, body, "text/plain","ISO-8859-1");
+		} catch (Exception e) {
+			log.error("Error sending email");
+			e.printStackTrace();
+		} 
+	}
+
+	private String decriptPassword(String password) {
+		AES256TextEncryptor textEncryptor = new AES256TextEncryptor();
+		textEncryptor.setPassword(Constants.AES_encription_password);
+		String text = textEncryptor.decrypt(password);
+		return text;
+	}
+
+	@Override
+	public void sendEmail(String type_code, HashMap<String,String> values, BigDecimal idn_system, BigDecimal idn_user_group) {
+		
+		
+		MailTypeBean bean = new MailTypeBean();
+		bean.setType_code(type_code);
+		bean.setStart_date( DateUtil.getToday());
+		
+		List<MailTypeBean> typeMail = mailMapper.getMailType(bean);
+		
+		if(typeMail.size()==0) {
+			log.error("Error sending email: not exists email type code " + type_code);
+			return;
+		} else {
+			bean = typeMail.get(0);
+		}
+		bean.setIdn_system(idn_system);
+		bean.setIdn_user_group(idn_user_group);
+		
+		
+		List<String> list_to = mailMapper.getSendEmails(bean);
+		ArrayList<String> to = new ArrayList<String>(); 
+		if(list_to.size()==0 || list_to.get(0)==null) {
+			log.error("Error sending email: not exists any email associated to type code " + type_code);
+			return;
+		} else {
+			StringTokenizer st = new StringTokenizer(list_to.get(0),";");
+			while(st.hasMoreTokens()) {
+				to.add(st.nextToken());
+			}
+		}
+		// only english message, if we generate message in another language descomment this line
+//		bean.setLanguage(FacesContext.getCurrentInstance().getViewRoot().getLocale().getLanguage());
+		bean.setLanguage("en");
+		List<String> list_subject = mailMapper.getSubject(bean);
+		String subject = ""; //Shipper submits Daily Nomination
+		if(list_subject.size()==0) {
+			log.error("Error sending email: not exists any subject associated to type code " + type_code);
+			return;
+		} else {
+			subject = list_subject.get(0);
+		}
+		String body = this.replaceMailBody(bean.getBody_template(), values);
+		
+		sendSimpleMessage(to, subject, body);
+		
+		
+	}
+	private String replaceMailBody(String body, HashMap<String,String> values) {
+		
+		Iterator<String> it = values.keySet().iterator();
+		
+		while(it.hasNext()) {
+			String it_value = it.next();
+			String value = values.get(it_value);
+			body = body.replace("{"+ it_value +"}", value);
+			
+		}
+		return body;
+	}
+}

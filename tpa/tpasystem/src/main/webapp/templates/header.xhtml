@@ -1,0 +1,1244 @@
+<!DOCTYPE composition PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+                      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pt="http://xmlns.jcp.org/jsf/passthrough"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core">
+	
+	<h:form id="formHeader" style="position:fixed;margin:0px;padding:0px;height:92px;width:100%">
+		<script>
+			function addShadow(id){
+				//document.getElementById(id).style.boxShadow=" 0px 0px 0px 0px rgba(09, 155, 202, 1)";
+				document.getElementById(id).style.opacity= "0.4";
+			}
+			function removeShadow(id){
+				//document.getElementById(id).style.boxShadow="";
+				document.getElementById(id).style.opacity= "1.0";
+			}
+		</script>
+		<p:panelGrid id="panelHeader" styleClass="panelHeaderClass" style="overflow-y: hidden;width:100%;border-collapse:collapse;padding:0px" >
+			<p:row style="width:100%;padding:0px">
+				<p:column style="padding:0px">
+					<p:panelGrid style="padding:0px">
+						<p:row style="padding:0px">
+							<p:column style="padding:0px">
+								<p:graphicImage value="/resources/images/logos/logo.png" style="width:93px;height:58px;margin-left:5px"/>
+							</p:column>
+						</p:row>
+					</p:panelGrid>
+				</p:column>
+				<p:column style="padding:0px;width:100%">
+					<p:panelGrid style="padding:0px;width:100%;">
+						<p:row style="padding:0px;width:100%;">
+							<!-- Change system -->
+							<p:column rowspan="2" style="width:155px;padding:0px;padding-left:5px">
+								<h:outputLabel style="font-size:12pt;font-weight:bold;vertical-align:top;white-space: nowrap;" value="#{changeSystemView.system} #{msg['system']}"/>
+							</p:column>
+							
+							<p:column rowspan="2" style="padding:0px">
+							</p:column>
+							
+							<p:column rowspan="2" styleClass="button_header_container">
+									<p:graphicImage value="/resources/images/icons/change_system.png" styleClass="button_header" id="changeBtn"	
+										onclick="PF('changeDialog').show();" title="#{changeSystemView.system} #{msg['system']}"
+										onmouseover="addShadow(this.id)" onmouseout="removeShadow(this.id)"/>
+									<pe:tooltip id="toolTipChange" for="changeBtn" mouseTracking="false" myPosition="top, center" adjustX="-20"
+										 style="border:1px solid black !important">
+										<h:outputText style="font-size:12pt" value="#{msg['change_system']}" />
+									</pe:tooltip>							
+							</p:column>
+			
+							<!-- Alarms -->
+							<p:column rowspan="2" styleClass="button_header_container" style="margin-left:10px">
+								
+								<c:set var="blue" value="#{alarmView.numberBlueAlarm}"/>
+			  					<p:outputLabel style="visibility: #{blue eq '0'? 'hidden' : 'visible'}"  rendered="#{alarmView.isVisible()}" id="alarm_blue" styleClass="blue2_ball" title="Number of NO ASSIGNED events" value="#{alarmView.numberBlueAlarm}">
+									<p:effect event="load" type="pulsate"/>  				 	
+			  					</p:outputLabel>
+			  					
+								<c:set var="orange" value="#{alarmView.numberOrangeAlarm}"/>
+			  					<p:outputLabel style="visibility: #{orange eq '0'? 'hidden' : 'visible'}" id="alarm_orange" styleClass="orange_ball" title="Number of MODERATE events" value="#{alarmView.numberOrangeAlarm}">
+									<p:effect event="load" type="pulsate"/>  				 	
+			  					</p:outputLabel>
+			  					
+								<c:set var="red" value="#{alarmView.numberRedAlarm}"/>
+			  					<p:outputLabel style="visibility: #{red eq '0'? 'hidden' : 'visible'}" id="alarm_red" styleClass="red_ball" title="Number of HIGH events" value="#{alarmView.numberRedAlarm}">
+									<p:effect event="load" type="pulsate"/> 				 	
+			  					</p:outputLabel>
+			  					
+			  					<p:poll interval="47" listener="#{alarmView.checkNotifications}" update="alarm_blue,alarm_orange,alarm_red,:#{p:component('alarmTable')}" />
+			  					
+								<p:graphicImage value="/resources/images/icons/warning.png" styleClass="button_header" id="alarmBtn"
+									title="#{msg['event']}" onmouseover="addShadow(this.id)" onmouseout="removeShadow(this.id)"/>
+								<pe:tooltip id="toolTipAlarm" for="alarmBtn" mouseTracking="false" myPosition="top, center" adjustX="-20"
+									 style="border:1px solid black !important">
+									<h:outputText style="font-size:12pt" value="#{msg['event']}" />
+								</pe:tooltip>
+							</p:column>			
+			
+							<!-- Notifications -->
+							<p:column rowspan="2" styleClass="button_header_container" style="margin-left:10px">
+								<c:set var="notif2" value="#{notificationView.numberNotBlue}"/>
+			  					<p:outputLabel style="visibility: #{notif2 eq '0'? 'hidden' : 'visible'}" id="notif_blue" styleClass="blue_ball" title="Number of notifications" value="#{notificationView.numberNotBlue}">
+									<p:effect event="load" type="pulsate"/> 				 	
+			  					</p:outputLabel>
+			  					<p:poll interval="30" listener="#{notificationView.checkNotifications}" update="notif_blue,:#{p:component('notificationBalancingTable')},:#{p:component('notificationMocTable')},:#{p:component('notificationContractTable')}, :#{p:component('notificationBookingTable')},:#{p:component('notificationMeteringTable')},:#{p:component('notificationTariffTable')},:#{p:component('notificationAllocationTable')},:#{p:component('notificationQualityTable')},:#{p:component('notificationMaintenanceTable')},:#{p:component('notificationNominationTable')},:#{p:component('notificationEventTable')}" />
+			  					
+								<p:graphicImage value="/resources/images/icons/notification.png" styleClass="button_header" id="notifBtn"
+									title="#{msg['notification']}" onmouseover="addShadow(this.id)" onmouseout="removeShadow(this.id)"/>
+									<pe:tooltip id="toolTipNotification" for="notifBtn" mouseTracking="false" myPosition="top, center" adjustX="-20"
+										 style="border:1px solid black !important">
+										<h:outputText style="font-size:12pt" value="#{msg['notification']}" />
+									</pe:tooltip>
+									
+							</p:column>			
+								
+							<!-- Messages -->		
+							<p:column rowspan="2" styleClass="button_header_container" style="margin-left:10px">
+								<c:set var="info" value="#{messagesView.infoMsg}"/>
+			  					<p:outputLabel style="visibility: #{info eq '0'? 'hidden' : 'visible'}" id="msg_info" styleClass="green_ball" title="Number of info messages" value="#{messagesView.infoMsg}">
+									<p:effect event="load" type="pulsate"/>
+			  				 	</p:outputLabel>
+			  					
+								<c:set var="warn" value="#{messagesView.warningMsg}"/>
+			  					<p:outputLabel style="visibility: #{warn eq '0' ? 'hidden' : 'visible'}" id="msg_warning" styleClass="orange_ball" title="Number of warning messages" value="#{messagesView.warningMsg}">
+									<p:effect event="load" type="pulsate"/>
+			  				 	</p:outputLabel>
+
+								<c:set var="error" value="#{messagesView.errorMsg}"/>
+			  					<p:outputLabel style="visibility: #{error eq '0' ? 'hidden' : 'visible'}" id="msg_error" styleClass="red_ball" title="Number of error messages" value="#{messagesView.errorMsg}">
+									<p:effect event="load" type="pulsate"/>
+			  				 	</p:outputLabel>
+			
+								<p:graphicImage value="/resources/images/icons/message.png" styleClass="button_header" id="messageBtn"
+									title="#{msg['messages']}" onclick="PF('messagePanelWidget').loadContents()" onmouseover="addShadow(this.id)" onmouseout="removeShadow(this.id)"/>
+									<pe:tooltip id="toolTipMessage" for="messageBtn" mouseTracking="false" myPosition="top, center" adjustX="-20"
+										 style="border:1px solid black !important">
+										<h:outputText style="font-size:12pt" value="#{msg['messages']}" />
+									</pe:tooltip>
+							</p:column>			
+									
+							<!-- Version -->	
+							<p:column rowspan="2" styleClass="button_header_container">
+								<p:graphicImage value="/resources/images/icons/info.png" styleClass="button_header" id="infoBtn"
+									title="#{msg['version']}" onmouseover="addShadow(this.id)" onmouseout="removeShadow(this.id)"/>
+									<pe:tooltip id="toolTipVersion" for="infoBtn" mouseTracking="false" myPosition="top, center" adjustX="-20"
+										 style="border:1px solid black !important">
+										<ui:include src="/WEB-INF/classes/version.xhtml"/>
+									</pe:tooltip>
+							</p:column>			
+							
+							<!-- User info -->			
+							<p:column rowspan="2" styleClass="button_header_container">
+								<p:graphicImage value="/resources/images/icons/user.png" styleClass="button_header" id="userBtn"
+									title="#{msg['user']}" onmouseover="addShadow(this.id)" onmouseout="removeShadow(this.id)"/>
+									<pe:tooltip id="toolTipUser" for="userBtn" mouseTracking="false" myPosition="top, center" adjustX="-20"
+										 style="border:1px solid black !important">
+										<h:outputText style="float:right" value="#{msg['user']}: #{userBean.username}"/>
+										<h:outputText value="&lt;br/&gt;" escape="false" />
+										<h:outputText style="float:right" value="#{userBean.type_desc}: #{userBean.user_group_id}"/>
+									</pe:tooltip>
+							</p:column>		
+							
+								
+						<!-- GUIDE -->			
+							<p:column rowspan="2" styleClass="button_header_container">
+							<h:commandLink >
+								<p:fileDownload value="#{userGuideView.getTemplate(userBean.idn_user_group)}"/>
+								<h:graphicImage value="/resources/images/icons/book-icon-1.png" styleClass="button_header" id="userGuideBtn"
+								title="#{msg['User Guide']}" onmouseover="addShadow(this.id)" onmouseout="removeShadow(this.id)"/>
+							</h:commandLink>
+							<pe:tooltip id="toolTipUserGuide" for="userGuideBtn" mouseTracking="false" myPosition="top, center" adjustX="-20"
+									 style="border:1px solid black !important">
+								<h:outputText style="font-size:12pt"  value="#{msg['user_Guide']}"/>				
+							</pe:tooltip>
+							</p:column>		
+							
+							
+							<!-- Clock -->
+							<p:column style="width:140px;float:right;padding:0px">
+								<p:clock autoSync="true" pattern="dd/MM/yyyy HH:mm:ss" mode="server" locale="en_EN"/>
+								
+							</p:column>
+						</p:row>
+						<p:row style="padding:0px;width:100%;">
+							<!-- Change language --> 			
+							<p:column style="padding:0px;width:140px">
+								<h:selectOneMenu style="text-size:10pt;float:right" value="#{languageBean.locale}" onchange="submit()"
+								     valueChangeListener="#{languageBean.localeChanged}">
+									<f:selectItems value="#{languageBean.countries}" /> 
+								</h:selectOneMenu>
+								<p:graphicImage style="padding-top:2px; float:right" value="/resources/images/flags/#{languageBean.locale}.png" width="22" height="17"/>  
+							</p:column>
+						</p:row>
+						<!--  Breadcrump -->
+						<p:row style="padding:0px;height:19px">
+							<p:column colspan="3" style="padding: 1px !important;">
+								<ui:insert name="breadCrumbComponent" />
+							</p:column>
+							<p:column colspan="6" style="padding: 1px !important;">
+								<h:outputText style="float:right;font-weight: bold;" value="#{msg['user']}: #{userBean.username}"/>
+							</p:column>
+						</p:row>
+					</p:panelGrid>
+				</p:column>
+				
+				<!-- Atos logo .- CH804 Delete Atos Icon
+				<p:column style="text-align:right;width:100px;padding:0px">
+					<p:panelGrid style="padding:0px">
+						<p:row style="padding:0px">
+							<p:column style="padding:0px">
+								<p:graphicImage value="/resources/images/logos/atos.png" style="float:left;width:100px;height:33px;margin-right:5px;margin-left:5px"/>
+							</p:column>
+						</p:row>
+					</p:panelGrid>
+				</p:column>-->
+			</p:row>
+		</p:panelGrid>
+		
+		<p:panelGrid style="overflow-y: hidden;width:100%;height:20px;border-collapse:collapse;padding:0px">			
+			
+			
+			<!--  Menu -->
+					<p:menubar model="#{menuView.model}" >
+	 				<f:facet name="options">
+							<p:commandButton style="background:white;color:black" onclick="PF('layoutWdgt').toggle('north')" id="header_collapse" icon="fa fa-minus" title="#{msg['collapse_header']}" value="#{msg['minimize']}" />
+
+
+							<p:remoteCommand name="logout_rc" actionListener="#{shiroLoginBean.doLogout}"  />
+								 
+							<p:commandButton style="background:white;color:black" id="logout" type="button" onclick="logout_rc()" value="Logout" icon="ui-icon fa fa-sign-out" />
+
+
+						</f:facet>
+					</p:menubar> 
+		</p:panelGrid>
+		
+		
+		
+	<!--  Alarm panel -->	
+    <p:overlayPanel id="alarmPanel" for="alarmBtn" showEffect="size" hideEffect="fold" widgetVar="alarmPanelWidget" 
+    	dismissable="false" my="left top" at="left bottom"
+    	dynamic="true" style="width:950px">
+    	
+		<p:panel style="height:21px">
+			<h3 style="margin-top: -2px;text-align: center">
+				<p:outputLabel value="#{userBean.isUser_type('OPERATOR')? msg['alarm_alarm_area'] : msg['alarm_unplanned_events']}"/>
+				<p:commandButton style="float:right;width:22px;height:22px;top:-3px" icon="fa fa-close" onclick="PF('alarmPanelWidget').hide();"/>
+			</h3>
+		</p:panel>    	
+        <p:dataTable id="alarmTable" widgetVar="w_alarmTable" var="alarms" value="#{alarmView.items}" paginator="true"
+        	scrollable="true" scrollHeight="500"
+        	filteredValue="#{alarmView.filteredAlarms}"
+        	rows="5" rowsPerPageTemplate="5,10,15,20,25,50,100,400">
+        	
+        	
+            <p:column  rendered="#{alarmView.isVisible()}"    headerText="#{msg['scadaAlarms_Name']}" style="width: 65px;">
+                <h:outputText value="#{alarms.scada_tag_name}" />
+            </p:column>
+            
+            <p:column headerText="#{msg['scadaAlarms_ID']}" style="width: 85px;"> 
+                <h:outputText value="#{alarms.alarm_id}" />
+            </p:column>
+            
+             <p:column headerText="#{msg['scadaAlarms_type']}" style="width: 30px;"> 
+                <h:outputText value="#{alarms.alarm_type}" />
+            </p:column>
+            
+            
+            
+            <p:column headerText="#{msg['scadaAlarms_Time_Stamp']}"  style="width: 60px;">
+                <h:outputText value="#{alarms.scada_timestamp}" >
+				   	<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss"/>
+				</h:outputText>
+            </p:column>
+            <p:column headerText="#{msg['scadaAlarms_Label']}" style="width: 65px;">
+                <h:outputText value="#{alarms.scada_label}" />
+            </p:column>
+            <p:column headerText="#{msg['scadaAlarms_Metering_Point']}" style="width: 55px;">
+                <h:outputText value="#{alarms.metering_point}" />
+            </p:column>
+            <p:column headerText="#{msg['scadaAlarms_Capacity_Restriction']}">
+                <h:outputText value="#{alarms.capacity_restriction}" style="float:right,  width: 100px;" >
+            		<f:convertNumber pattern="#,##0" />
+				</h:outputText>
+            </p:column>
+            <p:column headerText="#{msg['scadaAlarms_Area']}" style="width: 30px;">
+                <h:outputText value="#{alarms.area_code}" />
+            </p:column>
+            <p:column headerText="#{msg['scadaAlarms_Temp_Resolution_Time']}" style="width: 60px;">
+                <h:outputText value="#{alarms.temp_resolution_time}" >
+                	<f:convertDateTime pattern="dd/MM/yyyy"/>
+                </h:outputText>
+            </p:column>
+            
+           <!-- CH732 --> 
+           <p:column style="width:50px" headerText="#{msg['scadaAlarms_Comment_Shipper']}">
+                <p:commandButton icon="fa fa-search-plus"
+                	action="#{alarmView.setLongMessage(alarms.comments_shipper)}"
+                	oncomplete="PF('viewAlarmTextDialog').show()"
+                	update=":#{p:component('viewAlarmText')}"
+                />
+                <h:outputText style="word-wrap: break-word" value="#{notif.information.length() gt 100 ? notif.information.substring(0,100).concat('...') : notif.information}"/>
+            </p:column>
+            
+            <p:column headerText="#{msg['scadaAlarms_Severity']}"
+            	filterBy="#{alarms.severity}" filterMatchMode="in" style="width: 70px;">
+            	<f:facet name="filter">
+	                <p:selectCheckboxMenu label="#{msg['scadaAlarms_Severity']}" onchange="PF('w_alarmTable').filter()">
+	                    <f:selectItem itemLabel="NO SEVERITY" itemValue="NO SEVERITY" />
+	                    <f:selectItem itemLabel="MODERATE" itemValue="MODERATE" />
+						<f:selectItem itemLabel="HIGH" itemValue="HIGH" />
+	                </p:selectCheckboxMenu>
+            	</f:facet>
+                <h:outputText value="#{alarms.severity}" />
+            </p:column>
+            <p:column headerText="#{msg['scadaAlarms_Status']}" 
+            	filterBy="#{alarms.status}" filterMatchMode="in" style="width: 65px;">
+            	<f:facet name="filter">
+	                <p:selectCheckboxMenu label="#{msg['scadaAlarms_Status']}" onchange="PF('w_alarmTable').filter()">
+	                    <f:selectItem itemLabel="NEW" itemValue="NEW" />
+						<f:selectItem itemLabel="PUBLISHED" itemValue="PUBLISHED" />
+	                </p:selectCheckboxMenu>
+            	</f:facet>
+                <h:outputText value="#{alarms.status}" />
+            </p:column>
+        </p:dataTable>
+    </p:overlayPanel>
+	<p:draggable for="alarmPanel" handle="div.ui-panel"/>
+
+	<!--  Notification panel -->	
+    <p:overlayPanel id="notificationPanel" for="notifBtn" showEffect="size"  hideEffect="fold" widgetVar="notificationPanelWidget" 
+    	dismissable="false"
+    	dynamic="true" style="width:805px;">
+    	
+		<p:panel style="height:21px">
+			<h3 style="margin-top: -2px;text-align: center">
+				<p:outputLabel value="Notification Area"/> 
+				<p:commandButton style="float:right;width:22px;height:22px;top:-3px" icon="fa fa-close" onclick="PF('notificationPanelWidget').hide();"/>
+				<p:commandButton oncomplete="PF('notificationPanelWidget').loadContents()" style="float:right;width:22px;height:22px;top:-3px"
+        					actionListener="#{notificationView.removeAllNotifications}"
+        					update=":#{p:component('msgs')},:#{p:component('notif_blue')}"
+        					 icon="fa fa-check-square-o" title="Acknowledge all notifications"/>
+        	</h3>
+		</p:panel>
+		<!-- ******************************************************* -->
+		
+		 <p:tabView scrollable="true" id="tabViewNotif"> 
+   		<!-- pos 1 -->
+   			  <p:tab title="#{msg['menu_balancing']} - #{notificationView.getNotifList('BALANCING').size()}">
+		         <p:dataTable id="notificationBalancingTable" var="notif" value="#{notificationView.getNotifList('BALANCING')}" rows="5" paginator="true"> 
+		         <f:facet name="header">
+		        		<p:outputLabel value="BALANCING Notification Area"/> 
+        				<p:commandButton oncomplete="PF('notificationPanelWidget').loadContents()" style="float:right;width:22px;height:22px;top:-3px"
+        					actionListener="#{notificationView.removeAllNotificationsOrigin('BALANCING')}"
+        					update=":#{p:component('msgs')}"
+        					 icon="fa fa-check-square-o" title="Acknowledge all BALANCING notifications"/>
+    				</f:facet> 
+		              <p:column style="width:15px;white-space: nowrap" headerText="#{msg['notification_id']}">
+		                <h:outputText value="#{notif.idn_notification}" />
+		            </p:column>
+		            <p:column style="width:50px;white-space: nowrap" headerText="#{msg['notification_origin']}">
+		                <h:outputText value="#{notif.origin}" />
+		            </p:column>
+		            <p:column style="width:230px" headerText="#{msg['notification_text']}">
+		                <p:commandButton icon="fa fa-search-plus"
+		                	action="#{notificationView.setLongMessage(notif.information)}"
+		                	oncomplete="PF('viewNotificationTextDialog').show()"
+		                	update=":#{p:component('viewNotificationText')}"
+		                />
+		                <h:outputText style="word-wrap: break-word" value="#{notif.information.length() gt 100 ? notif.information.substring(0,100).concat('...') : notif.information}"/>
+		            </p:column>
+		            <p:column style="width:90px;white-space: nowrap" headerText="#{msg['messages_date']}">
+		                <h:outputText value="#{notif.start_date}" >
+		                	<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+						</h:outputText>
+				    </p:column>
+		            <p:column style="width:45px;text-align: center" headerText="#{msg['notification_acknowledge']}">
+			            <p:commandButton oncomplete="PF('notificationPanelWidget').loadContents()" icon="fa fa-check-square-o"
+			            	actionListener="#{notificationView.acknowledgeNotification(notif)}" 
+			            	update=":#{p:component('msgs')},:#{p:component('notif_blue')},:#{p:component('notificationBalancingTable')}">
+			            </p:commandButton>
+					 </p:column> 
+		        </p:dataTable>
+			 </p:tab>
+			 <!-- pos 2 -->
+			 <p:tab title="#{msg['menu_moc']} - #{notificationView.getNotifList('MOC').size()}">
+		         <p:dataTable id="notificationMocTable" var="notif" value="#{notificationView.getNotifList('MOC')}" rows="5" paginator="true">  
+		            <f:facet name="header">
+		        		<p:outputLabel value="MOC Notification Area"/> 
+        				<p:commandButton oncomplete="PF('notificationPanelWidget').loadContents()" style="float:right;width:22px;height:22px;top:-3px"
+        					actionListener="#{notificationView.removeAllNotificationsOrigin('MOC')}"
+        					update=":#{p:component('msgs')}"
+        					 icon="fa fa-check-square-o" title="Acknowledge all MOC notifications"/>
+    				</f:facet> 
+		            <p:column style="width:15px;white-space: nowrap" headerText="#{msg['notification_id']}">
+		                <h:outputText value="#{notif.idn_notification}" />
+		            </p:column>
+		            <p:column style="width:50px;white-space: nowrap" headerText="#{msg['notification_origin']}">
+		                <h:outputText value="#{notif.origin}" />
+		            </p:column>
+		            <p:column style="width:230px" headerText="#{msg['notification_text']}">
+		                <p:commandButton icon="fa fa-search-plus"
+		                	action="#{notificationView.setLongMessage(notif.information)}"
+		                	oncomplete="PF('viewNotificationTextDialog').show()"
+		                	update=":#{p:component('viewNotificationText')}"
+		                />
+		                <h:outputText style="word-wrap: break-word" value="#{notif.information.length() gt 100 ? notif.information.substring(0,100).concat('...') : notif.information}"/>
+		            </p:column>
+		            <p:column style="width:90px;white-space: nowrap" headerText="#{msg['messages_date']}">
+		                <h:outputText value="#{notif.start_date}" >
+		                	<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+						</h:outputText>
+				    </p:column>
+		            <p:column style="width:45px;text-align: center" headerText="#{msg['notification_acknowledge']}">
+			            <p:commandButton oncomplete="PF('notificationPanelWidget').loadContents()" icon="fa fa-check-square-o"
+			            	actionListener="#{notificationView.acknowledgeNotification(notif)}"
+			            	  update=":#{p:component('msgs')},:#{p:component('notif_blue')},:#{p:component('notificationMocTable')}">
+			            </p:commandButton>
+					 </p:column> 
+		        </p:dataTable>
+			 </p:tab> 
+			 <!-- pos 3 -->
+			 <p:tab title="#{msg['menu_contract']} - #{notificationView.getNotifList('CONTRACT').size()}">
+		         <p:dataTable id="notificationContractTable" var="notif" value="#{notificationView.getNotifList('CONTRACT')}" rows="5" paginator="true">  
+		            <f:facet name="header">
+		        		<p:outputLabel value="CONTRACT Notification Area"/> 
+        				<p:commandButton oncomplete="PF('notificationPanelWidget').loadContents()" style="float:right;width:22px;height:22px;top:-3px"
+        					actionListener="#{notificationView.removeAllNotificationsOrigin('CONTRACT')}"
+        					update=":#{p:component('msgs')}"
+        					 icon="fa fa-check-square-o" title="Acknowledge all CONTRACT notifications"/>
+    				</f:facet> 
+		            <p:column style="width:15px;white-space: nowrap" headerText="#{msg['notification_id']}">
+		                <h:outputText value="#{notif.idn_notification}" />
+		            </p:column>
+		            <p:column style="width:50px;white-space: nowrap" headerText="#{msg['notification_origin']}">
+		                <h:outputText value="#{notif.origin}" />
+		            </p:column>
+		            <p:column style="width:230px" headerText="#{msg['notification_text']}">
+		                <p:commandButton icon="fa fa-search-plus"
+		                	action="#{notificationView.setLongMessage(notif.information)}"
+		                	oncomplete="PF('viewNotificationTextDialog').show()"
+		                	update=":#{p:component('viewNotificationText')}"
+		                />
+		                <h:outputText style="word-wrap: break-word" value="#{notif.information.length() gt 100 ? notif.information.substring(0,100).concat('...') : notif.information}"/>
+		            </p:column>
+		            <p:column style="width:90px;white-space: nowrap" headerText="#{msg['messages_date']}">
+		                <h:outputText value="#{notif.start_date}" >
+		                	<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+						</h:outputText>
+				    </p:column>
+		            <p:column style="width:45px;text-align: center" headerText="#{msg['notification_acknowledge']}">
+			            <p:commandButton oncomplete="PF('notificationPanelWidget').loadContents()" icon="fa fa-check-square-o"
+			            	actionListener="#{notificationView.acknowledgeNotification(notif)}"
+			            	update=":#{p:component('msgs')},:#{p:component('notif_blue')},:#{p:component('notificationContractTable')}">
+			            </p:commandButton>
+					 </p:column> 
+		        </p:dataTable>
+			 </p:tab>  
+			 <!-- pos 4 -->
+			 <p:tab title="#{msg['menu_booking']} - #{notificationView.getNotifList('BOOKING').size()}">
+		         <p:dataTable id="notificationBookingTable" var="notif" value="#{notificationView.getNotifList('BOOKING')}" rows="5" paginator="true">  
+		            <f:facet name="header">
+		        		<p:outputLabel value="BOOKING Notification Area"/> 
+        				<p:commandButton oncomplete="PF('notificationPanelWidget').loadContents()" style="float:right;width:22px;height:22px;top:-3px"
+        					actionListener="#{notificationView.removeAllNotificationsOrigin('BOOKING')}"
+        					update=":#{p:component('msgs')}"
+        					 icon="fa fa-check-square-o" title="Acknowledge all BOOKING notifications"/>
+    				</f:facet> 
+		            <p:column style="width:15px;white-space: nowrap" headerText="#{msg['notification_id']}">
+		                <h:outputText value="#{notif.idn_notification}" />
+		            </p:column>
+		            <p:column style="width:50px;white-space: nowrap" headerText="#{msg['notification_origin']}">
+		                <h:outputText value="#{notif.origin}" />
+		            </p:column>
+		            <p:column style="width:230px" headerText="#{msg['notification_text']}">
+		                <p:commandButton icon="fa fa-search-plus"
+		                	action="#{notificationView.setLongMessage(notif.information)}"
+		                	oncomplete="PF('viewNotificationTextDialog').show()"
+		                	update=":#{p:component('viewNotificationText')}"
+		                />
+		                <h:outputText style="word-wrap: break-word" value="#{notif.information.length() gt 100 ? notif.information.substring(0,100).concat('...') : notif.information}"/>
+		            </p:column>
+		            <p:column style="width:90px;white-space: nowrap" headerText="#{msg['messages_date']}">
+		                <h:outputText value="#{notif.start_date}" >
+		                	<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+						</h:outputText>
+				    </p:column>
+		            <p:column style="width:45px;text-align: center" headerText="#{msg['notification_acknowledge']}">
+			            <p:commandButton oncomplete="PF('notificationPanelWidget').loadContents()" icon="fa fa-check-square-o"
+			            	actionListener="#{notificationView.acknowledgeNotification(notif)}" 
+			            	 update=":#{p:component('msgs')},:#{p:component('notif_blue')},:#{p:component('notificationBookingTable')}" title="#{msg['notification_acknowledge']}"> 
+			            </p:commandButton>
+					 </p:column> 
+		        </p:dataTable>
+			 </p:tab> 
+			 <!-- pos 5 -->       
+			 <p:tab title="#{msg['menu_metering']} - #{notificationView.getNotifList('METERING').size()}">
+		         <p:dataTable id="notificationMeteringTable" var="notif" value="#{notificationView.getNotifList('METERING')}" rows="5" paginator="true">  
+		            <f:facet name="header">
+		        		<p:outputLabel value="METERING Notification Area"/> 
+        				<p:commandButton oncomplete="PF('notificationPanelWidget').loadContents()" style="float:right;width:22px;height:22px;top:-3px"
+        					actionListener="#{notificationView.removeAllNotificationsOrigin('METERING')}"
+        					update=":#{p:component('msgs')}"
+        					 icon="fa fa-check-square-o" title="Acknowledge all METERING notifications"/>
+    				</f:facet> 
+		            <p:column style="width:15px;white-space: nowrap" headerText="#{msg['notification_id']}">
+		                <h:outputText value="#{notif.idn_notification}" />
+		            </p:column>
+		            <p:column style="width:50px;white-space: nowrap" headerText="#{msg['notification_origin']}">
+		                <h:outputText value="#{notif.origin}" />
+		            </p:column>
+		            <p:column style="width:230px" headerText="#{msg['notification_text']}">
+		                <p:commandButton icon="fa fa-search-plus"
+		                	action="#{notificationView.setLongMessage(notif.information)}"
+		                	oncomplete="PF('viewNotificationTextDialog').show()"
+		                	update=":#{p:component('viewNotificationText')}"
+		                />
+		                <h:outputText style="word-wrap: break-word" value="#{notif.information.length() gt 100 ? notif.information.substring(0,100).concat('...') : notif.information}"/>
+		            </p:column>
+		            <p:column style="width:90px;white-space: nowrap" headerText="#{msg['messages_date']}">
+		                <h:outputText value="#{notif.start_date}" >
+		                	<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+						</h:outputText>
+				    </p:column>
+		            <p:column style="width:45px;text-align: center" headerText="#{msg['notification_acknowledge']}">
+			            <p:commandButton oncomplete="PF('notificationPanelWidget').loadContents()" icon="fa fa-check-square-o"
+			            	actionListener="#{notificationView.acknowledgeNotification(notif)}"
+			            	update=":#{p:component('msgs')},:#{p:component('notif_blue')},:#{p:component('notificationMeteringTable')}" title="#{msg['notification_acknowledge']}"> 
+			            </p:commandButton>
+					 </p:column> 
+		        </p:dataTable>
+			 </p:tab>       
+			 <!-- pos 6 -->  
+			 <p:tab title="#{msg['menu_tariff']} - #{notificationView.getNotifList('TARIFF').size()}">
+		         <p:dataTable id="notificationTariffTable" var="notif" value="#{notificationView.getNotifList('TARIFF')}" rows="5" paginator="true">
+		         <f:facet name="header">
+		        		<p:outputLabel value="TARIFF Notification Area"/> 
+        				<p:commandButton oncomplete="PF('notificationPanelWidget').loadContents()" style="float:right;width:22px;height:22px;top:-3px"
+        					actionListener="#{notificationView.removeAllNotificationsOrigin('TARIFF')}"
+        					update=":#{p:component('msgs')}"
+        					 icon="fa fa-check-square-o" title="Acknowledge all TARIFF notifications"/>
+    				</f:facet>  
+		            <p:column style="width:15px;white-space: nowrap" headerText="#{msg['notification_id']}">
+		                <h:outputText value="#{notif.idn_notification}" />
+		            </p:column>
+		            <p:column style="width:50px;white-space: nowrap" headerText="#{msg['notification_origin']}">
+		                <h:outputText value="#{notif.origin}" />
+		            </p:column>
+		            <p:column style="width:230px" headerText="#{msg['notification_text']}">
+		                <p:commandButton icon="fa fa-search-plus"
+		                	action="#{notificationView.setLongMessage(notif.information)}"
+		                	oncomplete="PF('viewNotificationTextDialog').show()"
+		                	update=":#{p:component('viewNotificationText')}"
+		                />
+		                <h:outputText style="word-wrap: break-word" value="#{notif.information.length() gt 100 ? notif.information.substring(0,100).concat('...') : notif.information}"/>
+		            </p:column>
+		            <p:column style="width:90px;white-space: nowrap" headerText="#{msg['messages_date']}">
+		                <h:outputText value="#{notif.start_date}" >
+		                	<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+						</h:outputText>
+				    </p:column>
+		            <p:column style="width:45px;text-align: center" headerText="#{msg['notification_acknowledge']}">
+			            <p:commandButton oncomplete="PF('notificationPanelWidget').loadContents()" icon="fa fa-check-square-o"
+			            	actionListener="#{notificationView.acknowledgeNotification(notif)}" 
+			            	update=":#{p:component('msgs')},:#{p:component('notif_blue')},:#{p:component('notificationTariffTable')}" title="#{msg['notification_acknowledge']}"> 
+			            </p:commandButton>
+					 </p:column> 
+		        </p:dataTable>
+			 </p:tab>   
+			 <!-- pos 7 -->
+			 <p:tab title="#{msg['menu_allocation']} - #{notificationView.getNotifList('ALLOCATION').size()}">
+		         <p:dataTable id="notificationAllocationTable" var="notif" value="#{notificationView.getNotifList('ALLOCATION')}" rows="5" paginator="true">  
+		            <f:facet name="header">
+		        		<p:outputLabel value="ALLOCATION Notification Area"/> 
+        				<p:commandButton oncomplete="PF('notificationPanelWidget').loadContents()" style="float:right;width:22px;height:22px;top:-3px"
+        					actionListener="#{notificationView.removeAllNotificationsOrigin('ALLOCATION')}"
+        					update=":#{p:component('msgs')}"
+        					 icon="fa fa-check-square-o" title="Acknowledge all ALLOCATION notifications"/>
+    				</f:facet>  
+		            <p:column style="width:15px;white-space: nowrap" headerText="#{msg['notification_id']}">
+		                <h:outputText value="#{notif.idn_notification}" />
+		            </p:column>
+		            <p:column style="width:50px;white-space: nowrap" headerText="#{msg['notification_origin']}">
+		                <h:outputText value="#{notif.origin}" />
+		            </p:column>
+		            <p:column style="width:230px" headerText="#{msg['notification_text']}">
+		                <p:commandButton icon="fa fa-search-plus"
+		                	action="#{notificationView.setLongMessage(notif.information)}"
+		                	oncomplete="PF('viewNotificationTextDialog').show()"
+		                	update=":#{p:component('viewNotificationText')}"
+		                />
+		                <h:outputText style="word-wrap: break-word" value="#{notif.information.length() gt 100 ? notif.information.substring(0,100).concat('...') : notif.information}"/>
+		            </p:column>
+		            <p:column style="width:90px;white-space: nowrap" headerText="#{msg['messages_date']}">
+		                <h:outputText value="#{notif.start_date}" >
+		                	<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+						</h:outputText>
+				    </p:column>
+		            <p:column style="width:45px;text-align: center" headerText="#{msg['notification_acknowledge']}">
+			            <p:commandButton oncomplete="PF('notificationPanelWidget').loadContents()" icon="fa fa-check-square-o"
+			            	actionListener="#{notificationView.acknowledgeNotification(notif)}"
+			            	update=":#{p:component('msgs')},:#{p:component('notif_blue')},:#{p:component('notificationAllocationTable')}"> 
+			            </p:commandButton>
+					 </p:column> 
+		        </p:dataTable>
+			 </p:tab>   
+			 <!-- pos 8 -->
+			 <p:tab title="#{msg['menu_quality']} - #{notificationView.getNotifList('QUALITY').size()}">
+		         <p:dataTable id="notificationQualityTable" var="notif" value="#{notificationView.getNotifList('QUALITY')}" rows="5" paginator="true">  
+		            <f:facet name="header">
+		        		<p:outputLabel value="QUALITY Notification Area"/> 
+        				<p:commandButton oncomplete="PF('notificationPanelWidget').loadContents()" style="float:right;width:22px;height:22px;top:-3px"
+        					actionListener="#{notificationView.removeAllNotificationsOrigin('QUALITY')}"
+        					update=":#{p:component('msgs')}"
+        					 icon="fa fa-check-square-o" title="Acknowledge all QUALITY notifications"/>
+    				</f:facet>
+		            <p:column style="width:15px;white-space: nowrap" headerText="#{msg['notification_id']}">
+		                <h:outputText value="#{notif.idn_notification}" />
+		            </p:column>
+		            <p:column style="width:50px;white-space: nowrap" headerText="#{msg['notification_origin']}">
+		                <h:outputText value="#{notif.origin}" />
+		            </p:column>
+		            <p:column style="width:230px" headerText="#{msg['notification_text']}">
+		                <p:commandButton icon="fa fa-search-plus"
+		                	action="#{notificationView.setLongMessage(notif.information)}"
+		                	oncomplete="PF('viewNotificationTextDialog').show()"
+		                	update=":#{p:component('viewNotificationText')}"
+		                />
+		                <h:outputText style="word-wrap: break-word" value="#{notif.information.length() gt 100 ? notif.information.substring(0,100).concat('...') : notif.information}"/>
+		            </p:column>
+		            <p:column style="width:90px;white-space: nowrap" headerText="#{msg['messages_date']}">
+		                <h:outputText value="#{notif.start_date}" >
+		                	<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+						</h:outputText>
+				    </p:column>
+		            <p:column style="width:45px;text-align: center" headerText="#{msg['notification_acknowledge']}">
+			            <p:commandButton oncomplete="PF('notificationPanelWidget').loadContents()" icon="fa fa-check-square-o"
+			            	actionListener="#{notificationView.acknowledgeNotification(notif)}" 
+			            	update=":#{p:component('msgs')},:#{p:component('notif_blue')},:#{p:component('notificationQualityTable')}" title="#{msg['notification_acknowledge']}"> 
+			            </p:commandButton>
+					 </p:column> 
+		        </p:dataTable>
+			 </p:tab>  
+			 <!-- pos 9 -->
+			 <p:tab title="#{msg['menu_maintenance']} - #{notificationView.getNotifList('MAINTENANCE').size()}">
+		         <p:dataTable id="notificationMaintenanceTable" var="notif" value="#{notificationView.getNotifList('MAINTENANCE')}" rows="5" paginator="true">  
+		            <f:facet name="header">
+		        		<p:outputLabel value="MAINTENANCE Notification Area"/> 
+        				<p:commandButton oncomplete="PF('notificationPanelWidget').loadContents()" style="float:right;width:22px;height:22px;top:-3px"
+        					actionListener="#{notificationView.removeAllNotificationsOrigin('MAINTENANCE')}"
+        					update=":#{p:component('msgs')}"
+        					 icon="fa fa-check-square-o" title="Acknowledge all MAINTENANCE notifications"/>
+    				</f:facet>
+		            <p:column style="width:15px;white-space: nowrap" headerText="#{msg['notification_id']}">
+		                <h:outputText value="#{notif.idn_notification}" />
+		            </p:column>
+		            <p:column style="width:50px;white-space: nowrap" headerText="#{msg['notification_origin']}">
+		                <h:outputText value="#{notif.origin}" />
+		            </p:column>
+		            <p:column style="width:230px" headerText="#{msg['notification_text']}">
+		                <p:commandButton icon="fa fa-search-plus"
+		                	action="#{notificationView.setLongMessage(notif.information)}"
+		                	oncomplete="PF('viewNotificationTextDialog').show()"
+		                	update=":#{p:component('viewNotificationText')}"
+		                />
+		                <h:outputText style="word-wrap: break-word" value="#{notif.information.length() gt 100 ? notif.information.substring(0,100).concat('...') : notif.information}"/>
+		            </p:column>
+		            <p:column style="width:90px;white-space: nowrap" headerText="#{msg['messages_date']}">
+		                <h:outputText value="#{notif.start_date}" >
+		                	<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+						</h:outputText>
+				    </p:column>
+		            <p:column style="width:45px;text-align: center" headerText="#{msg['notification_acknowledge']}">
+			            <p:commandButton oncomplete="PF('notificationPanelWidget').loadContents()" icon="fa fa-check-square-o"
+			            	actionListener="#{notificationView.acknowledgeNotification(notif)}" 
+			            	update=":#{p:component('msgs')},:#{p:component('notif_blue')},:#{p:component('notificationMaintenanceTable')}" title="#{msg['notification_acknowledge']}">
+			            </p:commandButton>
+					 </p:column> 
+		        </p:dataTable>
+			 </p:tab>   
+			 <!-- pos 10 -->
+			 <p:tab title="#{msg['menu_nominations']} - #{notificationView.getNotifList('NOMINATION').size()}">
+		         <p:dataTable id="notificationNominationTable" var="notif" value="#{notificationView.getNotifList('NOMINATION')}" rows="5" paginator="true">  
+		            <f:facet name="header">
+		        		<p:outputLabel value="NOMINATION Notification Area"/> 
+        				<p:commandButton oncomplete="PF('notificationPanelWidget').loadContents()" style="float:right;width:22px;height:22px;top:-3px"
+        					actionListener="#{notificationView.removeAllNotificationsOrigin('NOMINATION')}"
+        					update=":#{p:component('msgs')}"
+        					 icon="fa fa-check-square-o" title="Acknowledge all NOMINATION notifications"/>
+    				</f:facet>
+		            <p:column style="width:15px;white-space: nowrap" headerText="#{msg['notification_id']}">
+		                <h:outputText value="#{notif.idn_notification}" />
+		            </p:column>
+		            <p:column style="width:50px;white-space: nowrap" headerText="#{msg['notification_origin']}">
+		                <h:outputText value="#{notif.origin}" />
+		            </p:column>
+		            <p:column style="width:230px" headerText="#{msg['notification_text']}">
+		                <p:commandButton icon="fa fa-search-plus"
+		                	action="#{notificationView.setLongMessage(notif.information)}"
+		                	oncomplete="PF('viewNotificationTextDialog').show()"
+		                	update=":#{p:component('viewNotificationText')}"
+		                />
+		                <h:outputText style="word-wrap: break-word" value="#{notif.information.length() gt 100 ? notif.information.substring(0,100).concat('...') : notif.information}"/>
+		            </p:column>
+		            <p:column style="width:90px;white-space: nowrap" headerText="#{msg['messages_date']}">
+		                <h:outputText value="#{notif.start_date}" >
+		                	<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+						</h:outputText>
+				    </p:column>
+		            <p:column style="width:45px;text-align: center" headerText="#{msg['notification_acknowledge']}">
+			            <p:commandButton oncomplete="PF('notificationPanelWidget').loadContents()" icon="fa fa-check-square-o"
+			            	actionListener="#{notificationView.acknowledgeNotification(notif)}" 
+			            	update=":#{p:component('msgs')},:#{p:component('notif_blue')},:#{p:component('notificationNominationTable')}" title="#{msg['notification_acknowledge']}">
+			            </p:commandButton>
+					 </p:column> 
+		        </p:dataTable>
+			 </p:tab>
+			 <!-- pos 11 -->
+			 <p:tab title="#{msg['menu_events']} - #{notificationView.getNotifList('EVENT').size()}">
+		         <p:dataTable id="notificationEventTable" var="notif" value="#{notificationView.getNotifList('EVENT')}" rows="5" paginator="true">  
+		            <f:facet name="header">
+		        		<p:outputLabel value="EVENT Notification Area"/> 
+        				<p:commandButton oncomplete="PF('notificationPanelWidget').loadContents()" style="float:right;width:22px;height:22px;top:-3px"
+        					actionListener="#{notificationView.removeAllNotificationsOrigin('EVENT')}"
+        					update=":#{p:component('msgs')}"
+        					 icon="fa fa-check-square-o" title="Acknowledge all EVENT notifications"/>
+    				</f:facet>
+		            <p:column style="width:15px;white-space: nowrap" headerText="#{msg['notification_id']}">
+		                <h:outputText value="#{notif.idn_notification}" />
+		            </p:column>
+		            <p:column style="width:50px;white-space: nowrap" headerText="#{msg['notification_origin']}">
+		                <h:outputText value="#{notif.origin}" />
+		            </p:column>
+		            <p:column style="width:230px" headerText="#{msg['notification_text']}">
+		                <p:commandButton icon="fa fa-search-plus"
+		                	action="#{notificationView.setLongMessage(notif.information)}"
+		                	oncomplete="PF('viewNotificationTextDialog').show()"
+		                	update=":#{p:component('viewNotificationText')}"
+		                />
+		                <h:outputText style="word-wrap: break-word" value="#{notif.information.length() gt 100 ? notif.information.substring(0,100).concat('...') : notif.information}"/>
+		            </p:column>
+		            <p:column style="width:90px;white-space: nowrap" headerText="#{msg['messages_date']}">
+		                <h:outputText value="#{notif.start_date}" >
+		                	<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+						</h:outputText>
+				    </p:column>
+		            <p:column style="width:45px;text-align: center" headerText="#{msg['notification_acknowledge']}">
+			            <p:commandButton oncomplete="PF('notificationPanelWidget').loadContents()" icon="fa fa-check-square-o"
+			            	actionListener="#{notificationView.acknowledgeNotification(notif)}" 
+			            	update=":#{p:component('msgs')},:#{p:component('notif_blue')},:#{p:component('notificationEventTable')}" title="#{msg['notification_acknowledge']}">
+			            </p:commandButton>
+					 </p:column> 
+		        </p:dataTable>
+			 </p:tab>          
+		 	</p:tabView>  
+		
+		<!-- ******************************************************* -->    	
+    </p:overlayPanel>
+	<p:draggable for="notificationPanel" handle="div.ui-panel"/>
+
+
+	<!--  Messages panel -->	
+    <p:overlayPanel id="messagesPanel" for="messageBtn" showEffect="size" hideEffect="fold" widgetVar="messagePanelWidget" 
+    	dismissable="false"
+    	dynamic="true" style="width:805px;">
+    	
+		<p:panel style="height:21px">
+			<h3 style="margin-top: -2px;text-align: center">
+				<p:outputLabel value="Messages Area"/> 
+				<p:commandButton style="float:right;width:22px;height:22px;top:-3px" icon="fa fa-close" onclick="PF('messagePanelWidget').hide();"/>
+				<p:commandButton oncomplete="PF('messagePanelWidget').loadContents()" style="float:right;width:22px;height:22px;top:-3px"
+        					actionListener="#{messagesView.removeAllAreasMessages}"
+        					 icon="fa fa-trash-o" title="Delete all messages"/>
+			</h3>
+		</p:panel>
+		<!--Rosa pongo scroll provisional porque apareran mas tabs -->
+   		<p:tabView scrollable="true">
+   		<!-- pos 1 -->
+   			<p:tab title="#{msg['menu_dam']} - #{messagesView.getMessagesList('DAM').size()}">
+		        <p:dataTable id="messagePanelTableDAM" var="msgs" value="#{messagesView.getMessagesList('DAM')}" scrollable="true" rows="4" paginator="true" style="width:800px">
+		        	<f:facet name="header">
+		        		<p:outputLabel value="DAM Message Area"/> 
+        				<p:commandButton oncomplete="PF('messagePanelWidget').loadContents()" style="float:right;width:22px;height:22px;top:-3px"
+        					actionListener="#{messagesView.removeAllMessages('DAM')}"
+        					 icon="fa fa-trash-o" title="Delete all DAM messages"/>
+    				</f:facet>
+		            <p:column style="width:30px;white-space: nowrap" headerText="#{msg['messages_type']}">
+		            	<h:outputText value="#{msgs.type_string}" />
+		            </p:column>
+		            <p:column style="width:100px" headerText="#{msg['messages_summary']}">
+		                <h:outputText value="#{msgs.summary}" />
+		            </p:column>
+		            <p:column style="width:300px" headerText="#{msg['messages_string']}">
+		                <p:commandButton icon="fa fa-search-plus"
+		                	action="#{messagesView.setLongMessage(msgs.message)}"
+		                	oncomplete="PF('viewTextDialog').show()"
+		                	update=":#{p:component('viewText')}"
+		                />
+		                <h:outputText value="#{msgs.message.length() gt 100 ? msgs.message.substring(0,100).concat('...') : msgs.message}" escape="false"/>
+		            </p:column>
+		            <p:column style="width:110px;white-space: nowrap" headerText="#{msg['messages_date']}">
+		                <h:outputText value="#{msgs.creationDate}" >
+		                	<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+						</h:outputText>
+		            </p:column>					
+			        <p:column style="width:32px;text-align: center">
+			             <p:commandButton oncomplete="PF('messagePanelWidget').loadContents()" icon="fa fa-trash-o" title="#{msg['delete']}" action="#{messagesView.removeMessage('DAM', msgs)}"/>
+			        </p:column>
+                </p:dataTable>
+			</p:tab>
+			<!-- pos 2 -->
+   			<p:tab title="#{msg['menu_booking']} - #{messagesView.getMessagesList('BOOKING').size()}">
+		        <p:dataTable id="messagePanelTableBooking" var="msgs" value="#{messagesView.getMessagesList('BOOKING')}" scrollable="true" rows="4" paginator="true" style="width:800px">
+		        	<f:facet name="header">
+		        		<p:outputLabel value="Booking Message Area"/> 
+        				<p:commandButton oncomplete="PF('messagePanelWidget').loadContents()" style="float:right;width:22px;height:22px;top:-3px"
+        					actionListener="#{messagesView.removeAllMessages('BOOKING')}"
+        					 icon="fa fa-trash-o" title="Delete all Booking messages"/>
+    				</f:facet>
+		            <p:column style="width:30px;white-space: nowrap" headerText="#{msg['messages_type']}">
+		            	<h:outputText value="#{msgs.type_string}" />
+		            </p:column>
+		            <p:column style="width:100px" headerText="#{msg['messages_summary']}">
+		                <h:outputText value="#{msgs.summary}" />
+		            </p:column>
+		            <p:column style="width:300px" headerText="#{msg['messages_string']}">
+		                <p:commandButton icon="fa fa-search-plus"
+		                	action="#{messagesView.setLongMessage(msgs.message)}"
+		                	oncomplete="PF('viewTextDialog').show()"
+		                	update=":#{p:component('viewText')}"
+		                />
+		                <h:outputText value="#{msgs.message.length() gt 100 ? msgs.message.substring(0,100).concat('...') : msgs.message}" escape="false"/>
+		            </p:column>
+		            <p:column style="width:110px;white-space: nowrap" headerText="#{msg['messages_date']}">
+		                <h:outputText value="#{msgs.creationDate}" >
+		                	<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+						</h:outputText>
+		            </p:column>
+					<p:column style="width:32px;text-align: center">
+			             <p:commandButton oncomplete="PF('messagePanelWidget').loadContents()" icon="fa fa-trash-o" title="#{msg['delete']}" action="#{messagesView.removeMessage('BOOKING', msgs)}"/>
+			        </p:column>
+		        </p:dataTable>
+			</p:tab>
+			<!-- pos 3 ahora forecasting -->
+			<p:tab title="#{msg['menu_forecast']} - #{messagesView.getMessagesList('FORECAST').size()}">
+		        <p:dataTable id="messagePanelTableForecast" var="msgs" value="#{messagesView.getMessagesList('FORECAST')}" scrollable="true" rows="4" paginator="true" style="width:800px">
+		        	<f:facet name="header">
+		        		<p:outputLabel value="Forecast Message Area"/> 
+        				<p:commandButton oncomplete="PF('messagePanelWidget').loadContents()" style="float:right;width:22px;height:22px;top:-3px"
+        					actionListener="#{messagesView.removeAllMessages('FORECAST')}"
+        					 icon="fa fa-trash-o" title="Delete all Forecast messages"/>
+    				</f:facet>
+		            <p:column style="width:30px;white-space: nowrap" headerText="#{msg['messages_type']}">
+		            	<h:outputText value="#{msgs.type_string}" />
+		            </p:column>
+		            <p:column style="width:100px" headerText="#{msg['messages_summary']}">
+		                <h:outputText value="#{msgs.summary}" />
+		            </p:column>
+		            <p:column style="width:300px" headerText="#{msg['messages_string']}">
+		                <p:commandButton icon="fa fa-search-plus"
+		                	action="#{messagesView.setLongMessage(msgs.message)}"
+		                	oncomplete="PF('viewTextDialog').show()"
+		                	update=":#{p:component('viewText')}"
+		                />
+		                <h:outputText value="#{msgs.message.length() gt 100 ? msgs.message.substring(0,100).concat('...') : msgs.message}" escape="false"/>
+		            </p:column>
+		            <p:column style="width:110px;white-space: nowrap" headerText="#{msg['messages_date']}">
+		                <h:outputText value="#{msgs.creationDate}" >
+		                	<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+						</h:outputText>
+		            </p:column>
+					<p:column style="width:32px;text-align: center">
+			             <p:commandButton oncomplete="PF('messagePanelWidget').loadContents()" icon="fa fa-trash-o" title="#{msg['delete']}" action="#{messagesView.removeMessage('FORECAST', msgs)}"/>
+			        </p:column>
+		        </p:dataTable>
+			</p:tab>
+			
+   			
+			<!-- pos 4-->
+			<p:tab title="#{msg['menu_maintenance']} - #{messagesView.getMessagesList('MAINTENANCE').size()}">
+		        <p:dataTable id="messagePanelTableMaintenance" var="msgs" value="#{messagesView.getMessagesList('MAINTENANCE')}" scrollable="true" rows="4" paginator="true" style="width:800px">
+		        	<f:facet name="header">
+		        		<p:outputLabel value="Maintenance Message Area"/> 
+        				<p:commandButton oncomplete="PF('messagePanelWidget').loadContents()" style="float:right;width:22px;height:22px;top:-3px"
+        					actionListener="#{messagesView.removeAllMessages('MAINTENANCE')}"
+        					 icon="fa fa-trash-o" title="Delete all Maintenance messages"/>
+    				</f:facet>
+		            <p:column style="width:30px;white-space: nowrap" headerText="#{msg['messages_type']}">
+		            	<h:outputText value="#{msgs.type_string}" />
+		            </p:column>
+		            <p:column style="width:100px" headerText="#{msg['messages_summary']}">
+		                <h:outputText value="#{msgs.summary}" />
+		            </p:column>
+		            <p:column style="width:300px" headerText="#{msg['messages_string']}">
+		                <p:commandButton icon="fa fa-search-plus"
+		                	action="#{messagesView.setLongMessage(msgs.message)}"
+		                	oncomplete="PF('viewTextDialog').show()"
+		                	update=":#{p:component('viewText')}"
+		                />
+		                <h:outputText value="#{msgs.message.length() gt 100 ? msgs.message.substring(0,100).concat('...') : msgs.message}" escape="false"/>
+		            </p:column>
+		            <p:column style="width:110px;white-space: nowrap" headerText="#{msg['messages_date']}">
+		                <h:outputText value="#{msgs.creationDate}" >
+		                	<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+						</h:outputText>
+		            </p:column>
+					<p:column style="width:32px;text-align: center">
+			             <p:commandButton oncomplete="PF('messagePanelWidget').loadContents()" icon="fa fa-trash-o" title="#{msg['delete']}" action="#{messagesView.removeMessage('MAINTENANCE', msgs)}"/>
+			        </p:column>
+		        </p:dataTable>
+			</p:tab>
+			
+   			
+			<!-- pos  5 -->
+			<p:tab title="#{msg['menu_nominations']} - #{messagesView.getMessagesList('NOMINATIONS').size()}">
+		        <p:dataTable id="messagePanelTableNom" var="msgs" value="#{messagesView.getMessagesList('NOMINATIONS')}" scrollable="true" rows="4" paginator="true" style="width:800px">
+		        	<f:facet name="header">
+		        		<p:outputLabel value="Nominations Message Area"/> 
+        				<p:commandButton oncomplete="PF('messagePanelWidget').loadContents()" style="float:right;width:22px;height:22px;top:-3px"
+        					actionListener="#{messagesView.removeAllMessages('NOMINATIONS')}"
+        					 icon="fa fa-trash-o" title="Delete all Nominations messages"/>
+    				</f:facet>
+		            <p:column style="width:30px;white-space: nowrap" headerText="#{msg['messages_type']}">
+		            	<h:outputText value="#{msgs.type_string}" />
+		            </p:column>
+		            <p:column style="width:100px" headerText="#{msg['messages_summary']}">
+		                <h:outputText value="#{msgs.summary}" />
+		            </p:column>
+		            <p:column style="width:300px" headerText="#{msg['messages_string']}">
+		                <p:commandButton icon="fa fa-search-plus"
+		                	action="#{messagesView.setLongMessage(msgs.message)}"
+		                	oncomplete="PF('viewTextDialog').show()"
+		                	update=":#{p:component('viewText')}"
+		                />
+		                <h:outputText value="#{msgs.message.length() gt 100 ? msgs.message.substring(0,100).concat('...') : msgs.message}" escape="false"/>
+		            </p:column>
+		            <p:column style="width:110px;white-space: nowrap" headerText="#{msg['messages_date']}">
+		                <h:outputText value="#{msgs.creationDate}" >
+		                	<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+						</h:outputText>
+		            </p:column>
+					<p:column style="width:32px;text-align: center">
+			             <p:commandButton oncomplete="PF('messagePanelWidget').loadContents()" icon="fa fa-trash-o" title="#{msg['delete']}" action="#{messagesView.removeMessage('NOMINATIONS', msgs)}"/>
+			        </p:column>
+		        </p:dataTable>
+			</p:tab>
+			
+			<!--pos 6 -->
+			<p:tab title="#{msg['event']} - #{messagesView.getMessagesList('ALARMS').size()}">
+		        <p:dataTable id="messagePanelTableAlarms" var="msgs" value="#{messagesView.getMessagesList('ALARMS')}" scrollable="true" rows="4" paginator="true" style="width:800px">
+		        	<f:facet name="header">
+		        		<p:outputLabel value="Event Message Area"/> 
+        				<p:commandButton oncomplete="PF('messagePanelWidget').loadContents()" style="float:right;width:22px;height:22px;top:-3px"
+        					actionListener="#{messagesView.removeAllMessages('ALARMS')}"
+        					 icon="fa fa-trash-o" title="Delete all Event messages"/>
+    				</f:facet>
+		            <p:column style="width:30px;white-space: nowrap" headerText="#{msg['messages_type']}">
+		            	<h:outputText value="#{msgs.type_string}" />
+		            </p:column>
+		            <p:column style="width:100px" headerText="#{msg['messages_summary']}">
+		                <h:outputText value="#{msgs.summary}" />
+		            </p:column>
+		            <p:column style="width:300px" headerText="#{msg['messages_string']}">
+		                <p:commandButton icon="fa fa-search-plus"
+		                	action="#{messagesView.setLongMessage(msgs.message)}"
+		                	oncomplete="PF('viewTextDialog').show()"
+		                	update=":#{p:component('viewText')}"
+		                />
+		                <h:outputText value="#{msgs.message.length() gt 100 ? msgs.message.substring(0,100).concat('...') : msgs.message}" escape="false"/>
+		            </p:column>
+		            <p:column style="width:110px;white-space: nowrap" headerText="#{msg['messages_date']}">
+		                <h:outputText value="#{msgs.creationDate}" >
+		                	<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+						</h:outputText>
+		            </p:column>
+					<p:column style="width:32px;text-align: center">
+			             <p:commandButton oncomplete="PF('messagePanelWidget').loadContents()" icon="fa fa-trash-o" title="#{msg['delete']}" action="#{messagesView.removeMessage('ALARMS', msgs)}"/>
+			        </p:column>
+		        </p:dataTable>
+			</p:tab>
+			<!--pos 7 -->
+			<p:tab title="#{msg['menu_quality']} - #{messagesView.getMessagesList('QUALITY').size()}">
+		        <p:dataTable id="messagePanelTableQuality" var="msgs" value="#{messagesView.getMessagesList('QUALITY')}" scrollable="true" rows="4" paginator="true" style="width:800px">
+		        	<f:facet name="header">
+		        		<p:outputLabel value="Quality Message Area"/> 
+        				<p:commandButton oncomplete="PF('messagePanelWidget').loadContents()" style="float:right;width:22px;height:22px;top:-3px"
+        					actionListener="#{messagesView.removeAllMessages('QUALITY')}"
+        					 icon="fa fa-trash-o" title="Delete all Quality messages"/>
+    				</f:facet>
+		            <p:column style="width:30px;white-space: nowrap" headerText="#{msg['messages_type']}">
+		            	<h:outputText value="#{msgs.type_string}" />
+		            </p:column>
+		            <p:column style="width:100px" headerText="#{msg['messages_summary']}">
+		                <h:outputText value="#{msgs.summary}" />
+		            </p:column>
+		            <p:column style="width:300px" headerText="#{msg['messages_string']}">
+		                <p:commandButton icon="fa fa-search-plus"
+		                	action="#{messagesView.setLongMessage(msgs.message)}"
+		                	oncomplete="PF('viewTextDialog').show()"
+		                	update=":#{p:component('viewText')}"
+		                />
+		                <h:outputText value="#{msgs.message.length() gt 100 ? msgs.message.substring(0,100).concat('...') : msgs.message}" escape="false"/>
+		            </p:column>
+		            <p:column style="width:110px;white-space: nowrap" headerText="#{msg['messages_date']}">
+		                <h:outputText value="#{msgs.creationDate}" >
+		                	<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+						</h:outputText>
+		            </p:column>
+					<p:column style="width:32px;text-align: center">
+			             <p:commandButton oncomplete="PF('messagePanelWidget').loadContents()" icon="fa fa-trash-o" title="#{msg['delete']}" action="#{messagesView.removeMessage('QUALITY', msgs)}"/>
+			        </p:column>
+		        </p:dataTable>
+			</p:tab>
+			<!-- pos 8 -->
+   			<p:tab title="#{msg['menu_metering']} - #{messagesView.getMessagesList('METERING').size()}">
+		        <p:dataTable id="messagePanelTableMetering" var="msgs" value="#{messagesView.getMessagesList('METERING')}" scrollable="true" rows="4" paginator="true" style="width:800px">
+		        	<f:facet name="header">
+		        		<p:outputLabel value="Metering Message Area"/> 
+        				<p:commandButton oncomplete="PF('messagePanelWidget').loadContents()" style="float:right;width:22px;height:22px;top:-3px"
+        					actionListener="#{messagesView.removeAllMessages('METERING')}"
+        					 icon="fa fa-trash-o" title="Delete all Metering messages"/>
+    				</f:facet>
+		            <p:column style="width:30px;white-space: nowrap" headerText="#{msg['messages_type']}">
+		            	<h:outputText value="#{msgs.type_string}" />
+		            </p:column>
+		            <p:column style="width:100px" headerText="#{msg['messages_summary']}">
+		                <h:outputText value="#{msgs.summary}" />
+		            </p:column>
+		            <p:column style="width:300px" headerText="#{msg['messages_string']}">
+		                <p:commandButton icon="fa fa-search-plus"
+		                	action="#{messagesView.setLongMessage(msgs.message)}"
+		                	oncomplete="PF('viewTextDialog').show()"
+		                	update=":#{p:component('viewText')}"
+		                />
+		                <h:outputText value="#{msgs.message.length() gt 100 ? msgs.message.substring(0,100).concat('...') : msgs.message}" escape="false"/>
+		            </p:column>
+		            <p:column style="width:110px;white-space: nowrap" headerText="#{msg['messages_date']}">
+		                <h:outputText value="#{msgs.creationDate}" >
+		                	<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+						</h:outputText>
+		            </p:column>
+					<p:column style="width:32px;text-align: center">
+			             <p:commandButton oncomplete="PF('messagePanelWidget').loadContents()" icon="fa fa-trash-o" title="#{msg['delete']}" action="#{messagesView.removeMessage('METERING', msgs)}"/>
+			        </p:column>
+		        </p:dataTable>
+			</p:tab>
+			<!-- pos 9 -->
+			<p:tab title="#{msg['menu_allocation']} - #{messagesView.getMessagesList('ALLOCATION').size()}">
+		        <p:dataTable id="messagePanelTableAllocation" var="msgs" value="#{messagesView.getMessagesList('ALLOCATION')}" scrollable="true" rows="4" paginator="true" style="width:800px">
+		        	<f:facet name="header">
+		        		<p:outputLabel value="Allocation Message Area"/> 
+        				<p:commandButton oncomplete="PF('messagePanelWidget').loadContents()" style="float:right;width:22px;height:22px;top:-3px"
+        					actionListener="#{messagesView.removeAllMessages('ALLOCATION')}"
+        					 icon="fa fa-trash-o" title="Delete all Allocation messages"/>
+    				</f:facet>
+		            <p:column style="width:30px;white-space: nowrap" headerText="#{msg['messages_type']}">
+		            	<h:outputText value="#{msgs.type_string}" />
+		            </p:column>
+		            <p:column style="width:100px" headerText="#{msg['messages_summary']}">
+		                <h:outputText value="#{msgs.summary}" />
+		            </p:column>
+		            <p:column style="width:300px" headerText="#{msg['messages_string']}">
+		                <p:commandButton icon="fa fa-search-plus"
+		                	action="#{messagesView.setLongMessage(msgs.message)}"
+		                	oncomplete="PF('viewTextDialog').show()"
+		                	update=":#{p:component('viewText')}"
+		                />
+		                <h:outputText value="#{msgs.message.length() gt 100 ? msgs.message.substring(0,100).concat('...') : msgs.message}" escape="false"/>
+		            </p:column>
+		            <p:column style="width:110px;white-space: nowrap" headerText="#{msg['messages_date']}">
+		                <h:outputText value="#{msgs.creationDate}" >
+		                	<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+						</h:outputText>
+		            </p:column>
+					<p:column style="width:32px;text-align: center">
+			             <p:commandButton oncomplete="PF('messagePanelWidget').loadContents()" icon="fa fa-trash-o" title="#{msg['delete']}" action="#{messagesView.removeMessage('ALLOCATION', msgs)}"/>
+			        </p:column>
+		        </p:dataTable>
+			</p:tab>
+   			<!-- pas 10 -->
+   			<p:tab title="#{msg['menu_balancing']} - #{messagesView.getMessagesList('BALANCING').size()}">
+		        <p:dataTable id="messagePanelTableBalancing" var="msgs" value="#{messagesView.getMessagesList('BALANCING')}" scrollable="true" rows="4" paginator="true" style="width:800px">
+		        	<f:facet name="header">
+		        		<p:outputLabel value="Balancing Message Area"/> 
+        				<p:commandButton oncomplete="PF('messagePanelWidget').loadContents()" style="float:right;width:22px;height:22px;top:-3px"
+        					actionListener="#{messagesView.removeAllMessages('BALANCING')}"
+        					 icon="fa fa-trash-o" title="Delete all Balancing messages"/>
+    				</f:facet>
+		            <p:column style="width:30px;white-space: nowrap" headerText="#{msg['messages_type']}">
+		            	<h:outputText value="#{msgs.type_string}" />
+		            </p:column>
+		            <p:column style="width:100px" headerText="#{msg['messages_summary']}">
+		                <h:outputText value="#{msgs.summary}" />
+		            </p:column>
+		            <p:column style="width:300px" headerText="#{msg['messages_string']}">
+		                <p:commandButton icon="fa fa-search-plus"
+		                	action="#{messagesView.setLongMessage(msgs.message)}"
+		                	oncomplete="PF('viewTextDialog').show()"
+		                	update=":#{p:component('viewText')}"
+		                />
+		                <h:outputText value="#{msgs.message.length() gt 100 ? msgs.message.substring(0,100).concat('...') : msgs.message}" escape="false"/>
+		            </p:column>
+		            <p:column style="width:110px;white-space: nowrap" headerText="#{msg['messages_date']}">
+		                <h:outputText value="#{msgs.creationDate}" >
+		                	<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+						</h:outputText>
+		            </p:column>
+					<p:column style="width:32px;text-align: center">
+			             <p:commandButton oncomplete="PF('messagePanelWidget').loadContents()" icon="fa fa-trash-o" title="#{msg['delete']}" action="#{messagesView.removeMessage('BALANCING', msgs)}"/>
+			        </p:column>
+		        </p:dataTable>
+			</p:tab>
+   			
+			<!--pos 11 -->
+			<p:tab title="#{msg['menu_tariff']} - #{messagesView.getMessagesList('TARIFF').size()}">
+		        <p:dataTable id="messagePanelTableTariff" var="msgs" value="#{messagesView.getMessagesList('TARIFF')}" scrollable="true" rows="4" paginator="true" style="width:800px">
+		        	<f:facet name="header">
+		        		<p:outputLabel value="Tariff Message Area"/> 
+        				<p:commandButton oncomplete="PF('messagePanelWidget').loadContents()" style="float:right;width:22px;height:22px;top:-3px"
+        					actionListener="#{messagesView.removeAllMessages('TARIFF')}"
+        					 icon="fa fa-trash-o" title="Delete all Tariff messages"/>
+    				</f:facet>
+		            <p:column style="width:30px;white-space: nowrap" headerText="#{msg['messages_type']}">
+		            	<h:outputText value="#{msgs.type_string}" />
+		            </p:column>
+		            <p:column style="width:100px" headerText="#{msg['messages_summary']}">
+		                <h:outputText value="#{msgs.summary}" />
+		            </p:column>
+		            <p:column style="width:300px" headerText="#{msg['messages_string']}">
+		                <p:commandButton icon="fa fa-search-plus"
+		                	action="#{messagesView.setLongMessage(msgs.message)}"
+		                	oncomplete="PF('viewTextDialog').show()"
+		                	update=":#{p:component('viewText')}"
+		                />
+		                <h:outputText value="#{msgs.message.length() gt 100 ? msgs.message.substring(0,100).concat('...') : msgs.message}" escape="false"/>
+		            </p:column>
+		            <p:column style="width:110px;white-space: nowrap" headerText="#{msg['messages_date']}">
+		                <h:outputText value="#{msgs.creationDate}" >
+		                	<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+						</h:outputText>
+		            </p:column>
+					<p:column style="width:32px;text-align: center">
+			             <p:commandButton oncomplete="PF('messagePanelWidget').loadContents()" icon="fa fa-trash-o" title="#{msg['delete']}" action="#{messagesView.removeMessage('TARIFF', msgs)}"/>
+			        </p:column>
+		        </p:dataTable>
+			</p:tab>
+			
+   			<p:tab title="#{msg['general']} - #{messagesView.getMessagesList('GENERAL').size()}">
+		        <p:dataTable id="messagePanelTableGeneral" var="msgs" value="#{messagesView.getMessagesList('GENERAL')}" scrollable="true" rows="4" paginator="true" style="width:800px">
+		        	<f:facet name="header">
+		        		<p:outputLabel value="General Message Area"/> 
+        				<p:commandButton oncomplete="PF('messagePanelWidget').loadContents()" style="float:right;width:22px;height:22px;top:-3px"
+        					actionListener="#{messagesView.removeAllMessages('GENERAL')}"
+        					 icon="fa fa-trash-o" title="Delete all General messages"/>
+    				</f:facet>
+		            <p:column style="width:30px;white-space: nowrap" headerText="#{msg['messages_type']}">
+		            	<h:outputText value="#{msgs.type_string}" />
+		            </p:column>
+		            <p:column style="width:100px" headerText="#{msg['messages_summary']}">
+		                <h:outputText value="#{msgs.summary}" />
+		            </p:column>
+		            <p:column style="width:300px" headerText="#{msg['messages_string']}">
+		                <p:commandButton icon="fa fa-search-plus"
+		                	action="#{messagesView.setLongMessage(msgs.message)}"
+		                	oncomplete="PF('viewTextDialog').show()"
+		                	update=":#{p:component('viewText')}"
+		                />
+		                <h:outputText value="#{msgs.message.length() gt 100 ? msgs.message.substring(0,100).concat('...') : msgs.message}" escape="false"/>
+		            </p:column>
+		            <p:column style="width:110px;white-space: nowrap" headerText="#{msg['messages_date']}">
+		                <h:outputText value="#{msgs.creationDate}" >
+		                	<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+						</h:outputText>
+		            </p:column>
+					<p:column style="width:32px;text-align: center">
+			             <p:commandButton oncomplete="PF('messagePanelWidget').loadContents()" icon="fa fa-trash-o" title="#{msg['delete']}" action="#{messagesView.removeMessage('GENERAL', msgs)}"/>
+			        </p:column>
+		        </p:dataTable>
+			</p:tab>
+			
+   		</p:tabView>
+    	
+    </p:overlayPanel>
+	<p:draggable for="messagesPanel" handle="div.ui-panel"/>
+
+	<p:dialog widgetVar="viewTextDialog" id="viewText">
+		<p:panelGrid columns="1">
+			<p:inputTextarea rows="25" cols="60" readonly="true" autoResize="false" value="#{messagesView.longMessage}" />
+		</p:panelGrid>
+	
+	</p:dialog>
+
+	<p:dialog widgetVar="viewNotificationTextDialog" id="viewNotificationText">
+		<p:panelGrid columns="1">
+			<p:inputTextarea rows="25" cols="60" readonly="true" autoResize="false" value="#{notificationView.longMessage}" />
+		</p:panelGrid>
+	
+	</p:dialog>
+
+	<p:dialog widgetVar="viewAlarmTextDialog" id="viewAlarmText" >
+		<p:panelGrid columns="1">
+			<p:inputTextarea rows="5" cols="60" readonly="true" autoResize="false" value="#{alarmView.longMessage}" />
+		</p:panelGrid>
+	
+	</p:dialog>
+
+
+    <!-- Change dialog -->
+    <p:dialog header="#{msg['change_system']}" widgetVar="changeDialog" showEffect="size"  hideEffect="fold" >
+		<c:if test="#{changeSystemView.isOnshore()}">
+			<p:panelGrid>
+				<p:row>
+					<p:column colspan="2" style="text-align: center;">
+						<h:outputText value="#{msg['change_to_offshore']}" />
+					</p:column>
+				</p:row>
+				<p:row>
+					<p:column colspan="2" style="text-align: center;">
+						<h:outputText value="#{msg['conf_to_onshore']}" />
+					</p:column>
+				</p:row>
+				<p:row>
+					<p:column style="text-align: center;">
+						<p:commandButton value="#{msg['ok']}" id="okChangeSystem" actionListener="#{changeSystemView.changeSystem}" ajax="false" />
+					</p:column >
+					<p:column style="text-align: center;">
+						<p:commandButton value="#{msg['cancel']}" id="cancelChangeSystem" onclick="PF('changeDialog').hide();" />
+					</p:column>
+				</p:row>
+			</p:panelGrid>
+		</c:if>
+		<c:if test="#{changeSystemView.isOffshore()}">
+			<p:panelGrid>
+				<p:row>
+					<p:column colspan="2" style="text-align: center;">
+						<h:outputText value="#{msg['change_to_onshore']}" />
+					</p:column>
+				</p:row>
+				<p:row>
+					<p:column colspan="2" style="text-align: center;">
+						<h:outputText value="#{msg['conf_to_offshore']}" />
+					</p:column>
+				</p:row>
+				<p:row>
+					<p:column style="text-align: center;">
+						<p:commandButton value="#{msg['ok']}" id="okChangeSystem" actionListener="#{changeSystemView.changeSystem}" ajax="false" />
+					</p:column>
+					<p:column style="text-align: center;">
+						<p:commandButton value="#{msg['cancel']}" id="cancelChangeSystem" onclick="PF('changeDialog').hide();" />
+					</p:column>
+				</p:row>
+			</p:panelGrid>
+		</c:if>
+	</p:dialog>
+
+	</h:form>
+	
+
+	
+</ui:composition>

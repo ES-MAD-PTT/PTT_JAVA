@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Configuration>
+	<Properties>
+     <Property name="baseDir">/projects/ptt/srvapp/ptt_domain/servers/ptt_ManagedServer_1/logs/dev</Property>
+  	</Properties>
+  <Appenders>
+ 	<RollingFile name="file" fileName="${baseDir}/tpa.log"
+                 filePattern="${baseDir}/tpa-$${date:yyyy-MM}/app-%d{MM-dd-yyyy}-%i.log.gz">
+      <PatternLayout>
+        <Pattern>%d %p %c{1.} [%t] %m%n</Pattern>
+      </PatternLayout>
+	  <Policies>
+        <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+        <SizeBasedTriggeringPolicy size="10 MB"/>
+      </Policies>
+      <DefaultRolloverStrategy max="200">
+         <Delete basePath="${baseDir}" maxDepth="2">
+          <IfFileName glob="*/app-*.log.gz" />
+          <IfLastModified age="120d" />
+        </Delete>
+      </DefaultRolloverStrategy>    
+    </RollingFile>    
+    
+    <Console name="STDOUT" target="SYSTEM_OUT">
+      <PatternLayout pattern="%m%n"/>
+    </Console>
+  </Appenders>
+  <Loggers>
+  	<Logger name="com.atos.mapper.NotificationMapper.getNotifications" level="ERROR">
+  		<AppenderRef ref="file" level="ERROR"/>
+    	<AppenderRef ref="STDOUT" level="ERROR"/>
+  	</Logger>
+  	<Logger name="com.atos.mapper.scadaAlarms.ScadaAlarmMapper.selectScadaAlarmsPanel" level="ERROR">
+  		<AppenderRef ref="file" level="ERROR"/>
+    	<AppenderRef ref="STDOUT" level="ERROR"/>
+  	</Logger>
+  	<Logger name="org.apache.shiro.realm.AuthorizingRealm" level="ERROR">
+  		<AppenderRef ref="file" level="ERROR"/>
+    	<AppenderRef ref="STDOUT" level="ERROR"/>
+  	</Logger>
+  	
+  	<Logger name="com.atos.views.MessagesView" level="ALL"/>
+  	
+  	<logger name="com.atos.beans.UserAudBean" level="ALL"/>
+  	<logger name="com.atos.runnable.allocation.AllocationBalanceTask" level="ALL"/>
+  	<logger name="com.atos.security.ShiroLoginBean" level="ALL"/>
+   	<Logger name="com.atos.services.allocation.AllocationManagementServiceImpl" level="ALL"/>
+   	<Logger name="com.atos.services.allocation.AllocationReviewSupplyEWServiceImpl" level="ALL"/>
+  	<Logger name="com.atos.services.balancing.BalanceManagementServiceImpl" level="ALL"/>
+  	<Logger name="com.atos.services.booking.BulletinBoardServiceImpl" level="ALL"/>
+   	<Logger name="com.atos.services.metering.MeteringManagementServiceImpl" level="ALL"/>
+  	<Logger name="com.atos.utils.booking.SignedContractTemplateGenerator" level="ALL"/>
+  	<Logger name="com.atos.utils.security.JdbcSaltRealm" level="ALL"/>
+  	<Logger name="com.atos.utils.Xlsx2XmlConverter" level="ALL"/>
+  	<Logger name="com.atos.utils.Xlsx2XmlConverter2" level="ALL"/>  	
+  	<Logger name="com.atos.views.allocation.AllocationManagementView" level="ALL"/>
+  	<Logger name="com.atos.views.allocation.AllocationQueryView" level="ALL"/>
+  	<Logger name="com.atos.views.allocation.AllocationReviewSupplyEWView" level="ALL"/>
+  	<Logger name="com.atos.views.allocation.AllocationReviewView" level="ALL"/>
+  	<Logger name="com.atos.views.balancing.BalanceIntradayReportView" level="ALL"/>
+  	<Logger name="com.atos.views.balancing.BalanceManagementView" level="ALL"/>
+  	<Logger name="com.atos.views.balancing.BalanceReportView" level="ALL"/>
+  	<Logger name="com.atos.views.balancing.ReserveBalancingGasContractsView" level="ALL"/>
+  	<Logger name="com.atos.views.booking.BulletinBoardView" level="ALL"/>
+  	<Logger name="com.atos.views.booking.CRManagementView" level="ALL"/>
+  	<Logger name="com.atos.views.booking.CapacityRequestQueryView" level="ALL"/>
+  	<Logger name="com.atos.views.booking.ReleaseCapacitySubmissionView" level="ALL"/>
+  	<Logger name="com.atos.views.booking.ReleaseCapacityManagementView" level="ALL"/>
+  	<Logger name="com.atos.views.booking.NewConnectionView" level="ALL"/>
+  	<Logger name="com.atos.views.dam.AreaView" level="ALL"/>
+  	<Logger name="com.atos.views.dam.ForecastingDeadlineView" level="ALL"/>
+  	<Logger name="com.atos.views.dam.GuestUserView" level="ALL"/>
+  	<Logger name="com.atos.views.dam.LinePackRequirementView" level="ALL"/>
+  	<Logger name="com.atos.views.dam.MeteredPointView" level="ALL"/>
+  	<Logger name="com.atos.views.dam.NominationDeadlineView" level="ALL"/>
+  	<Logger name="com.atos.views.dam.NominationPointView" level="ALL"/>
+  	<Logger name="com.atos.views.dam.OperatorView" level="ALL"/>
+  	<Logger name="com.atos.views.dam.RoleView" level="ALL"/>
+  	<Logger name="com.atos.views.dam.ShipperView" level="ALL"/>
+  	<Logger name="com.atos.views.dam.ShrinkageFactorView" level="ALL"/>
+  	<Logger name="com.atos.views.dam.ZoneView" level="ALL"/>
+   	<Logger name="com.atos.views.metering.MeteringManagementView" level="ALL"/>
+   	<Logger name="com.atos.views.metering.MeteringQualityReportView" level="ALL"/>
+   	<Logger name="com.atos.views.metering.MeteringRetrievingView" level="ALL"/>
+  	<Logger name="com.atos.views.nominations.QualityPublicationView" level="ALL"/>
+   	<Logger name="com.atos.views.quality.OffSpecGasReportManagementView" level="ALL"/>
+  	<Logger name="com.atos.client" level="ALL"/>
+    <Root level="trace">
+      <AppenderRef ref="file" level="ALL"/>
+      <AppenderRef ref="STDOUT" level="ALL"/>
+    </Root>
+  	
+  </Loggers>
+</Configuration>

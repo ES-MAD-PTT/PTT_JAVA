@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<!-- Namespace -->
+<mapper namespace="com.atos.mapper.allocation.AllocationQueryMapper">
+
+    <select id="selectFactorFromDefaultUnit" resultType="java.math.BigDecimal">
+		SELECT conversion_factor FROM tpa_vunit_convert_from_default WHERE unit_code = #{otherUnit} 
+	</select>
+    
+	<!-- Para hacer consultas, el punto no tendria por que estar vigente. -->
+    <select id="selectShipperId" resultType="com.atos.beans.ComboFilterNS">
+		select tgr.idn_user_group as key, tgr.user_group_id as value
+		from tpa_tuser_group tgr
+		where tgr.idn_user_group_type = (select idn_user_group_type from tpa_tuser_group_type where type_code = 'SHIPPER')
+		order by upper(tgr.user_group_id) asc
+    </select>
+
+    <select id="selectContractId" parameterType="com.atos.filters.allocation.AllocationQueryFilter" resultType="com.atos.beans.ComboFilterNS">
+		select tcon.idn_contract as key, tcon.contract_code as value
+		  from tpa_tcontract tcon
+	     where EXISTS (SELECT 1
+	             FROM tpa_tcontract_consolidate tconso
+	            WHERE tconso.idn_contract = tcon.idn_contract)
+	            and tcon.idn_pipeline_system = #{systemId}
+				<if test="gasDay != null">
+				and #{gasDay} >= tcon.start_date and tcon.end_date >= #{gasDay}
+				</if>
+		       	<if test="shipperId != null">
+		       	and tcon.idn_user_group = #{shipperId}
+		       	</if>
+	     order by upper(tcon.contract_code) asc
+	</select>
+
+    <select id="selectZonesFromSystemCode" resultType="com.atos.beans.ComboFilterNS">
+	    select z.idn_zone as key, z.zone_code as value
+	      from TPA_VZONE_TPA z
+	     where z.idn_pipeline_system =
+	           (select tps.idn_pipeline_system
+	              from tpa_tpipeline_system tps
+	             where tps.pipeline_system_code = #{systemCode})
+	     order by UPPER(z.zone_code)
+    </select>
+    
+    <select id="selectAreasFromZoneId" resultType="com.atos.beans.ComboFilterNS">
+	    select tar.idn_area as key, tar.area_code as value
+		from tpa_tarea tar
+	  	<where>
+			<choose>
+				<when test="zoneIds != null and zoneIds.length > 0">
+					<foreach item="item" index="index" collection="zoneIds"
+			             open="and tar.idn_zone in (" separator="," close=")">
+			        		#{item}
+			    	</foreach>
+				</when>
+				<otherwise>
+					and tar.idn_zone in (-1)
+				</otherwise>
+			</choose>
+		</where>
+		order by UPPER(tar.area_code)
+    </select>
+    
+	<!-- No se filtra por la vigencia del punto, porque se podrian consultar datos a pasado de puntos no vigentes. -->
+    <select id="selectPointId" resultType="com.atos.beans.ComboFilterNS">
+		select tsp.idn_system_point as key,
+		       tsp.point_code as value
+		from tpa_tsystem_point tsp
+		where tsp.idn_system_point_group = (select tspgr.idn_system_point_group 
+		                                           from tpa_tsystem_point_group tspgr 
+		                                           where tspgr.group_code = 'NOMINATION')
+			<choose>
+				<when test="areaIds != null and areaIds.length > 0">
+					<foreach item="item" index="index" collection="areaIds"
+			             open="and tsp.idn_area in (" separator="," close=")">
+			        		#{item}
+			    	</foreach>
+				</when>
+				<otherwise>
+					and tsp.idn_area in (-1)
+				</otherwise>
+			</choose>
+		order by upper(tsp.point_code) asc
+    </select>
+	
+    <resultMap type="com.atos.beans.allocation.AllocationQueryBean" id="AllocationQuery">
+        <id property="allocationDataId" column="idn_allocation_data" />
+		<result property="gasDay" column="gas_day"/>
+		<result property="shipperId" column="idn_user_group"/>
+        <result property="shipperCode" column="user_group_id"/>
+        <result property="contractId" column="idn_contract"/> 
+        <result property="contractCode" column="contract_code"/>   
+        <result property="nomPointId" column="idn_system_point"/>
+        <result property="nomPointCode" column="point_code"/> 
+        <result property="nomPointTypeCode" column="point_type_code"/>
+        <result property="bookedCap" column="contracted_value"/>   
+        <result property="nominatedCap" column="nominated_value"/>   
+        <result property="allocationTPA" column="allocated_value"/>
+        <result property="origin" column="origin_desc"/>
+        <result property="versionDate" column="version_date"/>        
+    </resultMap>
+
+	<!-- Se valida que el reparto es de tipo commercial por, si en algun momento se definiera otro tipo, no se obtengan 2 registros
+		 uno para cada tipo de reparto.
+		 De todos los conceptos de reparto, solo interesan los repartos con conceptos 'ENERGY'.
+		 La clave primaria de la tabla tpa_tallocation_data contiene 
+		 (IDN_ALLOCATION, IDN_CONTRACT, IDN_ZONE, IDN_NOMINATION_POINT, IDN_NOMINATION_CONCEPT)
+		 1.- IDN_ALLOCATION tiene como clave primaria (IDN_ALLOCATION_TYPE, GAS_DAY, VERSION_DATE)
+		     - IDN_ALLOCATION_TYPE se fija a COMMERCIAL.
+		     - El resto de campos marcan dia de gas y version.
+		 2.- IDN_CONTRACT: Hay un reparto por contrato.
+		 5.- IDN_NOMINATION_CONCEPT: Se fija a 'ENERGY'.
+		 3, 4.- IDN_ZONE, IDN_NOMINATION_POINT estan definidos por el IDN_NOMINATION_CONCEPT: Si el concepto es ENERGY, siempre va a 
+		 venir relleno el punto. Para un punto, la zona es fija (No puede haber dos registros, con 1 mismo punto y 2 zonas distintas)
+		 Para otros conceptos, el punto es nulo, y el valor afecta a una zona concreta. Pero no aplica aqui, pues filtramos por ENERGY.-->
+		<!-- El atributo origin se obtiene en la consulta (por si es util a la hora de trazar datos), pero no se muestra en la pantalla porque
+		puede dar lugar a confusion, por este motivo: 
+		Allocation Origin field indicates the process responsible for the allocation data for one Gas Day (any contract and point) and
+		it doesn´t indicate the origin of every allocation data for one Gas Day, Contract and Nom. Point
+		Por ejemplo, en la tabla de repartos se generan todos los repartos correspondientes a un dia, aunque solo se haya recibido medida para un punto.
+		El proceso que genera los repartos, es el de Repartos de Medidas, pero solo uno de los repartos se ha generado por la medida; el resto se calculan 
+		a partir de la ultima version. -->
+    <select id="selectAllocations" resultMap="AllocationQuery">
+			SELECT tdata.idn_allocation_data,
+			       tal.gas_day,
+			       tgr.idn_user_group,
+			       tgr.user_group_id,
+			       tcon.idn_contract,
+			       tcon.contract_code,
+			       tnomp.idn_system_point,
+			       tnomp.point_code,
+			       (select x.type_code from TPA_TSYSTEM_POINT_TYPE x where x.idn_system_point_type= tnomp.idn_system_point_type) point_type_code,
+			       tdata.contracted_value * #{factorFromDefaultUnit} as contracted_value,
+			       tdata.nominated_value * #{factorFromDefaultUnit} as nominated_value,
+			       tdata.allocated_value * #{factorFromDefaultUnit} as allocated_value,
+			       tao.origin_desc,
+			       tal.version_date
+			  FROM tpa_tallocation      tal,
+			       tpa_tallocation_data tdata,
+			       tpa_tcontract        tcon,
+			       tpa_tuser_group      tgr,
+			       tpa_tsystem_point    tnomp,
+			       tpa_tallocation_origin tao
+			 WHERE tdata.idn_allocation = tal.idn_allocation
+			   AND tal.idn_allocation_type =
+			       (SELECT talty.idn_allocation_type
+			          FROM tpa_tallocation_type talty
+			         WHERE talty.type_code = 'COMMERCIAL')
+			   AND tdata.idn_nomination_concept =
+			       (SELECT tncon.idn_nomination_concept
+			          FROM tpa_tnomination_concept tncon
+			         WHERE tncon.concept_code = 'ENERGY')
+			   	<if test="gasDay != null">
+				and tal.gas_day = #{gasDay}
+				</if>
+		       	<if test="contractId != null">
+		       	and tdata.idn_contract = #{contractId}
+		       	</if>
+				<choose>
+					<when test="nomPointIds != null and nomPointIds.length > 0">
+						<foreach item="item" index="index" collection="nomPointIds"
+				             open="and tdata.idn_nomination_point in (" separator="," close=")">
+				        		#{item}
+				    	</foreach>
+					</when>
+					<otherwise>
+						and tdata.idn_nomination_point in (-1)
+					</otherwise>
+				</choose>
+			    AND tcon.idn_contract = tdata.idn_contract
+		       	<if test="shipperId != null">
+		       	and tcon.idn_user_group = #{shipperId}
+		       	</if>
+		       	<choose>
+					<when test='strLastVersion != null and "Y".equals(strLastVersion)'>			         
+					     AND tal.version_date =
+					       (SELECT MAX(ax.version_date)
+					          FROM tpa_tallocation ax,
+                              	   tpa_tallocation_origin ao
+					         WHERE ax.gas_day = tal.gas_day
+                                             AND ax.idn_pipeline_system = tal.idn_pipeline_system   ----- esto es lo que le falta!!!!!
+					           AND ax.idn_allocation_type = tal.idn_allocation_type
+	                           AND ax.idn_allocation_origin = ao.idn_allocation_origin
+	                           AND ao.origin_code != 'BALANCE')
+
+			       	</when>
+					<otherwise>
+						<if test="generatedFrom != null">
+						and cast(tal.version_date as date) >= #{generatedFrom}
+						</if>
+						<if test="generatedTo != null">
+						and #{generatedTo} >= cast(tal.version_date as date) 
+						</if>   
+					</otherwise>
+				</choose>
+			   AND tgr.idn_user_group = tcon.idn_user_group
+			   AND tnomp.idn_system_point = tdata.idn_nomination_point
+			   AND tao.idn_allocation_origin = tal.idn_allocation_origin
+               AND tao.origin_code != 'BALANCE'
+			 order by upper(tgr.user_group_id) asc, 
+			 		  upper(tcon.contract_code) asc,
+			 		  upper(tnomp.point_code) asc,
+			          tal.version_date
+	</select>
+</mapper>

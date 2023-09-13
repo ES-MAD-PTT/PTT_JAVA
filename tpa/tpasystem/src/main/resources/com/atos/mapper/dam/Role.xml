@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+
+<mapper namespace="com.atos.mapper.dam.RoleMapper">
+
+ 
+    <resultMap type="com.atos.beans.dam.RoleBean" id="Role">
+              <id column="idn_profile" property="idn_profile"  />  
+        <result property="idn_pipeline_system" column="idn_pipeline_system"/> 
+		<result property="idn_permission" column="idn_permission"/>
+		<result property="permission_code" column="permission_code"/>
+		<result property="profile_desc" column="profile_desc"/>
+		<result property="idn_profile_pipeline" column="idn_profile_pipeline"/>
+		
+		<result property="system" column="pipeline_system_code"/>
+		<result property="role" column="profile_code"/> 
+		<result property="process" column="permission_desc"/>
+		<result property="sIsEnabled" column="sIsEnabled"/>
+		<result property="startDate" column="start_Date"/>
+		<result property="endDate" column="end_Date"/>
+		
+		
+    </resultMap>
+     
+    <select id="selectRoles" resultMap="Role">
+		SELECT  ps.pipeline_system_code as pipeline_system_code,
+		        ps.idn_pipeline_system as idn_pipeline_system,
+		        p.idn_profile as idn_profile, 
+		        pp.idn_profile_pipeline as idn_profile_pipeline,
+		        p.profile_code as profile_code     
+		FROM tpa_tprofile p,  
+		     tpa_tprofile_pipeline pp, 
+		     tpa_tpipeline_system ps
+		WHERE p.idn_profile= pp.idn_profile
+		      AND pp.idn_pipeline_system = ps.idn_pipeline_system
+	
+		 <!-- offshore -->
+		 AND pp.idn_pipeline_system = #{idn_system}
+
+		<if test="role != null and role != ''">
+		 AND p.idn_profile = #{role}
+		</if> 
+		
+    	 ORDER BY UPPER(ps.pipeline_system_code), UPPER(p.profile_code)
+    </select>
+    
+   
+   <select id="selectSelectedProcess" resultType="java.math.BigDecimal">
+    SELECT proper.idn_permission as selectedProcess
+    FROM  tpa_tprofile_permission proper
+    WHERE proper.idn_profile = #{idn_profile}
+    AND proper.is_enabled='Y'
+	AND exists ( SELECT 1
+	             FROM TPA_TPERMISSION x
+	             WHERE x.idn_permission=proper.idn_permission
+	             AND   x.is_enabled='Y' )
+    
+	</select>	
+
+    <select id="selectRole" resultType="java.lang.String">
+		SELECT  p.profile_code 
+		FROM   tpa_tprofile p
+		WHERE  p.profile_code like #{query}
+		
+    </select>
+    
+   
+    <select id="selectComboRolesSystem" resultType="com.atos.beans.ComboFilterNS">
+		SELECT  p.idn_profile as key, p.profile_code as value 
+		FROM   tpa_tprofile p,
+               tpa_tprofile_pipeline pp
+        WHERE   p.idn_profile= pp.idn_profile
+           AND  pp.IDN_PIPELINE_SYSTEM=#{idn_system}
+		ORDER BY  UPPER (p.profile_code)
+    </select>
+
+   
+    <select id="selectSystems" resultType="com.atos.beans.ComboFilterNS">
+	    <!-- offshore el unico combo de la pantalla se carga con el system sel sistema -->
+		SELECT ps.idn_pipeline_system as key, ps.pipeline_system_code as value
+		FROM tpa_tpipeline_system  ps
+		WHERE ps.idn_pipeline_system = #{idn_system}
+		ORDER BY   UPPER (ps.pipeline_system_code)
+		
+		
+    </select>
+    
+    <select id="selectProcess" resultType="com.atos.beans.ComboFilterNS">
+		SELECT per.idn_permission as key, per.permission_desc as value
+		FROM tpa_tpermission per
+		WHERE per.is_enabled='Y'
+		ORDER BY   UPPER (per.permission_desc)
+    </select>
+   
+    
+ <select id="getRoleId" resultType="java.lang.String">
+		SELECT p.profile_code 
+		FROM  tpa_tprofile p
+		WHERE p.profile_code = #{role}	
+ </select>
+	
+	<!-- ojo en profile_desc ponemos lo que hay en profile_code -->
+	<insert id="insertProfile" useGeneratedKeys="true" keyProperty="idn_profile" keyColumn="idn_profile" parameterType="com.atos.beans.dam.RoleBean">
+		INSERT INTO tpa_tprofile
+			(idn_profile,profile_code,profile_desc,start_date, end_date,
+			aud_ins_user,aud_last_user)
+		VALUES
+			(tpa_sprofile.nextval,
+			 #{role},
+			 #{role}, 	
+			 #{startDate},
+		     #{endDate},
+		     #{username},
+		     #{username})
+	</insert>
+
+   <insert id="insertProfilePipeline" useGeneratedKeys="true" keyProperty="idn_profile" keyColumn="idn_profile" parameterType="com.atos.beans.dam.RoleBean">
+		INSERT INTO tpa_tprofile_pipeline
+			(idn_profile_pipeline,idn_profile,idn_pipeline_system,start_date, end_date,
+			aud_ins_user,aud_last_user)
+		VALUES
+			(tpa_sprofile_pipeline.nextval,
+			 #{idn_profile}, 
+			 #{idn_pipeline_system},
+			 #{startDate},
+		     #{endDate},
+		     #{username},
+		     #{username})
+	</insert>
+	 <insert id="insertProfilePermission" useGeneratedKeys="true" keyProperty="idn_profile" keyColumn="idn_profile" parameterType="com.atos.beans.dam.RoleBean">
+		INSERT INTO tpa_tprofile_permission
+			(idn_profile_permission, idn_profile, idn_permission, is_enabled,start_date, end_date,
+			aud_ins_user,aud_last_user)
+		VALUES
+			(tpa_sprofile_permission.nextval,
+			 #{idn_profile}, 
+			 #{idn_permission},
+			 #{sIsEnabled},
+			 #{startDate},
+		     #{endDate},
+		     #{username},
+		     #{username})
+	</insert>
+
+
+	<update id="updateProfile" parameterType="com.atos.beans.dam.RoleBean">
+		UPDATE tpa_tprofile set
+			profile_code=#{role},
+			profile_desc=#{role},
+			aud_last_user=#{username}
+		WHERE idn_profile = #{idn_profile}	
+	</update>
+	
+	<update id="updateProfilePipeline" parameterType="com.atos.beans.dam.RoleBean">
+		UPDATE tpa_tprofile_pipeline set		
+			idn_profile=#{idn_profile},
+			idn_pipeline_system=#{idn_pipeline_system},
+			aud_last_user=#{username}
+		WHERE idn_profile_pipeline = #{idn_profile_pipeline}		
+	</update>
+	
+	
+	<select id="getProfilePermission" resultType="java.math.BigDecimal">
+		SELECT pp.idn_profile_permission 
+		FROM  tpa_tprofile_permission pp
+		WHERE pp.idn_profile = #{idn_profile}	
+		AND   pp.idn_permission = #{idn_permission}	
+ 	</select>
+ 
+	<update id="updateProfilePermission" parameterType="com.atos.beans.dam.RoleBean">
+		UPDATE tpa_tprofile_permission set
+			is_enabled=#{sIsEnabled},
+			aud_last_user=#{username}
+		WHERE 	idn_profile=#{idn_profile}
+				AND idn_permission=#{idn_permission}
+				
+	</update>
+	
+</mapper>

@@ -1,0 +1,265 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_dam']}" url="#" />
+			<p:menuitem value="#{msg['menu_parameters']}" url="#" />
+			<p:menuitem value="#{msg['menu_area_nominal_capacity']}" url="/pages/dam/areaNominalCapacitys.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="5000"/>
+			
+            <p:layout widgetVar="areaNominalCapacityLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">	
+					
+				<p:panelGrid columns="2" style="width:100%">
+					
+						<p:panelGrid>
+							<p:row>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['areaNominalCapacity_Area']}" />
+								</p:column>
+							
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['areaNominalCapacity_Start_Date']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['areaNominalCapacity_End_Date']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								
+								<p:column>
+					               	<p:selectOneMenu widgetVar="area_w" id="area" style="width:100px" value="#{areaNominalCapacityView.filters.area}" >
+										<f:selectItem itemLabel="" itemValue="" />
+										<!--offshore
+										<f:selectItems value="#{areaNominalCapacityView.areas.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />   -->
+        								<f:selectItems value="#{areaNominalCapacityView.areasSystem.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>
+								</p:column>
+								<p:column>
+									<p:calendar id="fecInicio"  size="10" pattern="dd/MM/yyyy" mask="true" value="#{areaNominalCapacityView.filters.startDate}"
+										showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="fecInicio"></p:ajax>
+										<p:ajax event="change" update="fecInicio"></p:ajax>
+									</p:calendar>
+								</p:column>
+								<p:column>
+									<p:calendar id="fecFin"  size="10" pattern="dd/MM/yyyy" mask="true" value="#{areaNominalCapacityView.filters.endDate}"
+										showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="fecFin"></p:ajax>
+										<p:ajax event="change" update="fecFin"></p:ajax>
+									</p:calendar>
+								</p:column>
+							
+								
+							</p:row>
+						</p:panelGrid>
+						<p:panelGrid columns="2" style="float:right;top:0px">
+							<shiro:hasPermission name="#{changeSystemView.system}.DAM.AREA_NOM_CAP.QUERY">
+								<p:commandButton value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{areaNominalCapacityView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,:#{p:component('areaNominalCapacitys1')}"/>
+							</shiro:hasPermission>
+							
+							<p:commandButton  onclick="PF('areaNominalCapacityLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+							
+							<shiro:hasPermission name="#{changeSystemView.system}.DAM.AREA_NOM_CAP.QUERY">									
+								<p:commandButton value="#{msg['clear']}"
+									actionListener="#{areaNominalCapacityView.onClear}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" 
+									process="@this" 
+								    update="form"/>
+							</shiro:hasPermission>
+								
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center" resizable="false" closable="false" collapsible="false">
+
+					<p:dataTable widgetVar="w_areaNominalCapacity1"  id="areaNominalCapacitys1" var="areaNominalCapacity" value="#{areaNominalCapacityView.items}" reflow="true" editable="true"
+					   	style="margin-bottom:20px;border-collapse:collapse"
+					    paginator="true" rows="15"
+					     scrollable="true"  scrollHeight="100%" 
+					    rowsPerPageTemplate="5,10,15,20,25, #{areaNominalCapacityView.itemsSize}" >
+
+							<f:facet name="header">
+								<p:outputPanel style="height:25px">
+									<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+	        						<p:columnToggler datasource="areaNominalCapacitys1" trigger="toggler" style="width:200px"/>
+	        						<shiro:hasPermission name="#{changeSystemView.system}.DAM.AREA_NOM_CAP.ADD">
+		        						<p:commandButton id="new" type="button" value="New" icon="ui-icon fa fa-save" style="float:right;"
+		        							onclick="PF('dlgNewAreaNominalCapacity').show();"/>
+	        						</shiro:hasPermission>	
+								</p:outputPanel>        										          
+					        </f:facet>
+					        
+					        <shiro:hasPermission name="#{changeSystemView.system}.DAM.AREA_NOM_CAP.MOD">
+						 		<p:ajax event="rowEditInit" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','hidden')});" />
+								<p:ajax event="rowEdit" listener="#{areaNominalCapacityView.onRowEdit}" update=":form:msgs" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>   
+								<p:ajax event="rowEditCancel" listener="#{areaNominalCapacityView.onRowCancel}" update=":form:msgs" onstart="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>
+					 		</shiro:hasPermission>
+					       					       
+					        <p:column  headerText="#{msg['areaNominalCapacity_Area']}" style="width: 100px;" sortBy="#{areaNominalCapacity.area_code}" filterMatchMode="contains" filterBy="#{areaNominalCapacity.area_code}">
+					       		<h:outputText value="#{areaNominalCapacity.area_code}">			
+					            </h:outputText>
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['areaNominalCapacity_Area_Nominal_Capacity']}" style="width: 100px;" sortBy="#{areaNominalCapacity.technicalCapacity}" filterMatchMode="contains" filterBy="#{areaNominalCapacity.technicalCapacity}">
+					       		<p:cellEditor>
+					               <f:facet name="output">
+					               		<h:outputText value="#{areaNominalCapacity.technicalCapacity}" style="float:right" >
+					               			<f:convertNumber pattern="#,##0" />
+					               		</h:outputText>
+				               	   </f:facet>
+					               <f:facet name="input">
+					               		<p:inputNumber value="#{areaNominalCapacity.technicalCapacity}"  style="width:100%" label="#{msg['areaNominalCapacity_Area_Nominal_Capacity']}" 
+					               			disabled="#{areaNominalCapacityView.disabledField(areaNominalCapacity)}"
+					               			requiredMessage="#{msg['areaNominalCapacity_Area_Nominal_Capacity']}: #{msg['empty_field']}" 
+					               			validatorMessage="#{msg['areaNominalCapacity_Area_Nominal_Capacity']}: #{msg['lenght_field']} "
+					               			decimalSeparator="." thousandSeparator="," decimalPlaces="0" minValue="0" required="true">	
+					               		</p:inputNumber>
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+				<!--  	   	    <p:column headerText="#{msg['areaNominalCapacity_Start_Year']}" style="width: 100px;" sortBy="#{areaNominalCapacity.startDate}" >
+					           <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{areaNominalCapacity.startYear}" /></f:facet>
+					               <f:facet name="input" >
+					               		<p:selectOneMenu id="startYear"   style="width:75%" value="#{areaNominalCapacity.startYear}" 
+					               				required="true" disabled="#{areaNominalCapacityView.disabledField(areaNominalCapacity)}"
+					               				requiredMessage="#{msg['areaNominalCapacity_Start_Year']}: #{msg['empty_field']}">
+							               		<f:selectItems value="#{areaNominalCapacityView.years.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					               		</p:selectOneMenu>
+					               	</f:facet>
+					           </p:cellEditor>   
+					       </p:column>
+					       
+				-->	       
+					        <p:column headerText="#{msg['areaNominalCapacity_Start_Date']}" style="width: 90px;" sortBy="#{areaNominalCapacity.startDate}" >
+					          <p:cellEditor>
+					               <f:facet name="output">
+					               			<h:outputText value="#{areaNominalCapacity.startDate}" >
+					              				<f:convertDateTime pattern="dd/MM/yyyy" />
+					              		 </h:outputText>
+					               </f:facet>
+					               <f:facet name="input"> 
+					               		<p:calendar required="true" id="startDate" value="#{areaNominalCapacity.startDate}" pattern="dd/MM/yyyy"
+					               			readonlyInput="true"   mindate="#{(shipperView.sysdate).getTime()}" 
+					               		
+											requiredMessage="#{msg['areaNominalCapacity_Start_Date']}: #{msg['empty_field']}" validatorMessage="#{msg['areaNominalCapacity_Start_Date']}: #{msg['empty_field']}">
+											<f:convertDateTime pattern="dd/MM/yyyy"/>
+										</p:calendar>
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					       
+					      <shiro:hasPermission name="#{changeSystemView.system}.DAM.AREA_NOM_CAP.MOD">			      
+					       <p:column style="width:32px">
+					           <p:rowEditor rendered="#{areaNominalCapacityView.renderItemEditor(areaNominalCapacity)}"/>
+					       </p:column>
+					     </shiro:hasPermission>  
+					   </p:dataTable>
+				</p:layoutUnit>
+
+			</p:layout>
+		</h:form>
+		
+		<shiro:hasPermission name="#{changeSystemView.system}.DAM.AREA_NOM_CAP.ADD">
+		<p:dialog widgetVar="dlgNewAreaNominalCapacity" resizable="false"  closable="true" modal="true" appendTo="@(body)" header="New AreaNominalCapacity">
+		<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario
+		 <p:ajax event="close" update="formNewEntity"  process="@this" listener="#{areaNominalCapacityView.cancel}" />	-->
+			<h:form id="formNewEntity">
+			<p:growl id="msgs" showDetail="true"  life="5000"/>
+				<p:panelGrid columns="4" style="width:100%">
+					<p:panelGrid>
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['areaNominalCapacity_Area']}" />
+							</p:column>
+							<p:column>
+								<p:selectOneMenu id="area" style="width:100px"   value="#{areaNominalCapacityView.newAreaNominalCapacity.idn_area}" >
+									  	<!-- offshore
+									  	 <f:selectItems value="#{areaNominalCapacityView.areas.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" /> -->
+									  	<f:selectItems value="#{areaNominalCapacityView.areasSystem.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           	</p:selectOneMenu>									
+							</p:column>
+							
+							<p:column>
+								<h:outputText value="#{msg['areaNominalCapacity_Area_Nominal_Capacity']}" />
+							</p:column>
+							<p:column>
+								<p:inputNumber required="true" id="technicalCapacity" value="#{areaNominalCapacityView.newAreaNominalCapacity.technicalCapacity}" 
+									requiredMessage="#{msg['areaNominalCapacity_Area_Nominal_Capacity']}: #{msg['empty_field']}" 
+									validatorMessage="#{msg['areaNominalCapacity_Area_Nominal_Capacity']}: #{msg['lenght_field']}"
+									decimalSeparator="." thousandSeparator="," decimalPlaces="0" minValue="0" >
+								</p:inputNumber>
+								<p:message for="technicalCapacity" />
+							</p:column>
+							
+						</p:row>
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['areaNominalCapacity_Start_Date']}"/>
+							</p:column>
+						<!-- <p:column>
+								<p:selectOneMenu id="startDate" style="width:100px"   value="#{areaNominalCapacityView.newAreaNominalCapacity.startYear}" >
+									<f:selectItems value="#{areaNominalCapacityView.years.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+						       	</p:selectOneMenu>	
+								<p:message for="startDate" />
+							</p:column>
+							-->
+							<p:column>
+								<p:calendar required="true" id="startDate" 
+									value="#{areaNominalCapacityView.newAreaNominalCapacity.startDate}" pattern="dd/MM/yyyy"
+									readonlyInput="true"  mindate="#{(shipperView.sysdate).getTime()}" 
+									requiredMessage="#{msg['areaNominalCapacity_Start_Date']}: #{msg['empty_field']}" validatorMessage="#{msg['areaNominalCapacity_Start_Date']}: #{msg['lenght_field']}">
+								</p:calendar>
+								<p:message for="startDate" />
+							</p:column>
+						</p:row>					
+						
+					</p:panelGrid>
+				</p:panelGrid>
+				
+				<p:separator/>
+				<p:panelGrid>
+					<p:row>
+						<p:column>
+							<p:commandButton value="#{msg['save']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" validateClient="true"
+								action="#{areaNominalCapacityView.save}" update=":#{p:component('areaNominalCapacitys1')},:formNewEntity"
+								onstart="PF('cargando').show()"
+								oncomplete="PF('dlgNewAreaNominalCapacity').hide(),PF('cargando').hide()" />
+			        		<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close"
+			        			update="formNewEntity" process="@this" actionListener="#{areaNominalCapacityView.cancel}" 
+			        			oncomplete="PF('dlgNewAreaNominalCapacity').hide()"/>
+						</p:column>					
+					</p:row>
+				</p:panelGrid>							
+			</h:form>			
+		</p:dialog>
+	
+	</shiro:hasPermission>
+	</ui:define>
+
+</ui:composition>

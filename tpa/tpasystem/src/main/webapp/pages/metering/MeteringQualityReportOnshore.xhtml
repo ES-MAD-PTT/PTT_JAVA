@@ -1,0 +1,88 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core">
+
+	<p:dataTable widgetVar="w_meteringQualityReport1"
+		id="meteringQualityReport1" var="meteringQualityReport"
+		value="#{meteringQualityReportView.items}" reflow="true"
+		style="margin-bottom:20px;border-collapse:collapse" scrollable="true"
+		scrollHeight="100%" paginator="true" rows="15"
+		rowsPerPageTemplate="5,10,15,20,25">
+
+		<shiro:hasPermission name="#{changeSystemView.system}.METERING.QUALITY.REPORT.QUERY">
+
+			<p:columnGroup type="header">
+				<p:row>
+					<p:column rowspan="3" headerText="#{msg['meteringQualityReport_Main_Specifications']}" />
+					<p:column rowspan="3" headerText="#{msg['meteringQualityReport_Unit']}" />
+					<p:column colspan="4" headerText="#{msg['meteringQualityReport_Mixing_Zones']}" />
+					<p:column colspan="6" headerText="#{msg['meteringQualityReport_Delivery_Zones']}" />
+				</p:row>
+				<p:row>
+					<p:column colspan="2" headerText="#{msg['meteringQualityReport_East_Onshore_Dry_Gas_Mixing_Zone']}" />
+					<p:column colspan="2" headerText="#{msg['meteringQualityReport_West_Onshore_Dry_Gas_Mixing_Zone']}" />
+					<p:column colspan="2" headerText="#{msg['meteringQualityReport_East_Onshore_Delivery_Zone']}" />
+					<p:column colspan="2" headerText="#{msg['meteringQualityReport_West_Onshore_Delivery_Zone']}" />
+					<p:column colspan="2" headerText="#{msg['meteringQualityReport_EastWest_Onshore_Delivery_Zone']}" />
+				</p:row>
+
+				<p:row>
+					<p:column headerText="#{msg['meteringQualityReport_Min']}" />
+					<p:column headerText="#{msg['meteringQualityReport_Max']}" />
+					<p:column headerText="#{msg['meteringQualityReport_Min']}" />
+					<p:column headerText="#{msg['meteringQualityReport_Max']}" />
+					<p:column headerText="#{msg['meteringQualityReport_Min']}" />
+					<p:column headerText="#{msg['meteringQualityReport_Max']}" />
+					<p:column headerText="#{msg['meteringQualityReport_Min']}" />
+					<p:column headerText="#{msg['meteringQualityReport_Max']}" />
+					<p:column headerText="#{msg['meteringQualityReport_Min']}" />
+					<p:column headerText="#{msg['meteringQualityReport_Max']}" />
+				</p:row>
+			</p:columnGroup>
+
+			<p:column>
+				<h:outputText value="#{meteringQualityReport.gasQualityParam}" />
+			</p:column>
+			<p:column>
+				<h:outputText value="#{meteringQualityReport.unit}" />
+			</p:column>
+			<p:column>
+				<h:outputText value="#{meteringQualityReport.mixEastMin}" style="float:right" />
+			</p:column>
+			<p:column>
+				<h:outputText value="#{meteringQualityReport.mixEastMax}" style="float:right" />
+			</p:column>
+			<p:column>
+				<h:outputText value="#{meteringQualityReport.mixWestMin}" style="float:right" />
+			</p:column>
+			<p:column>
+				<h:outputText value="#{meteringQualityReport.mixWestMax}" style="float:right" />
+			</p:column>
+			<p:column>
+				<h:outputText value="#{meteringQualityReport.delEastMin}" style="float:right" />
+			</p:column>
+			<p:column>
+				<h:outputText value="#{meteringQualityReport.delEastMax}" style="float:right" />
+			</p:column>
+			<p:column>
+				<h:outputText value="#{meteringQualityReport.delWestMin}" style="float:right" />
+			</p:column>
+			<p:column>
+				<h:outputText value="#{meteringQualityReport.delWestMax}" style="float:right" />
+			</p:column>
+			<p:column>
+				<h:outputText value="#{meteringQualityReport.delEastWestMin}" style="float:right" />
+			</p:column>
+			<p:column>
+				<h:outputText value="#{meteringQualityReport.delEastWestMax}" style="float:right" />
+			</p:column>
+
+		</shiro:hasPermission>
+	</p:dataTable>
+
+</ui:composition>
+

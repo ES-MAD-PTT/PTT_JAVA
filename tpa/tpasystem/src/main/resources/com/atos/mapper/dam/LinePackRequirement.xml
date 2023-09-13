@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<!-- Namespace -->
+<mapper namespace="com.atos.mapper.dam.LinePackRequirementMapper">
+    <resultMap type="com.atos.beans.dam.LinePackRequirementBean" id="LinePackRequirement">
+        <id column="idn_linepack_requirement" property="idn_linepack_requirement"/>
+        <result property="idn_zone" column="idn_zone"/>
+        <result property="zone_code" column="idn_zone_code"/>   
+        <result property="zone_desc" column="idn_zone_desc"/>   
+        <result property="linepack" column="required_quantity"/>   
+        <result property="startDate" column="start_date"/>   
+        <result property="endDate" column="end_date"/>   
+    </resultMap>
+     
+    <select id="selectLinePackRequirements" resultMap="LinePackRequirement" >
+		SELECT lr.idn_linepack_requirement as idn_linepack_requirement,
+		          lr.idn_zone as idn_zone,
+		          z.zone_desc as zone_desc,
+		          z.zone_code as zone_code, 
+		          lr.required_quantity as required_quantity,
+		          lr.start_date as start_date,
+		          lr.end_date as end_date
+		     FROM tpa_tlinepack_requirement lr, 
+		          TPA_VZONE_TPA z
+		    WHERE lr.idn_zone= z.idn_zone
+		      AND NVL(lr.END_DATE, lr.START_DATE) >= lr.START_DATE    
+		      AND lr.VERSION_DATE = (SELECT MAX(lrx.version_date) 
+		                               FROM tpa_tlinepack_requirement lrx
+		                              WHERE lr.idn_zone = lrx.idn_zone
+		                                AND lr.start_date  = lrx.start_date)
+		                                
+
+  	 <!-- offshore búsqueda y sólo para el sistema cargado en la pantalla principal de la aplicación -->
+	 AND z.idn_pipeline_system = #{idn_system}
+  		                                
+	  <if test="startDate != null">
+			      AND nvl(lr.end_date,nvl((SELECT MIN(lry.start_date) - 1
+			                                FROM tpa_tlinepack_requirement lry
+			                               WHERE lry.idn_zone = lr.idn_zone
+			                                 AND lry.start_date > lr.start_date
+			                                 AND NVL(LRY.END_DATE, LRY.START_DATE) >= LRY.START_DATE
+			                                 AND lry.version_date = (SELECT MAX(lrz.version_date) 
+			                                                           FROM tpa_tlinepack_requirement lrz
+			                                                          WHERE lrz.idn_zone = lry.idn_zone
+			                                                            AND lrz.start_date = lry.start_date)) ,to_date('9999/12/31','yyyy/mm/dd')))>=  #{startDate}
+	  </if>
+	  <if test="endDate != null">
+	      AND #{endDate} >= lr.start_date 
+	  </if>
+	  <if test="zone != null and zone != ''">
+	      AND lr.idn_zone = #{zone}
+	  </if>
+      ORDER BY  UPPER (z.zone_code), lr.start_date DESC    
+   </select>
+
+   <select id="selectLinePackRequirementZoneSystem" resultType="com.atos.beans.ComboFilterNS">
+    	SELECT z.idn_zone as key, z.zone_code as value
+	    FROM TPA_VZONE_TPA z
+	    WHERE z.idn_pipeline_system =#{idn_system}
+	    ORDER BY UPPER(z.zone_code)
+    </select>
+
+	<insert id="insertLinePackRequirement" useGeneratedKeys="true" keyProperty="idn_linepack_requirement" keyColumn="idn_linepack_requirement" parameterType="com.atos.beans.dam.LinePackRequirementBean">
+		 INSERT INTO tpa_tlinepack_requirement
+			(idn_linepack_requirement,idn_zone, start_date, required_quantity,
+			aud_ins_user,aud_last_user)
+		VALUES
+			(tpa_slinepack_requirement.nextval,
+			 #{idn_zone},
+			 #{startDate}, 
+			 #{linepack},
+			 #{username},
+			 #{username})
+			 
+	</insert>
+	
+	<update id="deleteLinePackRequirement" parameterType="com.atos.beans.dam.LinePackRequirementBean">
+			UPDATE tpa_tlinepack_requirement set
+			end_date = #{endDate},
+			aud_last_user=#{username}
+			WHERE idn_linepack_requirement = #{idn_linepack_requirement}
+	</update>
+	
+	<select id="getLinePackRequirementStarDate" resultType="java.util.Date">
+		SELECT  lr.start_date as start_date
+	 	FROM tpa_tlinepack_requirement lr
+		WHERE idn_linepack_requirement = #{idn_linepack_requirement}
+	</select>
+	
+	
+	<select id="getLinePackRequirement" resultType="com.atos.beans.dam.LinePackRequirementBean">
+		SELECT 	lr.idn_linepack_requirement as idn_linepack_requirement, z.zone_code zone_code
+        FROM tpa_tlinepack_requirement lr, tpa_tzone z
+        WHERE lr.start_date=#{startDate}
+        and lr.idn_zone= z.idn_zone
+	</select>
+</mapper>

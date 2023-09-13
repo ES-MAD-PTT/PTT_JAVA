@@ -1,0 +1,57 @@
+<ui:composition
+	xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+<p:dataTable id="o_east_quality_table" var="o_east_quality" value="#{weekNom.o_east_quality}" style="margin-bottom:20px;border-collapse:collapse"
+paginator="true" rows="15" rowsPerPageTemplate="5,10,15,20,25">
+	<f:facet name="header">
+	 						<p:outputPanel style="height:30px">
+							<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+      						<p:columnToggler datasource="o_east_quality_table" trigger="toggler" style="width:200px"/>
+							</p:outputPanel>
+							</f:facet>
+	<p:column headerText="#{msg['nom_concept']}">
+	<h:outputText value="#{o_east_quality.concept}" />
+	</p:column>
+	<p:column headerText="#{msg['nom_unit']}">
+	<h:outputText value="#{o_east_quality.unit}" />
+	</p:column>
+	<p:column headerText="#{header_day_1}">
+	<h:outputText style="float:right" styleClass="#{o_east_quality.is_warned_day_1 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{o_east_quality.day_1}" > 
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column headerText="#{header_day_2}">
+	<h:outputText style="float:right" styleClass="#{o_east_quality.is_warned_day_2 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{o_east_quality.day_2}" > 
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column headerText="#{header_day_3}">
+	<h:outputText style="float:right" styleClass="#{o_east_quality.is_warned_day_3 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{o_east_quality.day_3}" > 
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column headerText="#{header_day_4}">
+	<h:outputText style="float:right" styleClass="#{o_east_quality.is_warned_day_4 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{o_east_quality.day_4}" > 
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column headerText="#{header_day_5}">
+	<h:outputText style="float:right" styleClass="#{o_east_quality.is_warned_day_5 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{o_east_quality.day_5}" > 
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column headerText="#{header_day_6}">
+	<h:outputText style="float:right" styleClass="#{o_east_quality.is_warned_day_6 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{o_east_quality.day_6}" > 
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column headerText="#{header_day_7}">
+	<h:outputText style="float:right" styleClass="#{o_east_quality.is_warned_day_7 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{o_east_quality.day_7}" > 
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+</p:dataTable>
+</ui:composition>

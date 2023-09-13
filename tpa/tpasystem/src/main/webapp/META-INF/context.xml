@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- DESARROLLO -->
+<Context
+            path="/tpasystem"
+            reloadable="true">
+<!--           <Realm className="org.apache.catalina.realm.JDBCRealm"
+            connectionName="us_sago"
+            connectionPassword="us_sago"
+            connectionURL="jdbc:oracle:thin:@172.24.56.221:1521:SAGOP"
+            driverName="oracle.jdbc.driver.OracleDriver"
+            roleNameCol="MPE_CDA_PERFILXX"
+            userCredCol="MUS_CDA_PASSWORD"
+            userNameCol="MUS_CDA_BDUSUARI"
+            userRoleTable="T_MAE_PERFIL_USUARIO"
+            userTable="T_MAE_USUARIO"/> -->
+<Resource name="jdbc/TPAds"
+          auth="Container"
+          type="javax.sql.DataSource"
+          factory="org.apache.tomcat.jdbc.pool.DataSourceFactory"
+          testWhileIdle="true"
+          testOnBorrow="false"
+          testOnReturn="false"
+          validationQuery="SELECT 1"
+          validationInterval="30000"
+          timeBetweenEvictionRunsMillis="30000"
+          maxActive="100"
+          minIdle="10"
+          maxWait="10000"
+          initialSize="10"
+          removeAbandonedTimeout="600"
+          removeAbandoned="false"
+          logAbandoned="true"
+          minEvictableIdleTimeMillis="60000"
+          username="US_WEB"
+          password="webservice123"
+          driverClassName="oracle.jdbc.OracleDriver"
+           
+          url="jdbc:oracle:thin:@172.24.59.19:1522/TPA01"
+             />
+       <!--    jdbcInterceptors="org.apache.tomcat.jdbc.pool.interceptor.ConnectionState;
+			org.apache.tomcat.jdbc.pool.interceptor.StatementFinalizer;
+			org.apache.tomcat.jdbc.pool.interceptor.ResetAbandonedTimer" -->
+			
+                
+</Context>
+           <!-- driverClassName="oracle.jdbc.driver.OracleDriver"
+          
+          url para la BD de desarrollo 
+            url="jdbc:oracle:thin:@172.24.59.19:1522/TPA01"
+           
+           usr para mi BD Local 
+            url="jdbc:oracle:thin:@localhost:1522/TPA12"
+            />
+            
+            usr para la BD de test
+            url="jdbc:oracle:thin:@172.24.59.19:1524/TPA03"
+            
+            usr para la BD de preproduccion
+            url="jdbc:oracle:thin:@10.104.239.112:1521/TPA01"
+
+			usr para la BD de produccion nodo 1
+			url="jdbc:oracle:thin:@10.104.239.93:1521/TPA01"
+
+            usr para la BD de produccion nodo 2
+            url="jdbc:oracle:thin:@10.104.239.94:1521/TPA01"
+            
+            url para la BD de backup restore
+            url="jdbc:oracle:thin:@10.10.1.183:1521/TPA01"
+           -->
+           

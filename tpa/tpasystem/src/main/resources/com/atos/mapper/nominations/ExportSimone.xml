@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atos.mapper.nominations.ExportSimoneMapper">
+
+	          
+	<select id="selectExportSimone" parameterType="com.atos.filters.nominations.ExportSimoneFilter" resultType="com.atos.beans.nominations.ExportSimoneBean">
+WITH daily_nominated_quantities AS
+(SELECT n.idn_nomination,
+         n.idn_operation,
+         n.idn_contract,
+         o.term_code,
+         1  AS priority,
+         ndq.idn_nomination_day,
+         ndq.idn_nom_day_quantity,
+         nhq.idn_nomination_hour,
+         nhq.idn_nom_hour_quantity,
+         ndq.idn_nomination_entity,
+         ndq.idn_nomination_concept,
+         ndq.gas_day,
+         ndq.day_confirmed_quantity,
+         nhq.hour                    AS hour_,
+         nhq.hour_confirmed_quantity,
+         ne.idn_system_point,
+         ne.idn_area,
+         ne.idn_zone
+    FROM tpa_tnomination               n,
+         tpa_voperation                o,
+         tpa_tcontract                 c,
+         tpa_vnomination_day_quantity  ndq,
+         tpa_vnomination_hour_quantity nhq,
+         tpa_tnomination_entity        ne
+   WHERE n.start_date = #{start_date}
+     AND n.end_date = #{start_date}
+     AND ndq.gas_day = #{start_date}
+     AND c.idn_pipeline_system = #{idn_pipeline}
+     AND n.nomination_version =
+         (SELECT MAX(nx.nomination_version) FROM tpa_tnomination nx WHERE nx.nomination_code = n.nomination_code AND n.is_intraday = 'N')
+     AND NOT (n.is_responsed = 'Y' AND n.is_valid = 'N') 
+     AND n.idn_operation = o.idn_operation
+     AND o.category_code = 'NOMINATION'
+     AND o.term_code = 'DAILY'
+     AND n.idn_contract = c.idn_contract
+     AND n.idn_nomination = ndq.idn_nomination
+     AND n.idn_nomination = ne.idn_nomination
+     AND nhq.idn_nomination_day(+) = ndq.idn_nomination_day
+    AND nhq.idn_nomination_entity(+) = ndq.idn_nomination_entity
+     AND nhq.idn_nomination_concept(+) = ndq.idn_nomination_concept
+     AND ndq.idn_nomination = ne.idn_nomination
+     AND ndq.idn_nomination_entity = ne.idn_nomination_entity
+     AND n.is_intraday = 'N'),
+
+weekly_nominated_quantities AS
+(SELECT n.idn_nomination,
+         n.idn_operation,
+         n.idn_contract,
+         o.term_code,
+         2 AS priority,
+         ndq.idn_nomination_day,
+         ndq.idn_nom_day_quantity,
+         NULL AS idn_nomination_hour,
+         NULL AS idn_nom_hour_quantity,
+         ndq.idn_nomination_entity,
+         ndq.idn_nomination_concept,
+         ndq.gas_day,
+         ndq.day_confirmed_quantity,
+         hours.hour_ AS hour_,
+         (ndq.day_confirmed_quantity / 24) AS hour_confirmed_quantity,
+         ne.idn_system_point,
+         ne.idn_area,
+         ne.idn_zone
+    FROM tpa_tnomination n,
+         tpa_voperation o,
+         tpa_tcontract c,
+         tpa_vnomination_day_quantity ndq,
+         tpa_tnomination_entity ne,
+         (SELECT LEVEL AS hour_ FROM dual CONNECT BY LEVEL <![CDATA[ <= ]]> 24) hours
+   WHERE #{start_date} BETWEEN n.start_date AND n.end_date
+     AND ndq.gas_day = #{start_date}
+     AND c.idn_pipeline_system = #{idn_pipeline}
+     AND n.nomination_version =
+         (SELECT MAX(nx.nomination_version) FROM tpa_tnomination nx WHERE nx.nomination_code = n.nomination_code)
+     AND NOT (n.is_responsed = 'Y' AND n.is_valid = 'N') 
+     AND n.idn_operation = o.idn_operation
+     AND n.idn_contract = c.idn_contract
+     AND n.idn_nomination = ndq.idn_nomination
+     AND n.idn_nomination = ne.idn_nomination
+     AND o.category_code = 'NOMINATION'
+     AND o.term_code = 'WEEKLY'
+     AND ndq.idn_nomination_entity = ne.idn_nomination_entity
+     AND ndq.idn_nomination = ne.idn_nomination),
+
+extended_unit_conversion AS
+(SELECT uc.*,
+         ut.type_code
+    FROM tpa_vunit_convert_from_default uc,
+         tpa_tunit                      u,
+         tpa_tunit_type                 ut
+   WHERE uc.idn_unit_default = u.idn_unit
+     AND u.idn_unit_type = ut.idn_unit_type),
+
+aggregatable_units AS
+(SELECT 'ENERGY' AS type_code FROM dual UNION SELECT 'VOLUME' AS type_code FROM dual),
+
+all_nominated_quantities AS
+(SELECT * FROM daily_nominated_quantities UNION SELECT * FROM weekly_nominated_quantities),
+
+best_nominated_quantities AS
+(SELECT b.idn_nomination,
+         b.idn_contract,
+         b.gas_day,
+         b.hour_,
+         nen.idn_nomination_entity,
+         b.idn_nomination_concept,
+         b.day_confirmed_quantity,
+         b.hour_confirmed_quantity
+    FROM tpa_tnomination_entity nen,
+         (SELECT idn_nomination,
+                 idn_contract,
+                 gas_day,
+                 hour_,
+                 idn_system_point,
+                 idn_area,
+                 idn_zone,
+                 idn_nomination_concept,
+                 SUM(day_confirmed_quantity) keep(dense_rank FIRST ORDER BY priority) AS day_confirmed_quantity,
+                 SUM(hour_confirmed_quantity) keep(dense_rank FIRST ORDER BY priority) AS hour_confirmed_quantity
+            FROM all_nominated_quantities
+           GROUP BY idn_nomination,
+                    idn_contract,
+                    gas_day,
+                    hour_,
+                    idn_system_point,
+                    idn_area,
+                    idn_zone,
+                    idn_nomination_concept) b
+   WHERE nen.idn_nomination = b.idn_nomination
+     AND nvl(nen.idn_system_point, -1) = nvl(b.idn_system_point, -1)
+     AND nvl(nen.idn_area, -1) = nvl(b.idn_area, -1)
+     AND nvl(nen.idn_zone, -1) = nvl(b.idn_zone, -1)),
+
+full_nomination AS
+(SELECT nq.idn_nomination,
+         nq.gas_day,
+         nq.idn_nomination_concept,
+         nc.type_code AS concept_type,
+         ne.zone_code,
+         ne.point_code,
+         nc.concept_code,
+         nh.area,
+         nh.subarea,
+         nh.unit,
+         nh.entry_exit,
+         nq.hour_,
+         nq.hour_confirmed_quantity,
+         nq.day_confirmed_quantity,
+         (SELECT ngq.quality_value
+            FROM tpa_tnomination_gasq   ngq,
+                 tpa_tgas_quality_param gqp
+           WHERE ngq.idn_nomination_entity = ne.idn_nomination_entity
+             AND ngq.idn_nomination_concept = nc.idn_nomination_concept
+             AND ngq.idn_gas_quality_param = gqp.idn_gas_quality_param
+             AND gqp.parameter_code = 'WI') AS wi,
+         (SELECT ngq.quality_value
+            FROM tpa_tnomination_gasq   ngq,
+                 tpa_tgas_quality_param gqp
+           WHERE ngq.idn_nomination_entity = ne.idn_nomination_entity
+             AND ngq.idn_nomination_concept = nc.idn_nomination_concept
+             AND ngq.idn_gas_quality_param = gqp.idn_gas_quality_param
+             AND gqp.parameter_code = 'HV') AS hv,
+         (SELECT ngq.quality_value
+            FROM tpa_tnomination_gasq   ngq,
+                 tpa_tgas_quality_param gqp
+           WHERE ngq.idn_nomination_entity = ne.idn_nomination_entity
+             AND ngq.idn_nomination_concept = nc.idn_nomination_concept
+             AND ngq.idn_gas_quality_param = gqp.idn_gas_quality_param
+             AND gqp.parameter_code = 'SG') AS sg,
+         nvl(ucfd.conversion_factor, 1) AS conversion_factor,
+         nvl(ucfd.type_code, '~$~') AS unit_type,
+         nc.sort_value
+    FROM tpa_vnomination_entity        ne,
+         best_nominated_quantities     nq,
+         tpa_vnomination_excel_header  nh,
+         tpa_vnomination_main_concepts nc,
+         extended_unit_conversion      ucfd
+   WHERE ne.idn_nomination = nq.idn_nomination
+     AND ne.idn_nomination_entity = nq.idn_nomination_entity
+     AND ne.idn_nomination_entity = nh.idn_nomination_entity
+     AND ne.is_point_entity = nc.is_point_concept
+     AND ne.is_area_entity = nc.is_area_concept
+     AND ne.is_zone_entity = nc.is_zone_concept
+     AND nq.idn_nomination_concept = nh.idn_nomination_concept
+     AND nq.idn_nomination_concept = nc.idn_nomination_concept
+     AND ucfd.idn_unit(+) = nh.idn_unit)
+
+SELECT *
+  FROM ( 
+        SELECT f.zone_code,
+                nvl(f.point_code, f.concept_code) AS entity,
+                f.area,
+                f.subarea,
+                f.unit,
+                f.entry_exit,
+                cast(decode(SUM(f.day_confirmed_quantity),
+                       0,
+                       NULL,
+                       SUM(f.day_confirmed_quantity * f.wi) / SUM(f.day_confirmed_quantity))as decimal(10,3)) AS wi,
+                cast(decode(SUM(f.day_confirmed_quantity),
+                       0,
+                       NULL,
+                       SUM(f.day_confirmed_quantity * f.hv) / SUM(f.day_confirmed_quantity)) as decimal(10,3)) AS hv,
+                cast(decode(SUM(f.day_confirmed_quantity), 0, NULL, SUM(f.day_confirmed_quantity * f.sg) / SUM(f.day_confirmed_quantity)) as decimal(10,3)) AS sg,
+                f.hour_,
+                SUM(f.hour_confirmed_quantity * f.conversion_factor) AS hour_quantity,
+                SUM(f.day_confirmed_quantity * f.conversion_factor) AS day_quantity,
+                f.sort_value
+          FROM full_nomination f
+         WHERE f.unit_type IN (SELECT type_code FROM aggregatable_units)
+         GROUP BY zone_code,
+                   nvl(point_code, concept_code),
+                   area,
+                   subarea,
+                   unit,
+                   entry_exit,
+                   hour_,
+                   sort_value
+
+        UNION ALL
+
+        SELECT f.zone_code,
+                nvl(f.point_code, f.concept_code) AS entity,
+                f.area,
+                f.subarea,
+                f.unit,
+                f.entry_exit,
+                cast(decode(SUM(f.day_confirmed_quantity),
+                       0,
+                       NULL,
+                       SUM(f.day_confirmed_quantity * f.wi) / SUM(f.day_confirmed_quantity)) as decimal(10,3)) AS wi,
+                cast(decode(SUM(f.day_confirmed_quantity),
+                       0,
+                       NULL,
+                       SUM(f.day_confirmed_quantity * f.hv) / SUM(f.day_confirmed_quantity)) as decimal(10,3)) AS hv,
+                cast(decode(SUM(f.day_confirmed_quantity), 0, NULL, SUM(f.day_confirmed_quantity * f.sg) / SUM(f.day_confirmed_quantity)) as decimal(10,3)) AS sg,
+            
+                f.hour_,
+                AVG(f.hour_confirmed_quantity * f.conversion_factor) AS hour_quantity,
+                AVG(f.day_confirmed_quantity * f.conversion_factor) AS day_quantity,
+                f.sort_value
+          FROM full_nomination f
+         WHERE f.unit_type NOT IN (SELECT type_code FROM aggregatable_units)
+         GROUP BY zone_code,
+                   nvl(point_code, concept_code),
+                   area,
+                   subarea,
+                   unit,
+                   entry_exit,
+                   hour_,
+                   sort_value)
+pivot (SUM(hour_quantity) FOR hour_ IN(1 AS hour_01,
+                                  2 AS hour_02,
+                                  3 AS hour_03,
+                                  4 AS hour_04,
+                                  5 AS hour_05,
+                                  6 AS hour_06,
+                                  7 AS hour_07,
+                                  8 AS hour_08,
+                                  9 AS hour_09,
+                                  10 AS hour_10,
+                                  11 AS hour_11,
+                                  12 AS hour_12,
+                                  13 AS hour_13,
+                                  14 AS hour_14,
+                                  15 AS hour_15,
+                                  16 AS hour_16,
+                                  17 AS hour_17,
+                                  18 AS hour_18,
+                                  19 AS hour_19,
+                                  20 AS hour_20,
+                                  21 AS hour_21,
+                                  22 AS hour_22,
+                                  23 AS hour_23,
+                                  24 AS hour_24))
+ORDER BY zone_code,
+          area,
+          sort_value,
+          entity
+
+		
+	</select>
+		          
+	<select id="selectExportSimone_old"  resultType="com.atos.beans.nominations.ExportSimoneBean">
+SELECT ne.zone_code AS "zone_code",
+       neh.supply_demand AS "supply_demand",
+       neh.area AS "area",
+       nvl(ne.point_code, nmc.concept_code) AS "point_id",
+       NULL AS wi_hv,
+       NULL AS area_concept,
+       neh.cust_type AS "cust_type",
+       neh.area_code AS "area_code",
+       neh.subarea AS "subarea",
+       neh.unit AS "unit",
+       neh.entry_exit AS "entry_exit",
+       MIN((SELECT ngq.quality_value
+             FROM tpa_tnomination_gasq   ngq,
+                  tpa_tgas_quality_param gqp
+            WHERE ngq.idn_nomination_entity = ne.idn_nomination_entity
+              AND ngq.idn_nomination_concept = nmc.idn_nomination_concept
+              AND ngq.idn_gas_quality_param = gqp.idn_gas_quality_param
+              AND gqp.parameter_code = 'WI')) AS wi,
+       NVL(MIN((SELECT ngq.is_warned
+             FROM tpa_tnomination_gasq   ngq,
+                  tpa_tgas_quality_param gqp
+            WHERE ngq.idn_nomination_entity = ne.idn_nomination_entity
+              AND ngq.idn_nomination_concept = nmc.idn_nomination_concept
+              AND ngq.idn_gas_quality_param = gqp.idn_gas_quality_param
+              AND gqp.parameter_code = 'WI')),'N') AS is_warned_wi,
+       MIN((SELECT ngq.quality_value
+             FROM tpa_tnomination_gasq   ngq,
+                  tpa_tgas_quality_param gqp
+            WHERE ngq.idn_nomination_entity = ne.idn_nomination_entity
+              AND ngq.idn_nomination_concept = nmc.idn_nomination_concept
+              AND ngq.idn_gas_quality_param = gqp.idn_gas_quality_param
+              AND gqp.parameter_code = 'HV')) AS hv,
+       NVL(MIN((SELECT ngq.is_warned
+             FROM tpa_tnomination_gasq   ngq,
+                  tpa_tgas_quality_param gqp
+            WHERE ngq.idn_nomination_entity = ne.idn_nomination_entity
+              AND ngq.idn_nomination_concept = nmc.idn_nomination_concept
+              AND ngq.idn_gas_quality_param = gqp.idn_gas_quality_param
+              AND gqp.parameter_code = 'HV')),'N') AS is_warned_hv,
+       SUM(decode(nhq.hour, 1, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_01,
+       SUM(decode(nhq.hour, 2, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_02,
+       SUM(decode(nhq.hour, 3, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_03,
+       SUM(decode(nhq.hour, 4, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_04,
+       SUM(decode(nhq.hour, 5, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_05,
+       SUM(decode(nhq.hour, 6, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_06,
+       SUM(decode(nhq.hour, 7, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_07,
+       SUM(decode(nhq.hour, 8, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_08,
+       SUM(decode(nhq.hour, 9, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_09,
+       SUM(decode(nhq.hour, 10, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_10,
+       SUM(decode(nhq.hour, 11, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_11,
+       SUM(decode(nhq.hour, 12, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_12,
+       SUM(decode(nhq.hour, 13, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_13,
+       SUM(decode(nhq.hour, 14, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_14,
+       SUM(decode(nhq.hour, 15, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_15,
+       SUM(decode(nhq.hour, 16, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_16,
+       SUM(decode(nhq.hour, 17, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_17,
+       SUM(decode(nhq.hour, 18, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_18,
+       SUM(decode(nhq.hour, 19, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_19,
+       SUM(decode(nhq.hour, 20, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_20,
+       SUM(decode(nhq.hour, 21, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_21,
+       SUM(decode(nhq.hour, 22, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_22,
+       SUM(decode(nhq.hour, 23, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_23,
+       SUM(decode(nhq.hour, 24, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_24,
+       MIN(ndq.day_matched_quantity * ucfd.conversion_factor) AS total,
+       MIN(ndq.is_warned) AS is_warned
+  FROM tpa_vnomination_entity         ne,
+       tpa_vnomination_excel_header   neh,
+       tpa_vnomination_day_quantity   ndq,
+       tpa_vnomination_hour_quantity  nhq,
+       tpa_vnomination_main_concepts  nmc,
+       tpa_vunit_convert_from_default ucfd
+ WHERE ne.idn_nomination =  #{idn_nomination}
+   AND ndq.idn_nomination = #{idn_nomination}
+   AND ne.idn_zone = #{idn_zone}
+   AND neh.idn_nomination_entity = ne.idn_nomination_entity
+   AND neh.idn_nomination_concept = nmc.idn_nomination_concept
+   AND ndq.idn_nomination_entity = ne.idn_nomination_entity
+   AND ndq.idn_nomination_concept = nmc.idn_nomination_concept
+   AND nhq.idn_nomination_day(+) = ndq.idn_nomination_day
+   AND nhq.idn_nomination_entity = ne.idn_nomination_entity
+   AND nhq.idn_nomination_concept = nmc.idn_nomination_concept
+   AND nhq.idn_nomination_entity = ndq.idn_nomination_entity
+   AND nhq.idn_nomination_concept = ndq.idn_nomination_concept
+   AND neh.idn_nomination_entity = ndq.idn_nomination_entity
+   AND neh.idn_nomination_concept = ndq.idn_nomination_concept
+   AND neh.idn_nomination_entity = nhq.idn_nomination_entity
+   AND neh.idn_nomination_concept = nhq.idn_nomination_concept
+   AND neh.idn_unit = ucfd.idn_unit
+   AND nmc.is_point_concept = ne.is_point_entity
+   AND nmc.is_area_concept = ne.is_area_entity
+   AND nmc.is_zone_concept = ne.is_zone_entity
+GROUP BY ne.zone_code,
+          neh.supply_demand,
+          neh.area,
+          nvl(ne.point_code, nmc.concept_code),
+          neh.cust_type,
+          neh.area_code,
+          neh.subarea,
+          neh.unit,
+          neh.entry_exit,
+          nmc.type_code,
+          nmc.sort_value
+ ORDER BY ne.zone_code,
+          neh.supply_demand DESC,
+          neh.area,
+          nmc.type_code,
+          nmc.sort_value,
+          nvl(ne.point_code, nmc.concept_code)
+
+	</select>
+
+	
+</mapper>
+

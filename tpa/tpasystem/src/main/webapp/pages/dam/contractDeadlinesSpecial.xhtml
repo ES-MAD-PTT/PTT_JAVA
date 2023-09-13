@@ -1,0 +1,354 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_dam']}" url="#" />
+			<p:menuitem value="#{msg['menu_parameters']}" url="#" />
+			<p:menuitem value="#{msg['menu_contract_deadline_special']}" url="/pages/dam/contractDeadlinesSpecial.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="5000"/>
+			
+            <p:layout widgetVar="contractDeadlineSpecialLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false" collapsible="true" id="page_filters">	
+				<p:panelGrid columns="2" style="width:100%">
+					
+						<p:panelGrid>
+							<p:row>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['contractDeadlineSpecial_Type']}" />
+								</p:column>
+								
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['contractDeadlineSpecial_Start_Date']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['contractDeadlineSpecial_End_Date']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								
+								<p:column>				           		
+					           		<p:selectOneMenu id="type" style="width:100px"   value="#{contractDeadlineSpecialView.filters.type}" >
+							               		<f:selectItem itemLabel="" itemValue="" />
+        								        <f:selectItems value="#{contractDeadlineSpecialView.types.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>											
+								</p:column>
+								
+								<p:column>
+									<p:calendar id="fecInicio"  size="10" pattern="dd/MM/yyyy" mask="true" 
+										value="#{contractDeadlineSpecialView.filters.startDate}"
+										showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="fecInicio"></p:ajax>
+										<p:ajax event="change" update="fecInicio"></p:ajax>
+									</p:calendar>
+								</p:column>
+								<p:column>
+									<p:calendar id="fecFin"  size="10" pattern="dd/MM/yyyy" mask="true" value="#{contractDeadlineSpecialView.filters.endDate}"
+										showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="fecFin"></p:ajax>
+										<p:ajax event="change" update="fecFin"></p:ajax>
+									</p:calendar>
+								</p:column>
+							
+								
+							</p:row>
+						</p:panelGrid>
+						<p:panelGrid columns="2" style="float:right;top:0px">
+							<shiro:hasPermission name="#{changeSystemView.system}.DAM.CONTRACT_DEADLINES.QUERY">
+								<p:commandButton id="search" value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{contractDeadlineSpecialView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,:#{p:component('contractDeadlineSpecial1')}"/>
+							</shiro:hasPermission>
+							
+							<p:commandButton  onclick="PF('contractDeadlineSpecialLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+							
+							<shiro:hasPermission name="#{changeSystemView.system}.DAM.CONTRACT_DEADLINES.QUERY">								
+								<p:commandButton value="#{msg['clear']}"
+									actionListener="#{contractDeadlineSpecialView.onClear}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" 
+									process="@this" 
+									update="form"/>  
+							</shiro:hasPermission>
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center"
+					resizable="false" closable="false" collapsible="false">
+
+					<p:dataTable widgetVar="w_contractDeadlineSpecial1"  id="contractDeadlineSpecial1" var="contractDeadlineSpecial" value="#{contractDeadlineSpecialView.items}" reflow="true" editable="true" 
+						style="margin-bottom:20px;border-collapse:collapse"
+					    paginator="true" rows="15"
+					    scrollable="true"  scrollHeight="100%"
+					    rowsPerPageTemplate="5,10,15,20,25, #{contractDeadlineSpecialView.itemsSize}" >
+
+							<f:facet name="header">
+								<p:outputPanel style="height:25px">
+									<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+	        						<p:columnToggler datasource="contractDeadlineSpecial1" trigger="toggler" style="width:200px"/>
+	        						<shiro:hasPermission name="#{changeSystemView.system}.DAM.CONTRACT_DEADLINES.ADD">
+		        						<p:commandButton id="new" type="button" value="New" icon="ui-icon fa fa-save" style="float:right;"
+		        							onclick="PF('dlgxx').show();"/>
+	        						</shiro:hasPermission>
+								</p:outputPanel>        										          
+					        </f:facet>
+					        
+					        <shiro:hasPermission name="#{changeSystemView.system}.DAM.CONTRACT_DEADLINES.MOD">
+						 		<p:ajax event="rowEditInit" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','hidden')});" />
+								<p:ajax event="rowEdit" listener="#{contractDeadlineSpecialView.onRowEdit}" update=":form:msgs" onstart="PF('cargando').show()"
+									oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});PF('cargando').hide()"/>   
+								<p:ajax event="rowEditCancel" listener="#{contractDeadlineSpecialView.onRowCancel}" update=":form:msgs" onstart="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>
+						 </shiro:hasPermission>
+					      
+					       <p:column headerText="#{msg['contractDeadlineSpecial_Type']}"  style="width: 100px;" sortBy="#{contractDeadlineSpecial.type}" filterMatchMode="contains" filterBy="#{contractDeadlineSpecial.type}">
+					       		<h:outputText value="#{contractDeadlineSpecial.type}" />
+					          
+					       </p:column>
+					       
+					   		 <p:column headerText="#{msg['contractDeadlineSpecial_Start_Date']}" style="width: 100px;" sortBy="#{contractDeadlineSpecial.startDate}" >
+					          <p:cellEditor>
+					               <f:facet name="output">
+					               			<h:outputText value="#{contractDeadlineSpecial.startDate}" >
+					              				<f:convertDateTime pattern="dd/MM/yyyy" />
+					              		 </h:outputText>
+					               </f:facet>
+					               <f:facet name="input">
+					               		<p:calendar required="true" id="startDate1"
+					               			readonlyInput="true"   
+					               			value="#{contractDeadlineSpecial.startDate}" pattern="dd/MM/yyyy" 
+					               			disabled="#{contractDeadlineSpecialView.disabledField(contractDeadlineSpecial)}"
+											requiredMessage="#{msg['contractDeadlineSpecial_Start_Date']}: #{msg['empty_field']}" validatorMessage="#{msg['contractDeadlineSpecial_Start_Date']}: #{msg['empty_field']}">
+											<!--  mindate="#{(contractDeadlineSpecialView.sysdate).getTime()}"  -->
+											<f:convertDateTime pattern="dd/MM/yyyy"/>
+										</p:calendar>
+					               </f:facet>
+					           </p:cellEditor> 
+					       </p:column>	       
+					       
+ 					       <p:column headerText="#{msg['contractDeadlineSpecial_contract_min_start_date']}" style="width: 100px;" sortBy="#{contractDeadlineSpecial.contract_min_start_date}" >
+					          <p:cellEditor>
+					               <f:facet name="output">
+					               			<h:outputText value="#{contractDeadlineSpecial.contract_min_start_date}" >
+					              				<f:convertDateTime pattern="dd/MM/yyyy" />
+					              		 </h:outputText>
+					               </f:facet>
+					               <f:facet name="input">
+					               		<p:calendar required="true" id="contract_min_start_date"
+					               			readonlyInput="true"      
+					               			value="#{contractDeadlineSpecial.contract_min_start_date}" pattern="dd/MM/yyyy" 
+					               			disabled="#{contractDeadlineSpecialView.disabledField(contractDeadlineSpecial)}"
+											requiredMessage="#{msg['contractDeadlineSpecial_contract_min_start_date']}: #{msg['empty_field']}" validatorMessage="#{msg['contractDeadlineSpecial_contract_min_start_date']}: #{msg['empty_field']}">
+											<!-- mindate="#{(contractDeadlineSpecialView.sysdate).getTime()}" -->
+											<f:convertDateTime pattern="dd/MM/yyyy"/>
+										</p:calendar>
+					               </f:facet>
+					           </p:cellEditor> 
+					       </p:column>
+					       <p:column headerText="#{msg['contractDeadlineSpecial_contract_max_start_date']}" style="width: 100px;" sortBy="#{contractDeadlineSpecial.contract_max_start_date}" >
+					          <p:cellEditor>
+					               <f:facet name="output">
+					               			<h:outputText value="#{contractDeadlineSpecial.contract_max_start_date}" >
+					              				<f:convertDateTime pattern="dd/MM/yyyy" />
+					              		 </h:outputText>
+					               </f:facet>
+					               <f:facet name="input">
+					               		<p:calendar required="true" id="contract_max_start_date"
+					               			readonlyInput="true"  
+					               			value="#{contractDeadlineSpecial.contract_max_start_date}" pattern="dd/MM/yyyy" 
+					               			disabled="#{contractDeadlineSpecialView.disabledField(contractDeadlineSpecial)}"
+											requiredMessage="#{msg['contractDeadlineSpecial_contract_max_start_date']}: #{msg['empty_field']}" validatorMessage="#{msg['contractDeadlineSpecial_contract_max_start_date']}: #{msg['empty_field']}">
+											<!--  mindate="#{(contractDeadlineSpecialView.sysdate).getTime()}"   -->
+											<f:convertDateTime pattern="dd/MM/yyyy"/>
+										</p:calendar>
+					               </f:facet>
+					           </p:cellEditor> 
+					       </p:column>
+					      <p:column headerText="#{msg['contractDeadlineSpecialsubmission_deadline']}" style="width: 100px;" sortBy="#{contractDeadlineSpecial.submission_deadline}" >
+					          <p:cellEditor>
+					               <f:facet name="output">
+					               			<h:outputText value="#{contractDeadlineSpecial.submission_deadline}" >
+					              				<f:convertDateTime pattern="dd/MM/yyyy" />
+					              		 </h:outputText>
+					               </f:facet>
+					               <f:facet name="input">
+					               		<p:calendar required="true" id="submission_deadline"
+					               			readonlyInput="true"   
+					               			value="#{contractDeadlineSpecial.submission_deadline}" pattern="dd/MM/yyyy" 
+					               			disabled="#{contractDeadlineSpecialView.disabledField(contractDeadlineSpecial)}"
+											requiredMessage="#{msg['contractDeadlineSpecialsubmission_deadline']}: #{msg['empty_field']}" validatorMessage="#{msg['contractDeadlineSpecialsubmission_deadline']}: #{msg['empty_field']}">
+											<!--  mindate="#{(contractDeadlineSpecialView.sysdate).getTime()}"   -->
+											<f:convertDateTime pattern="dd/MM/yyyy"/>
+										</p:calendar>
+					               </f:facet>
+					           </p:cellEditor> 
+					       </p:column>
+					       <p:column headerText="#{msg['contractDeadlineSpecialmanagement_deadline']}" style="width: 100px;" sortBy="#{contractDeadlineSpecial.management_deadline}" >
+					          <p:cellEditor>
+					               <f:facet name="output">
+					               			<h:outputText value="#{contractDeadlineSpecial.management_deadline}" >
+					              				<f:convertDateTime pattern="dd/MM/yyyy" />
+					              		 </h:outputText>
+					               </f:facet>
+					               <f:facet name="input">
+					               		<p:calendar required="true" id="management_deadline"
+					               			readonlyInput="true"   
+					               			value="#{contractDeadlineSpecial.management_deadline}" pattern="dd/MM/yyyy" 
+					               			disabled="#{contractDeadlineSpecialView.disabledField(contractDeadlineSpecial)}"
+											requiredMessage="#{msg['contractDeadlineSpecialmanagement_deadline']}: #{msg['empty_field']}" validatorMessage="#{msg['contractDeadlineSpecialmanagement_deadline']}: #{msg['empty_field']}">
+											<!-- mindate="#{(contractDeadlineSpecialView.sysdate).getTime()}"   -->
+											<f:convertDateTime pattern="dd/MM/yyyy"/>
+										</p:calendar>
+					               </f:facet>
+					           </p:cellEditor> 
+					       </p:column>
+					      <shiro:hasPermission name="#{changeSystemView.system}.DAM.CONTRACT_DEADLINES.MOD">
+						       <p:column style="width:32px">
+						           <p:rowEditor rendered="#{contractDeadlineSpecialView.renderItemEditor(contractDeadlineSpecial)}"/>
+						       </p:column>
+					       </shiro:hasPermission>
+					   </p:dataTable>
+				</p:layoutUnit>
+
+			</p:layout>
+		</h:form>
+	
+	
+
+<shiro:hasPermission name="#{changeSystemView.system}.DAM.CONTRACT_DEADLINES.ADD">
+		<p:dialog widgetVar="dlgxx" resizable="false"  closable="true" modal="true" appendTo="@(body)" header="New Contract Deadline Special">
+		<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario
+		 <p:ajax event="close" update="formNewEntity"  process="@this" listener="#{contractDeadlineSpecialView.cancel}" />	-->
+			<h:form id="formNewEntity">
+			<p:growl id="msgs" showDetail="true"  life="5000"/>
+				<p:panelGrid columns="4" style="width:100%">
+					<p:panelGrid>
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['contractDeadlineSpecial_Type']}" />
+							</p:column>
+							<p:column>
+						   <p:selectOneMenu id="type" style="width:100px"    value="#{contractDeadlineSpecialView.newContractDeadlineSpecial.idn_operation_term}" >
+						<!-- 		<p:selectOneMenu id="type" style="width:100px"    value="#{contractDeadlineSpecialView.newContractDeadlineSpecial.idn_deadline_type}" > -->
+        					        <f:selectItems value="#{contractDeadlineSpecialView.types.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					          </p:selectOneMenu>		
+								<p:message for="type" />
+							</p:column>
+							
+							<p:column>
+								<h:outputText value="#{msg['contractDeadlineSpecial_Start_Date']}"/>
+							</p:column>
+							<p:column>
+								<p:calendar required="true" id="startDate" 	
+											value="#{contractDeadlineSpecialView.newContractDeadlineSpecial.startDate}" pattern="dd/MM/yyyy"																					
+											requiredMessage="#{msg['contractDeadlineSpecial_Start_Date']}: #{msg['empty_field']}" 
+											validatorMessage="#{msg['contractDeadlineSpecial_Start_Date']}: #{msg['lenght_field']}">
+											<!-- mindate="#{(contractDeadlineSpecialView.sysdate).getTime()}" -->
+											<p:ajax event="dateSelect" update="startDate"></p:ajax>
+											<p:ajax event="change" update="startDate"></p:ajax>
+								</p:calendar>
+								<p:message for="startDate" />
+							</p:column>
+						</p:row>
+						<p:row>
+							
+							<p:column>
+								<h:outputText value="#{msg['contractDeadlineSpecial_contract_min_start_date']}" />
+							</p:column>
+							<p:column>
+									<p:calendar required="true" id="contract_min_start_date" 
+											value="#{contractDeadlineSpecialView.newContractDeadlineSpecial.contract_min_start_date}" pattern="dd/MM/yyyy"											
+											requiredMessage="#{msg['contractDeadlineSpecial_contract_min_start_date']}: #{msg['empty_field']}" 
+											validatorMessage="#{msg['contractDeadlineSpecial_contract_min_start_date']}: #{msg['lenght_field']}">
+											<!--  mindate="#{(contractDeadlineSpecialView.sysdate).getTime()}"  -->
+											<p:ajax event="dateSelect" update="contract_min_start_date"></p:ajax>
+											<p:ajax event="change" update="contract_min_start_date"></p:ajax>
+									</p:calendar>
+									<p:message for="contract_min_start_date" />
+							</p:column>
+							<p:column>
+								<h:outputText value="#{msg['contractDeadlineSpecial_contract_max_start_date']}" />
+							</p:column>
+							<p:column>
+								<p:calendar required="true" id="contract_max_start_date" 
+											value="#{contractDeadlineSpecialView.newContractDeadlineSpecial.contract_max_start_date}" pattern="dd/MM/yyyy"											
+											requiredMessage="#{msg['contractDeadlineSpecial_contract_max_start_date']}: #{msg['empty_field']}" 
+											validatorMessage="#{msg['contractDeadlineSpecial_contract_max_start_date']}: #{msg['lenght_field']}">
+											<!--  mindate="#{(contractDeadlineSpecialView.sysdate).getTime()}" -->
+											<p:ajax event="dateSelect" update="contract_max_start_date"></p:ajax>
+											<p:ajax event="change" update="contract_max_start_date"></p:ajax>
+									</p:calendar>
+								<p:message for="contract_max_start_date" />
+							</p:column>
+						</p:row>
+				
+						
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['contractDeadlineSpecialsubmission_deadline']}" />
+							</p:column>
+							<p:column>
+									<p:calendar required="true" id="submission_deadline" 
+											value="#{contractDeadlineSpecialView.newContractDeadlineSpecial.submission_deadline}" pattern="dd/MM/yyyy"											  
+											requiredMessage="#{msg['contractDeadlineSpecialsubmission_deadline']}: #{msg['empty_field']}" 
+											validatorMessage="#{msg['contractDeadlineSpecialsubmission_deadline']}: #{msg['lenght_field']}">
+											<!-- mindate="#{(contractDeadlineSpecialView.sysdate).getTime()}" -->
+											<p:ajax event="dateSelect" update="submission_deadline"></p:ajax>
+											<p:ajax event="change" update="submission_deadline"></p:ajax>
+									</p:calendar>
+									<p:message for="submission_deadline" />
+							</p:column>
+							<p:column>
+								<h:outputText value="#{msg['contractDeadlineSpecialmanagement_deadline']}" />
+							</p:column>
+							<p:column>
+									<p:calendar required="true" id="management_deadline" 
+											value="#{contractDeadlineSpecialView.newContractDeadlineSpecial.management_deadline}" pattern="dd/MM/yyyy"										    
+											requiredMessage="#{msg['contractDeadlineSpecialmanagement_deadline']}: #{msg['empty_field']}" 
+											validatorMessage="#{msg['contractDeadlineSpecialmanagement_deadline']}: #{msg['lenght_field']}">
+											<!-- mindate="#{(contractDeadlineSpecialView.sysdate).getTime()}"-->
+											<p:ajax event="dateSelect" update="management_deadline"></p:ajax>
+											<p:ajax event="change" update="management_deadline"></p:ajax>
+									</p:calendar>
+									<p:message for="management_deadline" />
+							</p:column>
+						</p:row>					
+						
+					</p:panelGrid>
+				</p:panelGrid>
+				
+				<p:separator/>
+				<p:panelGrid>
+					<p:row>
+						<p:column>
+							<p:commandButton value="#{msg['save']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" validateClient="true"
+								action="#{contractDeadlineSpecialView.save}" update=":#{p:component('contractDeadlineSpecial1')},:formNewEntity"
+								onstart="PF('cargando').show()"
+								oncomplete="PF('dlgxx').hide(),PF('cargando').hide()" />
+			        		<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close"
+			        			update="formNewEntity" process="@this" actionListener="#{contractDeadlineSpecialView.cancel}"
+			        		 	oncomplete="PF('dlgxx').hide()"/>
+						</p:column>					
+					</p:row>
+				</p:panelGrid>							
+			</h:form>			
+		</p:dialog>
+	</shiro:hasPermission>
+	</ui:define>
+</ui:composition>

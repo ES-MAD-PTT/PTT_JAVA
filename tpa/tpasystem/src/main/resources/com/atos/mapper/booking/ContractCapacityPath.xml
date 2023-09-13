@@ -1,0 +1,476 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<!-- Namespace -->
+<mapper namespace="com.atos.mapper.booking.ContractCapacityPathMapper">
+
+
+<select id="selectBookingIds" resultType="com.atos.beans.ComboFilterNS" parameterType="com.atos.filters.booking.ContractCapacityPathFilter">
+SELECT r.idn_contract as key, r.request_code as value
+  FROM tpa_tcontract_request r
+WHERE r.status IN ('ACCEPTED', 'COMPLETED')
+   AND r.is_capacity_release = 'N' 
+   AND r.is_released_to_operator = 'N'
+   AND r.is_addendum = 'N'
+   AND r.idn_pipeline_system = #{idn_system}
+</select>
+   
+   
+    <resultMap type="com.atos.beans.booking.ContractCapacityPathBean" id="ContractCapacityPath">
+        <result property="idn_zone" column="idn_zone" />
+		<result property="zone" column="zone"/>
+		<result property="idn_area" column="idn_area"/>
+        <result property="area" column="area"/>   
+        <result property="point_code" column="point_code"/>   
+        <result property="point_desc" column="point_desc"/>  
+        <result property="date_from" column="date_from"/>   
+        <result property="date_to" column="date_to"/>   
+        <result property="idn_system_point" column="idn_system_point"/>   
+        <result property="idn_contract" column="idn_contract"/>   
+        
+        <association property="values" select="selectValues" column="{idn_system_point = IDN_SYSTEM_POINT, idn_contract=IDN_CONTRACT}}"/>
+         
+    </resultMap>
+    
+<select id="selectCapacityPath" resultMap="ContractCapacityPath" parameterType="com.atos.filters.booking.ContractCapacityPathFilter">
+SELECT DISTINCT z.IDN_ZONE as idn_zone,
+       z.zone_code as zone,
+      a.IDN_AREA as idn_area,
+  a.area_code as area, 
+  sp.point_code as point_code, 
+  sp.point_desc as point_desc, 
+  cr.start_date as date_from, 
+  cr.end_date as date_to, 
+  sp.idn_system_point as idn_system_point,
+  #{idn_booking} as idn_contract
+  FROM tpa_vcontract_request cr,
+       tpa_vsystem_point sp,
+       tpa_varea_tpa     a,
+       tpa_vzone_tpa     z
+WHERE cr.idn_contract = #{idn_booking}
+   AND cr.is_capacity_release = 'N' 
+   AND cr.is_released_to_operator = 'N'
+   AND cr.is_addendum = 'N'
+   AND cr.idn_pipeline_system = #{idn_system}
+   AND cr.idn_system_point = sp.idn_system_point
+   AND sp.idn_area = a.idn_area
+   AND a.idn_zone = z.idn_zone
+ORDER BY z.zone_code, a.area_code, sp.point_code
+
+
+</select>
+
+<select id="selectValues" resultType="com.atos.beans.booking.ContractCapacityPathValuesBean">
+SELECT rc.idn_system_point as idn_system_point,
+	rc.agreement_start_date as start_date,
+	rc.agreement_end_date as end_date,
+	to_char(rc.agreement_start_date, 'MON/YYYY') AS month_year,
+	SUM(rc.quantity) AS quantity
+  FROM tpa_vcontract_request_capacity rc 
+ WHERE rc.idn_contract = #{idn_contract}
+   AND rc.idn_system_point = #{idn_system_point}
+   AND rc.status IN ('ACCEPTED', 'COMPLETED')
+GROUP BY rc.idn_system_point, rc.agreement_start_date, rc.agreement_end_date
+ORDER BY 2
+
+</select>
+
+<select id="selectPeriod" resultType="com.atos.beans.booking.ContractCapacityPathPeriodBean" parameterType="com.atos.filters.booking.ContractCapacityPathFilter">
+SELECT x.idn_contract,
+       x.start_date,
+       x.end_date,
+       x.is_contract_complete,
+       x.num_agreements 
+  FROM tpa_vcontract_equal_agreements x 
+ WHERE x.idn_contract = #{idn_booking}
+ORDER BY start_date
+
+</select>
+
+<select id="selectPeriodContractComplete" resultType="com.atos.beans.booking.ContractCapacityPathPeriodBean" parameterType="com.atos.filters.booking.ContractCapacityPathFilter">
+SELECT start_date,
+       end_date
+  FROM tpa_tcontract_agreement ca
+WHERE ca.idn_contract_request = (SELECT idn_contract_request
+                                    FROM tpa_tcontract_request
+                                   WHERE idn_contract = #{idn_booking}
+                                     AND is_capacity_release = 'N'
+                                     AND is_released_to_operator = 'N'
+                                     AND is_addendum = 'N'
+                        AND status IN ('ACCEPTED', 'COMPLETED'))
+ORDER BY start_date,
+          end_date
+
+</select>
+
+
+<select id="selectTechCapacity" resultType="com.atos.beans.booking.ContractCapacityPathDetailBean" parameterType="com.atos.filters.booking.ContractCapacityPathFilter">
+WITH
+  w_area_tech_capacity AS
+    (SELECT atc.idn_area_tech_capacity,
+            atc.idn_area,
+            atc.start_date,
+            atc.version_date,
+            coalesce(atc.end_date,
+                     (SELECT atcx.start_date - 1
+                        FROM tpa_tarea_tech_capacity atcx
+                       WHERE atcx.idn_area = atc.idn_area
+                         AND atcx.start_date > atc.start_date
+                         AND nvl(atcx.end_date, atcx.start_date) >= atcx.start_date
+                         AND atcx.version_date = (SELECT MAX(atcxy.version_date)
+                                                    FROM tpa_tarea_tech_capacity atcxy
+                                                   WHERE atcxy.idn_area = atcx.idn_area
+                                                     AND atcxy.start_date >= atcx.start_date))
+                    ) AS end_date,
+            atc.technical_capacity,
+            atc.aud_ins_date,
+            atc.aud_last_date,
+            atc.aud_ins_user,
+            atc.aud_last_user
+       FROM tpa_tarea_tech_capacity atc
+      WHERE atc.version_date = (SELECT MAX(atcy.version_date)
+                                  FROM tpa_tarea_tech_capacity atcy
+                                 WHERE atcy.idn_area = atc.idn_area
+                                   AND atcy.start_date = atc.start_date)
+   )
+SELECT a.area_code, a.idn_area, act.idn_area_tech_capacity, act.start_date, act.end_date, act.technical_capacity,
+       COALESCE((SELECT 1
+                   FROM tpa_tarea_capacity ac, 
+                        tpa_tarea_capacity_point acp,
+                        tpa_tsystem_point_type spt
+                  WHERE ac.idn_area_capacity = acp.idn_area_capacity 
+                    AND ac.idn_area = act.idn_area
+                    AND acp.idn_system_point_type = spt.idn_system_point_type
+                    AND spt.type_code = 'ENTRY'), 0) AS is_entry_area
+  FROM w_area_tech_capacity act,
+       tpa_varea_tpa a,
+       tpa_vzone_tpa z
+WHERE act.idn_area = a.idn_area
+   AND a.idn_zone = z.idn_zone
+   AND z.idn_pipeline_system = #{idn_system}
+   AND #{end_date} >= act.start_date 
+   AND NVL(act.end_date, #{start_date}) >= #{start_date}
+ORDER BY is_entry_area DESC, act.idn_area, act.start_date
+
+</select>
+
+<select id="selectRemainBooked" resultType="com.atos.beans.booking.ContractCapacityPathDetailBean" parameterType="com.atos.filters.booking.ContractCapacityPathFilter">
+
+SELECT DISTINCT a.area_code, a.idn_area, SUM(crq.quantity) OVER (PARTITION BY a.idn_area, crq.agreement_start_date, crq.agreement_end_date) as remain_booked
+  FROM tpa_vcontract_request_capacity crq,
+       tpa_tsystem_point sp,
+       tpa_varea_tpa a
+WHERE crq.idn_system_point = sp.idn_system_point
+   AND sp.idn_area = a.idn_area
+   AND crq.status IN ('ACCEPTED', 'COMPLETED')
+   AND crq.idn_pipeline_system = #{idn_system}
+   AND crq.idn_contract = #{idn_booking}
+   AND #{end_date} >= crq.agreement_start_date
+   AND crq.agreement_end_date >= #{start_date}
+</select>
+
+<select id="selectAvailableCapacity" resultType="com.atos.beans.booking.ContractCapacityPathDetailBean" parameterType="com.atos.filters.booking.ContractCapacityPathFilter">
+SELECT area as area_code, tech_cap as technical_capacity, booked_cap as booked_capacity
+FROM TABLE(pck_capacity_query.query_booked_capacity(#{idn_system},
+                                                    #{start_date},
+                                                    #{end_date},
+                                                    #{idn_booking},
+                                                    NULL))
+
+</select>
+
+
+
+<select id="selectEntryPoints" resultType="com.atos.beans.booking.ContractCapacityPathEntryExitBean" parameterType="com.atos.filters.booking.ContractCapacityPathFilter">
+WITH
+  w_contracted_points AS 
+    (SELECT DISTINCT crq.idn_system_point, 
+                     SUM(crq.quantity) OVER (PARTITION BY crq.idn_system_point, crq.agreement_start_date, crq.agreement_end_date) point_quantity
+       FROM tpa_vcontract_request crq
+      WHERE crq.idn_contract = #{idn_booking}
+        AND #{end_date} >= crq.agreement_start_date
+        AND crq.agreement_end_date >=#{start_date}
+        AND crq.status IN ('ACCEPTED', 'COMPLETED')
+        AND crq.idn_pipeline_system = #{idn_system}
+     )
+SELECT sp.idn_system_point, sp.point_code, sp.idn_area
+  FROM tpa_vsystem_point sp,
+       tpa_tsystem_point_type spt
+WHERE sp.idn_system_point_type = spt.idn_system_point_type
+   AND spt.type_code = 'ENTRY' 
+   AND sp.idn_system_point IN (SELECT idn_system_point 
+                                 FROM w_contracted_points
+                                WHERE point_quantity != 0
+                              )
+</select>
+
+<select id="selectExitPoints" resultType="com.atos.beans.booking.ContractCapacityPathEntryExitBean" parameterType="com.atos.filters.booking.ContractCapacityPathFilter">
+WITH
+  w_contracted_points AS 
+    (SELECT DISTINCT crq.idn_system_point, 
+                     SUM(crq.quantity) OVER (PARTITION BY crq.idn_system_point, crq.agreement_start_date, crq.agreement_end_date) point_quantity
+       FROM tpa_vcontract_request crq
+      WHERE crq.idn_contract = #{idn_booking}
+        AND #{end_date} >= crq.agreement_start_date
+        AND crq.agreement_end_date >=#{start_date}
+        AND crq.status IN ('ACCEPTED', 'COMPLETED')
+        AND crq.idn_pipeline_system = #{idn_system}
+     )
+SELECT sp.idn_system_point, sp.point_code, sp.idn_area
+  FROM tpa_vsystem_point sp,
+       tpa_tsystem_point_type spt
+WHERE sp.idn_system_point_type = spt.idn_system_point_type
+   AND spt.type_code = 'EXIT'  
+   AND sp.idn_system_point IN (SELECT idn_system_point 
+                                 FROM w_contracted_points
+                                WHERE point_quantity != 0
+                              )
+</select>
+
+<select id="getConnectionPaths" resultType="com.atos.beans.booking.ContractCapacityConnectionPathsBean" parameterType="com.atos.filters.booking.ContractCapacityPathFilter">
+
+SELECT cp.idn_capacity_path, cp.path_desc
+  FROM tpa_tcapacity_path cp
+WHERE cp.idn_area_orig = #{idn_area_orig} 
+   AND cp.idn_area_dest = #{idn_area_dest}
+   AND #{end_date} >= cp.start_date 
+   AND NVL(cp.end_date, #{start_date} ) >= #{start_date}
+ORDER BY 1+(LENGTH(cp.path_desc) - LENGTH(REPLACE(cp.path_desc, '->', '')))/2, cp.path_desc
+
+</select>
+
+
+<select id="getContractAgreementIdPoint" parameterType="com.atos.beans.booking.ContractCapacityPathInsertBean" resultType="com.atos.beans.booking.ContractCapacityPathInsertBean">
+
+WITH 
+  w_contract_data AS 
+    (SELECT cr.agreement_start_date, cr.agreement_end_date, cr.idn_contract_agreement, cr.idn_contract_point, spt.type_code
+       FROM tpa_vcontract_request cr,
+            tpa_tsystem_point sp,
+            tpa_tsystem_point_type spt
+      WHERE cr.idn_contract = #{idn_contract}
+        AND cr.is_capacity_release = 'N'
+        AND cr.is_released_to_operator = 'N'
+        AND cr.is_addendum = 'N'
+        AND cr.status IN ('ACCEPTED', 'COMPLETED')
+        AND #{end_date} >= cr.agreement_start_date
+        AND cr.agreement_end_date >= #{start_date}
+        AND cr.idn_system_point IN (#{entry_point}, #{exit_point})
+        AND cr.idn_system_point = sp.idn_system_point
+        AND sp.idn_system_point_type = spt.idn_system_point_type
+    ),
+  w_pivoted AS 
+    (SELECT * 
+       FROM w_contract_data 
+      PIVOT (MIN(idn_contract_point) AS idn_contract_point FOR type_code IN ('ENTRY' AS ORIG, 'EXIT' AS DEST))
+    )
+SELECT wp.idn_contract_agreement as idn_contract_agreement,
+       wp.orig_idn_contract_point as idn_contract_point_orig,
+       wp.dest_idn_contract_point as idn_contract_point_dest
+  FROM w_pivoted wp
+
+
+</select>
+
+<insert id="insertCapacityPath" useGeneratedKeys="true" keyProperty="idn_contract_capacity_path" keyColumn="idn_contract_capacity_path" parameterType="com.atos.beans.booking.ContractCapacityPathInsertBean">
+
+INSERT INTO tpa_tcontract_capacity_path(idn_contract_capacity_path,
+                                        idn_contract_agreement,
+                                        idn_capacity_path,
+                                        idn_contract_point_orig,
+                                        idn_contract_point_dest,
+                                        quantity,
+                                        is_enabled,
+                                        VERSION_DATE,
+                                        aud_ins_user,
+                                        aud_last_user)        
+VALUES (
+	tpa_scontract_capacity_path.nextval,
+	#{idn_contract_agreement},
+	#{idn_capacity_path},
+	#{idn_contract_point_orig},
+	#{idn_contract_point_dest},
+	#{assigned_quantity},
+	'Y',
+    #{version_date},
+    #{username},
+    #{username} 
+ )
+ 
+</insert>
+
+
+<select id="getContractCapacityPathValues" resultType="com.atos.beans.booking.ContractCapacityPathInsertBean" parameterType="com.atos.beans.booking.ContractCapacityPathInsertBean">
+
+select 
+  t.idn_contract_capacity_path as idn_contract_capacity_path,
+  t.idn_contract_agreement as idn_contract_agreement,
+  t.idn_capacity_path as idn_capacity_path,
+  t.idn_contract_point_orig as idn_contract_point_orig,
+  t.idn_contract_point_dest as idn_contract_point_orig,
+  t.version_date as version_date,
+  t.quantity as assigned_quantity
+ from tpa_tcontract_capacity_path t, tpa_tcontract_agreement ca
+ where t.is_enabled = 'Y'
+       and t.idn_capacity_path = #{idn_capacity_path}
+       and ca.idn_contract_agreement = t.idn_contract_agreement
+       AND #{end_date} >= ca.start_date
+       AND ca.end_date >= #{start_date}
+       and t.version_date = (select max(version_date) from tpa_tcontract_capacity_path t2 where t2.idn_capacity_path = t.idn_capacity_path 
+                                                                                       and ca.idn_contract_agreement = t2.idn_contract_agreement
+                                                                                       AND t.idn_contract_point_orig = t2.idn_contract_point_orig
+                                                                                       AND t.idn_contract_point_dest = t2.idn_contract_point_dest )
+</select>
+
+<select id="getContractCapacityPathAreaValuesBean" resultType="com.atos.beans.booking.ContractCapacityPathAreaValuesBean" parameterType="com.atos.filters.booking.ContractCapacityPathFilter">
+
+select distinct cp2.idn_capacity_path as idn_capacity_path, 
+       idn_area, quantity, path_step
+  from tpa_tcapacity_path_step cps, tpa_tcontract_capacity_path cp2, tpa_tcontract_agreement ca
+ where cp2.idn_capacity_path = cps.idn_capacity_path
+     and ca.idn_contract_agreement = cp2.idn_contract_agreement
+       and cp2.is_enabled = 'Y'
+       and cp2.version_date = (select max(version_date) from tpa_tcontract_capacity_path ccpx where 
+                      ccpx.idn_contract_agreement = cp2.idn_contract_agreement
+                                   AND ccpx.idn_capacity_path = cp2.idn_capacity_path
+                                    AND ccpx.idn_contract_point_orig = cp2.idn_contract_point_orig
+                                    AND ccpx.idn_contract_point_dest = cp2.idn_contract_point_dest)
+   and (cps.idn_capacity_path, ca.idn_contract_agreement) in
+       (select cp.idn_capacity_path, cp.idn_contract_agreement
+          from tpa_tcontract_capacity_path cp
+         where cp.idn_contract_agreement in
+               (select distinct cr.idn_contract_agreement
+                  from tpa_vcontract_request_capacity cr
+                 where cr.idn_contract = #{idn_booking}
+                   AND cr.is_capacity_release = 'N'
+                   AND cr.is_released_to_operator = 'N'
+                   AND cr.is_addendum = 'N'
+                   AND cr.status IN ('ACCEPTED', 'COMPLETED')
+                   AND #{end_date} >= cr.agreement_start_date
+                   AND cr.agreement_end_date >= #{start_date}))
+ order by cp2.idn_capacity_path, path_step
+</select>
+
+<select id="getCapacityPathStep" resultType="com.atos.beans.booking.ContractCapacityPathAreaValuesBean" parameterType="java.math.BigDecimal">
+
+select idn_capacity_path, idn_area, path_step from tpa_tcapacity_path_step where idn_capacity_path = #{idn_capacity_path} order by path_step
+
+</select>
+
+
+<select id="selectBookingIdsByShipper" resultType="com.atos.beans.ComboFilterNS" parameterType="com.atos.filters.booking.ContractCapacityPathFilter">
+SELECT r.idn_contract as key, r.request_code as value
+  FROM tpa_tcontract_request r,
+  	tpa_tuser_group tuser_group 
+WHERE  tuser_group.idn_user_group = r.idn_user_group
+   <if test="idn_shipper != null and idn_shipper != ''">
+   	  and r.idn_user_group = #{idn_shipper}
+   </if>
+   <if test="idn_shipper == null or idn_shipper == ''">
+     and 1=0
+   </if>
+   AND r.status IN ('ACCEPTED', 'COMPLETED')
+   AND r.is_capacity_release = 'N' 
+   AND r.is_released_to_operator = 'N'
+   AND r.is_addendum = 'N'
+   AND r.idn_pipeline_system = #{idn_system}
+</select>
+
+<select id="selectShippersCombo"  parameterType="com.atos.filters.booking.ContractCapacityPathFilter" resultType="com.atos.beans.ComboFilterNS">
+	SELECT tuser.idn_user_group as key, tuser.user_group_id as value
+	FROM tpa_tuser_group tuser
+	WHERE tuser.idn_user_group_type = (SELECT idn_user_group_type 
+									   FROM tpa_tuser_group_type 
+									   WHERE type_code = 'SHIPPER')
+	   AND trunc(sysdate) between tuser.start_date AND nvl(tuser.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+	order by UPPER(value)
+</select>
+   
+
+<select id="selectTechCapacityEditionPeriod" resultType="com.atos.beans.booking.ContractCapacityPathDetailBean" parameterType="com.atos.filters.booking.ContractCapacityPathFilter">
+
+SELECT a.idn_area as idn_area,
+       x.start_date as start_date,
+       x.end_date as end_date,
+       y.area as area_code,
+       y.tech_cap as technical_capacity, 
+       y.booked_cap as booked_capacity,
+       COALESCE((SELECT 1
+                   FROM tpa_tarea_capacity ac, 
+                        tpa_tarea_capacity_point acp,
+                        tpa_tsystem_point_type spt
+                  WHERE ac.idn_area_capacity = acp.idn_area_capacity 
+                    AND ac.idn_area = a.idn_area
+                    AND acp.idn_system_point_type = spt.idn_system_point_type
+                    AND spt.type_code = 'ENTRY'), 0) AS is_entry_area
+   FROM (SELECT DISTINCT start_date,
+                         end_date
+          FROM tpa_vcontract_equal_agreements a
+         WHERE a.start_date BETWEEN #{start_date} AND #{end_date}
+         AND a.idn_contract = #{idn_booking}) x,
+       TABLE(pck_capacity_query.query_booked_capacity(1, x.start_date, x.end_date )) y,
+      tpa_tarea a 
+where a.area_code = y.area
+      and #{start_date} >= a.start_date  
+      and nvl(a.end_date, #{end_date}) >= #{end_date}
+ORDER BY x.start_date, is_entry_area DESC, a.idn_area
+
+</select>
+
+<select id="selectTechCapacityEditionDates" resultType="com.atos.beans.booking.ContractCapacityPathDetailBean" parameterType="com.atos.filters.booking.ContractCapacityPathFilter">
+
+SELECT a.idn_area as idn_area,
+       x.start_date as start_date,
+       x.end_date as end_date,
+       y.area as area_code,
+       y.tech_cap as technical_capacity, 
+       y.booked_cap as booked_capacity,
+       COALESCE((SELECT 1
+                   FROM tpa_tarea_capacity ac, 
+                        tpa_tarea_capacity_point acp,
+                        tpa_tsystem_point_type spt
+                  WHERE ac.idn_area_capacity = acp.idn_area_capacity 
+                    AND ac.idn_area = a.idn_area
+                    AND acp.idn_system_point_type = spt.idn_system_point_type
+                    AND spt.type_code = 'ENTRY'), 0) AS is_entry_area
+   FROM (SELECT DISTINCT start_date,
+                        end_date
+          FROM tpa_tcontract_agreement a,
+          	   tpa_tcontract_consolidate cc
+         WHERE a.start_date BETWEEN #{start_date} AND #{end_date}
+         	AND cc.idn_contract = #{idn_booking}
+         	AND cc.idn_contract_agreement = a.idn_contract_agreement) x,
+       TABLE(pck_capacity_query.query_booked_capacity(1, x.start_date, x.end_date )) y,
+      tpa_tarea a 
+where a.area_code = y.area
+      and #{start_date} >= a.start_date  
+      and nvl(a.end_date, #{end_date}) >= #{end_date}
+ORDER BY x.start_date, is_entry_area DESC, a.idn_area
+
+</select>
+
+<select id="getShipperCode" resultType="java.lang.String" parameterType="com.atos.filters.booking.ContractCapacityPathFilter">
+
+select tuser.user_group_id from tpa_tuser_group tuser where tuser.idn_user_group = #{idn_shipper}
+AND nvl(tuser.end_date,to_date('9999/12/31','yyyy/mm/dd'))>=  #{start_date}
+AND #{end_date} >= tuser.start_date 
+
+</select>
+
+<select id="getContractCode" resultType="java.lang.String" parameterType="com.atos.filters.booking.ContractCapacityPathFilter">
+SELECT r.request_code as value
+  FROM tpa_tcontract_request r
+WHERE r.status IN ('ACCEPTED', 'COMPLETED')
+   AND r.is_capacity_release = 'N' 
+   AND r.is_released_to_operator = 'N'
+   AND r.is_addendum = 'N'
+   AND r.idn_pipeline_system = #{idn_system}
+   AND r.idn_contract = #{idn_booking}
+</select>
+
+<select id="getAreaCode" resultType="java.lang.String" parameterType="java.math.BigDecimal">
+select t.area_code from TPA_TAREA t
+where t.idn_area = #{idn_area}
+</select>
+
+</mapper>

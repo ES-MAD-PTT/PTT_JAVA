@@ -1,0 +1,286 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_allocation']}" url="#" />
+			<p:menuitem value="#{msg['menu_allocation_query']}" url="/pages/allocation/allocationQuery.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+				
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="10000" />
+			
+			<script type="text/javascript">
+				function disableSearch(){
+					$("[id$='btnSearch']").prop('disabled', true);
+					$("[id$='btnSearch']").css('color', '#a8a8a8');
+				}
+				function enableSearch(){
+					$("[id$='btnSearch']").prop('disabled',false);
+					$("[id$='btnSearch']").css('color', '#4d4d4d');
+				}
+				// El boton Search y los combos se deshabilitan por javascript.
+				// Luego el boton Search se habilitara tras cargarse el combo de puntos.
+				// Los combos se habilitaran al hacer update, porque por definicion no estan deshabilidatos.
+ 				function disableFromZonesCombo(){
+					$("[id$='btnSearch']").prop('disabled', true);
+ 					$("[id$='btnSearch']").css('color', '#a8a8a8');
+					PF('areasWidget').disabled='true';
+					PF('pointsWidget').disabled='true';
+				}
+				function disableFromAreasCombo(){
+					$("[id$='btnSearch']").prop('disabled', true);
+ 					$("[id$='btnSearch']").css('color', '#a8a8a8');
+					PF('pointsWidget').disabled='true';
+				}
+			</script>
+			
+            <p:layout widgetVar="AllocationQueryLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">	
+					
+				<p:panelGrid columns="2" style="width:100%">
+					
+						<p:panelGrid>
+							<p:row>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['all_rev_gas_day']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['all_rev_shipper_code']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['all_rev_contract_code']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['all_rev_zone']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['all_rev_area']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['all_rev_nomination_point_id']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+
+								<p:column>
+									<p:calendar id="gasDay" size="6" pattern="dd/MM/yyyy" mask="true" value="#{AllocationQueryView.filters.gasDay}"
+										showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="gasDay,contractId"></p:ajax>
+										<p:ajax event="change" update="gasDay,contractId"></p:ajax>
+									</p:calendar>
+								</p:column>
+								
+								<p:column>
+									<p:selectOneMenu id="shipperId" style="width:100px" value="#{AllocationQueryView.filters.shipperId}" 
+										rendered="#{!AllocationQueryView.isShipper}" >
+ 								   		<f:selectItem itemLabel="" itemValue="" />
+      									<f:selectItems value="#{AllocationQueryView.shipperIds.entrySet()}" var="entry" 
+      											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+										<p:ajax event="change" update="contractId" />
+					           		</p:selectOneMenu>
+									<h:outputText value="#{AllocationQueryView.user.user_group_id}" style="float:left" rendered="#{AllocationQueryView.isShipper()}"/>
+								</p:column>
+
+								<p:column>
+									<p:selectOneMenu id="contractId" autoWidth="false" style="width:100px" value="#{AllocationQueryView.filters.contractId}" >
+								   		<f:selectItem itemLabel="" itemValue="" />
+      									<f:selectItems value="#{AllocationQueryView.contractIds.entrySet()}" var="entry" 
+      										itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>						
+								</p:column>
+ 								<p:column>
+									<p:selectCheckboxMenu id="zones" widgetVar="zonesWidget" autoWidth="false" style="width:80px" 
+											onHide="reloadAreasOnhide();" onShow="disableFromZonesCombo();"
+										   value="#{AllocationQueryView.filters.zoneIds}" label="#{msg['met_man_zone']}">
+      									<f:selectItems value="#{AllocationQueryView.getZones(changeSystemView.system).entrySet()}" var="entry" 
+      										itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectCheckboxMenu>						
+								</p:column>
+								<!-- remoteCommand para que actualice los otros combos cuando se haga el onHide (se cierre el combo anterior). -->
+								<p:remoteCommand  name="reloadAreasOnhide" update="zones,areas,pointIds" process="@this form:zones"/>
+								<p:column>
+									<p:selectCheckboxMenu id="areas" widgetVar="areasWidget" autoWidth="false" style="width:80px" 
+											onHide="reloadPointsOnhide();" onShow="disableFromAreasCombo();"
+										   	value="#{AllocationQueryView.filters.areaIds}" label="#{msg['met_man_area']}">
+      									<f:selectItems value="#{AllocationQueryView.areas.entrySet()}" var="entry" 
+      										itemValue="#{entry.key}" itemLabel="#{entry.value}" />							
+					           		</p:selectCheckboxMenu>						
+								</p:column>
+								<!-- remoteCommand para que actualice los otros combos cuando se haga el onHide (se cierre el combo anterior). -->
+								<p:remoteCommand  name="reloadPointsOnhide" update="areas,pointIds" process="@this form:areas"/>
+								<p:column>
+									<p:selectCheckboxMenu id="pointIds" widgetVar="pointsWidget" autoWidth="false" style="width:170px" 
+											onHide="autoReloadPointsOnhide();"
+											filter="true" filterMatchMode="startsWith"
+											multiple="true"
+										   value="#{AllocationQueryView.filters.nomPointIds}" label="#{msg['all_rev_nomination_point_id']}">
+      									<f:selectItems value="#{AllocationQueryView.pointIds.entrySet()}" var="entry" 
+      										itemValue="#{entry.key}" itemLabel="#{entry.value}" />								
+					           		</p:selectCheckboxMenu>						
+								</p:column>
+								<!-- remoteCommand para que actualice los otros combos cuando se haga el onHide (se cierre el combo anterior). -->
+								<p:remoteCommand  name="autoReloadPointsOnhide" update="pointIds" process="@this form:pointIds"/>
+							</p:row>
+							<p:row>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['all_que_generated_from']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['all_que_generated_to']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['all_que_last_version']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<p:calendar id="generatedFrom" size="13" pattern="dd/MM/yyyy HH:mm:ss" value="#{AllocationQueryView.filters.generatedFrom}"
+										mask="true" showButtonPanel="true" showOn="button" navigator="true" disabled="#{AllocationQueryView.filters.lastVersion}">
+									</p:calendar>
+								</p:column>
+								
+								<p:column>
+									<p:calendar id="generatedTo" size="13" pattern="dd/MM/yyyy HH:mm:ss" value="#{AllocationQueryView.filters.generatedTo}"
+										mask="true" showButtonPanel="true" showOn="button" navigator="true" disabled="#{AllocationQueryView.filters.lastVersion}">
+									</p:calendar>
+								</p:column>
+								
+								<p:column style="text-align:center">
+									<p:selectBooleanCheckbox id="lastVersionCheckbox" value="#{AllocationQueryView.filters.lastVersion}" >
+ 										<p:ajax event="change" update=":#{p:component('generatedFrom')},:#{p:component('generatedTo')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+							</p:row>
+
+						</p:panelGrid>
+						<p:panelGrid columns="2" style="float:right;top:0px">
+							<shiro:hasPermission name="#{changeSystemView.system}.ALLOCATION.QUERY.QUERY">									
+								<p:commandButton id="btnSearch" value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{AllocationQueryView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,:#{p:component('allocations1')}"/>
+							</shiro:hasPermission>
+
+							<p:commandButton  onclick="PF('AllocationQueryLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" 
+								value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+															
+							<shiro:hasPermission name="#{changeSystemView.system}.ALLOCATION.QUERY.QUERY">	
+								 <p:commandButton value="#{msg['clear']}"
+									actionListener="#{AllocationQueryView.onClear}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" 
+									process="@this"
+									update="msgs,@form"/>
+							</shiro:hasPermission>
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center" resizable="false" closable="false" collapsible="false" style="border: 0;">
+
+					<p:dataTable widgetVar="w_allocations1"  id="allocations1" var="allocation" value="#{AllocationQueryView.items}"
+						reflow="true" style="margin-bottom:20px;border-collapse:collapse"
+						scrollable="true" scrollHeight="100%"
+						paginator="true" rows="15" rowsPerPageTemplate="5,10,15,20,25, #{AllocationQueryView.itemsSize}">
+
+	  						<f:facet name="header"> 
+								<p:outputPanel style="height:25px">
+									<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+      								<p:columnToggler datasource="allocations1" trigger="toggler" style="width:200px"/>
+								
+				        			<h:commandLink style="float:right">
+								       <p:graphicImage name="/images/excel.png" width="24"/>
+								       <p:dataExporter type="xlsx" target="allocations1" fileName="allocationReport" 
+								       			postProcessor="#{AllocationQueryView.postProcessXLS}"/>
+								       <p:spacer width="10" height="10"/>
+									</h:commandLink>
+								</p:outputPanel>        										          
+	 				        </f:facet>
+
+ 					 	<shiro:hasPermission name="#{changeSystemView.system}.ALLOCATION.QUERY.QUERY">
+					       <p:column headerText="#{msg['all_rev_gas_day']}" style="width: 70px;" sortBy="#{allocation.gasDay}" >
+			               		<h:outputText value="#{allocation.gasDay}" >
+			              			<f:convertDateTime pattern="dd/MM/yyyy" />
+			              		</h:outputText>
+					       </p:column>
+
+					       <p:column headerText="#{msg['all_rev_shipper_code']}" style="width: 100px;" sortBy="#{allocation.shipperCode}" 
+					       		rendered="#{not AllocationQueryView.isShipper}">
+					       		<h:outputText value="#{allocation.shipperCode}" />
+					       </p:column>
+
+					       <p:column headerText="#{msg['all_rev_contract_code']}" style="width: 100px;" sortBy="#{allocation.contractCode}">
+					       		<h:outputText value="#{allocation.contractCode}" />
+					       </p:column>
+
+					       <p:column headerText="#{msg['all_rev_nomination_point_id']}" style="width: 100px;" sortBy="#{allocation.nomPointCode}">
+					       		<h:outputText value="#{allocation.nomPointCode}" />
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['all_rev_nomination_point_type']}" style="width: 40px;" sortBy="#{allocation.nomPointTypeCode}">
+					       		<h:outputText value="#{allocation.nomPointTypeCode}" />
+					       </p:column>
+
+							<p:column headerText="#{msg['all_rev_booked_cap']}" style="width: 100px;" sortBy="#{allocation.bookedCap}">
+								<h:outputText style="float:right" value="#{allocation.bookedCap}">
+									<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+								</h:outputText>
+							</p:column>
+
+							<p:column headerText="#{msg['all_rev_nominated_cap']}" style="width: 100px;" sortBy="#{allocation.nominatedCap}">
+								<h:outputText style="float:right" value="#{allocation.nominatedCap}">
+									<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+								</h:outputText>
+							</p:column>
+							
+							<p:column headerText="#{msg['all_rev_allocation_tpa']}" style="width: 100px;" sortBy="#{allocation.allocationTPA}">
+								<h:outputText style="float:right" value="#{allocation.allocationTPA}">
+									<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+								</h:outputText>
+							</p:column>
+
+							<p:column headerText="#{msg['all_rev_usage']}" style="width: 100px;" sortBy="#{allocation.allocationTPA}">
+								<h:outputText style="float:right" value="#{allocation.percent}">
+									<f:convertNumber groupingUsed="true" minFractionDigits="2" maxFractionDigits="2"/>
+								</h:outputText>
+							</p:column>
+					       
+					       <p:column headerText="#{msg['all_que_timestamp']}" style="width: 110px;" sortBy="#{allocation.versionDate}" >
+			               		<h:outputText value="#{allocation.versionDate}" >
+			              			<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+			              		</h:outputText>
+					       </p:column>
+					       
+						</shiro:hasPermission>
+				   </p:dataTable>
+				</p:layoutUnit>
+			</p:layout>
+		</h:form> 
+	</ui:define>
+	
+	<script type="text/javascript">
+	function start() {
+	    PF('cargando').show();
+	}
+	 
+	function stop() {
+	    PF('cargando').hide();
+	}
+	</script>
+</ui:composition>

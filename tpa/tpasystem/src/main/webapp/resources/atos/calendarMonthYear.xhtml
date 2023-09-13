@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:composite="http://java.sun.com/jsf/composite">
+<composite:interface>
+	<composite:attribute name="calId" />
+	<composite:attribute name="calValue" />
+	<composite:attribute name="styleClass" />
+	<composite:clientBehavior name="calChangeEvent" targets="#{cc.attrs.calId}out" event="valueChange" />
+</composite:interface>
+<composite:implementation>
+
+	<style>
+.ui-datepicker-calendar {
+	display: none;
+}
+
+</style>
+	<h:outputScript library="js" name="month-year-date-picker.js" />
+	<h:outputScript library="js" name="jquery-ui-i18n.min.js" />
+
+	<p:inputText  id="#{cc.attrs.calId}out" styleClass="date-picker #{cc.attrs.styleClass}" style="position: relative; z-index: 100000;"  />
+	<h:inputHidden id="#{cc.attrs.calId}"
+		value="#{cc.attrs.calValue}">
+		<f:converter converterId="com.atos.utils.jsf.Html5MonthConverter" />
+	</h:inputHidden>
+
+	<script type="text/javascript">
+
+		$.datepicker.setDefaults( $.datepicker.regional[ "#{facesContext.getCurrentInstance().getViewRoot().getLocale().getLanguage()}" ] );
+		$(function() {
+			//console.log('initing #{cc.attrs.calId}')
+			initCal('#{cc.attrs.calId}')
+		});
+	</script>
+</composite:implementation>
+</html>

@@ -1,0 +1,289 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_nominations']}" url="#" />
+			<p:menuitem value="#{msg['menu_parking_allocation']}" url="/pages/nomination/parking_allocation.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="5000"/>
+			
+            <p:layout widgetVar="parkingAllocationLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">	
+					
+				<p:panelGrid columns="2" style="width:100%">
+					
+						<p:panelGrid id="filters">
+							<p:row>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['gas_day']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['day_nom_zone']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<p:calendar id="fecInicio" size="10" pattern="dd/MM/yyyy" mask="true" value="#{parkingAllocationView.filters.gas_day}"
+										showOn="button" navigator="true"
+										required="true">
+										<p:ajax event="dateSelect" update="fecInicio"></p:ajax>
+										<p:ajax event="change" update="fecInicio"></p:ajax>
+									</p:calendar>
+								</p:column>
+								<p:column>
+								<!-- cambiamos por un checkbox, las zonas ya filtradas por system 
+									<p:selectOneMenu widgetVar="zone_code" onchange="" id="zone_code" style="width:100px" 
+										value="#{parkingAllocationView.filters.idn_zone}">
+										<f:selectItem itemValue="" itemLabel=""/>
+        								<f:selectItems value="#{parkingAllocationView.zonesCodes.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>
+					           	-->
+													           	
+					           	<p:selectCheckboxMenu id="zone_code" autoWidth="false" style="width:110px"   
+										   value="#{parkingAllocationView.filters.idn_zone}" label="#{msg['qua_pub_zone']}">
+      									<f:selectItems value="#{parkingAllocationView.zonesSystem.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           	</p:selectCheckboxMenu>		
+					           									
+								</p:column>
+							</p:row>
+						</p:panelGrid>
+						<p:panelGrid columns="2" style="float:right;top:0px">
+								<shiro:hasPermission name="#{changeSystemView.system}.NOMINATIONS.PARK.QUERY">
+								<p:commandButton value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{parkingAllocationView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,:#{p:component('parkingAllocationTable')}"/>
+								</shiro:hasPermission>
+								<p:commandButton  onclick="PF('parkingAllocationLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+								<shiro:hasPermission name="#{changeSystemView.system}.NOMINATIONS.PARK.QUERY">	
+								 <p:commandButton value="#{msg['clear']}"
+									actionListener="#{parkingAllocationView.onClear}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" 
+									process="@this" 
+									update="msgs,@form,formAllocate"/>
+								</shiro:hasPermission>
+								<shiro:hasPermission name="#{changeSystemView.system}.NOMINATIONS.PARK.ADD">
+									<p:commandButton id="allocate" type="button" value="#{msg['park_allocate']}" icon="ui-icon fa fa-gears" style="float:right;"
+	        							onclick="PF('dlgAllocate').show();"
+	        						/>								
+								</shiro:hasPermission>
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center"
+					resizable="false" closable="false" collapsible="false">
+
+					<p:dataTable id="parkingAllocationTable" var="park" value="#{parkingAllocationView.items}"
+						style="margin-bottom:20px;border-collapse:collapse" sortBy="#{park.zone_code}">
+							<f:facet name="header">
+									<p:outputPanel style="height:25px">
+										<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+		        						<p:columnToggler datasource="parkingAllocationTable" trigger="toggler" style="width:200px"/>
+									</p:outputPanel>        										          
+					       			 </f:facet>	
+					       <p:column headerText="#{msg['nom_zone']}">
+					       		<h:outputText value="#{park.zone_code}" />
+					       </p:column>
+
+					       <p:column headerText="#{msg['nom_shipper_code']}">
+					       		<h:outputText value="#{park.shipper_code}" />
+					       </p:column>
+
+					       <p:column headerText="#{msg['contract_code']}">
+					           <h:outputText value="#{park.contract_code}" />
+					       </p:column>
+
+					       <p:column headerText="#{msg['day_nom_code']}">
+					           <h:outputText value="#{park.nomination_code}" />
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['park_nomination_version']}">
+					           <h:outputText style="float:right"  value="#{park.nomination_version}" />
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['park_unpark_nominated']}">
+								<h:outputText style="float:right" value="#{park.unpark_nominated}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+								</h:outputText>
+							</p:column>
+					       <p:column headerText="#{msg['park_park_nominated']}">
+								<h:outputText style="float:right" value="#{park.park_nominated}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+								</h:outputText>
+							</p:column>
+					       <p:column headerText="#{msg['park_park_allocated']}">
+								<h:outputText style="float:right" value="#{park.park_allocated}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+								</h:outputText>
+							</p:column>
+					       
+							<p:summaryRow id="summary">
+							
+					            <p:column colspan="2" style="text-align:right;">
+					                <h:outputText value="#{msg['park_default_value']} :" />
+					          
+					                <h:outputText value="#{parkingAllocationView.getDefaultValue(park.idn_zone)}">
+					                    <f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+					                </h:outputText>
+					            </p:column>
+					            
+					            <p:column colspan="2"  style="text-align:right;">
+					                <h:outputText value="#{msg['park_last_user_park_value']} :" />
+					            
+					                <h:outputText value="#{parkingAllocationView.getLastValue(park.idn_zone)}">
+					                    <f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+					                </h:outputText>
+					            </p:column>
+					            
+					            <p:column colspan="1" style="text-align:right;">
+					                <h:outputText value="#{msg['day_nom_total']} :" />
+					            </p:column>
+					            <p:column style="text-align:right">
+					                <h:outputText value="#{parkingAllocationView.getUnparkNominated(park.idn_zone)}">
+					                    <f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+					                </h:outputText>
+					            </p:column>
+					            <p:column style="text-align:right">
+					                <h:outputText value="#{parkingAllocationView.getParkNominated(park.idn_zone)}">
+					                    <f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+					                </h:outputText>
+					            </p:column>
+					            <p:column style="text-align:right">
+					                <h:outputText value="#{parkingAllocationView.getParkAllocated(park.idn_zone)}">
+					                    <f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+					                </h:outputText>
+					            </p:column>
+					        </p:summaryRow>					       
+					   </p:dataTable>
+				</p:layoutUnit>
+
+			</p:layout>
+		</h:form>
+		<p:dialog widgetVar="dlgAllocate" resizable="false"  closable="true" modal="true" appendTo="@(body)" header="Allocate">
+			<h:form id="formAllocate">
+			<p:growl id="msgs" showDetail="true"  life="5000"/>
+	<shiro:hasPermission name="#{changeSystemView.system}.NOMINATIONS.PARK.ADD">
+				<p:panelGrid columns="4" style="width:100%">
+					<p:panelGrid>
+						<p:row>
+							<p:column  style="font-weight: bold;">
+								<h:outputText value="#{msg['gas_day']}" />
+							</p:column>
+							<p:column  style="font-weight: bold;">
+								<h:outputText value="#{msg['day_nom_zone']}" />
+							</p:column>
+							<p:column  style="font-weight: bold;">
+								<h:outputText value="#{msg['park_parking_value']}" />
+							</p:column>
+							<p:column  style="font-weight: bold;">
+								<h:outputText value="#{msg['park_last_user_park_value']}" />
+							</p:column>
+							<p:column  style="font-weight: bold;">
+								<h:outputText value="#{msg['park_default_value']}" />
+							</p:column>
+						</p:row>
+						<p:row>	
+															
+							<p:column>
+								<p:calendar  disabled="true" size="10"   required="true" id="gas_day_allocate" showOn="button" value="#{parkingAllocationView.form.gas_day}" pattern="dd/MM/yyyy"
+									requiredMessage="#{msg['gas_day']}: #{msg['empty_field']}" 
+									validatorMessage="#{msg['gas_day']}: #{msg['lenght_field']}"
+									 readonlyInput="true"  mindate="#{(areaView.sysdate).getTime()}" maxdate="#{(areaView.sysdate).getTime()}">
+									<p:ajax event="dateSelect" update="gas_day_allocate, parkDefaultValue,lastUserValue"></p:ajax>
+									<p:ajax event="change" update="gas_day_allocate, parkDefaultValue,lastUserValue"></p:ajax>
+								</p:calendar>
+								<!--  -->
+								<p:message for="gas_day_allocate" />	
+																
+							</p:column>
+
+							<p:column>
+								<p:selectOneMenu widgetVar="zone_code_allocate" required="true" id="zone_code_allocate" style="width:100px"	value="#{parkingAllocationView.form.idn_zone}"
+								requiredMessage="#{msg['day_nom_zone']}: #{msg['empty_field']}" >
+										<f:selectItem  itemValue="-1" itemLabel="" />
+										<!-- offshore
+        								<f:selectItems value="#{parkingAllocationView.zonesCodes.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" /> -->
+        								<f:selectItems value="#{parkingAllocationView.zonesSystem.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+        								<p:ajax  update="zone_code_allocate,parkDefaultValue,lastUserValue,botonDefault, parking_value_allocate" />
+					          	</p:selectOneMenu>	
+					           		
+					           		<p:message for="zone_code_allocate" />	
+							</p:column>
+							<p:column>
+								<p:inputNumber required="false" id="parking_value_allocate" value="#{parkingAllocationView.form.parking_value}" size="10"
+				 							requiredMessage="#{msg['park_parking_value']}: #{msg['empty_field']}" 
+											validatorMessage="#{msg['park_parking_value']}: #{msg['lenght_field']} "
+											decimalSeparator="." thousandSeparator="," decimalPlaces="3">
+								</p:inputNumber>
+								<p:message for="parking_value_allocate" />
+							
+							</p:column>
+							<p:column>
+								<p:inputText id ="lastUserValue" readonly="true" style="background-color:lightgrey" 
+									value="#{parkingAllocationView.getAllocatedLastValue(parkingAllocationView.form.idn_zone)}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+								</p:inputText>
+							</p:column>
+							<p:column>
+							 
+								<p:inputText id="parkDefaultValue" readonly="true" style="background-color:lightgrey" 
+										value="#{parkingAllocationView.getAllocatedDefaultValue(parkingAllocationView.form.idn_zone)}" >
+										<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+								</p:inputText>
+							</p:column>
+						</p:row>
+					</p:panelGrid>
+				</p:panelGrid>
+				
+				<p:separator/>
+				<p:panelGrid>
+					<p:row>
+						<p:column>
+							<p:commandButton value="#{msg['park_allocate']} " styleClass="ui-confirmdialog-yes" icon="ui-icon-check" validateClient="true"
+								action="#{parkingAllocationView.allocate(parkingAllocationView.form.idn_zone,parkingAllocationView.form.parking_value)}" 
+								update=":#{p:component('parkingAllocationTable')},:formAllocate"
+								onstart="PF('allocating').show()"
+								oncomplete="PF('dlgAllocate').hide(),PF('allocating').hide()" />
+							</p:column>	
+						<p:column>	
+							<p:commandButton id="botonDefault" value="#{msg['park_Default_Value_Calculation']}  " styleClass="ui-confirmdialog-yes" icon="ui-icon-check"   
+							    validateClient="false" immediate="true"
+								action="#{parkingAllocationView.defaultValCal()}" 
+								disabled="#{parkingAllocationView.exitDefault()}" 
+								update=":#{p:component('parkingAllocationTable')},:formAllocate"
+								onstart="PF('cargando').show()"
+								oncomplete="PF('cargando').hide()" 
+								/>
+						</p:column>	
+						<p:column>			
+			        		<p:commandButton value="#{msg['cancel']}  " styleClass="ui-confirmdialog-no" icon="ui-icon-close" style="float:right;"
+			        			update="formAllocate" process="@this" actionListener="#{parkingAllocationView.cancel}"
+			        			oncomplete="PF('dlgAllocate').hide()"/>
+						</p:column>					
+					</p:row>
+				</p:panelGrid>							
+	</shiro:hasPermission>
+			</h:form>			
+		</p:dialog>
+	</ui:define>
+
+
+</ui:composition>

@@ -1,0 +1,116 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_booking']}" url="#" />
+			<p:menuitem value="#{msg['menu_bulleting_board']}" url="/pages/booking/bulletin_board.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+		<p:outputPanel deferred="true">
+        <p>Shipper Can Submit Request on TPA system Any Time Considering EoS and rest of time limitation for their CR.</p>
+        
+    </p:outputPanel>		
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="10000"/>
+    
+            <p:layout widgetVar="BBoardLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+            
+
+
+			    <p:layoutUnit position="north" size="50" resizable="false" closable="false" collapsible="false" />
+
+				<p:layoutUnit id="table_center_layout" position="center" resizable="false" closable="false" collapsible="false" style="border: 0;">
+
+					<p:dataTable widgetVar="w_bulletinBoard1"  id="bulletinBoard1" var="bulBoardItem" value="#{BulletinBoardView.items}"
+						reflow="true" style="margin-bottom:20px;border-collapse:collapse"
+						scrollable="false" scrollHeight="100%">
+						<f:facet name="header"> 
+								<p:outputPanel style="height:25px">
+									<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+									<p:columnToggler datasource="bulletinBoard1" trigger="toggler" style="width:200px"/>
+								</p:outputPanel>        										          
+	 				        </f:facet>
+						<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.BULLET.QUERY"> 					 
+					       <p:column headerText="#{msg['cb_bb_contract_types']}" style="width: 100%;" >
+			               		<h:outputText value="#{bulBoardItem.contractType}" />
+					       </p:column>
+<!--  CH740
+					       <p:column headerText="#{msg['cb_bb_shipper_subm_time']}" style="width: 100%;" >
+					       		<h:outputText value="#{bulBoardItem.shipperSubmissionTime}" />
+					       </p:column>
+-->
+					       <p:column headerText="#{msg['cb_bb_subm_end']}" style="width: 100%;" >
+					       		<h:outputText value="#{bulBoardItem.submissionEnd}" />
+					       </p:column>
+
+					       <p:column headerText="#{msg['cb_bb_announcement']}" style="width: 100%;" >
+					       		<h:outputText value="#{bulBoardItem.announcement}" />
+					       </p:column>
+
+					       <p:column headerText="#{msg['cb_bb_start_contract_from']}" style="width: 100%;" >
+					       		<h:outputText value="#{bulBoardItem.contractStart}" />
+					       </p:column>
+						
+							<!-- CH011 - 05/09/16 - Se anade a esta pagina la funcionalidad de CRSubmission de descarga de template y envio ficheros excel. -->						
+							<p:column headerText="#{msg['cb_bb_cr_template']}" style="width: 100%;" >
+							    <p:commandLink value="#{msg['cr_bb_download_template']}" ajax="false" actionListener="#{BulletinBoardView.selectTemplateFile(bulBoardItem.operationTermCode)}" 
+							    	oncomplete="PrimeFaces.monitorDownload(start, stop);" >
+							        <p:fileDownload value="#{BulletinBoardView.templateFile}"/>
+							    </p:commandLink>			
+							</p:column>
+						</shiro:hasPermission>
+						
+						<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.BULLET.ADD">
+					       	<p:column headerText="#{msg['cb_bb_cr_submission']}" style="width: 340%; text-align: left" >
+								<!-- El panelgrid es necesario para que el componente fileUpload no muestre los margenes de una tabla.-->
+ 								<p:panelGrid>           							
+								<p:row>
+								<p:column>
+									<!-- Para que no se ocupe espacio con la imagen preview y el boton se ajuste a la derecha.  --> 
+									<style type="text/css">
+									    .ui-fileupload-content .ui-fileupload-preview {
+									    width: 0px;
+									    height: 0px;
+									    margin: 0
+									    }
+										.ui-fileupload-content .ui-fileupload-cancel {
+									    float:right
+									    }
+									</style>								
+  									<p:fileUpload id="upload" style="width:100%" fileUploadListener="#{BulletinBoardView.handleFileUpload}" mode="advanced" dragDropSupport="true"
+           							fileLimit="1" ajax="true" update=":form:msgs,upload" sizeLimit="1000000" allowTypes="/(\.|\/)(xlsx|xls)$/"
+           							onstart="PF('cargando').show()"
+           							oncomplete="PF('cargando').hide()" >
+										<f:attribute name="fileUploadTermCode" value="#{bulBoardItem.operationTermCode}" />
+									</p:fileUpload>
+ 								</p:column>
+								</p:row>
+ 								</p:panelGrid>
+							</p:column>
+						</shiro:hasPermission>
+					</p:dataTable>
+				</p:layoutUnit>
+			</p:layout>
+		</h:form> 
+	</ui:define>
+	
+	<script type="text/javascript">
+	function start() {
+	    PF('grabando').show();
+	}
+	 
+	function stop() {
+	    PF('grabando').hide();
+	}
+	</script>	
+</ui:composition>

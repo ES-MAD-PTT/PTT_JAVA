@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atos.mapper.maintenance.MaintenanceMapper">
+
+	<select id="getMaintenanceCode" resultType="com.atos.beans.ComboFilterNS">
+		select idn_maintenance as key, work_code as value from TPA_TMAINTENANCE
+		order by 2
+	</select>
+
+	<select id="getMaintenanceArea" resultType="com.atos.beans.ComboFilterNS">
+		select idn_area as key, area_code as value from TPA_TAREA a, TPA_TZONE z where z.idn_pipeline_system = #{idnActive} and a.is_tpa='Y' and z.is_tpa='Y'
+and a.idn_zone=z.idn_zone order by 2
+
+	</select>
+
+	<select id="getMaintenanceSubarea" parameterType="com.atos.filters.maintenance.WorkMaintenanceFilter" resultType="com.atos.beans.ComboFilterNS">
+		select idn_subarea as key, subarea_code as value from TPA_TSUBAREA 
+		where idn_area = #{idn_area}
+		order by 2
+	</select>
+
+	<select id="getMaintenanceCodeSecuential" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT work_code from tpa_tmaintenance where work_code like #{query} order by 1 desc
+	</select>
+
+	<resultMap id="resultMapEngineeringMaintenance" type="com.atos.beans.maintenance.WorkSubmissionBean">
+		<result property="idn_maintenance" 	column="IDN_MAINTENANCE"/>
+		<result property="maintenance_subject" 	column="MAINTENANCE_SUBJECT"/>
+		<result property="maintenance_code" 	column="MAINTENANCE_CODE"/>
+		<result property="status" 	column="STATUS"/>
+		<result property="area" 	column="AREA"/>
+		<result property="idn_area" 	column="IDN_AREA"/>
+		<result property="area" 	column="AREA"/>
+		<result property="subarea" 	column="SUBAREA"/>
+		<result property="idn_subarea" 	column="IDN_SUBAREA"/>
+		<result property="start_date" 	column="START_DATE"/>
+		<result property="end_date" 	column="END_DATE"/>
+		<result property="daily"		column="DAILY"/>
+		<result property="engineering_comments" 	column="ENGINEERING_COMMENTS"/>
+		<result property="operator_comments" 	column="OPERATOR_COMMENTS"/>
+		<result property="operator_comments_old" 	column="OPERATOR_COMMENTS_OLD"/>
+		<result property="idn_maintenance_file" 	column="IDN_MAINTENANCE_FILE"/>
+		<result property="css_color" 	column="CSS_COLOR"/>
+		<result property="file_name" 	column="FILE_NAME"/>
+		<result property="actual_end_date" 	column="ACTUAL_END_DATE"/>
+		<association property="operator_data" select="com.atos.mapper.maintenance.MaintenanceMapper.getOperationsMaintenance"
+				column="{idn_maintenance=IDN_MAINTENANCE }" />
+	</resultMap>
+
+	<select id="getAllEngineeringMaintenance" resultMap="resultMapEngineeringMaintenance" parameterType="java.math.BigDecimal">
+		select t.idn_maintenance,
+				   t.maintenance_subject,
+		           t.work_code as maintenance_code,
+		           t.status,
+		           a.idn_area,
+		           a.area_code as area,
+		           ts.idn_subarea,
+		           s.subarea_code as subarea,
+		           t.start_date,
+		           t.end_date,
+		           t.is_daily daily,
+		           t.engineering_comments as engineering_comments,
+		           t.operation_comments as operator_comments,
+		           t.operation_comments as operator_comments_old,
+		           t.idn_maintenance_file as idn_maintenance_file,
+		           t.css_color as css_color,
+		           (select file_name from tpa_tmaintenance_file where t.idn_maintenance_file = idn_maintenance_file) as file_name,
+		           t.actual_end_date as actual_end_date
+		      from tpa_tmaintenance t, tpa_tmaintenance_subarea ts, tpa_tarea a, tpa_tzone z, tpa_tsubarea s
+		     where t.idn_maintenance = ts.idn_maintenance
+		       and status in ('PUBLISHED')
+		       and ts.insert_group = 'ENGINEERING'
+		       and ts.idn_subarea = s.idn_subarea
+		       and s.idn_area = a.idn_area
+                                      and z.idn_pipeline_system = #{idnActive}
+                                      and a.idn_zone = z.idn_zone
+		     order by t.start_date desc	
+	</select>
+
+
+
+<select id="getEngineeringMaintenance" parameterType="com.atos.filters.maintenance.WorkMaintenanceFilter" resultMap="resultMapEngineeringMaintenance">
+		select t.idn_maintenance,
+			   t.maintenance_subject,
+		       t.work_code as maintenance_code,
+		       t.status,
+		       a.idn_area,
+		       a.area_code as area,
+		       ts.idn_subarea,
+		       s.subarea_code as subarea,
+		       t.start_date,
+		       t.end_date,
+		       t.is_daily daily,
+		       t.engineering_comments as engineering_comments,
+		       t.operation_comments as operator_comments,
+		       t.operation_comments as operator_comments_old,
+		       t.idn_maintenance_file as idn_maintenance_file,
+		       t.css_color as css_color,
+	           (select file_name from tpa_tmaintenance_file where t.idn_maintenance_file = idn_maintenance_file) as file_name,
+		       t.actual_end_date as actual_end_date
+		  from tpa_tmaintenance t, tpa_tmaintenance_subarea ts, tpa_tarea a, tpa_tzone z, tpa_tsubarea s
+		 where t.idn_maintenance = ts.idn_maintenance
+		   and status in ('SUBMITTED', 'PUBLISHED')
+		   and ts.insert_group = 'ENGINEERING'
+		   and ts.idn_subarea = s.idn_subarea
+		   and s.idn_area = a.idn_area
+                                  and z.idn_pipeline_system = #{idnActive}
+                                  and a.idn_zone = z.idn_zone
+		   <if test="idn_maintenance != null and idn_maintenance != ''">
+	       		and upper(t.work_code) like '%' || upper(#{idn_maintenance}) || '%'
+	       </if>
+		   <if test="idn_area != null and idn_area != ''">
+	       		and a.idn_area = #{idn_area}
+	       </if>
+		   <if test="idn_subarea != null and idn_subarea != ''">
+	       		and ts.idn_subarea = #{idn_subarea}
+	       </if>
+		   <if test="start_date != null">
+	       		and nvl(t.end_date,to_date('9999/12/31','yyyy/mm/dd'))>=  #{start_date}
+	       </if>
+		   <if test="end_date != null">
+	       		and #{end_date} >= t.start_date
+	       </if>
+	       
+	       <if test="maintenance_subject != null and maintenance_subject != ''">
+  				and upper(t.maintenance_subject) like '%' || upper(#{maintenance_subject}) || '%'
+		   </if>
+	       
+		 order by t.start_date desc, t.work_code
+	</select>
+
+
+
+	<select id="getOperationsMaintenance" resultType="com.atos.beans.maintenance.WorkOperatorMaintenanceBean">
+		select ts.idn_maintenance,
+       			ts.idn_maintenance_subarea,
+		     (select s.idn_area
+		          from tpa_tsubarea s
+		         where s.idn_subarea = ts.idn_subarea) as idn_area,
+		       (select a.area_code
+		          from tpa_tarea a
+		         where a.idn_area in
+		               (select s.idn_area
+		                  from tpa_tsubarea s
+		                 where s.idn_subarea = ts.idn_subarea)) as area,
+		       ts.idn_subarea,
+		       (select s.subarea_code
+		          from tpa_tsubarea s
+		         where s.idn_subarea = ts.idn_subarea) as subarea,
+		       ts.capacity_affected 
+		  from tpa_tmaintenance_subarea ts
+		 where ts.idn_maintenance = #{idn_maintenance}
+		   and ts.insert_group = 'OPERATIONS'
+		 order by area, subarea
+	
+	</select>
+
+	<insert id="insertEngineeringMaintenance" useGeneratedKeys="true" keyProperty="idn_maintenance" keyColumn="idn_maintenance" parameterType="com.atos.beans.maintenance.WorkSubmissionBean">
+		insert into tpa_tmaintenance
+		  (idn_maintenance,
+		  	maintenance_subject,
+			work_code,
+			status,
+			start_date,
+			end_date,
+			is_daily,
+			ENGINEERING_COMMENTS,
+			idn_maintenance_file,
+	        aud_ins_user,
+	        aud_last_user
+		)
+		values
+		  (tpa_smaintenance.nextval,
+		    #{maintenance_subject},
+			#{maintenance_code},
+			#{status},
+			#{start_date},
+			#{end_date},
+			#{daily},
+			#{engineering_comments},
+			#{idn_maintenance_file},
+	      #{username},
+	      #{username})
+	</insert>
+
+	<insert id="insertOperationsMaintenance" useGeneratedKeys="true" keyProperty="idn_maintenance_subarea" keyColumn="idn_maintenance_subarea" parameterType="com.atos.beans.maintenance.WorkOperatorMaintenanceBean">
+		insert into tpa_tmaintenance_subarea
+		  (idn_maintenance_subarea,
+			idn_maintenance,
+			idn_subarea,
+			insert_group,
+			capacity_affected,
+	        aud_ins_user,
+	        aud_last_user
+		)
+		values
+		  (tpa_smaintenance_subarea.nextval,
+			#{idn_maintenance},
+			#{idn_subarea},
+			#{insert_group},
+			#{capacity_affected},
+	      #{username},
+	      #{username})
+	</insert>
+
+	<update id="updateEngineeringMaintenance1" parameterType="com.atos.beans.maintenance.WorkSubmissionBean">
+		UPDATE tpa_tmaintenance set
+			aud_last_user=#{username},
+			start_date = #{start_date},
+			end_date = #{end_date},
+			idn_maintenance_file = #{idn_maintenance_file},
+			engineering_comments = #{engineering_comments}
+		where idn_maintenance = #{idn_maintenance}
+	</update>
+
+	<update id="updateCssColorMaintenance" parameterType="com.atos.beans.maintenance.WorkSubmissionBean">
+		UPDATE tpa_tmaintenance set
+aud_last_user=#{username},
+			css_color = #{css_color}
+		where idn_maintenance = #{idn_maintenance}
+	</update>
+
+	<update id="updateActualEndDateMaintenance" parameterType="com.atos.beans.maintenance.WorkSubmissionBean">
+		UPDATE tpa_tmaintenance set
+aud_last_user=#{username},
+			actual_end_date = #{actual_end_date}
+		where idn_maintenance = #{idn_maintenance}
+	</update>
+
+	<update id="updateEngineeringMaintenance2" parameterType="com.atos.beans.maintenance.WorkOperatorMaintenanceBean">
+		UPDATE tpa_tmaintenance_subarea set
+aud_last_user=#{username},
+			idn_subarea = #{idn_subarea}
+		where idn_maintenance = #{idn_maintenance}
+			and insert_group = #{insert_group}
+	</update>
+
+	<update id="updateStatusMaintenance" parameterType="com.atos.beans.maintenance.WorkSubmissionBean">
+		UPDATE tpa_tmaintenance set
+aud_last_user=#{username},
+			status = #{status}
+		where idn_maintenance = #{idn_maintenance}
+	</update>
+
+	<update id="updateOperationsCommentMaintenance" parameterType="com.atos.beans.maintenance.WorkSubmissionBean">
+		UPDATE tpa_tmaintenance set
+aud_last_user=#{username},
+			operation_comments = #{operator_comments}
+		where idn_maintenance = #{idn_maintenance}
+	</update>
+
+	<update id="updateOperationsMaintenance" parameterType="com.atos.beans.maintenance.WorkOperatorMaintenanceBean">
+		UPDATE tpa_tmaintenance_subarea set
+aud_last_user=#{username},
+			idn_subarea = #{idn_subarea},
+			capacity_affected = #{capacity_affected}
+		where idn_maintenance = #{idn_maintenance}
+			and idn_maintenance_subarea = #{idn_maintenance_subarea}
+	</update>
+
+	<insert id="insertMaintenanceFile" useGeneratedKeys="true" keyProperty="idn_maintenance_file" keyColumn="idn_maintenance_file" parameterType="com.atos.beans.maintenance.MaintenanceFileBean">
+		insert into tpa_tmaintenance_file
+		  (idn_maintenance_file,
+		   FILE_NAME,
+		   CONTENT_TYPE,
+		   BINARY_DATA,
+	                                        aud_ins_user,
+	                                        aud_last_user)
+		values
+		  (tpa_smaintenance_file.nextval,
+		   #{file_name},
+		   #{content_type},
+		   #{binary_data},
+	      #{username},
+	      #{username})
+	</insert>
+	<select id="selectGetFile" parameterType="java.util.TreeMap" resultType="com.atos.beans.maintenance.MaintenanceFileBean">
+		select idn_maintenance_file,
+	       file_name,
+	       content_type,
+	       binary_data
+	    from tpa_tmaintenance_file o
+		where o.idn_maintenance_file = #{idn_maintenance_file}
+	</select>
+
+
+</mapper>
+

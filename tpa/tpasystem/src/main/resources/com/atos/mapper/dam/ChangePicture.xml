@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atos.mapper.dam.ChangePictureMapper">
+
+<update id="updateChangePicture" parameterType="com.atos.beans.dam.ChangePictureBean">
+		UPDATE TPA_TWEB_IMAGE SET BINARY_DATA =  #{binary_data}, AUD_LAST_DATE= sysdate, 
+		AUD_LAST_USER= #{username}, FILE_NAME = #{file_name}
+		WHERE WEB_IMAGE_CODE ='LANDING.PAGE.PICTURE'
+	</update>
+
+<select id="selectChangePicture" resultType="com.atos.beans.dam.ChangePictureBean">
+		select binary_data from TPA_TWEB_IMAGE where web_image_code = 'LANDING.PAGE.PICTURE'
+    </select>
+
+</mapper> 

@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- Namespace -->
+<mapper
+	namespace="com.atos.mapper.nominations.UploadNomTemplateShipperMapper">
+
+	<resultMap
+		type="com.atos.beans.nominations.UploadNomTemplateShipperBean"
+		id="UploadNomTemplateShipperBean">
+
+		<id column="idn_nom_template_contract"
+			property="idn_nom_template_contract" />
+		<id column="user_group_id" property="shipperGroupId" />
+		<id column="CONTRACT_CODE" property="contractId" />
+		<id column="operation_desc" property="operation_desc" />
+		<id column="document_name" property="document_name" />
+		<id column="binary_data" property="binary_data" />
+		<id column="comments" property="comments" />
+
+	</resultMap>
+
+
+	<select id="search" resultMap="UploadNomTemplateShipperBean"
+		parameterType="com.atos.filters.nominations.UploadNomTemplateShipperFilter">
+		SELECT ug.user_group_id, c.contract_code,
+		tc.idn_nom_template_contract, tc.document_name, tc.binary_data,
+		o.operation_desc, tc.comments
+		FROM TPA_TNOM_TEMPLATE_CONTRACT tc, TPA_TUSER_GROUP ug, TPA_TOPERATION o,
+		TPA_TCONTRACT c
+		WHERE tc.idn_user_group = ug.idn_user_group
+		AND tc.idn_operation = o.idn_operation
+		AND tc.idn_contract = c.idn_contract
+
+		<if test="shipperId != null and shipperId != ''">
+			AND tc.idn_user_group = #{shipperId}
+		</if>
+
+		<if test="contractId != null and contractId != ''">
+			AND tc.idn_contract = #{contractId}
+		</if>
+	</select>
+
+	<select id="selectShipperId"
+		resultType="com.atos.beans.ComboFilterNS">
+		select ug.idn_user_group as key, ug.user_group_id as value
+		from TPA_TUSER_GROUP ug
+		where ug.idn_user_group_type in
+		(select
+		idn_user_group_type
+		from tpa_tuser_group_type ugt
+		where ugt.type_code =
+		'SHIPPER')
+	</select>
+
+	<select id="selectOperationId"
+		resultType="com.atos.beans.ComboFilterNS">
+		select idn_operation as key, operation_desc as value
+		from
+		tpa_voperation
+		WHERE CATEGORY_CODE = 'NOMINATION'
+		order by 2
+	</select>
+
+	<select id="selectContractId"
+		resultType="com.atos.beans.ComboFilterNS">
+		select c.idn_contract as key, c.contract_code as value
+		from
+		TPA_TCONTRACT c
+		where c.idn_pipeline_system = #{systemId}
+		<if test="shipperId != null and shipperId != ''">
+		and c.idn_user_group = #{shipperId}
+		</if>
+		order by 2
+	</select>
+
+	<insert id="insertTemplateShipper"
+		parameterType="com.atos.beans.nominations.UploadNomTemplateShipperBean">
+
+		INSERT INTO TPA_TNOM_TEMPLATE_CONTRACT
+		(IDN_NOM_TEMPLATE_CONTRACT, IDN_USER_GROUP, IDN_CONTRACT, IDN_OPERATION, DOCUMENT_NAME,
+		BINARY_DATA, COMMENTS, VERSION_DATE,
+		AUD_INS_DATE,AUD_LAST_DATE,AUD_INS_USER,AUD_LAST_USER)
+		VALUES
+		(tpa_snom_template_contract.Nextval,
+		#{shipperGroupId},
+		#{contractId},
+		#{operation_desc},
+		#{document_name},
+		#{binary_data},
+		#{comments},
+		systimestamp,
+		sysdate,
+		sysdate,
+		#{username},
+		#{username})
+	</insert>
+
+	<update id="updateTemplateShipper"
+		parameterType="com.atos.beans.nominations.UploadNomTemplateShipperBean">
+		UPDATE TPA_TNOM_TEMPLATE_CONTRACT SET
+		DOCUMENT_NAME = #{document_name},
+		BINARY_DATA = #{binary_data},
+		COMMENTS = #{comments},
+		VERSION_DATE = systimestamp,
+		AUD_INS_DATE = SYSDATE,
+		AUD_LAST_DATE = SYSDATE,
+		AUD_INS_USER = #{username},
+		AUD_LAST_USER = #{username}
+		WHERE IDN_NOM_TEMPLATE_CONTRACT = #{idn_nom_template_contract}
+	</update>
+
+	<select id="selectTemplateFile"
+		parameterType="com.atos.beans.nominations.UploadNomTemplateShipperBean"
+		resultType="com.atos.beans.nominations.UploadNomTemplateShipperBean">
+		select idn_nom_template_contract,
+		document_name,
+		binary_data
+		from tpa_tnom_template_contract o
+		where o.idn_nom_template_contract =
+		#{idn_nom_template_contract}
+	</select>
+
+</mapper>

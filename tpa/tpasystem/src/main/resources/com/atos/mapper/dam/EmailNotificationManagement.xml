@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+
+<mapper namespace="com.atos.mapper.dam.EmailNotificationManagementMapper">
+
+ <resultMap type="com.atos.beans.dam.EmailNotificationManagementBean" id="EmailNotificationManagementBean">
+        <id column="idn_zone" property="idn_zone"  />  
+        
+        <result property="module" column="email_module"/> 		
+		<result property="activity" column="type_desc"/>
+		<result property="enabled" column="is_enabled"/>
+		<result property="idn_email_type" column="idn_email_type"/>
+    </resultMap>
+     
+     
+    <select id="selectModulesIds" resultType="com.atos.beans.ComboFilterNS">		
+		SELECT ROWNUM AS KEY, email_module
+		FROM (SELECT DISTINCT a.email_module FROM TPA_TEMAIL_TYPE a ORDER BY 1)
+   </select>
+   
+   <select id="selectEmails" parameterType="com.atos.filters.dam.EmailNotificationManagementFilter" resultMap="EmailNotificationManagementBean">
+		
+		 SELECT idn_email_type, email_module, type_desc, is_enabled 
+  		 FROM TPA_TEMAIL_TYPE 
+		 WHERE 1 = 1 
+   		<if test="module != null and module != ''">
+  			 AND email_module = #{module}
+		</if>
+
+   </select>
+   
+   <insert id="insertLogEmail" parameterType="com.atos.beans.dam.EmailNotificationManagementBean">
+   		INSERT INTO TPA_TEMAIL_TYPE_LOG 
+   		(IND_TEMAIL_TYPE, OLD_VALUE, NEW_VALUE, AUD_INS_USER, AUD_LAST_USER) 
+   		VALUES (#{idn_email_type}, 
+   		(SELECT IS_ENABLED FROM TPA_TEMAIL_TYPE WHERE IDN_EMAIL_TYPE = #{idn_email_type}), #{strEnabled}, #{user}, #{user})
+   </insert>
+   
+   <update id="updateEmailEnabled" parameterType="com.atos.beans.dam.EmailNotificationManagementBean">
+	   UPDATE TPA_TEMAIL_TYPE SET IS_ENABLED = #{strEnabled}, 
+	   AUD_LAST_DATE=sysdate, 
+	   AUD_LAST_USER  =#{user} WHERE IDN_EMAIL_TYPE = #{idn_email_type}
+   </update>
+</mapper>

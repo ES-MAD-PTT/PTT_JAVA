@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atos.mapper.nominations.ParkingAllocationMapper">
+<!-- 
+private BigDecimal idn_zone;
+	private String zone_code;
+	private BigDecimal idn_shipper;
+	private String shipper_code;
+	private String contract_code;
+	private String nomination_code;
+	private BigDecimal nomination_version;
+	private BigDecimal unpark_nominated;
+	private BigDecimal park_nominated;
+	private BigDecimal park_allocated; -->
+
+     <select id="selectParkingAllocationZones" resultType="com.atos.beans.ComboFilterNS">
+		select idn_zone as key, zone_code as value
+		  from TPA_TZONE t
+		 where zone_code in ('EAST', 'WEST', 'EAST-WEST','O-EAST')
+     </select>
+     
+     <!-- offshore -->
+	<select id="selectParkingAllocationZonesSystem" resultType="com.atos.beans.ComboFilterNS">
+		select z.idn_zone as key, z.zone_code as value
+	    from TPA_VZONE_TPA z
+	    where z.idn_pipeline_system =#{idn_system}
+	    order by UPPER(z.zone_code)
+	</select>
+
+  <select id="selectParkingAllocation" parameterType="com.atos.filters.nominations.ParkingAllocationFilter" resultType="com.atos.beans.nominations.ParkingAllocationBean">
+		SELECT ndq.gas_day,
+		       z.zone_code,
+		       z.idn_zone,
+		       ug.user_group_id as shipper_code,
+		       (SELECT c.contract_code
+		          FROM tpa_tcontract c
+		         WHERE c.idn_contract = n.idn_contract
+		           AND c.idn_user_group = n.idn_user_group) AS contract_code,
+		       n.nomination_code,
+		       n.nomination_version,
+		       SUM(decode(nc.concept_code, 'Unpark', ndq.day_confirmed_quantity * ucfd.conversion_factor, NULL)) AS unpark_nominated,
+		       SUM(decode(nc.concept_code, 'Park', ndq.day_confirmed_quantity * ucfd.conversion_factor, NULL)) AS park_nominated,
+		       SUM(decode((SELECT COUNT(*)
+		                    FROM tpa_tnom_process_executed npx,
+		                         tpa_tnomination_process   np
+		                   WHERE npx.idn_nomination = n.idn_nomination
+		                     AND npx.idn_nomination_process = np.idn_nomination_process
+		                     AND npx.execution_parameters = z.zone_code
+		                     AND np.process_code = 'PARK.PRORATE'
+		                     AND nc.concept_code = 'Park'),
+		                  0,
+		                  NULL,
+		                  ndq.day_matched_quantity * ucfd.conversion_factor)) AS park_allocated
+		  FROM tpa_tnomination              n,
+		       tpa_vnomination_day_quantity ndq,
+		       tpa_tnomination_concept      nc,
+		       tpa_tnomination_entity       ne,
+		       tpa_tnomination_xls_headr    neh,
+		       tpa_voperation                 o,
+		       tpa_tuser_group                ug,
+		       tpa_vunit_convert_from_default ucfd,
+		       tpa_tzone                      z,
+                  tpa_tpipeline_system           p
+		 WHERE n.idn_operation = o.idn_operation
+                                      AND #{gas_day} BETWEEN n.start_date AND n.end_date
+		   AND n.idn_user_group = ug.idn_user_group
+		   AND n.is_contracted = 'Y'
+		   AND n.idn_nomination = ndq.idn_nomination
+		   AND n.idn_nomination = ne.idn_nomination
+		   AND n.nomination_version =
+		       (SELECT MAX(nx.nomination_version) FROM tpa_tnomination nx WHERE n.nomination_code = nx.nomination_code AND n.is_intraday = 'N')
+		   AND ndq.gas_day = #{gas_day}
+		   AND ndq.idn_nomination_entity = ne.idn_nomination_entity
+		   AND ndq.idn_nomination_entity = neh.idn_nomination_entity
+		   AND ndq.idn_nomination_concept = nc.idn_nomination_concept
+		   AND ndq.idn_nomination_concept = neh.idn_nomination_concept
+		   AND nc.concept_code IN ('Park', 'Unpark')
+		   AND nc.is_zone_concept = 'Y'
+		   AND nc.idn_nomination_concept = neh.idn_nomination_concept
+		   AND ne.idn_nomination_entity = neh.idn_nomination_entity
+		   AND ne.idn_system_point IS NULL
+		   AND ne.idn_area IS NULL
+		   AND ne.idn_zone = z.idn_zone
+              AND p.idn_pipeline_system = z.idn_pipeline_system
+		   AND neh.idn_unit = ucfd.idn_unit
+		   AND o.category_code = 'NOMINATION'
+               AND o.term_code = DECODE(p.pipeline_system_code, 'ONSHORE', 'DAILY', 'OFFSHORE', 'WEEKLY')
+			AND n.is_intraday = 'N'
+		<!-- se cambia el combo por un comboCheckBox. Ya viene filtrado por system    
+		 <if test="idn_zone != null">
+			AND z.idn_zone = #{idn_zone}
+		</if> 
+		-->
+	  <choose>
+
+          	<when test="idn_zone != null and idn_zone.length > 0">
+                <foreach item="item" index="index" collection="idn_zone"
+                         open="and z.idn_zone in (" separator="," close=")">
+                               #{item}
+                </foreach>
+            </when>
+            <otherwise>
+               and z.idn_zone in (-1)
+            </otherwise>
+        </choose>   
+
+		  
+		 GROUP BY ndq.gas_day,
+		          z.zone_code,
+		          z.idn_zone,
+		          ug.user_group_id,
+		          n.idn_user_group,
+		          n.idn_contract,
+		          n.nomination_code,
+		          n.nomination_version
+		          
+		
+				          
+		 ORDER BY ndq.gas_day,
+		          z.zone_code,
+		          ug.user_group_id,
+		          contract_code
+     </select>
+	
+     
+     <select id="getParkDefaultValue" resultType="java.math.BigDecimal" >
+	                               
+		SELECT  p.final_park * ucfd.conversion_factor AS default_value 
+		  FROM tpa_tzone_park                 p, 
+		       tpa_vunit_convert_from_default ucfd 
+		  WHERE p.gas_day = trunc(#{gas_day}) -1
+		   AND p.idn_zone =  #{idn_zone} 
+		   AND ucfd.unit_code = 'MMBTU/D' 
+		   AND p.version_date = (SELECT MAX(py.version_date) 
+		                           FROM tpa_tzone_park py 
+		                          WHERE py.idn_zone = p.idn_zone 
+		                            AND py.gas_day = p.gas_day)
+                            
+	</select>
+	
+	 <select id="getLastUserParkValue" resultType="java.math.BigDecimal" >
+	                               
+		SELECT  p.user_park  * ucfd.conversion_factor AS lastUserPark_value 
+		  FROM tpa_tzone_park                 p, 
+		       tpa_vunit_convert_from_default ucfd 
+		  WHERE p.gas_day = trunc(#{gas_day})
+		   AND p.idn_zone =  #{idn_zone} 
+		   AND ucfd.unit_code = 'MMBTU/D' 
+		   AND p.version_date = (SELECT MAX(py.version_date) 
+		                           FROM tpa_tzone_park py 
+		                          WHERE py.idn_zone = p.idn_zone 
+		                            AND py.gas_day = p.gas_day)
+                            
+	</select>
+	
+	
+	 <select id="allocated" statementType="CALLABLE" parameterType="com.atos.beans.nominations.ParkingAllocationBean">
+		{call #{valid,jdbcType=INTEGER,mode=OUT} :=
+		pck_zone_park.calculate_park(
+				#{idn_zone,jdbcType=NUMERIC,mode=IN},
+				#{gas_day,jdbcType=DATE,mode=IN},
+				#{parking_value,jdbcType=NUMERIC,mode=IN},
+				#{user,jdbcType=VARCHAR,mode=IN},
+				#{language,jdbcType=DATE,mode=IN},
+				#{error_desc,jdbcType=VARCHAR,mode=OUT})}
+	</select>
+	
+	
+	 <select id="defaultValueCalc" statementType="CALLABLE" parameterType="com.atos.beans.nominations.ParkingAllocationBean">
+		{call #{valid,jdbcType=INTEGER,mode=OUT} :=
+		pck_zone_park.calculate_park(
+				#{idn_zone,jdbcType=NUMERIC,mode=IN},
+				#{gas_day,jdbcType=DATE,mode=IN},
+				#{parking_value,jdbcType=NUMERIC,mode=IN},
+				#{user,jdbcType=VARCHAR,mode=IN},
+				#{language,jdbcType=DATE,mode=IN},
+				#{error_desc,jdbcType=VARCHAR,mode=OUT})}
+	</select>
+	
+	<select id="getZoneCode" resultType="java.lang.String">
+        select  z.zone_code 
+		from TPA_TZONE z
+		where z.idn_zone=#{idn_zone}  
+
+	</select>
+	
+</mapper>

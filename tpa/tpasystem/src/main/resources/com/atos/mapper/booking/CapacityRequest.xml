@@ -1,0 +1,699 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<!-- Namespace -->
+<mapper namespace="com.atos.mapper.booking.CapacityRequestMapper">
+
+    <resultMap type="com.atos.beans.booking.CapacityRequestBean" id="CapacityRequest">
+        <id property="id" column="idn_contract_request" />
+		<result property="requestCode" column="request_code"/>
+		<result property="submittedTimestamp" column="arriving_date"/>
+        <result property="shipperId" column="idn_user_group"/> 
+        <result property="shipperCode" column="user_group_id"/>
+        <result property="shipperName" column="user_group_name"/>
+        <result property="contractTypeId" column="idn_operation"/> 
+        <result property="contractTypeCode" column="operation_desc"/>   
+        <result property="contractId" column="idn_contract"/>
+        <result property="contractCode" column="contract_code"/> 
+        <result property="status" column="status"/>   
+        <result property="contractStartDate" column="start_date"/>   
+        <result property="contractEndDate" column="end_date"/>
+        <result property="idnOperationFile" column="idn_operation_file"/>
+        <result property="xlsFileName" column="file_name"/>    
+        <result property="submissionComments" column="shipper_warnings"/>
+        <result property="managementComments" column="operator_comments"/>
+        <result property="shadowTime" column="shadow_time"/>
+        <result property="shadowPeriod" column="shadow_period"/>
+        <result property="acceptanceTimestamp" column="response_date"/> 
+        <result property="idn_system" column="idn_pipeline_system"/>
+    </resultMap>
+
+	<!-- B823: Se muestran notificaciones de contratos que "no existen" (porque no aparecen en las consultas de contratos) =>
+	 Se trata de un caso no contemplado en las consultas de contratos (contrato sin fichero) -->	
+		
+	     <select id="selectCapacityRequestsWithoutGrandfathering" resultMap="CapacityRequest">
+				select t1.idn_contract_request as idn_contract_request,
+				       t1.request_code as request_code,
+				       t1.arriving_date as arriving_date,
+				       t1.idn_user_group as idn_user_group,
+				       t1.user_group_id as user_group_id,
+				       t1.user_group_name as user_group_name,
+				       t1.idn_operation as idn_operation,
+				       t1.operation_desc as operation_desc,
+				       t2.idn_contract as idn_contract,
+				       t2.contract_code as contract_code,
+				       t1.status as status,
+				       t1.start_date as start_date,
+				       t1.end_date as end_date,
+				       t1.idn_operation_file as idn_operation_file,
+				       t1.file_name as file_name,
+				       t1.shipper_warnings as shipper_warnings,
+				       t1.operator_comments as operator_comments,
+				       t2.shadow_time as shadow_time,
+				       t2.shadow_period as shadow_period,
+				       t1.response_date as response_date,
+				       t1.idn_pipeline_system as idn_pipeline_system
+				       from (select  tcreq.idn_contract_request as idn_contract_request,
+				                       tcreq.request_code as request_code,
+				                       tcreq.arriving_date as arriving_date,
+				                       tuser_group.idn_user_group as idn_user_group,
+				                       tuser_group.user_group_id as user_group_id,
+				                       tuser_group.user_group_name as user_group_name,
+				                       toper.idn_operation as idn_operation,
+				                       toper.operation_desc as operation_desc,
+				                       tcreq.idn_contract as idn_contract,
+				                       tcreq.status as status,
+				                       tcreq.start_date as start_date,
+				                       tcreq.end_date as end_date,
+				                       tfile.idn_operation_file as idn_operation_file,
+				                       tfile.file_name as file_name,
+				                       tcreq.shipper_warnings as shipper_warnings,
+				                       tcreq.operator_comments as operator_comments,
+				                       tcreq.response_date as response_date,
+				                       tcreq.idn_pipeline_system as idn_pipeline_system
+				                from (SELECT tcreq2.* 
+				                        FROM tpa_tcontract_request tcreq2, 
+				                             tpa_tcontract         tcontr2 
+				                       WHERE tcontr2.idn_contract (+)=  tcreq2.idn_contract 
+				                         AND NVL(tcontr2.is_grandfathering(+), 'N') = 'N'
+				                                 AND tcreq2.idn_pipeline_system = #{idn_system} 
+				                         AND tcontr2.idn_pipeline_system(+) = tcreq2.idn_pipeline_system
+				                      ) tcreq,
+				                     tpa_tuser_group tuser_group, 
+				                     tpa_toperation toper,
+				                     tpa_toperation_file tfile                     
+				                where tcreq.is_capacity_release='N'
+				<if test="capacityRequestCode != null and capacityRequestCode != ''">
+				and tcreq.request_code like #{capacityRequestCode}
+				</if>
+				<if test="shipperId != null and shipperId != ''">
+				and tuser_group.idn_user_group = #{shipperId}
+				</if>
+				<choose>
+				<when test="contractTypeId != null and contractTypeId.length > 0">
+				<foreach item="item" index="index" collection="contractTypeId"
+				             open="and toper.idn_operation in (" separator="," close=")">
+				        #{item}
+				    </foreach>
+				</when>
+				<otherwise>
+				and toper.idn_operation in (-1)
+				</otherwise>
+				</choose>
+				<choose>
+				<when test="status != null and status.length > 0">
+				<foreach item="item" index="index" collection="status"
+				             open="and tcreq.status in (" separator="," close=")">
+				        #{item}
+				    </foreach>
+				</when>
+				<otherwise>
+				and tcreq.status in ('no_valid_status')
+				</otherwise>
+				</choose>
+				<if test="startDate != null">
+				and trunc(tcreq.arriving_date) >= #{startDate}
+				</if>
+				<if test="endDate != null">
+				and #{endDate} >= trunc(tcreq.arriving_date) 
+				</if>                
+				        and tcreq.idn_user_group=tuser_group.idn_user_group
+				                and tcreq.idn_operation=toper.idn_operation
+				                and tfile.idn_operation_file (+)= tcreq.idn_operation_file) t1
+				    left outer join(select tcontr.idn_contract as idn_contract, 
+				                     tcontr.contract_code as contract_code,
+				                     tsha.shadow_time as shadow_time,
+				                     tsha.shadow_period as shadow_period
+				              from tpa_tcontract tcontr, tpa_tcontract_shadow tsha
+				              where tsha.idn_contract=tcontr.idn_contract
+				                             and tcontr.idn_pipeline_system = #{idn_system}) t2 on t2.idn_contract=t1.idn_contract
+				   order by t1.arriving_date desc, t1.user_group_id asc, t2.contract_code asc
+    </select>
+		
+     <select id="selectCapacityRequestsWithoutGrandfathering_old" resultMap="CapacityRequest">
+		select t1.idn_contract_request as idn_contract_request,
+		       t1.request_code as request_code,
+		       t1.arriving_date as arriving_date,
+		       t1.idn_user_group as idn_user_group,
+		       t1.user_group_id as user_group_id,
+		       t1.idn_operation as idn_operation,
+		       t1.operation_desc as operation_desc,
+		       t2.idn_contract as idn_contract,
+		       t2.contract_code as contract_code,
+		       t1.status as status,
+		       t1.start_date as start_date,
+		       t1.end_date as end_date,
+		       t1.idn_operation_file as idn_operation_file,
+		       t1.file_name as file_name,
+		       t1.shipper_warnings as shipper_warnings,
+		       t1.operator_comments as operator_comments,
+		       t2.shadow_time as shadow_time,
+		       t2.shadow_period as shadow_period,
+		       t1.response_date as response_date,
+		       t1.idn_pipeline_system as idn_pipeline_system
+		       from (select  tcreq.idn_contract_request as idn_contract_request,
+		                       tcreq.request_code as request_code,
+		                       tcreq.arriving_date as arriving_date,
+		                       tuser_group.idn_user_group as idn_user_group,
+		                       tuser_group.user_group_id as user_group_id,
+		                       toper.idn_operation as idn_operation,
+		                       toper.operation_desc as operation_desc,
+		                       tcreq.idn_contract as idn_contract,
+		                       tcreq.status as status,
+		                       tcreq.start_date as start_date,
+		                       tcreq.end_date as end_date,
+		                       tfile.idn_operation_file as idn_operation_file,
+		                       tfile.file_name as file_name,
+		                       tcreq.shipper_warnings as shipper_warnings,
+		                       tcreq.operator_comments as operator_comments,
+		                       tcreq.response_date as response_date,
+		                       tcreq.idn_pipeline_system as idn_pipeline_system
+		                from (SELECT tcreq2.* 
+		                        FROM tpa_tcontract_request tcreq2, 
+		                             tpa_tcontract         tcontr2 
+		                       WHERE tcontr2.idn_contract (+)=  tcreq2.idn_contract 
+		                         AND NVL(tcontr2.is_grandfathering(+), 'N') = 'N'
+                                 AND tcreq2.idn_pipeline_system = #{idn_system} 
+		                         AND tcontr2.idn_pipeline_system(+) = tcreq2.idn_pipeline_system
+		                      ) tcreq,
+		                     tpa_tuser_group tuser_group, 
+		                     tpa_toperation toper,
+		                     tpa_toperation_file tfile                     
+		                where tcreq.is_capacity_release='N'
+							<if test="capacityRequestCode != null and capacityRequestCode != ''">
+							and tcreq.request_code like #{capacityRequestCode}
+							</if>
+							<if test="shipperId != null and shipperId != ''">
+							and tuser_group.idn_user_group = #{shipperId}
+							</if>
+							<choose>
+								<when test="contractTypeId != null and contractTypeId.length > 0">
+									<foreach item="item" index="index" collection="contractTypeId"
+							             open="and toper.idn_operation in (" separator="," close=")">
+							        		#{item}
+							    	</foreach>
+								</when>
+								<otherwise>
+									and toper.idn_operation in (-1)
+								</otherwise>
+							</choose>
+							<choose>
+								<when test="status != null and status.length > 0">
+									<foreach item="item" index="index" collection="status"
+							             open="and tcreq.status in (" separator="," close=")">
+							        		#{item}
+							    	</foreach>
+								</when>
+								<otherwise>
+									and tcreq.status in ('no_valid_status')
+								</otherwise>
+							</choose>
+					 		<if test="startDate != null">
+							and trunc(tcreq.arriving_date) >= #{startDate}
+							</if>
+							<if test="endDate != null">
+							and #{endDate} >= trunc(tcreq.arriving_date) 
+							</if>                
+			        		and tcreq.idn_user_group=tuser_group.idn_user_group
+			                and tcreq.idn_operation=toper.idn_operation
+			                and tcreq.idn_operation_file=tfile.idn_operation_file ) t1
+		    left outer join(select tcontr.idn_contract as idn_contract, 
+		                     tcontr.contract_code as contract_code,
+		                     tsha.shadow_time as shadow_time,
+		                     tsha.shadow_period as shadow_period
+		              from tpa_tcontract tcontr, tpa_tcontract_shadow tsha
+		              where tsha.idn_contract=tcontr.idn_contract
+                             and tcontr.idn_pipeline_system = #{idn_system}) t2 on t2.idn_contract=t1.idn_contract
+		   order by t1.arriving_date desc, t1.user_group_id asc, t2.contract_code asc
+    </select>
+     
+
+	<!-- B823: Se muestran notificaciones de contratos que "no existen" (porque no aparecen en las consultas de contratos) 
+	=> Se trata de un caso no contemplado en las consultas de contratos (contrato sin fichero)-->	
+	    <select id="selectCapacityRequests" resultMap="CapacityRequest">
+			select t1.idn_contract_request as idn_contract_request,
+			       t1.request_code as request_code,
+			       t1.arriving_date as arriving_date,
+			       t1.idn_user_group as idn_user_group,
+			       t1.user_group_id as user_group_id,
+			       t1.user_group_name as user_group_name,
+			       t1.idn_operation as idn_operation,
+			       t1.operation_desc as operation_desc,
+			       t2.idn_contract as idn_contract,
+			       t2.contract_code as contract_code,
+			       t1.status as status,
+			       t1.start_date as start_date,
+			       t1.end_date as end_date,
+			       t1.idn_operation_file as idn_operation_file,
+			       t1.file_name as file_name,
+			       t1.shipper_warnings as shipper_warnings,
+			       t1.operator_comments as operator_comments,
+			       t2.shadow_time as shadow_time,
+			       t2.shadow_period as shadow_period,
+			       t1.response_date as response_date,
+			       t1.idn_pipeline_system as idn_pipeline_system
+			       from (select  tcreq.idn_contract_request as idn_contract_request,
+			                       tcreq.request_code as request_code,
+			                       tcreq.arriving_date as arriving_date,
+			                       tuser_group.idn_user_group as idn_user_group,
+			                       tuser_group.user_group_id as user_group_id,
+			                       tuser_group.user_group_id as user_group_name,
+			                       toper.idn_operation as idn_operation,
+			                       toper.operation_desc as operation_desc,
+			                       tcreq.idn_contract as idn_contract,
+			                       tcreq.status as status,
+			                       tcreq.start_date as start_date,
+			                       tcreq.end_date as end_date,
+			                       tfile.idn_operation_file as idn_operation_file,
+			                       tfile.file_name as file_name,
+			                       tcreq.shipper_warnings as shipper_warnings,
+			                       tcreq.operator_comments as operator_comments,
+			                       tcreq.response_date as response_date,
+			                       tcreq.idn_pipeline_system as idn_pipeline_system
+			                from tpa_tcontract_request tcreq, 
+			                     tpa_tuser_group tuser_group, 
+			                     tpa_toperation toper,
+			                     tpa_toperation_file tfile                     
+			                where tcreq.is_capacity_release='N'
+			<if test="capacityRequestCode != null and capacityRequestCode != ''">
+				and tcreq.request_code like #{capacityRequestCode}
+			</if>
+			<if test="shipperId != null and shipperId != ''">
+				and tuser_group.idn_user_group = #{shipperId}
+			</if>
+			<choose>
+			<when test="contractTypeId != null and contractTypeId.length > 0">
+			<foreach item="item" index="index" collection="contractTypeId"
+			             open="and toper.idn_operation in (" separator="," close=")">
+			        #{item}
+			    </foreach>
+			</when>
+			<otherwise>
+				and toper.idn_operation in (-1)
+			</otherwise>
+			</choose>
+			<choose>
+			<when test="status != null and status.length > 0">
+			<foreach item="item" index="index" collection="status"
+			             open="and tcreq.status in (" separator="," close=")">
+			        #{item}
+			    </foreach>
+			</when>
+			<otherwise>
+				and tcreq.status in ('no_valid_status')
+			</otherwise>
+			</choose>
+			<if test="startDate != null">
+				and trunc(tcreq.arriving_date) >= #{startDate}
+			</if>
+			<if test="endDate != null">
+				and #{endDate} >= trunc(tcreq.arriving_date) 
+			</if>                
+			        and tcreq.idn_user_group=tuser_group.idn_user_group
+			                and tcreq.idn_operation=toper.idn_operation
+			                and tfile.idn_operation_file(+)=tcreq.idn_operation_file
+			                and tcreq.idn_pipeline_system = #{idn_system}) t1
+			    left outer join(select tcontr.idn_contract as idn_contract, 
+			                     tcontr.contract_code as contract_code,
+			                     tsha.shadow_time as shadow_time,
+			                     tsha.shadow_period as shadow_period
+			              from tpa_tcontract tcontr, tpa_tcontract_shadow tsha
+			              where tsha.idn_contract=tcontr.idn_contract
+			                             and tcontr.idn_pipeline_system = #{idn_system}) t2 on t2.idn_contract=t1.idn_contract
+			   order by t1.arriving_date desc, t1.user_group_id asc, t2.contract_code asc
+    </select>
+		
+    <select id="selectCapacityRequests_old" resultMap="CapacityRequest">
+		select t1.idn_contract_request as idn_contract_request,
+		       t1.request_code as request_code,
+		       t1.arriving_date as arriving_date,
+		       t1.idn_user_group as idn_user_group,
+		       t1.user_group_id as user_group_id,
+		       t1.idn_operation as idn_operation,
+		       t1.operation_desc as operation_desc,
+		       t2.idn_contract as idn_contract,
+		       t2.contract_code as contract_code,
+		       t1.status as status,
+		       t1.start_date as start_date,
+		       t1.end_date as end_date,
+		       t1.idn_operation_file as idn_operation_file,
+		       t1.file_name as file_name,
+		       t1.shipper_warnings as shipper_warnings,
+		       t1.operator_comments as operator_comments,
+		       t2.shadow_time as shadow_time,
+		       t2.shadow_period as shadow_period,
+		       t1.response_date as response_date,
+		       t1.idn_pipeline_system as idn_pipeline_system
+		       from (select  tcreq.idn_contract_request as idn_contract_request,
+		                       tcreq.request_code as request_code,
+		                       tcreq.arriving_date as arriving_date,
+		                       tuser_group.idn_user_group as idn_user_group,
+		                       tuser_group.user_group_id as user_group_id,
+		                       toper.idn_operation as idn_operation,
+		                       toper.operation_desc as operation_desc,
+		                       tcreq.idn_contract as idn_contract,
+		                       tcreq.status as status,
+		                       tcreq.start_date as start_date,
+		                       tcreq.end_date as end_date,
+		                       tfile.idn_operation_file as idn_operation_file,
+		                       tfile.file_name as file_name,
+		                       tcreq.shipper_warnings as shipper_warnings,
+		                       tcreq.operator_comments as operator_comments,
+		                       tcreq.response_date as response_date,
+		                       tcreq.idn_pipeline_system as idn_pipeline_system
+		                from tpa_tcontract_request tcreq, 
+		                     tpa_tuser_group tuser_group, 
+		                     tpa_toperation toper,
+		                     tpa_toperation_file tfile                     
+		                where tcreq.is_capacity_release='N'
+							<if test="capacityRequestCode != null and capacityRequestCode != ''">
+							and tcreq.request_code like #{capacityRequestCode}
+							</if>
+							<if test="shipperId != null and shipperId != ''">
+							and tuser_group.idn_user_group = #{shipperId}
+							</if>
+							<choose>
+								<when test="contractTypeId != null and contractTypeId.length > 0">
+									<foreach item="item" index="index" collection="contractTypeId"
+							             open="and toper.idn_operation in (" separator="," close=")">
+							        		#{item}
+							    	</foreach>
+								</when>
+								<otherwise>
+									and toper.idn_operation in (-1)
+								</otherwise>
+							</choose>
+							<choose>
+								<when test="status != null and status.length > 0">
+									<foreach item="item" index="index" collection="status"
+							             open="and tcreq.status in (" separator="," close=")">
+							        		#{item}
+							    	</foreach>
+								</when>
+								<otherwise>
+									and tcreq.status in ('no_valid_status')
+								</otherwise>
+							</choose>
+					 		<if test="startDate != null">
+							and trunc(tcreq.arriving_date) >= #{startDate}
+							</if>
+							<if test="endDate != null">
+							and #{endDate} >= trunc(tcreq.arriving_date) 
+							</if>                
+			        		and tcreq.idn_user_group=tuser_group.idn_user_group
+			                and tcreq.idn_operation=toper.idn_operation
+			                and tcreq.idn_operation_file=tfile.idn_operation_file
+			                and tcreq.idn_pipeline_system = #{idn_system}) t1
+		    left outer join(select tcontr.idn_contract as idn_contract, 
+		                     tcontr.contract_code as contract_code,
+		                     tsha.shadow_time as shadow_time,
+		                     tsha.shadow_period as shadow_period
+		              from tpa_tcontract tcontr, tpa_tcontract_shadow tsha
+		              where tsha.idn_contract=tcontr.idn_contract
+                             and tcontr.idn_pipeline_system = #{idn_system}) t2 on t2.idn_contract=t1.idn_contract
+		   order by t1.arriving_date desc, t1.user_group_id asc, t2.contract_code asc
+    </select>
+    
+    
+     <select id="selectShipperId" resultType="com.atos.beans.ComboFilterNS">
+		select tgr.idn_user_group as key, tgr.user_group_id as value
+		from tpa_tuser_group tgr
+		where tgr.idn_user_group_type = (select idn_user_group_type from tpa_tuser_group_type where type_code = 'SHIPPER')
+			  and trunc(sysdate) between tgr.start_date and nvl(tgr.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+		order by upper(tgr.user_group_id) asc
+    </select>
+
+     <select id="selectOperators" resultType="com.atos.beans.ComboFilterNS">
+	    select tgr.idn_user_group as key, tgr.user_group_id as value
+	         from tpa_tuser_group tgr
+	         where tgr.idn_user_group_type = (select idn_user_group_type 
+	                                          from tpa_tuser_group_type 
+	                                          where type_code = 'OPERATOR')
+	        and trunc(sysdate) between tgr.start_date and nvl(tgr.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+	    order by tgr.start_date desc
+    </select>
+    	                  
+     <select id="selectContractTypes" resultType="com.atos.beans.ComboFilterNS">
+		select a.idn_operation as key, a.operation_desc as value
+		from tpa_toperation a, tpa_toperation_category b 
+		where a.idn_operation_category = b.idn_operation_category 
+		and b.category_code = 'CONTRACT'
+    </select>
+
+     <select id="selectRejectedPoints" resultType="java.lang.String">
+		select tpoint.point_code 
+		from TPA_TCONTRACT_REQUEST treq,
+		     TPA_TCONTRACT_REJECT_LIST tlist, 
+		     TPA_TSYSTEM_POINT tpoint
+		where treq.idn_contract_request=#{id}
+		      and tlist.idn_contract_request=treq.idn_contract_request
+		      and tpoint.idn_system_point=tlist.idn_system_point
+			  and trunc(sysdate) between tpoint.start_date and nvl(tpoint.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+		order by upper(tpoint.point_code) asc
+      </select>
+      
+      <select id="selectRequestedPoints" resultType="com.atos.beans.ComboFilterNS">
+		select distinct tsyspoint.idn_system_point as key, tsyspoint.point_code as value
+		from tpa_tcontract_request tcreq,
+		     tpa_tcontract_agreement tagree,
+		     tpa_tcontract_point tcontpoint,
+		     tpa_tsystem_point tsyspoint
+		where tcreq.idn_contract_request=#{id}
+		      and tagree.idn_contract_request=tcreq.idn_contract_request
+		      and tcontpoint.idn_contract_agreement=tagree.idn_contract_agreement
+		      and tsyspoint.idn_system_point=tcontpoint.idn_system_point
+			  and trunc(sysdate) between tsyspoint.start_date and nvl(tsyspoint.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+		order by upper(tsyspoint.point_code) asc
+      </select>
+      
+      <update id="updateCRReject" parameterType="com.atos.beans.booking.CapacityRequestBean">
+		update tpa_tcontract_request set
+	       status = #{status},
+	       operator_comments = #{managementComments},
+	       response_date = sysdate,
+	       aud_last_user = #{username}
+	    where idn_contract_request=#{id}
+      </update>
+      
+	<insert id="insertRejectedPoint" useGeneratedKeys="true" keyProperty="id" keyColumn="idn_contract_reject_list" parameterType="com.atos.beans.booking.ContractRejectedPointBean">
+		insert into tpa_tcontract_reject_list 
+			(idn_contract_reject_list, idn_contract_request, idn_system_point, aud_ins_user, aud_last_user)
+		values 
+			(tpa_scontract_reject_list.nextval, 
+			#{contractRequestId}, 
+			#{systemPointId},
+			#{username},
+	        #{username}) 		  
+	</insert>
+
+	<resultMap type="com.atos.beans.booking.ContractBean" id="Contract">
+		<id property="idnContract" column="idn_contract" />
+		<result property="contractCode" column="contract_code" />
+		<result property="idnOperation" column="idn_operation" />
+		<result property="idnUserGroup" column="idn_user_group" />
+		<result property="startDate" column="start_date" />
+		<result property="endDate" column="end_date" />
+		<result property="isGranfathering" column="is_grandfathering" />
+		<result property="signatureDate" column="signature_date" />
+		<result property="systemId" column="idn_pipeline_system" />
+	</resultMap>
+    
+	<select id="selectContractByCode" parameterType="java.lang.String" resultMap="Contract">
+		select idn_contract, 
+				contract_code, 
+				idn_operation, 
+				idn_user_group, 
+				start_date, 
+				end_date, 
+				is_grandfathering,
+				signature_date,
+				idn_pipeline_system 
+		from tpa_tcontract where contract_code=#{cCode}     
+	</select>      
+
+	<update id="updateCRAccept" parameterType="com.atos.beans.booking.CapacityRequestBean">
+		update tpa_tcontract_request set
+		   idn_contract=#{contractId},
+	       status = #{status},
+	       response_date = sysdate,
+	       aud_last_user = #{username}
+	    where idn_contract_request=#{id}
+	</update>
+
+	<insert id="insertContract" useGeneratedKeys="true" keyProperty="idnContract" keyColumn="idn_contract" parameterType="com.atos.beans.booking.ContractBean">
+		insert into tpa_tcontract
+			(idn_contract, contract_code, idn_operation, idn_user_group, start_date, end_date, is_grandfathering, idn_pipeline_system, aud_ins_user, aud_last_user)
+		values 
+			(tpa_scontract.nextval, 
+			#{contractCode}, 
+			#{idnOperation},
+			#{idnUserGroup}, 
+			#{startDate},
+			#{endDate}, 
+			#{isGranfathering},
+			#{systemId},
+			#{username},
+	        #{username}) 		  
+	</insert>
+	
+	<insert id="insertContractShadow" useGeneratedKeys="true" keyProperty="idnContractShadow" keyColumn="idn_contract_shadow" parameterType="com.atos.beans.booking.ContractShadowBean">
+		insert into tpa_tcontract_shadow
+			(idn_contract_shadow, idn_contract, shadow_time, shadow_period, aud_ins_user, aud_last_user) 
+		values 
+			(tpa_scontract_shadow.nextval, 
+			#{idnContract}, 
+			#{shadowTime},
+			#{shadowPeriod},
+			#{username},
+	        #{username})		  
+	</insert>
+
+	<resultMap type="com.atos.beans.booking.ContractAgreementBean" id="ContractAgreement">
+		<id property="idnContractAgreement" column="idn_contract_agreement" />
+		<result property="idnContractRequest" column="idn_contract_request" />
+		<result property="startDate" column="start_date" />
+		<result property="endDate" column="end_date" />
+	</resultMap>
+	
+	<select id="selectContractAgreementByContReqId" parameterType="java.math.BigDecimal" resultMap="ContractAgreement">
+		select idn_contract_agreement,
+		       idn_contract_request,
+		       start_date,
+		       end_date
+		from tpa_tcontract_agreement 
+		where idn_contract_request = #{crId}   
+	</select> 
+		
+	<insert id="insertContractConsolidate" useGeneratedKeys="true" keyProperty="idnContractConsolidate" keyColumn="idn_contract_consolidate" parameterType="com.atos.beans.booking.ContractConsolidateBean">
+		insert into tpa_tcontract_consolidate
+			(idn_contract_consolidate, idn_contract_agreement, idn_contract, aud_ins_user, aud_last_user)
+		values 
+			(tpa_scontract_consolidate.nextval, 
+			#{idnContractAgreement}, 
+			#{idnContract},
+			#{username},
+	        #{username})
+	</insert>
+
+	<update id="updateCRComplete" parameterType="com.atos.beans.booking.CapacityRequestBean">
+		update tpa_tcontract_request set
+	       status = #{status},
+	       operator_comments = #{managementComments},
+	       response_date = sysdate,
+	       aud_last_user = #{username}
+	    where idn_contract_request=#{id}
+	</update>
+
+	<resultMap type="com.atos.beans.booking.OperationFileBean" id="OperationFile">
+		<result property="binaryData" column="binary_data" jdbcType="BLOB" />
+	</resultMap>
+	
+	<select id="getFileByOpFileId" parameterType="java.math.BigDecimal" resultMap="OperationFile">
+	   select binary_data 
+	   from tpa_toperation_file
+	   where idn_operation_file=#{opFileId}
+	</select>
+
+	<resultMap type="com.atos.beans.booking.ContractAttachTypeBean" id="ContractAttachType">
+		<id property="contractAttachTypeId" column="idn_contract_attach_type" />
+		<result property="typeCode" column="type_code" />
+		<result property="maxNumber" column="max_number" />
+	</resultMap>
+	
+	<select id="selectContractAttachTypes" resultMap="ContractAttachType">
+		select tcatype.idn_contract_attach_type,
+		       tcatype.type_code,
+		       tcatype.max_number
+		from tpa_tcontract_attach_type tcatype
+		order by tcatype.idn_contract_attach_type   
+	</select> 
+
+	<select id="selectContractAttachTypeById" resultMap="ContractAttachType">
+		select tcatype.idn_contract_attach_type,
+		       tcatype.type_code,
+		       tcatype.max_number
+		from tpa_tcontract_attach_type tcatype
+		where tcatype.idn_contract_attach_type = #{catId}
+	</select> 
+
+	<resultMap type="com.atos.beans.booking.ContractAttachmentBean" id="ContractAttachment">
+		<id property="contractAttachmentId" column="idn_contract_attachment" />
+		<result property="contractRequestId" column="idn_contract_request" />
+		<result property="fileName" column="file_name" />
+		<result property="submissionDate" column="aud_ins_date" />		
+		<result property="comments" column="doc_type_code" />
+ 		<result property="contractAttachTypeId" column="idn_contract_attach_type" />
+	</resultMap>
+    
+	<select id="selectAdditionalDocs" parameterType="java.math.BigDecimal" resultMap="ContractAttachment">
+		select idn_contract_attachment,
+		       idn_contract_request,
+		       file_name,
+		       aud_ins_date,
+		       comments,
+		       idn_contract_attach_type
+		from tpa_tcontract_attachment tca
+		where tca.idn_contract_request = #{crid}
+				and tca.is_deleted = 'N'
+		order by tca.idn_contract_attachment
+	</select>
+
+	<select id="selectAdditionalDocsBankGuarantee" parameterType="java.math.BigDecimal" resultMap="ContractAttachment">
+	    select tca.idn_contract_attachment,
+	           tca.idn_contract_request,
+	           tca.file_name,
+	           tca.aud_ins_date,
+	           tca.comments,
+	           tca.idn_contract_attach_type
+	    from tpa_tcontract_attachment tca,
+	         tpa_tcontract_attach_type tcat
+	    where tca.idn_contract_request = #{crid}
+	          and tcat.idn_contract_attach_type = tca.idn_contract_attach_type
+	          and tcat.type_code = 'BANK_GUARANTEE'
+	        and tca.is_deleted = 'N'
+	    order by tca.idn_contract_attachment
+	</select>
+	
+	<insert id="insertContractAttachment" useGeneratedKeys="true" keyProperty="contractAttachmentId" keyColumn="idn_contract_attachment" parameterType="com.atos.beans.booking.ContractAttachmentBean">
+		insert into tpa_tcontract_attachment (idn_contract_attachment,
+		                                      idn_contract_request,
+		                                      idn_contract_attach_type,
+		                                      file_name,
+		                                      binary_data,
+		                                      comments, 
+		                                      aud_ins_user, 
+		                                      aud_last_user)
+		values (tpa_scontract_attachment.nextval,
+		       #{contractRequestId},
+		       #{contractAttachTypeId},
+		       #{fileName},
+		       #{binaryData},
+		       #{comments},
+			   #{username},
+	           #{username})		  
+	</insert>
+
+	<resultMap type="com.atos.beans.booking.ContractAttachmentBean" id="ContractAttachmentFile">
+		<result property="binaryData" column="binary_data" jdbcType="BLOB" />
+	</resultMap>
+	
+	<select id="getFileByContractAttachmentId" parameterType="java.math.BigDecimal" resultMap="ContractAttachmentFile">
+		select tca.binary_data
+		from tpa_tcontract_attachment tca
+		where tca.idn_contract_attachment=#{caId}
+	</select>
+	
+	<update id="updateContractAttachmentDelete" parameterType="com.atos.beans.booking.ContractAttachmentBean">
+		update tpa_tcontract_attachment set
+		   is_deleted = 'Y',
+		   delete_date = sysdate,
+           aud_last_user = #{username}
+		where idn_contract_attachment = #{contractAttachmentId}
+	</update>
+
+
+	<select id="ejec_pro_logger_clean" statementType="CALLABLE" >				                        
+		{call pro_logger_clean()}      			          
+
+	</select>
+</mapper>

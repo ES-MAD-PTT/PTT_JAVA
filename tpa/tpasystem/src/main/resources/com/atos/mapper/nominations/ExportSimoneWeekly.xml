@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atos.mapper.nominations.ExportSimoneWeeklyMapper">
+
+	          
+	<select id="selectExportWeeklySimone" parameterType="com.atos.filters.nominations.ExportSimoneWeeklyFilter" resultType="com.atos.beans.nominations.ExportSimoneWeeklyBean">
+WITH nominated_quantities AS
+ (SELECT n.idn_nomination,
+         ndq.gas_day,
+         ndq.idn_nomination_day,
+         ndq.idn_nom_day_quantity,
+         ndq.idn_nomination_entity,
+         ndq.idn_nomination_concept,
+         ndq.day_confirmed_quantity,
+         ndq.gas_day - n.start_date AS day_number
+    FROM tpa_tnomination              n,
+         tpa_voperation               o,
+         tpa_tcontract                c,
+         tpa_vnomination_day_quantity ndq
+   WHERE n.nomination_version =
+         (SELECT MAX(nx.nomination_version) FROM tpa_tnomination nx WHERE nx.nomination_code = n.nomination_code AND n.is_intraday = 'N')
+     AND n.start_date = #{start_date}
+     AND n.end_date = 6 + #{start_date}
+     AND NOT (n.is_responsed = 'Y' AND n.is_valid = 'N')
+     AND n.idn_operation = o.idn_operation
+     AND n.idn_contract = c.idn_contract
+     AND n.idn_nomination = ndq.idn_nomination
+     AND o.category_code = 'NOMINATION'
+     AND o.term_code = 'WEEKLY'
+     AND c.idn_pipeline_system = #{idn_pipeline_system}
+     AND n.is_intraday = 'N'),
+
+extended_unit_conversion AS
+ (SELECT uc.*,
+         ut.type_code
+    FROM tpa_vunit_convert_from_default uc,
+         tpa_tunit                      u,
+         tpa_tunit_type                 ut
+   WHERE uc.idn_unit_default = u.idn_unit
+     AND u.idn_unit_type = ut.idn_unit_type),
+
+full_nomination AS
+ (SELECT nq.idn_nomination,
+         nq.gas_day,
+         nq.idn_nomination_concept,
+         nc.type_code AS concept_type,
+         ne.zone_code,
+         ne.point_code,
+         nc.concept_code,
+         nh.area,
+         nh.subarea,
+         nh.unit,
+         nh.entry_exit,
+         nq.day_number AS day_number_,
+         nq.day_confirmed_quantity,
+         (SELECT ngq.quality_value
+            FROM tpa_tnomination_gasq   ngq,
+                 tpa_tgas_quality_param gqp
+           WHERE ngq.idn_nomination_entity = ne.idn_nomination_entity
+             AND ngq.idn_nomination_concept = nc.idn_nomination_concept
+             AND ngq.idn_gas_quality_param = gqp.idn_gas_quality_param
+             AND gqp.parameter_code = 'WI') AS wi,
+         (SELECT ngq.quality_value
+            FROM tpa_tnomination_gasq   ngq,
+                 tpa_tgas_quality_param gqp
+           WHERE ngq.idn_nomination_entity = ne.idn_nomination_entity
+             AND ngq.idn_nomination_concept = nc.idn_nomination_concept
+             AND ngq.idn_gas_quality_param = gqp.idn_gas_quality_param
+             AND gqp.parameter_code = 'HV') AS hv,
+         (SELECT ngq.quality_value
+            FROM tpa_tnomination_gasq   ngq,
+                 tpa_tgas_quality_param gqp
+           WHERE ngq.idn_nomination_entity = ne.idn_nomination_entity
+             AND ngq.idn_nomination_concept = nc.idn_nomination_concept
+             AND ngq.idn_gas_quality_param = gqp.idn_gas_quality_param
+             AND gqp.parameter_code = 'SG') AS sg,
+
+         nvl(ucfd.conversion_factor, 1) AS conversion_factor,
+         nvl(ucfd.type_code, '~$~') AS unit_type,
+         nc.sort_value
+    FROM tpa_vnomination_entity        ne,
+         nominated_quantities          nq,
+         tpa_vnomination_excel_header  nh,
+         tpa_vnomination_main_concepts nc,
+         extended_unit_conversion      ucfd
+   WHERE nq.idn_nomination = ne.idn_nomination
+
+     AND ne.idn_nomination_entity = nq.idn_nomination_entity
+     AND ne.idn_nomination_entity = nh.idn_nomination_entity
+     AND ne.is_point_entity = nc.is_point_concept
+     AND ne.is_area_entity = nc.is_area_concept
+     AND ne.is_zone_entity = nc.is_zone_concept
+
+     AND nq.idn_nomination_concept = nh.idn_nomination_concept
+     AND nq.idn_nomination_concept = nc.idn_nomination_concept
+
+     AND ucfd.idn_unit(+) = nh.idn_unit),
+
+full_nomination_with_gasq_avg AS
+ (SELECT idn_nomination,
+         gas_day,
+         idn_nomination_concept,
+         concept_type,
+         zone_code,
+         point_code,
+         concept_code,
+         area,
+         subarea,
+         unit,
+         entry_exit,
+         day_number_,
+         day_confirmed_quantity,
+         wi,
+         CASE
+            WHEN total_confirmed_quantity = 0 THEN
+             0
+            ELSE
+             SUM(wi * day_confirmed_quantity)
+             over(PARTITION BY zone_code, nvl(point_code, concept_code), area, subarea, unit, entry_exit) /
+             total_confirmed_quantity
+         END AS wgt_wi,
+         hv,
+         CASE
+            WHEN total_confirmed_quantity = 0 THEN
+             0
+            ELSE
+             SUM(hv * day_confirmed_quantity)
+             over(PARTITION BY zone_code, nvl(point_code, concept_code), area, subarea, unit, entry_exit) /
+             total_confirmed_quantity
+         END AS wgt_hv,
+         sg,
+         CASE
+            WHEN total_confirmed_quantity = 0 THEN
+             0
+            ELSE
+             SUM(sg * day_confirmed_quantity)
+             over(PARTITION BY zone_code, nvl(point_code, concept_code), area, subarea, unit, entry_exit) /
+             total_confirmed_quantity
+         END AS wgt_sg,
+         conversion_factor,
+         unit_type,
+         sort_value
+    FROM (SELECT f.*,
+                 SUM(day_confirmed_quantity) over(PARTITION BY zone_code, nvl(point_code, concept_code), area, subarea, unit, entry_exit) AS total_confirmed_quantity
+            FROM full_nomination f))
+
+SELECT *
+  FROM (SELECT f.zone_code,
+               nvl(f.point_code, f.concept_code) AS entity,
+               f.area,
+               f.subarea,
+               f.unit,
+               f.entry_exit,
+               f.wgt_wi AS wi,
+               f.wgt_hv AS hv,
+               f.wgt_sg AS sg,
+               f.day_number_,
+               CASE
+                  WHEN f.unit_type IN ('ENERGY', 'VOLUME') THEN
+                   SUM(f.day_confirmed_quantity * f.conversion_factor)
+                  ELSE
+                   AVG(f.day_confirmed_quantity * f.conversion_factor)
+               END AS day_quantity,
+               f.sort_value
+          FROM full_nomination_with_gasq_avg f
+         GROUP BY zone_code,
+                  nvl(point_code, concept_code),
+                  area,
+                  subarea,
+                  unit,
+                  unit_type,
+                  entry_exit,
+                  wgt_wi,
+                  wgt_hv,
+                  wgt_sg,
+                  day_number_,
+                  sort_value)
+
+pivot (SUM(day_quantity) FOR day_number_ IN(0 AS day_01,
+                                       1 AS day_02,
+                                       2 AS day_03,
+                                       3 AS day_04,
+                                       4 AS day_05,
+                                       5 AS day_06,
+                                       6 AS day_07))
+ ORDER BY zone_code,
+          area,
+          sort_value,
+          entity	
+	</select>
+		          
+	
+</mapper>
+

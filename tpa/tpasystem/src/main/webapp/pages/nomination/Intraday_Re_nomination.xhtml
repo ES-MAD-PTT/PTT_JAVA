@@ -1,0 +1,325 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_nominations']}" url="#" />
+			<p:menuitem value="#{msg['menu_Nominations_Intraday_Re_nomination']}" url="/pages/nomination/Intraday_Re_nomination.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+				
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="10000" />
+			
+            <p:layout widgetVar="nomIntradayLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">	
+					
+					<p:panelGrid columns="2" style="width:100%">
+					
+						<p:panelGrid>
+							<p:row>
+								<p:column  style="font-weight: bold;" rendered="#{!renominationIntradayView.isShipper()}">
+									<h:outputText value="" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="" />
+								</p:column>
+								<p:column  style="font-weight: bold;" >
+									<h:outputText value="#{msg['renom_intraday_shipper']}"  />
+								</p:column>
+
+								<p:column  style="font-weight: bold;" >
+									<h:outputText value="#{msg['day_nom_status']}"  />
+								</p:column>
+								
+							</p:row>
+							<p:row>
+								<p:column  style="font-weight: bold;" rendered="#{!renominationIntradayView.isShipper()}">
+									<h:outputText value="#{msg['renom_intraday_all_shippers']}" />
+								</p:column>
+								<p:column style="text-align:center">
+									<p:selectBooleanCheckbox id="allShippers" value="#{renominationIntradayView.filters.allShippers}" 
+									rendered="#{!renominationIntradayView.isShipper()}" >
+										<p:ajax update="shipperId" listener="#{renominationIntradayView.disabledComboShippers()}"/>
+									</p:selectBooleanCheckbox>					
+								</p:column>
+								<p:column>
+									<p:selectOneMenu id="shipperId" style="width:100px" value="#{renominationIntradayView.filters.shipperId}" 
+										disabled="#{renominationIntradayView.isShipper() or renominationIntradayView.disabledComboShippers()}" >
+ 								   		<f:selectItem itemLabel="" itemValue="" />
+      									<f:selectItems value="#{renominationIntradayView.shipperIds.entrySet()}" var="entry" 
+      											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>
+								</p:column>
+								<p:column>
+									<p:selectOneMenu id="status" style="width:100px" value="#{renominationIntradayView.filters.status}" >
+ 								   		<f:selectItem itemLabel="" itemValue="" />
+      									<f:selectItems value="#{renominationIntradayView.status.entrySet()}" var="entry" 
+      											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>
+								</p:column>
+							</p:row>
+						</p:panelGrid>
+
+						<p:panelGrid columns="2" style="float:right;top:0px">
+							<shiro:hasPermission name="#{changeSystemView.system}.NOMINATION.INTRADAY.RE_NOMINATION.QUERY">									
+								<p:commandButton value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{renominationIntradayView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,@form"/>
+							</shiro:hasPermission>
+
+							<p:commandButton  onclick="PF('nomIntradayLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" 
+								value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+
+							<shiro:hasPermission name="#{changeSystemView.system}.NOMINATION.INTRADAY.RE_NOMINATION.QUERY">	
+								 <p:commandButton value="#{msg['clear']}"
+									actionListener="#{renominationIntradayView.onClear}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" 
+									process="@this"
+									update="msgs,@form"/>
+							</shiro:hasPermission>
+							<shiro:hasPermission name="#{changeSystemView.system}.NOMINATION.INTRADAY.RE_NOMINATION.ADD">	
+								<p:commandButton id="new" type="button" value="#{msg['new']}" icon="ui-icon fa fa-save" style="float:right;"
+	        							onclick="PF('dlgNewRenomination').show();"
+	        						/>
+							</shiro:hasPermission>
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center" resizable="false" closable="false" collapsible="false" style="border: 0;">
+
+					<p:dataTable id="renominationIntradayTable" widgetVar="w_renominationIntradayTable" var="item" value="#{renominationIntradayView.items}"
+                     style="margin-bottom:20px;border-collapse:collapse" sortBy="#{item.intraday_renom_code}">
+							<f:facet name="header">
+									<p:outputPanel style="height:25px">
+										<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+		        						<p:columnToggler datasource="renominationIntradayTable" trigger="toggler" style="width:200px"/>
+									</p:outputPanel>        										          
+					       	</f:facet>	
+					  		<p:column headerText="Expand" style="width:40px">
+            					<p:rowToggler />
+        					</p:column>
+        					<p:column headerText="#{msg['renom_intraday_code']}">
+					       		<h:outputText value="#{item.intraday_renom_code}" />
+					       </p:column>
+					       <p:column headerText="#{msg['renom_intraday_day']}">
+					       		<h:outputText value="#{item.gas_day}" >
+					       			<f:convertDateTime pattern="dd/MM/yyyy" />
+					       		</h:outputText>
+					       </p:column>
+					       <p:column headerText="#{msg['renom_intraday_hour']}">
+					       		<h:outputText value="#{item.hour}" />
+					       </p:column>
+					       <p:column headerText="#{msg['renom_intraday_group_code']}">
+					           <h:outputText value="#{item.user_group_code}" />
+					       </p:column>
+					       <p:column headerText="#{msg['renom_intraday_group_name']}">
+					           <h:outputText value="#{item.user_group_name}" />
+					       </p:column>
+					       <p:column headerText="#{msg['day_nom_status']}">
+					           <h:outputText value="#{item.status}" />
+					       </p:column>
+
+							<shiro:hasPermission name="#{changeSystemView.system}.NOMINATION.INTRADAY.RE_NOMINATION.MAN">		
+						       <p:column headerText="#{msg['renom_intraday_accept_reject']}" >
+						           <p:commandButton value="#{msg['accept']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" rendered="#{item.status=='SUBMITTED'}"
+									action="#{renominationIntradayView.accept(item)}" update=":#{p:component('renominationIntradayTable')}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" />
+								<p:commandButton value="#{msg['reject']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close" rendered="#{item.status=='SUBMITTED'}"
+									action="#{renominationIntradayView.reject(item)}" update=":#{p:component('renominationIntradayTable')}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" />
+						       </p:column>
+						    </shiro:hasPermission>
+
+					       
+					       <p:rowExpansion>
+
+
+							<p:dataTable id="renominationIntradayTable_det" widgetVar="w_renominationIntradayTable_det"
+								var="det" value="#{item.detail}"
+								reflow="true" 
+								style="margin-bottom:20px;border-collapse:collapse"
+								paginator="false">
+
+							       <p:column headerText="#{msg['renom_intraday_point']}">
+							           <h:outputText value="#{det.point_code}" />
+							       </p:column>
+							       <p:column headerText="#{msg['renom_intraday_period']}">
+							           <h:outputText value="#{det.minutes}" />
+							       </p:column>
+							       
+							       <p:column headerText="#{msg['renom_intraday_energy']}">
+							       		<h:outputText value="#{det.energy}">
+						                   	<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+						                </h:outputText>
+							       </p:column>
+							       <p:column headerText="#{msg['renom_intraday_volume']}">
+							       		<h:outputText value="#{det.volume}">
+						                   	<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3" />
+						                </h:outputText>
+							       </p:column>
+
+							</p:dataTable>
+
+						</p:rowExpansion>					       
+					       
+					</p:dataTable>	
+					
+				</p:layoutUnit>
+			</p:layout>
+			
+
+			
+		</h:form> 
+		<p:dialog widgetVar="dlgNewRenomination" resizable="false"  closable="true" modal="true" appendTo="@(body)" position="100,30" header="New Renomination Intraday">
+			<h:form id="formNewEntity" onsubmit="return false;">
+			<p:growl id="msgs" showDetail="true"  life="5000"/>
+				<p:panelGrid columns="4" style="width:100%">
+					<p:panelGrid>
+									
+						<p:row>
+							<p:column  style="font-weight: bold;" rendered="#{!renominationIntradayView.isShipper()}">
+								<h:outputText value="" />
+							</p:column>
+							<p:column  style="font-weight: bold;">
+								<h:outputText value="" />
+							</p:column>
+							<p:column  style="font-weight: bold;" >
+								<h:outputText value="#{msg['renom_intraday_shipper']}"  />
+							</p:column>
+
+							<p:column  style="font-weight: bold;" >
+								<h:outputText value="#{msg['renom_intraday_hour']}"  />
+							</p:column>
+						</p:row>
+						<p:row>
+							<p:column  style="font-weight: bold;" rendered="#{!renominationIntradayView.isShipper()}">
+								<h:outputText value="#{msg['renom_intraday_all_shippers']}" />
+							</p:column>
+							<p:column style="text-align:center">
+								<p:selectBooleanCheckbox id="allShippers_d" value="#{renominationIntradayView.newReIntraday.allShippers}" 
+								rendered="#{!renominationIntradayView.isShipper()}" >
+									<p:ajax update="shipperId_d" listener="#{renominationIntradayView.disabledComboShippersDialog()}"/>
+								</p:selectBooleanCheckbox>					
+							</p:column>
+							<p:column>
+								<p:selectOneMenu id="shipperId_d" style="width:100px" value="#{renominationIntradayView.newReIntraday.shipperId}" 
+									disabled="#{renominationIntradayView.isShipper() or renominationIntradayView.disabledComboShippersDialog()}" >
+								   		<f:selectItem itemLabel="" itemValue="" />
+     									<f:selectItems value="#{renominationIntradayView.shipperIds.entrySet()}" var="entry" 
+     											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+				           		</p:selectOneMenu>
+							</p:column>
+							<p:column>
+								<p:selectOneMenu id="hour" style="width:100px" value="#{renominationIntradayView.newReIntraday.hour}" >
+								   		<f:selectItem itemLabel="" itemValue="" />
+     									<f:selectItems value="#{renominationIntradayView.hours.entrySet()}" var="entry" 
+     											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+				           		</p:selectOneMenu>
+							</p:column>
+						</p:row>
+						
+						<p:row>
+							<p:column colspan="4">
+								<p:dataTable id="renominationIntradayTable" var="item" value="#{renominationIntradayView.newReIntraday.detail}" editable="true"
+			                     style="margin-bottom:20px;border-collapse:collapse" sortBy="#{item.point_code}">
+										<p:ajax event="rowEdit"       listener="#{renominationIntradayView.onRowEdit}" update=":form:msgs"/>   
+										<p:ajax event="rowEditCancel" listener="#{renominationIntradayView.onRowCancel}" update=":form:msgs"/>
+										
+								       <p:column headerText="#{msg['renom_intraday_day']}">
+								       		<h:outputText value="#{item.gas_day}" >
+								       			<f:convertDateTime pattern="dd/MM/yyyy" />
+								       		</h:outputText>
+								       </p:column>
+								       <p:column headerText="#{msg['renom_intraday_period']}">
+								       		<p:cellEditor>
+							                    <f:facet name="output">
+							                        <h:outputText value="#{item.minutes}"/>
+							                    </f:facet>
+							                    <f:facet name="input">
+									           		<p:selectOneMenu required="true" requiredMessage="#{msg['renom_intraday_period']}: #{msg['empty_field']}" style="width:100px" value="#{item.minutes}" 
+														>
+				 								   		<f:selectItem itemLabel="" itemValue="" />
+				      									<f:selectItem itemLabel="15" itemValue="15" />
+				      									<f:selectItem itemLabel="30" itemValue="30" />
+				      									<f:selectItem itemLabel="45" itemValue="45" />
+				      									<f:selectItem itemLabel="00" itemValue="00" />
+									           		</p:selectOneMenu>
+									           	</f:facet>
+									         </p:cellEditor>
+								       </p:column>
+								       <p:column headerText="#{msg['renom_intraday_point']}">
+								           <h:outputText value="#{item.point_code}" />
+								       </p:column>
+								       <p:column headerText="#{msg['renom_intraday_energy']}">
+								        	<p:cellEditor>
+							                    <f:facet name="output">
+							                        <h:outputText value="#{item.energy}">
+							                        	<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							                        </h:outputText>
+							                    </f:facet>
+							                    <f:facet name="input">
+									           		<p:inputNumber value="#{item.energy}" required="true" requiredMessage="#{msg['renom_intraday_energy']}: #{msg['empty_field']}" decimalSeparator="." thousandSeparator="," decimalPlaces="3"/>
+									           	</f:facet>
+									         </p:cellEditor>
+								       </p:column>
+								       <p:column headerText="#{msg['renom_intraday_volume']}">
+								       		<p:cellEditor>
+							                    <f:facet name="output">
+							                        <h:outputText value="#{item.volume}">
+							                        	<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3" />
+							                        </h:outputText>
+							                    </f:facet>
+							                    <f:facet name="input">
+								           			<p:inputNumber value="#{item.volume}" required="true" requiredMessage="#{msg['renom_intraday_volume']}: #{msg['empty_field']}"  decimalSeparator="." thousandSeparator="," decimalPlaces="3"/>
+								           		</f:facet>
+								           	</p:cellEditor>
+								       </p:column>
+								       <p:column   style="width:32px">
+								            <p:rowEditor/>
+								       </p:column>
+								</p:dataTable>	
+							</p:column>
+						</p:row>
+					</p:panelGrid>
+				</p:panelGrid>
+				
+				<p:separator/>
+				<p:panelGrid>
+					<p:row>
+						<p:column>
+							<p:commandButton value="#{msg['save']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" validateClient="true"
+								action="#{renominationIntradayView.save}" update=":#{p:component('renominationIntradayTable')},formNewEntity"
+								onstart="PF('cargando').show()"
+								oncomplete="PF('dlgNewRenomination').hide(),PF('cargando').hide()" />
+			        		<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close" 
+			        			update="formNewEntity" process="@this" actionListener="#{renominationIntradayView.cancel}"
+			        			oncomplete="PF('dlgNewRenomination').hide()"/>
+						</p:column>					
+					</p:row>
+				</p:panelGrid>							
+			
+			</h:form>
+		</p:dialog>
+			
+	</ui:define>
+</ui:composition>  

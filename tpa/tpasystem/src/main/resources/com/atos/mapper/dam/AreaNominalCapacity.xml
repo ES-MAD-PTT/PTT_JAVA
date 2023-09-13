@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<!-- Namespace -->
+<mapper namespace="com.atos.mapper.dam.AreaNominalCapacityMapper">
+    <resultMap type="com.atos.beans.dam.AreaNominalCapacityBean" id="AreaNominalCapacity">
+        <id column="idn_area_tech_capacity" property="idn_area_tech_capacity"/>
+        <result property="idn_area" column="idn_area"/>
+        <result property="area_code" column="idn_area_code"/>   
+        <result property="area_desc" column="idn_area_desc"/>   
+        <result property="technicalCapacity" column="technical_capacity"/>   
+        <result property="startDate" column="start_date"/>
+        <result property="startYear" column="start_year"/>   
+        <result property="endDate" column="end_date"/>   
+    </resultMap>
+     
+    <select id="selectAreaNominalCapacitys" resultMap="AreaNominalCapacity" >
+		SELECT  tc.idn_area_tech_capacity as idn_area_tech_capacity,
+			tc.idn_area as idn_area,
+			a.area_desc as area_desc,
+			a.area_code as area_code,
+			tc.technical_capacity as technical_capacity,
+			tc.start_date as start_date,
+			to_char(tc.start_date, 'YYYY') as start_year,
+			tc.end_date as end_date
+			FROM tpa_tarea_tech_capacity tc,
+			TPA_VAREA_TPA a,
+			TPA_VZONE_TPA z
+		WHERE tc.idn_area= a.idn_area
+			AND tc.VERSION_DATE = (SELECT MAX(tcx.version_date) 
+									FROM tpa_tarea_tech_capacity tcx
+									WHERE tc.idn_area = tcx.idn_area
+									AND tc.start_date = tcx.start_date)
+		AND NVL(TC.END_DATE, TC.START_DATE) >= TC.START_DATE
+			   <!-- offshore --> 
+	    AND z.idn_zone= a.idn_zone
+		AND z.idn_pipeline_system = #{idn_system}
+   
+	<if test="startDate != null">
+		AND nvl(tc.end_date,nvl((SELECT MIN(tcy.start_date) - 1
+	              			     FROM tpa_tarea_tech_capacity tcy
+                               	 WHERE tcy.idn_area = tc.idn_area
+                           		 AND tcy.start_date > tc.start_date
+					             AND NVL(TCY.END_DATE, TCY.START_DATE) >= TCY.START_DATE
+                                 AND TCY.VERSION_DATE = (SELECT MAX(tcz.VERSION_DATE) 
+                                                         FROM tpa_tarea_tech_capacity tcz
+                                                         WHERE tcz.idn_area = tcy.idn_area
+		                                                 AND tcz.start_date = tcy.start_date)) ,to_date('9999/12/31','yyyy/mm/dd')))>=  #{startDate}
+	</if>
+	<if test="endDate != null">
+		AND #{endDate} >= tc.start_date 
+	</if>
+	<if test="area != null and area != ''">
+		AND tc.idn_area = #{area}
+	</if>
+		order by  UPPER (a.area_code), tc.start_date DESC
+    </select>
+
+	<select id="selectAreaNominalCapacityArea" resultType="com.atos.beans.ComboFilterNS">
+		SELECT  a.idn_area as key, a.area_code as value
+		FROM TPA_VAREA_TPA a
+		order by a.area_code
+	</select>
+
+	<select id="selectAreaNominalCapacityAreaSystem" resultType="com.atos.beans.ComboFilterNS">
+		SELECT  a.idn_area as key, a.area_code as value
+		FROM TPA_VAREA_TPA a, TPA_VZONE_TPA z
+		WHERE z.idn_zone= a.idn_zone
+		AND z.idn_pipeline_system = #{idn_system}
+		order by UPPER(a.area_code)
+
+	</select>
+
+	<insert id="insertAreaNominalCapacity" useGeneratedKeys="true"
+		keyProperty="idn_area_tech_capacity" keyColumn="idn_area_tech_capacity"
+		parameterType="com.atos.beans.dam.AreaNominalCapacityBean">
+		INSERT INTO tpa_tarea_tech_capacity
+		(idn_area_tech_capacity,idn_area, start_date, technical_Capacity,aud_ins_user,aud_last_user)
+		VALUES
+		(tpa_sarea_tech_capacity.nextval,
+		#{idn_area},
+		#{startDate},
+		#{technicalCapacity},
+		#{username},
+		#{username})
+	</insert>
+
+	<update id="deleteAreaNominalCapacity" parameterType="com.atos.beans.dam.AreaNominalCapacityBean">
+		UPDATE
+		tpa_tarea_tech_capacity set
+		end_date = #{endDate},
+		aud_last_user=#{username}
+		WHERE idn_area_tech_capacity = #{idn_area_tech_capacity}
+	</update>
+
+	<select id="getAreaNominalStartDate" resultType="java.util.Date">
+		SELECT 
+		tc.start_date as start_date
+		FROM tpa_tarea_tech_capacity tc
+		WHERE tc.idn_area_tech_capacity = #{idn_area_tech_capacity}
+	</select>
+</mapper>
+		
+	

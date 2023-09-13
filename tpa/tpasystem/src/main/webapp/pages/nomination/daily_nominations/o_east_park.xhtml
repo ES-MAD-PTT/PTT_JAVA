@@ -1,0 +1,71 @@
+<ui:composition
+	xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+<p:dataTable id="o_east_table_park" var="o_east_park" value="#{dayNom.o_east_tab_park}" editable="true" style="margin-bottom:20px;border-collapse:collapse"
+paginator="true" rows="15" rowsPerPageTemplate="5,10,15,20,25">
+<f:facet name="header">
+	 						<p:outputPanel style="height:30px">
+							<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+      						<p:columnToggler datasource="o_east_table_park" trigger="toggler" style="width:200px"/>
+							</p:outputPanel>
+							</f:facet>
+	<!-- Se permite editar con cualquiera de los dos permisos, Management o Modification -->
+<shiro:hasPermission name="#{changeSystemView.system}.NOMINATIONS.DAILY.MANAGEMENT.MAN">
+	<p:ajax event="rowEdit" listener="#{dayNom.onRowEdit}" update=":form:msgs" />
+	<p:ajax event="rowEditCancel" listener="#{dayNom.onRowCancel}" update=":form:msgs" />
+</shiro:hasPermission>
+<shiro:hasPermission name="#{changeSystemView.system}.NOMINATIONS.DAILY.MANAGEMENT.MOD">
+	<p:ajax event="rowEdit" listener="#{dayNom.onRowEdit}" update=":form:msgs" />
+	<p:ajax event="rowEditCancel" listener="#{dayNom.onRowCancel}" update=":form:msgs" />
+</shiro:hasPermission>
+
+	<p:column headerText="#{msg['nom_supply_demand']}">
+	<h:outputText value="#{o_east_park.supply_demand}" />
+	</p:column>
+<!-- 	<p:column headerText="#{msg['nom_area_desc']}">
+	<h:outputText value="#{o_east_park.area}" />
+	</p:column>
+	<p:column headerText="#{msg['nom_area_code']}">
+	<h:outputText value="#{o_east_park.area_code}" />
+	</p:column>
+	<p:column headerText="#{msg['nom_subarea']}">
+	<h:outputText value="#{o_east_park.subarea}" />
+	</p:column> -->
+	<p:column headerText="#{msg['nom_concept_id']}">
+	<h:outputText value="#{o_east_park.area_concept}" />
+	</p:column>
+<!-- 	<p:column headerText="#{msg['nom_type']}">
+	<h:outputText value="#{o_east_park.cust_type}" />
+	</p:column> -->
+	<p:column headerText="#{msg['nom_unit']}">
+	<h:outputText value="#{o_east_park.unit}" />
+	</p:column>
+	<p:column headerText="#{msg['nom_entry_exit']}">
+	<h:outputText value="#{o_east_park.entry_exit}" />
+	</p:column>
+	<p:column headerText="#{msg['nom_total']}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" value="#{o_east_park.total}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column headerText="#{msg['nom_total']}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" value="#{o_east_park.total}" >
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{o_east_park.total}" style="width:100%;text-align: right" label="#{msg['nom_total']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	
+	<!-- Se permite editar con cualquiera de los dos permisos, Management o Modification -->
+	<p:column style="width:32px" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:rowEditor />
+	</p:column>
+
+</p:dataTable>
+</ui:composition>

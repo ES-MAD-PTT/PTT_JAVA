@@ -1,0 +1,581 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_dam']}" url="#" />
+			<p:menuitem value="#{msg['menu_assets']}" url="#" />
+			<p:menuitem value="#{msg['menu_nom']}" url="/pages/dam/nominationPoints.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="5000"/>
+			
+            <p:layout widgetVar="nominationPointLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">	
+					
+				<p:panelGrid columns="2" style="width:100%">
+					
+						<p:panelGrid>
+							<p:row>
+								<p:column  style="font-weight: bold;" >
+									<h:outputText value="#{msg['nominationPoint_ID']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['nominationPoint_Point_Type']}" />
+								</p:column>
+							<!-- offshore
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['nominationPoint_System']}" />
+								</p:column>
+							-->
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['nominationPoint_Zone']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['nominationPoint_Area']}" />
+								</p:column>
+								
+							</p:row>
+							<p:row>
+								<p:column>
+									<p:selectOneMenu id="id"  style="width:100px"   value="#{nominationPointView.filters.id}" >
+							               		<f:selectItem itemLabel="" itemValue="" />
+        								        <f:selectItems value="#{nominationPointView.ids.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>									
+								</p:column>
+								<p:column>
+									<p:selectOneMenu id="pointType" style="width:100px"    value="#{nominationPointView.filters.pointType}" >
+												<f:selectItem itemLabel="" itemValue="" />
+        								        <f:selectItems value="#{nominationPointView.pointTypes.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					               	</p:selectOneMenu>									
+								</p:column>
+								<!-- offshore
+								<p:column>
+									<p:selectOneMenu id="system" style="width:100px"  value="#{nominationPointView.filters.systemCode}" >
+										<f:selectItem itemLabel="" itemValue="" />
+							        	<f:selectItems value="#{nominationPointView.systems.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+							        	
+					               	</p:selectOneMenu>										
+								</p:column>
+								 -->
+								<p:column>
+									<p:selectOneMenu id="zone" style="width:100px"   value="#{nominationPointView.filters.zone}" >
+							        	<f:selectItem itemLabel="" itemValue="" />
+							            <!--offshore
+							             <f:selectItems value="#{nominationPointView.zonesFiltro.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />-->
+							             <f:selectItems value="#{nominationPointView.zonesSystem.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+							            
+				               	</p:selectOneMenu>										
+								</p:column>
+								<p:column>
+									<p:selectOneMenu id="area" style="width:100px"  value="#{nominationPointView.filters.area}" >
+										   		<f:selectItem itemLabel="" itemValue="" />
+										   		<!--offshore
+							               		<f:selectItems value="#{nominationPointView.areas.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />--> 
+							               		<f:selectItems value="#{nominationPointView.areasSystem.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					               	</p:selectOneMenu>									
+								</p:column>
+								
+							</p:row>
+						<p:row>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['nominationPoint_Start_Date']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['nominationPoint_End_Date']}" />
+								</p:column>
+						</p:row>
+						<p:row>
+							<p:column>
+								<p:calendar id="fecInicio" size="10" pattern="dd/MM/yyyy" mask="true" value="#{nominationPointView.filters.startDate}"
+										showOn="button" navigator="true" style="width: 100%;">
+										<p:ajax event="dateSelect" update="fecInicio"></p:ajax>
+										<p:ajax event="change" update="fecInicio"></p:ajax>
+									</p:calendar>
+								</p:column>
+								<p:column>
+									<p:calendar id="fecFin" size="10" pattern="dd/MM/yyyy" mask="true" value="#{nominationPointView.filters.endDate}"
+										showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="fecFin"></p:ajax>
+										<p:ajax event="change" update="fecFin"></p:ajax>
+									</p:calendar>
+								</p:column>
+						</p:row>	
+						</p:panelGrid>
+						<p:panelGrid columns="2" style="float:right;top:0px">
+							<shiro:hasPermission name="#{changeSystemView.system}.DAM.NOMINATION_POINTS.QUERY">
+								<p:commandButton value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{nominationPointView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,:#{p:component('nominationPoints1')}"/>
+							</shiro:hasPermission>
+							
+							<p:commandButton  onclick="PF('nominationPointLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+							
+							<shiro:hasPermission name="#{changeSystemView.system}.DAM.NOMINATION_POINTS.QUERY">										
+								 <p:commandButton value="#{msg['clear']}"
+									actionListener="#{nominationPointView.onClear}"	
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" 
+									process="@this" 
+									update="form"/>  
+							</shiro:hasPermission>
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center" resizable="false" closable="false" collapsible="false">
+					<p:dataTable widgetVar="w_nominationPoint1"  id="nominationPoints1" var="nominationPoint" value="#{nominationPointView.items}"
+						 reflow="true" editable="true" 
+						style="width:2000px; margin-bottom:20px;border-collapse:collapse"
+					    paginator="true" rows="10" 
+					    rowsPerPageTemplate="5,10,15,20,25,#{nominationPointView.itemsSize}" 
+					    
+					    scrollable="true"  scrollHeight="100%"
+					    resizableColumns="false" >
+
+							<f:facet name="header"> 
+								<p:outputPanel style="height:25px">
+									<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+	        						<p:columnToggler datasource="nominationPoints1" trigger="toggler" style="width:200px"/>
+	        						<shiro:hasPermission name="#{changeSystemView.system}.DAM.NOMINATION_POINTS.ADD">
+		        						<p:commandButton id="new" type="button" value="New" icon="ui-icon fa fa-save" style="float:right;"
+		        							onclick="PF('dlgNewNominationPoint').show();"
+		        						/>
+	        						</shiro:hasPermission>
+	        						<shiro:hasPermission name="#{changeSystemView.system}.DAM.NOMINATION_POINTS.QUERY">
+					        			<h:commandLink style="float:right">
+										       <p:graphicImage name="/images/excel.png" width="24"/>
+										       <p:dataExporter type="xls" target="nominationPoints1" fileName="NominationPoints" postProcessor="#{nominationPointView.postProcessXLS}"/>
+										</h:commandLink>	 
+								  </shiro:hasPermission>
+								</p:outputPanel>        										          
+					        </f:facet>
+					        
+					        <shiro:hasPermission name="#{changeSystemView.system}.DAM.NOMINATION_POINTS.MOD">
+						 		<p:ajax event="rowEditInit" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','hidden')});" />
+								<p:ajax event="rowEdit" listener="#{nominationPointView.onRowEdit}" update=":form:msgs" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>   
+								<p:ajax event="rowEditCancel" listener="#{nominationPointView.onRowCancel}" update=":form:msgs" onstart="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>
+							 </shiro:hasPermission>
+					  	  
+					       <p:column styleClass="" headerText="#{msg['nominationPoint_ID']}" style="width: 130px; " sortBy="#{nominationPoint.id}" filterMatchMode="contains" filterBy="#{nominationPoint.id}">
+					       		<h:outputText value="#{nominationPoint.id}" />
+					       </p:column>
+					 
+					       <p:column  headerText="#{msg['nominationPoint_Name']}" style="width: 150px; " sortBy="#{nominationPoint.name}" filterMatchMode="contains" filterBy="#{nominationPoint.name}">
+					           <p:cellEditor>
+					               <f:facet name="output"><h:outputText styleClass="word-break: break-all"  value="#{nominationPoint.name}" /></f:facet>
+					               <f:facet name="input">
+					               			<p:inputText styleClass="word-wrap: break-word;" value="#{nominationPoint.name}" maxlength="120" 
+					               				required="true"  style="width:100%" label="#{msg['nominationPoint_Name']}" disabled="#{nominationPointView.disabledField(nominationPoint)}"
+					               				requiredMessage="#{msg['nominationPoint_Name']}: #{msg['empty_field']}" 
+					               				validatorMessage="#{msg['nominationPoint_Name']}: #{msg['lenght_field']} 120">
+					               				<f:validateLength maximum="120"/>
+					               				<f:validateRequired/>
+					               			</p:inputText>	
+					               	</f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['nominationPoint_Point_Type']}" style="width: 70px;" sortBy="#{nominationPoint.pointType}" filterMatchMode="contains"  filterBy="#{nominationPoint.pointType}">
+					          <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{nominationPoint.pointType}" /></f:facet>
+					               <f:facet name="input" >
+					               		<p:selectOneMenu id="pointType"  style="width:75%" value="#{nominationPoint.idn_system_point_type}" 
+					               				 required="true" disabled="#{nominationPointView.disabledField(nominationPoint)}"
+					               				>
+							               		<f:selectItems value="#{nominationPointView.pointTypes.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					               		</p:selectOneMenu>
+					               	</f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					         <p:column headerText="#{msg['nominationPoint_System']}" style="width: 70px;" sortBy="#{nominationPoint.systemCode}" filterMatchMode="contains" filterBy="#{nominationPoint.systemCode}">
+					         <h:outputText value="#{nominationPoint.systemCode}" />
+					       		<!--   <p:cellEditor> offshore ahora ya noe s editable
+					               <f:facet name="output"><h:outputText value="#{nominationPoint.systemCode}" /></f:facet>
+					                <f:facet name="input" >
+					               		<p:selectOneMenu id="system"   style="width:75%" value="#{nominationPoint.idn_pipeline_system}" 
+					               				required="true" disabled="#{nominationPointView.disabledField(nominationPoint)}"
+					               				requiredMessage="#{msg['nominationPoint_System']}: #{msg['empty_field']}">
+					               				<f:selectItem itemLabel="" itemValue="" />
+							               		<f:selectItems value="#{nominationPointView.systems.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+							               		<p:ajax  event="valueChange" update="zone,area" />
+					               		</p:selectOneMenu>
+					               	</f:facet>
+					           </p:cellEditor>  --> 
+					       </p:column>
+					       
+					       
+					        <p:column headerText="#{msg['nominationPoint_Zone']}" style="width: 70px;" sortBy="#{nominationPoint.zone}" filterMatchMode="contains" filterBy="#{nominationPoint.zone}">
+					       		<p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{nominationPoint.zone}" /></f:facet>
+					               <f:facet name="input" >
+					               		<p:selectOneMenu id="zone"  style="width:75%"  value="#{nominationPoint.idn_zone}" 
+					               				required="true" disabled="#{nominationPointView.disabledField(nominationPoint)}"
+					               				requiredMessage="#{msg['nominationPoint_Zone']}: #{msg['empty_field']}">
+							               		<!--  <f:selectItems value="#{nominationPointView.zones.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />-->
+							               		<f:selectItem itemLabel="" itemValue="" />
+							               		<!--offShore 
+							               		<f:selectItems value="#{nominationPointView.getZones(nominationPoint).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" /> -->
+							               		<f:selectItems value="#{nominationPointView.zonesSystem.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+							               		<p:ajax event="valueChange" update="area"/>							               		
+					               		</p:selectOneMenu>
+					               	</f:facet>
+					           </p:cellEditor> 
+					       </p:column>
+					       <p:column headerText="#{msg['nominationPoint_Area']}" style="width: 70px;" sortBy="#{nominationPoint.area}" filterMatchMode="contains" filterBy="#{nominationPoint.area}">
+					         
+					         <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{nominationPoint.area}" /></f:facet>
+					               <f:facet name="input" >
+					               		<p:selectOneMenu id="area" style="width:75%"  value="#{nominationPoint.idn_area}" 
+					               			required="true" disabled="#{nominationPointView.disabledField(nominationPoint)}"
+					               			requiredMessage="#{msg['nominationPoint_Area']}: #{msg['empty_field']}">
+					               			<f:selectItem itemLabel="" itemValue="" />
+							               	<f:selectItems value="#{nominationPointView.getAreas(nominationPoint).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					               		</p:selectOneMenu>
+					               	</f:facet>
+					           </p:cellEditor>  
+					         
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['nominationPoint_Latitude']}" style="width: 70px;" sortBy="#{nominationPoint.latitude}" filterMatchMode="contains" filterBy="#{nominationPoint.latitude}">
+					       
+					           <p:cellEditor>
+					               <f:facet name="output">
+					               		<h:outputText value="#{nominationPoint.latitude}" style="float:right" >
+					               			<!--  sin formato ... poner lo que venga de la bd
+					               			<f:convertNumber pattern="#00.00000" />-->
+					               		</h:outputText>
+					               	</f:facet>
+					               <f:facet name="input">
+					               		<p:inputNumber value="#{nominationPoint.latitude}"  style="width:100%" 
+					               					label="#{msg['nominationPoint_Latitude']}" disabled="#{nominationPointView.disabledField(nominationPoint)}"
+					               					requiredMessage="#{msg['nominationPoint_Latitude']}: #{msg['empty_field']}" 
+					               					validatorMessage="#{msg['nominationPoint_Latitude']}: #{msg['lenght_field']} "
+					               					decimalSeparator="." thousandSeparator="," > 	
+					               		</p:inputNumber>
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       <p:column headerText="#{msg['nominationPoint_Longitude']}" style="width: 70px;" sortBy="#{nominationPoint.longitude}" filterMatchMode="contains" filterBy="#{nominationPoint.longitude}">
+					    
+					           <p:cellEditor>
+					               <f:facet name="output">
+					               		<h:outputText value="#{nominationPoint.longitude}"  style="float:right">
+					               			<!--  sin formato ... poner lo que venga de la bd
+					               			<f:convertNumber pattern="##,##0.00####" />-->
+					               		</h:outputText>
+					               	</f:facet>
+					               <f:facet name="input">
+					               		<p:inputNumber value="#{nominationPoint.longitude}"  style="width:100%" 
+					               					label="#{msg['nominationPoint_Longitude']}" disabled="#{nominationPointView.disabledField(nominationPoint)}"
+					               					requiredMessage="#{msg['nominationPoint_Longitude']}: #{msg['empty_field']}" 
+					               					validatorMessage="#{msg['nominationPoint_Longitude']}: #{msg['lenght_field']} "
+					               					decimalSeparator="." thousandSeparator=","> 
+					               			
+					               		</p:inputNumber>
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					        <p:column styleClass="wrap"  headerText="#{msg['nominationPoint_Nominal_Capacity']}" style="width: 90px;" sortBy="#{nominationPoint.nominalCapacity}" filterMatchMode="contains" filterBy="#{nominationPoint.nominalCapacity}">
+					             <h:outputText value="#{nominationPoint.nominalCapacity}" style="float:right" >
+					             	<f:convertNumber pattern="#,##0" />
+					             </h:outputText>
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['nominationPoint_Min_Pressure']}" style="width:70px;" sortBy="#{nominationPoint.minPressure}" filterMatchMode="contains" filterBy="#{nominationPoint.minPressure}">
+					   
+					           <p:cellEditor>
+					               <f:facet name="output">
+					               		<h:outputText value="#{nominationPoint.minPressure}" style="float:right"  >
+					               			<f:convertNumber pattern="#,##0" />
+					               		</h:outputText>
+					               	</f:facet>
+					               <f:facet name="input">
+					               		<p:inputNumber value="#{nominationPoint.minPressure}"  style="width:100%" 
+					               						label="#{msg['nominationPoint_Min_Pressure']}" disabled="#{nominationPointView.disabledField(nominationPoint)}"
+					               						requiredMessage="#{msg['nominationPoint_Min_Pressure']}: #{msg['empty_field']}" 
+					               						validatorMessage="#{msg['nominationPoint_Min_Pressure']}: #{msg['lenght_field']} "
+					               						decimalSeparator="." thousandSeparator="," decimalPlaces="0">
+					               		</p:inputNumber>
+					               </f:facet>
+					           </p:cellEditor>
+					           
+					       </p:column>
+					       
+					 	   <p:column headerText="#{msg['nominationPoint_Max_Pressure']}" style="width: 70px;" sortBy="#{nominationPoint.maxPressure}" filterMatchMode="contains" filterBy="#{nominationPoint.maxPressure}">
+					
+					           <p:cellEditor>
+					               <f:facet name="output">
+					               	<h:outputText value="#{nominationPoint.maxPressure}" style="float:right"  >
+					               			<f:convertNumber pattern="#,##0" />
+					               		</h:outputText>
+					               </f:facet>
+					               <f:facet name="input">
+					               		<p:inputNumber value="#{nominationPoint.maxPressure}"  style="width:100%" 
+					               		label="#{msg['nominationPoint_Max_Pressure']}" disabled="#{nominationPointView.disabledField(nominationPoint)}"
+						               		requiredMessage="#{msg['nominationPoint_Max_Pressure']}: #{msg['empty_field']}" 
+						               		validatorMessage="#{msg['nominationPoint_Max_Pressure']}: #{msg['lenght_field']}"
+						               		decimalSeparator="." thousandSeparator="," decimalPlaces="0">
+					               		</p:inputNumber>
+					               	</f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					      
+					       
+					       <p:column headerText="#{msg['nominationPoint_Start_Date']}" style="width: 70px;" sortBy="#{nominationPoint.startDate}" >
+					          <p:cellEditor>
+					               <f:facet name="output">
+					               			<h:outputText value="#{nominationPoint.startDate}" >
+					              				<f:convertDateTime pattern="dd/MM/yyyy" />
+					              		 </h:outputText>
+					               </f:facet>
+					               <f:facet name="input">
+					               		<p:calendar required="true" id="startDate" value="#{nominationPoint.startDate}" pattern="dd/MM/yyyy" 
+					               			readonlyInput="true"   mindate="#{(nominationPointView.sysdate).getTime()}" 
+					               			disabled="#{nominationPointView.disabledField(nominationPoint)}"
+											requiredMessage="#{msg['nominationPoint_Start_Date']}: #{msg['empty_field']}" validatorMessage="#{msg['nominationPoint_Start_Date']}: #{msg['empty_field']}">
+											<f:convertDateTime pattern="dd/MM/yyyy"/>
+										</p:calendar>
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['nominationPoint_End_Date']}"  style="width: 70px;" sortBy="#{nominationPoint.endDate}" >
+					          <p:cellEditor>
+					               <f:facet name="output">
+					               		<h:outputText value="#{nominationPoint.endDate}" >
+					              			<f:convertDateTime pattern="dd/MM/yyyy" />
+					              		 </h:outputText>
+					               </f:facet>
+					               <f:facet name="input">
+					            	    <p:calendar  id="endDate" value="#{nominationPoint.endDate}" pattern="dd/MM/yyyy" 
+					            	    	mindate="#{(nominationPointView.sysdate).getTime()}" 
+					            	    	disabled="#{nominationPointView.disabledEndDate(nominationPoint)}"
+											requiredMessage="#{msg['nominationPoint_End_Date']}: #{msg['empty_field']}" validatorMessage="#{msg['nominationPoint_End_Date']}: #{msg['empty_field']}">
+											<f:convertDateTime pattern="dd/MM/yyyy"/>
+										</p:calendar>
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					      <shiro:hasPermission name="#{changeSystemView.system}.DAM.NOMINATION_POINTS.MOD">
+						       <p:column style="width:32px">
+						           <p:rowEditor rendered="#{nominationPointView.renderItemEditor(nominationPoint)}"/>
+						       </p:column>
+					       </shiro:hasPermission>
+					   </p:dataTable>
+				</p:layoutUnit>
+
+			</p:layout>
+		</h:form>
+		
+		<shiro:hasPermission name="#{changeSystemView.system}.DAM.NOMINATION_POINTS.ADD">
+		<p:dialog widgetVar="dlgNewNominationPoint" resizable="false"  closable="true" modal="true" appendTo="@(body)" header="New Nomination Points">
+		<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario
+		 <p:ajax event="close" update="formNewEntity"  process="@this" listener="#{nominationPointView.cancel}" />-->	
+			<h:form id="formNewEntity">
+			<p:growl id="msgs" showDetail="true"  life="5000"/>
+				<p:panelGrid columns="4" style="width:100%">
+					<p:panelGrid>
+						<p:row>
+							
+
+							<p:column>
+								<h:outputText value="#{msg['nominationPoint_ID']}" />
+							</p:column>
+							<p:column>
+								<p:inputText  id="id" maxlength="20" value="#{nominationPointView.newNominationPoint.id}" 
+									required="true" requiredMessage="#{msg['nominationPoint_ID']}: #{msg['empty_field']}" 
+									validatorMessage="#{msg['nominationPoint_ID']}: #{msg['lenght_field']} 20">
+									 <f:validateLength maximum="20"/>
+								</p:inputText>
+								<p:message for="id" />
+							</p:column>
+
+
+							<p:column>
+								<h:outputText value="#{msg['nominationPoint_Name']}" />
+							</p:column>
+							<p:column>
+								<p:inputText id="name" maxlength="120" value="#{nominationPointView.newNominationPoint.name}" 
+									 required="true" requiredMessage="#{msg['nominationPoint_Name']}: #{msg['empty_field']}" 
+									 validatorMessage="#{msg['nominationPoint_Name']}: #{msg['lenght_field']} 250">
+									 <f:validateLength maximum="120"/>
+								</p:inputText>
+								<p:message for="name" />
+							</p:column>
+							<p:column>
+								<h:outputText value="#{msg['nominationPoint_Point_Type']}" />
+							</p:column>
+							<p:column>
+								<p:selectOneMenu id="pointType"   value="#{nominationPointView.newNominationPoint.idn_system_point_type}"
+									required="true" requiredMessage="#{msg['nominationPoint_Point_Type']}: #{msg['empty_field']}" >
+							    	<f:selectItems value="#{nominationPointView.pointTypes.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+			               		</p:selectOneMenu>
+							<p:message for="pointType" />
+							</p:column>					
+						</p:row>
+					
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['nominationPoint_System']}" />
+							</p:column>
+							<p:column>
+			               		<p:selectOneMenu id="system" style="width:100px"    value="#{nominationPointView.newNominationPoint.idn_pipeline_system}" 
+			               			required="true" disabled="true" requiredMessage="#{msg['nominationPoint_System']}: #{msg['empty_field']}" >
+									
+									<f:selectItems value="#{nominationPointView.systems.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+									<!--  <p:ajax  event="valueChange" update="zone,area" />-->
+					            </p:selectOneMenu>	
+								<p:message for="system" />		
+							</p:column>
+							<p:column>
+								<h:outputText value="#{msg['nominationPoint_Zone']}" />
+							</p:column>
+							<p:column>
+								<p:selectOneMenu id="zone" style="width:100px"  value="#{nominationPointView.newNominationPoint.idn_zone}" 
+										 required="true"  requiredMessage="#{msg['nominationPoint_Zone']}: #{msg['empty_field']}"> 
+									   	 <f:selectItem itemLabel="" itemValue="" />
+									     <!--  <f:selectItems value="#{nominationPointView.getZones(nominationPointView.newNominationPoint).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />-->
+									     <f:selectItems value="#{nominationPointView.getZonesSystem().entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+									     <p:ajax  event="valueChange" update="area"/>
+					           	</p:selectOneMenu>	
+					           	<p:message for="zone" />								
+							</p:column>
+							<p:column>
+								<h:outputText value="#{msg['nominationPoint_Area']}" />
+							</p:column>
+							<p:column>
+								<p:selectOneMenu id="area" style="width:100px" value="#{nominationPointView.newNominationPoint.idn_area}" 
+									required="true" requiredMessage="#{msg['nominationPoint_Area']}: #{msg['empty_field']}"> >
+									<f:selectItem itemLabel="" itemValue="" />
+									<f:selectItems value="#{nominationPointView.getAreas(nominationPointView.newNominationPoint).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           	</p:selectOneMenu>	
+					            <p:message for="area" />								
+							</p:column>
+							
+						</p:row>
+					    <p:row>
+							<p:column>
+								<h:outputText value="#{msg['nominationPoint_Latitude']}" />
+							</p:column>
+							<p:column>
+								<p:message for="latitude" />
+								
+								<p:inputNumber required="false" id="latitude" value="#{nominationPointView.newNominationPoint.latitude}" size="12"
+												requiredMessage="#{msg['nominationPoint_Latitude']}: #{msg['empty_field']}"
+												validatorMessage="#{msg['nominationPoint_Latitude']}: #{msg['lenght_field']}"
+												decimalSeparator="." thousandSeparator="," >
+								  
+								</p:inputNumber>
+								<p:message for="latitude" />
+							</p:column>
+
+
+							<p:column>
+								<h:outputText value="#{msg['nominationPoint_Longitude']}" />
+							</p:column>
+							<p:column>
+								<p:inputNumber required="false" id="longitude" value="#{nominationPointView.newNominationPoint.longitude}" size="12"
+												requiredMessage="#{msg['nominationPoint_Longitude']}: #{msg['empty_field']}" 
+												validatorMessage="#{msg['nominationPoint_Longitude']}: #{msg['lenght_field']}"
+												decimalSeparator="." thousandSeparator="," >							
+								</p:inputNumber>
+								<p:message for="longitude" />
+							</p:column>
+
+							
+						</p:row>
+						<p:row>	
+							<p:column>
+								<h:outputText value="#{msg['nominationPoint_Min_Pressure']}" />
+							</p:column>
+							<p:column>
+								<p:inputNumber required="false" id="minPressure" value="#{nominationPointView.newNominationPoint.minPressure}" size="12"
+												requiredMessage="#{msg['nominationPoint_Min_Pressure']}: #{msg['empty_field']}" 
+												validatorMessage="#{msg['nominationPoint_Min_Pressure']}: #{msg['lenght_field']}"
+												decimalSeparator="." thousandSeparator="," decimalPlaces="0">
+								</p:inputNumber>
+								<p:message for="minPressure" />
+							</p:column>
+							<p:column>
+								<h:outputText value="#{msg['nominationPoint_Max_Pressure']}" />
+							</p:column>
+							<p:column>
+									<p:inputNumber required="false" id="maxPressure" value="#{nominationPointView.newNominationPoint.maxPressure}" size="12"
+												requiredMessage="#{msg['nominationPoint_Max_Pressure']}: #{msg['empty_field']}"
+									 			validatorMessage="#{msg['nominationPoint_Max_Pressure']}: #{msg['range_pressure']} "
+									 			decimalSeparator="." thousandSeparator="," decimalPlaces="0"
+									 			
+									 			>
+<!-- pendiente la validacion que este valor sea mayor que el minPressure -->
+								</p:inputNumber>
+							</p:column>
+					
+						</p:row>	
+						
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['nominationPoint_Start_Date']}"/>
+							</p:column>
+							<p:column>
+								<p:calendar required="true" id="startDate"
+								    value="#{nominationPointView.newNominationPoint.startDate}" pattern="dd/MM/yyyy"
+								    readonlyInput="true"  mindate="#{(nominationPointView.sysdate).getTime()}" 
+									requiredMessage="#{msg['nominationPoint_Start_Date']}: #{msg['empty_field']}" validatorMessage="#{msg['nominationPoint_Start_Date']}: #{msg['lenght_field']}">
+								</p:calendar>
+								<p:message for="startDate" />
+							</p:column>
+							<p:column>
+								<h:outputText value="#{msg['nominationPoint_End_Date']}"/>
+							</p:column>
+							<p:column>
+								<p:calendar id="endDate" 
+									value="#{nominationPointView.newNominationPoint.endDate}" pattern="dd/MM/yyyy"
+									mask="true" mindate="#{(nominationPointView.sysdate).getTime()}" 
+									validatorMessage="#{msg['nominationPoint_End_Date']}: #{msg['lenght_field']}">
+								</p:calendar>
+								<p:message for="endDate" />
+							</p:column>
+						</p:row>
+					</p:panelGrid>
+				</p:panelGrid>
+				
+				<p:separator/>
+				<p:panelGrid>
+					<p:row>
+						<p:column>
+							<p:commandButton value="#{msg['save']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" validateClient="true"
+								action="#{nominationPointView.save}" update=":#{p:component('nominationPoints1')},:formNewEntity, #{p:component('id')}"
+								onstart="PF('cargando').show()"
+								oncomplete="PF('dlgNewNominationPoint').hide(),PF('cargando').hide()" />
+			        		<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close"
+			        		 	update="formNewEntity" process="@this" actionListener="#{nominationPointView.cancel}"
+			        			oncomplete="PF('dlgNewNominationPoint').hide()"/>
+						</p:column>					
+					</p:row>
+				</p:panelGrid>							
+			</h:form>			
+		</p:dialog>
+	</shiro:hasPermission>
+	</ui:define>
+
+
+</ui:composition>

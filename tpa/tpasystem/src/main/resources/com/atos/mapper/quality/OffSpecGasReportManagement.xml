@@ -1,0 +1,909 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<!-- Namespace -->
+<mapper namespace="com.atos.mapper.quality.OffSpecGasReportManagementMapper">
+
+    <select id="selectIncidentTypes" resultType="com.atos.beans.ComboFilterNS">
+		select tfl.idn_offspec_status_flow as key, tfl.flow_desc as value
+		from tpa_toffspec_status_flow tfl
+		order by upper(tfl.flow_desc) asc
+    </select>
+    
+    <select id="selectIncidentTypeIdFromCode" parameterType="java.lang.String" resultType="java.math.BigDecimal">
+		select tfl.idn_offspec_status_flow
+		from tpa_toffspec_status_flow tfl
+		where tfl.flow_code=#{incidentTypeCode}
+    </select>
+    
+	<!-- Para hacer consultas, el punto no tendria por que estar vigente. -->
+    <select id="selectQualityPoints" resultType="com.atos.beans.ComboFilterNS">
+      SELECT DISTINCT qp.idn_system_point AS key,
+                      qp.point_code       AS value
+        FROM tpa_vsystem_point       qp,
+             tpa_vsystem_point       mp,
+             tpa_varea_tpa           a,
+             tpa_vzone_tpa           z,
+             tpa_tsystem_point_param spp
+       WHERE qp.group_code = 'QUALITY'
+         AND qp.idn_system_point = spp.idn_quality_point
+         AND mp.group_code = 'METERED'
+         AND mp.idn_system_point = spp.idn_system_point
+         AND mp.idn_area = a.idn_area
+         AND a.idn_zone = z.idn_zone
+         AND z.idn_pipeline_system = #{systemId}
+         AND spp.version_date = (SELECT MAX(sppx.version_date)
+                                   FROM tpa_tsystem_point_param sppx
+                                  WHERE sppx.idn_system_point = spp.idn_system_point
+                                    AND sppx.start_date = spp.start_date)
+       ORDER BY upper(qp.point_code) ASC
+    </select>
+
+	<!-- Se consulta cualquier grupo. No tiene por que estar vigente. -->
+	<select id="selectPointCodeFromId" parameterType="java.math.BigDecimal" resultType="java.lang.String">
+		select tsp.point_code
+		from tpa_tsystem_point tsp
+		where tsp.idn_system_point=#{pointId}
+	</select>
+	
+	<!-- Cuando el filtro se quiera usar para insertar datos debe estar vigente en el dia actual. -->
+    <select id="selectQualityPointsForInsert" resultType="com.atos.beans.ComboFilterNS">
+      SELECT DISTINCT qp.idn_system_point AS key,
+                      qp.point_code       AS value
+        FROM tpa_vsystem_point       qp,
+             tpa_vsystem_point       mp,
+             tpa_varea_tpa           a,
+             tpa_vzone_tpa           z,
+             tpa_tsystem_point_param spp
+       WHERE qp.group_code = 'QUALITY'
+         AND qp.idn_system_point = spp.idn_quality_point
+         AND mp.group_code = 'METERED'
+         AND mp.idn_system_point = spp.idn_system_point
+         AND mp.idn_area = a.idn_area
+         AND a.idn_zone = z.idn_zone
+         AND z.idn_pipeline_system = #{systemId}
+         AND spp.version_date = (SELECT MAX(sppx.version_date)
+                                   FROM tpa_tsystem_point_param sppx
+                                  WHERE sppx.idn_system_point = spp.idn_system_point
+                                    AND sppx.start_date = spp.start_date)
+         AND trunc(SYSDATE) BETWEEN qp.start_date AND nvl(qp.end_date, trunc(SYSDATE))
+         AND trunc(SYSDATE) BETWEEN mp.start_date AND nvl(mp.end_date, trunc(SYSDATE))
+         AND trunc(SYSDATE) BETWEEN spp.start_date AND nvl(spp.end_date, trunc(SYSDATE))
+       ORDER BY upper(qp.point_code) ASC
+    </select>
+
+	<!-- Para hacer consultas, el punto no tendria por que estar vigente. -->
+    <select id="selectShipperId" resultType="com.atos.beans.ComboFilterNS">
+		select tgr.idn_user_group as key, tgr.user_group_id as value
+		from tpa_tuser_group tgr
+		where tgr.idn_user_group_type = (select idn_user_group_type from tpa_tuser_group_type where type_code = 'SHIPPER')
+		order by upper(tgr.user_group_id) asc
+    </select>
+
+	<!-- Cuando el filtro se quiera usar para insertar datos debe estar vigente en el dia actual. -->
+    <select id="selectShipperIdForInsert" resultType="com.atos.beans.ComboFilterNS">
+		select tgr.idn_user_group as key, tgr.user_group_id as value
+		from tpa_tuser_group tgr
+		where tgr.idn_user_group_type = (select idn_user_group_type from tpa_tuser_group_type where type_code = 'SHIPPER')
+			  and trunc(sysdate) between tgr.start_date and nvl(tgr.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+		order by upper(tgr.user_group_id) asc
+    </select>
+	
+	<!-- Se consulta cualquier grupo. No tiene por que estar vigente. -->
+	<select id="selectGroupIdFromGroupCode" parameterType="java.lang.String" resultType="java.math.BigDecimal">
+		select tgr.idn_user_group 
+		from tpa_tuser_group tgr
+		where tgr.user_group_id=#{groupCode}
+	</select> 
+	
+	<select id="selectStatusIds" parameterType="com.atos.filters.quality.OffSpecGasReportManagementFilter" resultType="com.atos.beans.quality.OffSpecStatusBean">
+		select tsta.idn_offspec_status as statusId, 
+	       tsta.status_desc as statusDesc,
+	       tsta.idn_offspec_status_flow as incidentTypeId,
+	       tflow.flow_desc as incidentTypeDesc,
+	       tsta.sort_value as statusSort
+		from tpa_toffspec_status tsta,
+		     tpa_toffspec_status_flow tflow
+		where
+			tflow.idn_offspec_status_flow = tsta.idn_offspec_status_flow
+			<if test="incidentTypeId != null">
+	    	and tsta.idn_offspec_status_flow = #{incidentTypeId}
+	    	</if>
+		order by tsta.sort_value
+	</select>
+
+	<select id="selectStatusIdFromStatusCodes" resultType="java.math.BigDecimal">
+	    SELECT DISTINCT r.idn_offspec_status 
+FROM tpa_toffspec_status r, tpa_toffspec_status_rule sr
+WHERE r.idn_offspec_status = sr.next_status 
+AND sr.ask_other_shippers = 'Y'
+	</select>
+	
+	<select id="selectStatusIdFromStatusCode" parameterType="java.lang.String" resultType="java.math.BigDecimal">
+	    select tsta.idn_offspec_status
+			from tpa_toffspec_status tsta
+	    where tsta.status_code=#{statusCode}
+	</select>
+			
+    <resultMap type="com.atos.beans.quality.OffSpecStatusRuleBean" id="OffSpecStatusRule">
+        <id property="ruleId" column="idn_offspec_status_rule" />
+		<result property="currentStatusId" column="cur_idn_offspec_status"/>
+		<result property="currentStatusCode" column="cur_status_code"/>
+        <result property="currentStatusDesc" column="cur_status_desc"/> 
+        <result property="nextStatusId" column="next_idn_offspec_status"/>
+        <result property="nextStatusCode" column="next_status_code"/> 
+        <result property="nextStatusDesc" column="next_status_desc"/>   
+        <result property="neededPermissionCode" column="permission_code"/>
+        <result property="shipperFieldMode" column="shipper_field_mode"/> 
+        <result property="commentFieldMode" column="comment_field_mode"/>   
+        <result property="fileFieldMode" column="file_field_mode"/>   
+        <result property="endDateFieldMode" column="end_date_field_mode"/>
+        <result property="askOtherShippers" column="ask_other_shippers"/>
+        <result property="notificationTypeCode" column="notif_type_code"/>
+        <result property="notificationMode" column="notification_mode"/>
+        <result property="emailTypeCode" column="email_type_code"/>
+        <result property="emailMode" column="email_mode"/>
+    </resultMap>
+	<!-- Se filtra para que solo se carguen reglas para las que el usuario tenga permiso. -->	
+    <select id="selectStatusRulesByUserId" resultMap="OffSpecStatusRule">
+		SELECT DISTINCT TRULE.IDN_OFFSPEC_STATUS_RULE,
+		       TCURSTATUS.IDN_OFFSPEC_STATUS  AS CUR_IDN_OFFSPEC_STATUS,
+		       TCURSTATUS.STATUS_CODE         AS CUR_STATUS_CODE,
+		       TCURSTATUS.STATUS_DESC         AS CUR_STATUS_DESC,
+		       TNEXTSTATUS.IDN_OFFSPEC_STATUS AS NEXT_IDN_OFFSPEC_STATUS,
+		       TNEXTSTATUS.STATUS_CODE        AS NEXT_STATUS_CODE,
+		       TNEXTSTATUS.STATUS_DESC        AS NEXT_STATUS_DESC,
+		       TPER.PERMISSION_CODE,
+		       TRULE.SHIPPER_FIELD_MODE,
+		       TRULE.COMMENT_FIELD_MODE,
+		       TRULE.FILE_FIELD_MODE,
+		       TRULE.END_DATE_FIELD_MODE,
+		       TRULE.ASK_OTHER_SHIPPERS,
+		       TNOTTYPE.TYPE_CODE             AS NOTIF_TYPE_CODE,
+		       TRULE.NOTIFICATION_MODE,
+		       TEMAILTYPE.TYPE_CODE             AS EMAIL_TYPE_CODE,
+		       TRULE.EMAIL_MODE
+		  FROM TPA_TOFFSPEC_STATUS_RULE TRULE,
+		       TPA_TOFFSPEC_STATUS      TCURSTATUS,
+		       TPA_TOFFSPEC_STATUS      TNEXTSTATUS,
+		       TPA_TPERMISSION          TPER,
+		       TPA_TNOTIFICATION_TYPE   TNOTTYPE,
+		       TPA_TEMAIL_TYPE   TEMAILTYPE,
+		       TPA_TPROFILE_PERMISSION  TPROFPERM,
+		       TPA_TPROFILE             TPROFILE,
+		       TPA_TUSER_PROFILE        TUSERPROF,
+		       TPA_TUSER                TUSER
+		 WHERE TCURSTATUS.IDN_OFFSPEC_STATUS = TRULE.CURRENT_STATUS
+		   AND TNEXTSTATUS.IDN_OFFSPEC_STATUS = TRULE.NEXT_STATUS
+		   AND TPER.IDN_PERMISSION = TRULE.IDN_PERMISSION
+		   AND TRUNC(SYSDATE) BETWEEN TPER.START_DATE AND NVL(TPER.END_DATE, TO_DATE('31/12/9999', 'DD/MM/YYYY'))
+		   AND TPER.IS_ENABLED = 'Y'
+		   AND TNOTTYPE.IDN_NOTIFICATION_TYPE (+)= TRULE.IDN_NOTIFICATION_TYPE
+		   AND TRUNC(SYSDATE) BETWEEN NVL(TNOTTYPE.START_DATE, TRUNC(SYSDATE)) AND NVL(TNOTTYPE.END_DATE, TO_DATE('31/12/9999', 'DD/MM/YYYY'))
+		   AND NVL(TNOTTYPE.IS_ENABLED, 'Y') = 'Y'
+		   AND TEMAILTYPE.IDN_EMAIL_TYPE (+)= TRULE.IDN_EMAIL_TYPE
+		   AND TRUNC(SYSDATE) BETWEEN NVL(TEMAILTYPE.START_DATE, TRUNC(SYSDATE)) AND NVL(TEMAILTYPE.END_DATE, TO_DATE('31/12/9999', 'DD/MM/YYYY'))
+		   AND NVL(TEMAILTYPE.IS_ENABLED, 'Y') = 'Y'
+		   AND TPROFPERM.IDN_PERMISSION = TRULE.IDN_PERMISSION
+		   AND TRUNC(SYSDATE) BETWEEN TPROFPERM.START_DATE AND NVL(TPROFPERM.END_DATE, TO_DATE('31/12/9999', 'DD/MM/YYYY'))
+		   AND TPROFPERM.IS_ENABLED = 'Y'
+		   AND TPROFILE.IDN_PROFILE = TPROFPERM.IDN_PROFILE
+		   AND TRUNC(SYSDATE) BETWEEN TPROFILE.START_DATE AND NVL(TPROFILE.END_DATE, TO_DATE('31/12/9999', 'DD/MM/YYYY'))
+		   AND TPROFILE.IS_ENABLED = 'Y'
+		   AND TUSERPROF.IDN_PROFILE = TPROFILE.IDN_PROFILE
+		   AND TRUNC(SYSDATE) BETWEEN TUSERPROF.START_DATE AND NVL(TUSERPROF.END_DATE, TO_DATE('31/12/9999', 'DD/MM/YYYY'))
+		   AND TUSER.IDN_USER = TUSERPROF.IDN_USER
+		   AND TUSER.USER_ID = #{userId}
+		   AND TRUNC(SYSDATE) BETWEEN TUSER.START_DATE AND NVL(TUSER.END_DATE, TO_DATE('31/12/9999', 'DD/MM/YYYY'))
+		   AND TUSER.IS_ENABLED = 'Y'
+    </select>
+
+    <resultMap type="com.atos.beans.quality.OffSpecIncidentBean" id="OffSpecIncidentFromId">
+        <id property="incidentId" column="idn_offspec" />
+		<result property="incidentCode" column="offspec_code"/>
+        <result property="qualityPointId" column="idn_system_point"/>
+		<result property="originatorShipperId" column="idn_user_group"/>
+        <result property="startDate" column="start_date"/> 
+        <result property="endDate" column="end_date"/>
+        <result property="statusId" column="idn_offspec_status"/>
+        <result property="statusDesc" column="status_desc"/>
+    </resultMap>
+
+    <select id="selectIncidentFromId" resultMap="OffSpecIncidentFromId">
+	    select idn_offspec,
+		       offspec_code,
+		       idn_user_group,
+		       idn_system_point,
+		       start_date,
+		       end_date,
+		       tospec.idn_offspec_status,
+			   tstatus.status_desc
+		  from tpa_toffspec tospec,
+			   tpa_toffspec_status tstatus
+		 where tospec.idn_offspec=#{incidId}
+	       and tstatus.idn_offspec_status = tospec.idn_offspec_status		 
+    </select>
+    
+    <resultMap type="com.atos.beans.quality.OffSpecIncidentBean" id="OffSpecIncident">
+        <id property="incidentId" column="idn_offspec" />
+		<result property="incidentTypeId" column="idn_offspec_status_flow"/>
+		<result property="incidentTypeDesc" column="flow_desc"/>
+		<result property="incidentCode" column="offspec_code"/>
+		<result property="incidentVersionId" column="idn_offspec_log"/>
+        <result property="qualityPointId" column="idn_system_point"/>
+        <result property="qualityPointCode" column="point_code"/>
+		<result property="originatorShipperId" column="idn_user_group"/>
+		<result property="originatorShipperCode" column="user_group_id"/>
+        <result property="startDate" column="start_date"/> 
+        <result property="endDate" column="end_date"/>
+        <result property="lastModifiedDate" column="aud_last_date"/>
+        <result property="statusId" column="idn_offspec_status"/>        
+        <result property="statusDesc" column="status_desc"/> 
+        <result property="initialComments" column="initial_comments"/>  
+        <result property="firstUserCode" column="first_user"/>
+        <result property="comments" column="user_comments"/>        
+        <result property="fileName" column="file_name"/>       
+        <result property="operatorComments" column="operator_comments"/>
+        <association property="gasParams" select="selectGasQualityParametersFromIncidentId" column="idn_offspec"/>
+    </resultMap>
+        
+	<!-- Para los filtros de fechas se considera que debe entrar en la consulta aquellas incidencias que tengan alguna parte dentro del periodo del filtro.
+	Quedan fuera, aquellas incidencias que:
+	1.- tienen fecha fin anterior al startDate del filtro, o
+	2.- tienen fecha inicio posterior al endDate del filto.
+	Y hay que tener en cuenta que tanto el endDate del filtro, como el endDate de las incidencias pueden ser nulos. -->
+	<!-- Se hace external join con el tospec.idn_user_group porque al principio puede no estar relleno. -->
+	<!-- No se comprueba la vigencia de puntos ni user_groups. Si al hacer una consulta el punto o grupo hubiera dejado de estar vigente se podria mostrar un flag. -->
+	<!-- Al filtrar el shipper, se busca si es originator en la tabla padre, y si estuviera vacio el campo en la tabla padre, se busca si el shipper elegido
+	hubiera generado la ultima version de log. Si el filtro viniera vacio, no se tiene en cuenta la condicion y se obtienen los datos partiendo de la tabla padre
+	(con shipper originator relleno y vacio). 
+	Con la segunda parte del union se añaden registros correspondientes a incidencias que han sido enviadas (disclosed) a un shipper (en cualquier estado de la 
+	incidencia. Si el filtro de shipper esta vacio, no se obtiene nada, para no obtener registros duplicados.)-->
+    <select id="selectIncidents" resultMap="OffSpecIncident">
+      with pipeline_points as 
+          (select distinct spp.idn_quality_point as idn_quality_point
+             from tpa_vsystem_point       sp,
+                  tpa_tsystem_point_param spp,
+                  tpa_varea_tpa           a,
+                  tpa_vzone_tpa           z
+            where sp.idn_system_point = spp.idn_system_point
+              and sp.group_code = 'METERED'
+              and spp.idn_quality_point is not null
+               and spp.version_date = (select max(sppx.version_date)
+                                         from tpa_tsystem_point_param sppx
+                                        where sppx.idn_system_point = spp.idn_system_point
+                                          and sppx.start_date = spp.start_date)
+            and sp.idn_area = a.idn_area
+            and a.idn_zone = z.idn_zone
+            and z.idn_pipeline_system = #{systemId})
+		select * from
+		(select tospec.idn_offspec,
+		       tstatus.idn_offspec_status_flow,
+		       tflow.flow_desc,
+		       tospec.offspec_code,
+		       tlogmax.idn_offspec_log,
+		       tsp.idn_system_point,
+		       tsp.point_code,
+			   tospec.idn_user_group,
+		       tgr.user_group_id,
+		       tospec.start_date,
+		       tospec.end_date,
+		       tospec.aud_last_date,
+		       tstatus.idn_offspec_status,
+		       tstatus.status_desc,
+		       tlogmin.user_comments  as initial_comments,
+               (select u.user_id from tpa_tuser u where u.idn_user = tlogmin.idn_user) as first_user,
+		       tlogmax.user_comments,
+		       tlogmax.file_name
+		from tpa_toffspec tospec,
+		     tpa_tuser_group tgr,
+		     tpa_tsystem_point tsp,
+		     tpa_toffspec_status tstatus,
+		     tpa_toffspec_status_flow tflow,
+		     tpa_toffspec_log tlogmax,
+		     tpa_toffspec_log tlogmin,
+           pipeline_points pp
+		where tgr.idn_user_group (+)= tospec.idn_user_group
+			  <if test="incidentCode != null and incidentCode != ''">
+			  and tospec.offspec_code like #{incidentCode}
+			  </if>
+			  <if test="qualityPointId != null">
+          	  and tospec.idn_system_point=#{qualityPointId}
+			  </if>
+			  <if test="shipperId != null">
+          	  and nvl(tospec.idn_user_group,tlogmax.idn_user_group)=#{shipperId}
+			  </if>
+			  <choose>
+				<when test="statusId != null and statusId.length > 0">
+					<foreach item="item" index="index" collection="statusId"
+			             open="and tospec.idn_offspec_status in (" separator="," close=")">
+			        		#{item}
+			    	</foreach>
+				</when>
+				<otherwise>
+					and tospec.idn_offspec_status in (-1)
+				</otherwise>
+			  </choose>
+	 		  <if test="startDate != null">
+			  and nvl(tospec.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))>= #{startDate}
+			  </if>
+			  <if test="endDate != null">
+			  and #{endDate} >= tospec.start_date 
+			  </if>
+		      and tsp.idn_system_point = tospec.idn_system_point
+            and tsp.idn_system_point = pp.idn_quality_point
+		      and tstatus.idn_offspec_status = tospec.idn_offspec_status
+		      and tflow.idn_offspec_status_flow = tstatus.idn_offspec_status_flow
+		      and tlogmax.idn_offspec = tospec.idn_offspec
+		      and tlogmax.insert_date = (select max(tlog3.insert_date)
+		                                   from tpa_toffspec_log tlog3
+                                        where tlog3.idn_offspec = tlogmax.idn_offspec)
+              and tlogmin.idn_offspec = tospec.idn_offspec
+              and tlogmin.insert_date = (select min(tlog4.insert_date)
+		                                   from tpa_toffspec_log tlog4
+                                        where tlog4.idn_offspec = tlogmin.idn_offspec)
+		union
+	    select tospec.idn_offspec,
+	       tstatus.idn_offspec_status_flow,
+	       tflow.flow_desc,
+           tospec.offspec_code,
+           tlogmax.idn_offspec_log,
+           tsp.idn_system_point,
+           tsp.point_code,
+           tospec.idn_user_group,
+           tgr.user_group_id,
+           tospec.start_date,
+           tospec.end_date,
+           tospec.aud_last_date,
+           tstatus.idn_offspec_status,
+           tstatus.status_desc,
+	       tlogmin.user_comments  as initial_comments,
+           (select u.user_id from tpa_tuser u where u.idn_user = tlogmin.idn_user) as first_user,
+           tlogmax.user_comments,
+           tlogmax.file_name
+	    from tpa_toffspec tospec,
+	         tpa_tuser_group tgr,
+	         tpa_tsystem_point tsp,
+	         tpa_toffspec_status tstatus,
+	         tpa_toffspec_status_flow tflow,
+	         tpa_toffspec_log tlogmax,
+	         tpa_toffspec_log tlogmin,
+	         tpa_toffspec_response tores,
+             pipeline_points pp
+	    where tgr.idn_user_group (+)= tospec.idn_user_group
+	        <if test="incidentCode != null and incidentCode != ''">
+	        and tospec.offspec_code like #{incidentCode}
+	        </if>
+	        <if test="qualityPointId != null">
+	        and tospec.idn_system_point=#{qualityPointId}
+	        </if>
+	        <if test="shipperId != null">
+	        and tores.idn_user_group=#{shipperId}
+	        </if>
+	        <if test="shipperId == null">
+	        and tores.idn_user_group=-1
+	        </if>
+	        <choose>
+	        <when test="statusId != null and statusId.length > 0">
+	          	<foreach item="item" index="index" collection="statusId"
+	                   open="and tospec.idn_offspec_status in (" separator="," close=")">
+	                  #{item}
+	        	</foreach>
+	        </when>
+	        <otherwise>
+	        and tospec.idn_offspec_status in (-1)
+	        </otherwise>
+	        </choose>
+	        <if test="startDate != null">
+	        and nvl(tospec.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))>= #{startDate}
+	        </if>
+	        <if test="endDate != null">
+	        and #{endDate} >= tospec.start_date 
+	        </if>
+	        and tsp.idn_system_point = tospec.idn_system_point
+            and tsp.idn_system_point = pp.idn_quality_point
+	        and tstatus.idn_offspec_status = tospec.idn_offspec_status
+	        and tflow.idn_offspec_status_flow = tstatus.idn_offspec_status_flow
+	        and tlogmax.idn_offspec = tospec.idn_offspec
+		    and tlogmax.insert_date = (select max(tlog3.insert_date)
+		                                  from tpa_toffspec_log tlog3
+                                       where tlog3.idn_offspec = tlogmax.idn_offspec)
+           	and tlogmin.idn_offspec = tospec.idn_offspec
+           	and tlogmin.insert_date = (select min(tlog4.insert_date)
+		                                  from tpa_toffspec_log tlog4
+                                       where tlog4.idn_offspec = tlogmin.idn_offspec)
+	        and tores.idn_offspec=tospec.idn_offspec
+			and tores.idn_offspec_response = (select max(tres2.idn_offspec_response) from tpa_toffspec_response tres2
+											where tres2.idn_offspec=tores.idn_offspec
+											and tres2.idn_user_group=tores.idn_user_group)) t   
+	    order by t.point_code asc, t.user_group_id asc, t.start_date desc
+    </select>
+
+	<!-- Solo se consultan incidencias que tenga registro en la tabla de respuestas -->
+    <select id="selectIncidentsToRespond" resultMap="OffSpecIncident">
+       with pipeline_points as 
+          (select distinct spp.idn_quality_point as idn_quality_point
+             from tpa_vsystem_point       sp,
+                  tpa_tsystem_point_param spp,
+                  tpa_varea_tpa           a,
+                  tpa_vzone_tpa           z
+            where sp.idn_system_point = spp.idn_system_point
+              and sp.group_code = 'METERED'
+              and spp.idn_quality_point is not null
+              and spp.version_date = (select max(sppx.version_date)
+                                        from tpa_tsystem_point_param sppx
+                                       where sppx.idn_system_point = spp.idn_system_point
+                                         and sppx.start_date = spp.start_date)
+              and sp.idn_area = a.idn_area
+              and a.idn_zone = z.idn_zone
+              and z.idn_pipeline_system = #{systemId})
+	    select tospec.idn_offspec,
+		   tstatus.idn_offspec_status_flow,
+		   tflow.flow_desc,
+           tospec.offspec_code,
+           tlogmax.idn_offspec_log,
+           tsp.idn_system_point,
+           tsp.point_code,
+           tospec.idn_user_group,
+           tgr.user_group_id,
+           tospec.start_date,
+           tospec.end_date,
+           tospec.aud_last_date,
+           tstatus.idn_offspec_status,
+           tstatus.status_desc,
+           tores.file_name as file_name_resp,
+    	   tores.attached_file,
+    	   tstatus.file_on_response,
+           (select tlogmin.user_comments 
+              from tpa_toffspec_log tlogmin
+              where tlogmin.idn_offspec = tospec.idn_offspec  
+                and tlogmin.idn_offspec_log = (select min(tlog2.idn_offspec_log) 
+                                             from tpa_toffspec_log tlog2
+                                           where tlog2.idn_offspec = tlogmin.idn_offspec)) as initial_comments,
+           tlogmax.user_comments,
+           tlogmax.file_name,
+  tores.operator_comments
+	    from tpa_toffspec tospec,
+	         tpa_tuser_group tgr,
+	         tpa_tsystem_point tsp,
+	         tpa_toffspec_status tstatus,
+	         tpa_toffspec_status_flow tflow,
+	         tpa_toffspec_log tlogmax,
+	         tpa_toffspec_response tores,
+             pipeline_points  pp         
+	    where tgr.idn_user_group (+)= tospec.idn_user_group
+	        <if test="incidentCode != null and incidentCode != ''">
+	        and tospec.offspec_code like #{incidentCode}
+	        </if>
+	        <if test="qualityPointId != null">
+	        and tospec.idn_system_point=#{qualityPointId}
+	        </if>
+	        <if test="shipperId != null">
+	        and tores.idn_user_group=#{shipperId}
+	        </if>
+	        <if test="shipperId == null">
+	        and tores.idn_user_group=-1
+	        </if>
+	        <choose>
+	        <when test="statusId != null and statusId.length > 0">
+	          	<foreach item="item" index="index" collection="statusId"
+	                   open="and tospec.idn_offspec_status in (" separator="," close=")">
+	                  #{item}
+	        	</foreach>
+	        </when>
+	        <otherwise>
+	        and tospec.idn_offspec_status in (-1)
+	        </otherwise>
+	        </choose>
+	        <if test="startDate != null">
+	        and nvl(tospec.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))>= #{startDate}
+	        </if>
+	        <if test="endDate != null">
+	        and #{endDate} >= tospec.start_date 
+	        </if>
+	        and tsp.idn_system_point = tospec.idn_system_point
+            and tsp.idn_system_point = pp.idn_quality_point
+	        and tstatus.idn_offspec_status = tospec.idn_offspec_status
+	        and tflow.idn_offspec_status_flow = tstatus.idn_offspec_status_flow
+	        and tlogmax.idn_offspec = tospec.idn_offspec
+	        and tlogmax.idn_offspec_log = (select max(tlog3.idn_offspec_log) 
+	                                       from tpa_toffspec_log tlog3
+	                                       where tlog3.idn_offspec = tlogmax.idn_offspec)
+	        and tores.idn_offspec=tospec.idn_offspec
+			and tores.idn_offspec_response = (select max(tres2.idn_offspec_response) from tpa_toffspec_response tres2
+											where tres2.idn_offspec=tores.idn_offspec
+											and tres2.idn_user_group=tores.idn_user_group)
+	        <if test="resStatusId != null and resStatusId.length > 0">
+	          	<foreach item="item2" index="index2" collection="resStatusId"
+	                   open="and (" separator=" or " close=")">
+					(#{item2} = 1 AND tores.is_responded = 'N') 
+			        OR 
+			        (#{item2} = 2 AND tores.is_responded = 'Y' AND tores.response_value = 'OK') 
+			        OR 
+			        (#{item2} = 3 AND tores.is_responded = 'Y' AND tores.response_value != 'OK')
+	        	</foreach>	        
+	        </if>
+	    order by tsp.point_code asc, tospec.start_date desc
+    </select>
+
+    <resultMap type="com.atos.beans.quality.OffSpecGasQualityParameterBean" id="OffSpecGasQualityParameterFromId">
+        <id property="paramId" column="idn_gas_quality_param" />
+		<result property="paramDesc" column="parameter_desc"/>
+		<result property="unitDesc" column="unit_desc"/>
+        <result property="value" column="quality_value"/>
+    </resultMap>
+	
+    <select id="selectGasQualityParametersFromIncidentId" resultMap="OffSpecGasQualityParameterFromId">    
+		select t1.idn_gas_quality_param,
+		       t1.parameter_desc,
+		       t1.unit_desc,
+		       t2.quality_value
+		from
+		      (select tpar.idn_gas_quality_param,
+		         tpar.parameter_desc,
+		         tun.unit_desc
+		      from tpa_tgas_quality_param tpar,
+		           tpa_tunit tun,
+		           tpa_tgas_quality_list tlist,
+		           tpa_tgasq_list_item tlitem
+		      where tun.idn_unit=tpar.idn_unit
+		            and tlist.list_code='GQL-OFFSPEC.GAS'
+		            and tlitem.idn_gas_quality_list=tlist.idn_gas_quality_list
+		            and tlitem.idn_gas_quality_param=tpar.idn_gas_quality_param
+		      order by tlitem.sort_value asc) t1
+		      left outer join (select tog.idn_gas_quality_param,
+		                        	    tog.quality_value
+		                       from tpa_toffspec_gasq tog
+		                       where tog.idn_offspec=#{incidentId}) t2
+		      on t1.idn_gas_quality_param = t2.idn_gas_quality_param
+    </select>
+
+    <resultMap type="com.atos.beans.quality.OffSpecGasQualityParameterBean" id="OffSpecGasQualityParameter">
+        <id property="paramId" column="idn_gas_quality_param" />
+		<result property="paramDesc" column="parameter_desc"/>
+		<result property="unitDesc" column="unit_desc"/>
+    </resultMap>
+	
+    <select id="selectGasQualityParameters" resultMap="OffSpecGasQualityParameter">    
+	    select tpar.idn_gas_quality_param,
+	       tpar.parameter_desc,
+	       tun.unit_desc
+	    from tpa_tgas_quality_param tpar,
+	         tpa_tunit tun,
+	         tpa_tgas_quality_list tlist,
+	         tpa_tgasq_list_item tlitem
+	    where tun.idn_unit=tpar.idn_unit
+	          and tlist.list_code='GQL-OFFSPEC.GAS'
+	          and tlitem.idn_gas_quality_list=tlist.idn_gas_quality_list
+	          and tlitem.idn_gas_quality_param=tpar.idn_gas_quality_param
+	    order by tlitem.sort_value asc
+    </select>
+
+    <resultMap type="com.atos.beans.quality.OffSpecResponseBean" id="OffSpecResponsesFromId">
+        <id property="incidentResponseId" column="idn_offspec_response" />
+		<result property="groupId" column="idn_user_group"/>
+		<result property="groupCode" column="user_group_id"/>
+		<result property="userComments" column="user_comments"/>
+        <result property="isResponded" column="is_responded"/>
+		<result property="responseDate" column="response_date"/>
+        <result property="responseValue" column="response_value"/>
+        <result property="operatorComments" column="operator_comments"/>
+        <result property="attachedFile" column="attached_File"/>
+        <result property="fileName" column="file_Name"/>
+        <result property="fileOnResponse" column="file_On_Response"/>
+        <result property="fileOnResponse" column="file_On_Start"/>
+ </resultMap>
+    
+    <update id="updateTransporterComments" parameterType="com.atos.beans.quality.OffSpecResponseBean">
+		update tpa_toffspec_response set
+             operator_comments=#{operatorComments}
+		where idn_offspec_response=#{incidentResponseId}
+		
+	</update>
+	
+	<!-- Se filtra para que un shipper no vea las respuestas de otro. -->
+    <select id="selectDiscloseResponsesFromIncidentId" parameterType="map" resultMap="OffSpecResponsesFromId">    
+		select tres.idn_offspec_response,
+		       tres.idn_user_group,
+       		   tgr.user_group_id,
+		       tres.user_comments,
+		       tres.is_responded,
+		       tres.response_date,
+		       tres.response_value,
+		       tres.file_name,
+               tres.attached_file,
+               tes.file_on_response,
+		       tres.operator_comments	            
+		from tpa_toffspec_response tres,
+			 tpa_toffspec tof,
+             tpa_toffspec_status tes,
+     		 tpa_tuser_group tgr
+		where tres.idn_offspec=#{incidentId}
+      		  and tgr.idn_user_group=tres.idn_user_group
+      		  and tof.idn_offspec = tres.idn_offspec
+              and tof.idn_offspec_status = tes.idn_offspec_status 
+		      <if test="shipperId != null">
+		      and tres.idn_user_group=#{shipperId}
+		      </if>
+			  and tres.idn_offspec_response = (select max(tres2.idn_offspec_response) from tpa_toffspec_response tres2
+												where tres2.idn_offspec=tres.idn_offspec
+												and tres2.idn_user_group=tres.idn_user_group)
+		order by 1 asc
+    </select>
+
+    <resultMap type="com.atos.beans.quality.OffSpecIncidentBean" id="OffSpecIncidentForFile">
+		<result property="binaryData" column="attached_file" jdbcType="BLOB" />
+	</resultMap>
+	
+    <select id="getFileByOffSpecLogId" parameterType="java.math.BigDecimal" resultMap="OffSpecIncidentForFile">
+		select tlog.attached_file
+		from tpa_toffspec_log tlog
+		where tlog.idn_offspec_log=#{logId}
+	</select>
+	
+	<!-- endDate vendra relleno al crear una nueva Request. Al crear Event no se inserta ese dato. -->
+	<insert id="insertOffSpecIncident" useGeneratedKeys="true" keyProperty="incidentId" keyColumn="idn_offspec" parameterType="com.atos.beans.quality.OffSpecIncidentBean">
+		insert into tpa_toffspec (idn_offspec, 
+									offspec_code,
+			  						<if test="originatorShipperId != null">
+									idn_user_group,
+									</if>
+									idn_system_point,
+									start_date,
+								  	<if test="endDate != null">
+								  	end_date,
+								  	</if>
+									idn_offspec_status,
+	                                        aud_ins_user,
+	                                        aud_last_user)
+		values (tpa_soffspec.nextval, 
+				#{incidentCode}, 
+			  	<if test="originatorShipperId != null and originatorShipperId != ''">
+				#{originatorShipperId},
+				</if>
+				#{qualityPointId}, 
+				#{startDate}, 
+			  	<if test="endDate != null">
+			  	#{endDate},
+			  	</if>
+				#{statusId},
+	      #{username},
+	      #{username})
+	</insert>
+	
+	<update id="updateOffSpecIncident" parameterType="com.atos.beans.quality.OffSpecIncidentBean">
+		update tpa_toffspec set
+             aud_last_user=#{username},
+			<if test="newOriginatorShipperId != null">
+			idn_user_group = #{newOriginatorShipperId},
+			</if>
+			<if test="newEndDate != null">
+			end_date = #{newEndDate},
+			</if>
+	       	idn_offspec_status = #{newStatusId}
+	    where idn_offspec=#{incidentId}
+	</update>
+	
+	
+	
+	
+	
+	<insert id="insertOffSpecIncidentLog" useGeneratedKeys="true" keyProperty="incidentVersionId" keyColumn="idn_offspec_log" parameterType="com.atos.beans.quality.OffSpecIncidentBean">
+		insert into tpa_toffspec_log (idn_offspec_log,
+	                                        aud_ins_user,
+	                                        aud_last_user
+		                              ,idn_offspec
+		                              ,idn_user_group
+		                              ,idn_offspec_status
+			  						  <if test="newComments != null and newComments != ''">
+		                              ,user_comments
+		                              </if>
+		                              ,idn_user
+			  						  <if test="newFileName != null and newFileName != ''">		                              
+		                              ,file_name
+		                              </if>
+		  							  <if test="newBinaryData != null">
+		                              ,attached_file
+		                              </if>
+		                              )
+		values (tpa_soffspec_log.nextval,
+	      #{username},
+	      #{username}
+				,#{incidentId}
+				,#{groupId}
+				,#{newStatusId}
+			  	<if test="newComments != null and newComments != ''">
+				,#{newComments}
+				</if>
+				,#{userId}
+			  	<if test="newFileName != null and newFileName != ''">				
+				,#{newFileName}
+				</if>
+				<if test="newBinaryData != null">
+				,#{newBinaryData}
+				</if>				
+				)
+	</insert>
+
+	<insert id="insertGasQualityParameter" useGeneratedKeys="true" keyProperty="incidentGasParamId" keyColumn="idn_offspec_gasq" parameterType="com.atos.beans.quality.OffSpecGasQualityParameterBean">
+		insert into tpa_toffspec_gasq (idn_offspec_gasq,
+		                               idn_offspec,
+		                               idn_gas_quality_param,
+		                               quality_value,
+	                                        aud_ins_user,
+	                                        aud_last_user)
+		values (tpa_soffspec_gasq.nextval
+		       ,#{incidentId}
+		       ,#{paramId}
+		       ,#{value},
+	      #{username},
+	      #{username})	
+	</insert>
+	    
+	<insert id="insertOffSpecResponse" useGeneratedKeys="true" keyProperty="incidentResponseId" keyColumn="idn_offspec_response" parameterType="com.atos.beans.quality.OffSpecResponseBean">
+		insert into tpa_toffspec_response (idn_offspec_response,
+		                                   idn_offspec,
+		                                   idn_user_group,
+		                                   is_responded,
+		                                   response_value,
+		                                   response_date,
+		                                   user_comments,
+		                                   idn_response_user,
+		                                    operator_comments,
+		                                    <if test="fileName != null and fileName != ''">
+		                                    file_name,
+		                                    </if>
+		                                    <if test="attachedFile != null">
+		                                    attached_file,
+		                                    </if>
+	                                        aud_ins_user,
+	                                        aud_last_user)
+		values (tpa_soffspec_response.nextval
+				,#{incidentId}
+				,#{groupId}
+				,#{isResponded}
+				,#{responseValue}
+				,#{responseDate}
+				,#{userComments}
+		        ,#{userId}
+		        ,#{operatorComments}
+		        <if test="fileName != null and fileName != ''">
+				,#{fileName}
+				</if>
+				<if test="attachedFile != null">
+				,#{attachedFile}
+				</if>
+	      ,#{username}
+	      ,#{username})
+	</insert>	
+	
+	<select id="selectResponseFile" parameterType="com.atos.beans.quality.OffSpecResponseBean" resultType="com.atos.beans.quality.OffSpecResponseBean">
+		select idn_offspec_response,
+	       file_name,
+	       attached_file
+	    from tpa_toffspec_response o
+		where o.idn_offspec_response = #{incidentResponseId}
+	</select>
+	
+	<select id="getZoneCode" parameterType="com.atos.beans.quality.OffSpecIncidentBean" resultType="java.lang.String">
+	WITH
+
+  w_point_param AS
+
+    (SELECT spp.idn_system_point_param,
+
+            spp.idn_system_point,
+
+            spp.start_date,
+
+            coalesce(spp.end_date,
+
+                     (SELECT MIN(sppx.start_date) - 1
+
+                        FROM tpa_tsystem_point_param sppx
+
+                       WHERE sppx.idn_system_point = spp.idn_system_point
+
+                         AND sppx.start_date > spp.start_date
+
+                         AND nvl(sppx.end_date, sppx.start_date) >= sppx.start_date
+
+                         AND sppx.version_date = (SELECT MAX(sppxy.version_date)
+
+                                                    FROM tpa_tsystem_point_param sppxy
+
+                                                   WHERE sppxy.idn_system_point = sppx.idn_system_point
+
+                                                     AND sppxy.start_date = sppx.start_date)),
+
+                     to_date('9999-12-31', 'yyyy-mm-dd')) AS end_date,
+
+            spp.idn_quality_point,
+
+            spp.idn_nomination_point
+
+       FROM tpa_tsystem_point_param spp,
+
+            tpa_tsystem_point       sp,
+
+            tpa_tsystem_point_group spg
+
+      WHERE spp.version_date = (SELECT MAX(sppy.version_date)
+
+                                  FROM tpa_tsystem_point_param sppy
+
+                                 WHERE sppy.idn_system_point = spp.idn_system_point
+
+                                   AND sppy.start_date = spp.start_date)
+
+       AND spp.idn_system_point = sp.idn_system_point
+
+       AND sp.idn_system_point_group = spg.idn_system_point_group
+
+       AND spg.group_code = 'METERED'
+
+    ),
+
+  w_basic_data AS
+
+   (SELECT x.idn_system_point, x.start_date, x.end_date,
+
+           x.idn_quality_point, q.point_code AS quality_point_code, q.start_date AS quality_start_date, q.end_date AS quality_end_date,
+
+           x.idn_nomination_point, n.point_code AS nomination_point_code, n.start_date AS nomination_start_date, n.end_date AS nomination_end_date, n.idn_area,
+
+           GREATEST(x.start_date, q.start_date, n.start_date) AS max_start_date,
+
+           LEAST(x.end_date, NVL(q.end_date, to_date('9999-12-31', 'yyyy-mm-dd')), NVL(n.end_date, to_date('9999-12-31', 'yyyy-mm-dd'))) AS min_end_date
+
+      FROM w_point_param      x,
+
+           tpa_tsystem_point q,
+
+           tpa_tsystem_point n
+
+     WHERE x.idn_quality_point = q.idn_system_point
+
+       AND x.idn_nomination_point = n.idn_system_point
+
+       AND x.start_date <![CDATA[ <= ]]> NVL(q.end_date, x.start_date + 1)
+
+       AND x.start_date <![CDATA[ <= ]]> NVL(n.end_date, x.start_date + 1)
+
+       AND x.end_date >= q.start_date
+
+       AND x.end_date >= n.start_date
+
+   ),
+
+  w_quality_point_area AS
+
+   (SELECT DISTINCT idn_quality_point, quality_point_code, idn_area, max_start_date AS start_date, min_end_date AS end_date
+
+       FROM w_basic_data d
+
+   )
+
+SELECT DISTINCT qpa.idn_quality_point, qpa.quality_point_code, z.IDN_ZONE, z.ZONE_CODE, z.IDN_PIPELINE_SYSTEM
+
+  FROM w_quality_point_area qpa,
+
+       tpa_varea_tpa a,
+
+       tpa_vzone_tpa z
+
+WHERE qpa.idn_area = a.IDN_AREA
+
+   AND a.IDN_ZONE = z.IDN_ZONE
+
+   AND #{startDate} BETWEEN a.START_DATE AND NVL(a.END_DATE, to_date('9999-12-31', 'yyyy-mm-dd'))
+
+   AND #{startDate} BETWEEN z.START_DATE AND NVL(z.END_DATE, to_date('9999-12-31', 'yyyy-mm-dd'))
+
+   AND #{startDate} BETWEEN qpa.start_date AND qpa.end_date
+
+   AND z.IDN_PIPELINE_SYSTEM = #{idn_pipeline_system}
+
+   AND qpa.idn_quality_point = #{qualityPointId}
+	</select>
+</mapper>

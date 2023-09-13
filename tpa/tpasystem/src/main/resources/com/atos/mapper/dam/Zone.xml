@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+
+<mapper namespace="com.atos.mapper.dam.ZoneMapper">
+
+
+    <resultMap type="com.atos.beans.dam.ZoneBean" id="Zone">
+              <id column="idn_zone" property="idn_zone"  />  
+        <result property="idn_pipeline_system" column="idn_pipeline_system"/> 		
+		<result property="idn_zone_gas_quality" column="idn_zone_gas_quality"/>
+		<result property="maxValue" column="max_value"/>
+		<result property="minValue" column="min_value"/>
+		<result property="parameterCode" column="parameter_code"/>
+		
+		<result property="id" column="zone_code"/>
+		<result property="name" column="zone_desc"/> 
+		<result property="startDate" column="start_date"/>
+		<result property="endDate" column="end_date"/>
+		
+		<result property="system" column="pipeline_system_code"/>
+		<result property="idn_zone_gasq_type" column="idn_zone_gasq_type"/>
+		<result property="type" column="type_desc"/>
+        <result property="startDateGasQuality" column="start_date_gas_Quality"/>   
+       
+    </resultMap>
+     
+    <select id="selectZones" resultMap="Zone">
+		
+	 SELECT z.idn_zone idn_zone, 
+	        z.zone_code zone_code,
+	        z.zone_desc zone_desc,
+	        z.start_date start_date,
+	        z.end_date end_date, 
+	        ps.idn_pipeline_system, 
+	        ps.pipeline_system_code,
+	        nvl(gq.idn_zone_gas_quality, -1) idn_zone_gas_quality, 
+	        nvl(gq.start_date, z.START_DATE) start_date_gas_Quality,
+	        gt.idn_zone_gasq_type idn_zone_gasq_type,
+          gt.type_desc type_desc
+	   FROM TPA_VZONE_TPA z,
+	        tpa_tpipeline_system ps, 
+	        tpa_tzone_gas_quality gq,
+	        tpa_tzone_gasq_type gt
+	   WHERE z.IDN_PIPELINE_SYSTEM= ps.IDN_PIPELINE_SYSTEM
+	     AND gq.idn_zone (+)= z.idn_zone
+	     AND gq.idn_zone_gasq_type=gt.idn_zone_gasq_type
+         AND nvl(gq.end_date, gq.start_date) >= gq.start_date
+	     AND gq.version_date =(SELECT MAX(gqx.version_date) 
+	                             FROM tpa_tzone_gas_quality gqx
+	                            WHERE gq.idn_zone = gqx.idn_zone
+	                             AND gq.idn_zone_gasq_type=gqx.idn_zone_gasq_type
+	                             AND gq.start_date = gqx.start_date)
+	                             
+    <!-- offshore se quita la condicion y se pone fijo-->
+	 	AND ps.idn_pipeline_system = #{idn_system}
+	                              
+    <if test="idn_zone != null and idn_zone != ''">
+    	 AND z.idn_zone = #{idn_zone} 
+    </if>
+    
+    <if test="name != null and name != ''">
+    	AND z.zone_desc = #{name}
+    </if> 
+    
+
+     order by UPPER (zone_code), UPPER(type_desc), start_date_gas_Quality DESC
+		
+    </select>
+    
+    <select id="getMaxMin" parameterType="com.atos.beans.dam.ZoneBean" resultMap="Zone">
+		SELECT gq.idn_zone,  gv.min_value min_value, gv.max_value max_value
+		FROM tpa_tzone_gasq_value gv,tpa_tgas_quality_param qp,tpa_tzone_gas_quality gq
+		WHERE gv.IDN_GAS_QUALITY_PARAM= qp.idn_gas_quality_param
+				AND gq.IDN_ZONE_GAS_QUALITY=gv.idn_zone_gas_quality
+				AND gq.idn_zone_gas_quality=#{idn_zone_gas_quality}
+				AND qp.idn_gas_quality_param= (SELECT idn_gas_quality_param 
+											   FROM tpa_tgas_quality_param 
+											   WHERE parameter_code =#{parameterCode})
+    </select>
+
+    <select id="selectIds" resultType="java.lang.String">
+		SELECT a.zone_code zone_code
+		FROM TPA_VZONE_TPA a
+		WHERE a.zone_code like #{query}
+    </select>
+    
+    <select id="selectNames" resultType="java.lang.String">
+		SELECT a.zone_desc zone_desc
+		FROM TPA_VZONE_TPA a
+		WHERE zone_desc like #{query}
+    </select>
+    
+    <select id="selectSystems" resultType="com.atos.beans.ComboFilterNS">
+    <!-- offshore el unico combo de la pantalla se carga con el system sel sistema -->
+		SELECT ps.idn_pipeline_system as key, ps.pipeline_system_code as value
+		FROM tpa_tpipeline_system  ps
+		WHERE ps.idn_pipeline_system = #{idn_system}
+		order by   UPPER (ps.pipeline_system_code)
+    </select>
+    
+    
+    <select id="selectComboIds" resultType="com.atos.beans.ComboFilterNS">		
+		SELECT z.idn_zone as key, z.zone_code as value
+		FROM TPA_VZONE_TPA z
+		order by UPPER(z.zone_code)
+    </select>
+    
+     <select id="selectZonesSystem" resultType="com.atos.beans.ComboFilterNS">		
+		SELECT z.idn_zone as key, z.zone_code as value
+	    FROM TPA_VZONE_TPA z
+	    WHERE z.idn_pipeline_system =#{idn_system}
+	    order by UPPER(z.zone_code)
+    </select>
+    
+    <select id="selectTypesNewQuality" resultType="com.atos.beans.ComboFilterNS">		
+		SELECT a.idn_zone_gasq_type as key, type_desc as value 
+ 		 FROM tpa_tzone_gasq_type   a, 
+       		  tpa_tzone_gqtype_zone b 
+ 		WHERE (b.idn_zone =  #{idn_zone} AND a.idn_zone_gasq_type = b.idn_zone_gasq_type) 
+		UNION 
+		SELECT a.idn_zone_gasq_type as key,  type_desc as value 
+  		FROM tpa_tzone_gasq_type a 
+ 		WHERE NOT EXISTS (SELECT 1 FROM tpa_tzone_gqtype_zone x WHERE x.idn_zone =  #{idn_zone})
+    </select>
+    
+   
+    <select id="selectTypesNewZone" resultType="com.atos.beans.ComboFilterNS">		
+		SELECT idn_zone_gasq_type as key, type_desc as value 
+ 		FROM tpa_tzone_gasq_type   
+    </select>
+    
+    <select id="getZoneId" resultType="java.lang.String">
+		SELECT z.zone_code   
+		FROM  TPA_VZONE_TPA z
+		WHERE z.zone_code = #{id}	
+	</select>
+	
+	<select id="getName" resultType="java.lang.String">
+		SELECT z.zone_desc 
+		FROM  TPA_VZONE_TPA z
+		WHERE z.idn_zone = #{idn_zone}	
+	</select>
+	
+	<select id="getPipelineSystem" resultType="java.math.BigDecimal">
+		SELECT  z.idn_pipeline_system
+		FROM  TPA_VZONE_TPA z
+		WHERE z.idn_zone = #{idn_zone}	
+	</select>
+	
+	<select id="getZone" resultMap="Zone">
+		SELECT z.idn_zone idn_zone, 
+	        z.zone_code zone_code,
+	        z.zone_desc zone_desc,
+	        z.start_date start_date,
+	        z.end_date end_date
+		FROM  TPA_VZONE_TPA z
+		WHERE z.idn_zone = #{idn_zone}	
+	</select>
+	
+	<insert id="insertZone" useGeneratedKeys="true" keyProperty="idn_zone" keyColumn="idn_zone" parameterType="com.atos.beans.dam.ZoneBean">
+		INSERT INTO tpa_tzone
+			(idn_zone,zone_code,zone_desc,idn_pipeline_system ,start_date,
+			aud_ins_user,aud_last_user)
+		VALUES
+			(tpa_szone.nextval,
+			 #{id},
+			 #{name}, 
+			 #{idn_pipeline_system},
+			 #{startDateGasQuality},
+			 #{username},
+			 #{username})
+	</insert>
+
+	<insert id="insertZoneGasQuality" useGeneratedKeys="true" keyProperty="idn_zone_gas_quality" keyColumn="idn_zone_gas_quality" parameterType="com.atos.beans.dam.ZoneBean">
+		INSERT INTO tpa_tzone_gas_quality
+			(idn_zone_gas_quality, idn_zone, idn_zone_gasq_type, start_date,
+			aud_ins_user,aud_last_user)
+		VALUES
+			(tpa_szone_gas_quality.nextval,
+			 #{idn_zone},
+			 #{idn_zone_gasq_type}, 
+			 #{startDateGasQuality},
+			 #{username},
+			 #{username})
+	</insert>
+
+	<insert id="insertZoneGasValue" useGeneratedKeys="true" keyProperty="idn_zone_gasq_value" keyColumn="idn_zone_gasq_value" parameterType="com.atos.beans.dam.ZoneBean">
+		INSERT INTO tpa_tzone_gasq_value
+			(idn_zone_gasq_value, idn_zone_gas_quality, idn_gas_quality_param, min_value,max_value,
+			aud_ins_user,aud_last_user)
+		VALUES
+			(tpa_szone_gasq_value.nextval,
+			 (SELECT gq.idn_zone_gas_quality FROM tpa_tzone_gas_quality gq WHERE  gq.version_date =(SELECT MAX(odx.version_date) FROM tpa_tzone_gas_quality odx) AND gq.idn_zone=#{idn_zone}),
+		     (SELECT idn_gas_quality_param FROM tpa_tgas_quality_param WHERE parameter_code =#{parameterCode}),
+			 #{minValue},
+		     #{maxValue},
+		     #{username},
+			 #{username})
+	</insert>
+
+	<update id="updateZone" parameterType="com.atos.beans.dam.ZoneBean">
+		UPDATE tpa_tzone set
+			zone_desc=#{name},
+			idn_zone=#{idn_zone},
+			idn_zone_gasq_type=#{idn_zone_gasq_type},
+		  	start_date=#{startDate},
+		    end_date=#{endDate},
+		    aud_last_user=#{username}
+		WHERE idn_zone = #{idn_zone}		
+	</update>
+	
+	<update id="deleteZoneGasQuality" parameterType="com.atos.beans.dam.ZoneBean">
+		UPDATE tpa_tzone_gas_quality set
+			end_date = #{endDate},
+			aud_last_user=#{username}
+		 WHERE idn_zone_gas_quality = #{idn_zone_gas_quality}		     
+	</update>
+	
+	<select id="getGasQualityStarDate" resultType="java.util.Date">
+		select  gq.start_date start_date_gas_Quality
+	    FROM  tpa_tzone_gas_quality gq
+		WHERE idn_zone_gas_quality = #{idn_zone_gas_quality}      
+	</select>
+	
+</mapper>

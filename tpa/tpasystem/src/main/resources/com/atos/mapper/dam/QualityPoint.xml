@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+ 
+<mapper namespace="com.atos.mapper.dam.QualityPointMapper">
+
+<!-- filtro 
+    private BigDecimal pointCode;	//private BigDecimal id;
+	private String typeCode;        //private String pointType;
+	private Date startDate;
+	private Date endDate;
+	private BigDecimal idnPipelineSystem;//offshore
+	
+	bean
+	private BigDecimal idnSystemPoint;
+	private String pointCode; 	//private String id;
+	private String pointDesc; 	//private String name;
+	private String typeCode;
+	private String typeDesc;
+	private Date startDate;
+	private Date endDate;
+	private BigDecimal idnSystemPointGroup;
+	private BigDecimal idnSystemPointType;
+	 -->
+    <resultMap type="com.atos.beans.dam.QualityPointBean" id="QualityPoint">
+        <id property="idnSystemPoint" column="idn_system_point"  /> 
+        <result property="pointCode" column="point_code"/>
+        <result property="pointDesc" column="point_desc"/>
+        <result property="typeCode" column="type_code"/>
+        <result property="typeDesc" column="type_desc"/>
+   	    <result property="startDate" column="start_date"/>      
+        <result property="endDate" column="end_date"/>  
+        <result property="idnSystemPointType" column="idn_system_point_type"/>
+        <result property="idnSystemPointGroup" column="idn_system_point_group"/>
+        <result property="idnPipelineSystem" column="idn_pipeline_system"/>
+        <result property="idnSystemPointParam" column="idn_system_point_param"/>
+    </resultMap>
+     
+    <select id="selectQualityPoints" resultMap="QualityPoint">
+		WITH quality_point AS
+		 (SELECT sp.idn_system_point,
+		         sp.point_code,
+		         sp.point_desc,
+		         sp.type_code,
+		         sp.type_desc,
+		         sp.start_date,
+		         sp.end_date,
+		         sp.idn_system_point_type,
+		         sp.idn_system_point_group
+		    FROM tpa_vsystem_point sp
+		   WHERE sp.group_code = 'QUALITY' 
+		    <if test="startDate != null">
+		       AND nvl(sp.end_date,to_date('9999/12/31','yyyy/mm/dd'))>=  #{startDate}
+		    </if>
+		    <if test="endDate != null">
+		       AND #{endDate} >= sp.start_date
+		    </if>
+		    <if test="pointCode != null and pointCode != ''">
+		       AND sp.idn_system_point = #{pointCode}
+		    </if>
+		    <if test="typeCode != null and typeCode != ''">
+		        AND sp.idn_system_point_type = #{typeCode}
+		    </if>
+		  ),
+		metered_point AS
+		 (SELECT spp.idn_quality_point
+		    FROM tpa_vsystem_point       sp,
+		         tpa_varea_tpa           a,
+		         tpa_vzone_tpa           z,
+		         tpa_tsystem_point_param spp
+		   WHERE sp.group_code = 'METERED'
+		     AND sp.idn_system_point = spp.idn_system_point
+		     AND sp.idn_area = a.idn_area
+		     AND a.idn_zone = z.idn_zone
+		     AND z.idn_pipeline_system = #{idnPipelineSystem}
+		     AND spp.version_date = (SELECT MAX(sppx.version_date)
+		                               FROM tpa_tsystem_point_param sppx
+		                              WHERE sppx.idn_system_point = spp.idn_system_point
+		                                AND sppx.start_date = spp.start_date))
+		SELECT *
+		  FROM (SELECT qp.*
+		          FROM quality_point qp
+		         WHERE NOT EXISTS (SELECT 1 FROM tpa_tsystem_point_param spp WHERE spp.idn_quality_point = qp.idn_system_point)
+		        UNION
+		        SELECT qp.*
+		          FROM quality_point qp,
+		               metered_point mp
+		         WHERE qp.idn_system_point = mp.idn_quality_point)
+		 ORDER BY upper(point_code)
+		 </select>
+       
+     <select id="selectPointTypes" resultType="com.atos.beans.ComboFilterNS">
+		SELECT pt.idn_system_point_type as key, pt.type_desc as value
+		FROM tpa_vsystem_point_type_dam pt
+		ORDER BY  pt.type_desc
+    </select>
+   
+    <select id="selectQualityPointSystem" resultType="com.atos.beans.ComboFilterNS">
+		WITH quality_point AS
+			 (SELECT sp.idn_system_point,
+			         sp.point_code
+			    FROM tpa_vsystem_point sp
+			    WHERE sp.group_code = 'QUALITY'),
+		metered_point AS
+		 (SELECT spp.idn_quality_point
+		    FROM tpa_vsystem_point       sp,
+		         tpa_varea_tpa           a,
+		         tpa_vzone_tpa           z,
+		         tpa_tsystem_point_param spp
+		   WHERE sp.group_code = 'METERED'
+		     AND sp.idn_system_point = spp.idn_system_point
+		     AND sp.idn_area = a.idn_area
+		     AND a.idn_zone = z.idn_zone
+		     AND z.idn_pipeline_system =  #{idn_pipeline_system}
+		     AND spp.version_date = (SELECT MAX(sppx.version_date)
+		                               FROM tpa_tsystem_point_param sppx
+		                              WHERE sppx.idn_system_point = spp.idn_system_point
+		                                AND sppx.start_date = spp.start_date))
+		SELECT qp.idn_system_point AS key,
+		       qp.point_code       AS VALUE
+		FROM quality_point qp
+		WHERE NOT EXISTS (SELECT 1 FROM tpa_tsystem_point_param spp WHERE spp.idn_quality_point = qp.idn_system_point)
+		UNION
+		SELECT qp.idn_system_point AS key,
+		       qp.point_code       AS VALUE
+		  FROM quality_point qp,
+		       metered_point mp
+		 WHERE qp.idn_system_point = mp.idn_quality_point
+		 ORDER BY 2
+      
+    </select>
+	
+	
+	 <insert id="insertQualityPointParam" useGeneratedKeys="true" keyProperty="idn_system_point_param" keyColumn="idn_system_point_param" parameterType="com.atos.beans.dam.QualityPointBean">
+		INSERT INTO tpa_tsystem_point_param
+		      (idn_system_point_param, idn_system_point,
+		       start_date, end_date,
+		       aud_ins_user,aud_last_user)
+		   VALUES
+		      (tpa_ssystem_point_param.nextval,
+		       #{idnSystemPoint},
+		       #{startDate},
+		       #{endDate},
+		       #{username},
+			   #{username})		  
+	</insert>
+	
+	
+	<insert id="insertQualityPoint" useGeneratedKeys="true" keyProperty="idnSystemPoint" keyColumn="idn_system_point" parameterType="com.atos.beans.dam.QualityPointBean">
+		INSERT INTO tpa_tsystem_point
+			(idn_system_point,IDN_SYSTEM_POINT_GROUP,
+			point_code,point_desc, 
+			idn_system_point_type, 
+			start_date, end_date,
+			aud_ins_user,aud_last_user)
+		VALUES
+			(tpa_ssystem_point.nextval,
+			 (SELECT pg.idn_system_point_group  FROM tpa_tsystem_point_group pg WHERE pg.group_code='QUALITY'),
+			 #{pointCode},
+			 #{pointDesc}, 
+			 #{idnSystemPointType},
+			 #{startDate},
+		     #{endDate},
+		     #{username},
+			 #{username})
+	</insert>
+
+	<update id="updateQualityPoint" parameterType="com.atos.beans.dam.QualityPointBean">
+	<!-- he puesto endDate ¿? dependera de la tabla param....¿? Luis¿? -->
+		UPDATE tpa_tsystem_point set
+			point_desc = #{pointDesc},
+			idn_system_point_type=#{idnSystemPointType},
+			end_date= #{endDate},
+		    aud_last_user=#{username}
+		WHERE idn_system_point = #{idnSystemPoint}
+	</update>
+	
+	
+	<select id="getQualityPointCode" resultType="java.lang.String">
+	    SELECT p.POINT_CODE point_code
+		FROM tpa_tsystem_point p, tpa_tsystem_point_group pg
+		WHERE p.idn_system_point_group = pg.idn_system_point_group
+       		  AND pg.group_code= 'QUALITY'
+			  AND p.point_code = #{pointCode}	 
+	        
+	</select>
+	
+	
+	<update id="deleteQualityPointParam" parameterType="com.atos.beans.dam.QualityPointBean">
+		UPDATE tpa_tsystem_point_param set
+			   end_date = #{endDate},
+			   aud_last_user=#{username}
+		WHERE  idn_system_point = #{idnSystemPoint}
+		       AND idn_system_point_param = #{idn_system_point_param} 
+	</update>
+	
+	<select id="getQualityPointParamStarDate" resultType="java.util.Date">
+		SELECT  pp.start_date
+	    FROM tpa_tsystem_point_param pp
+		WHERE idn_system_point = #{idnSystemPoint}
+		      AND idn_system_point_param = #{idn_system_point_param} 
+	</select>
+	
+
+</mapper>

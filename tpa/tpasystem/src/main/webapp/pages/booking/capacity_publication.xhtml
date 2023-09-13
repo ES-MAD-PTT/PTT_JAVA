@@ -1,0 +1,464 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_booking']}" url="#" />
+			<p:menuitem value="#{msg['menu_capacity_publication']}" url="/pages/booking/capacity_publication.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+		<script type="text/javascript" async="async" defer="defer" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBw9vi2FF2jHvZtwam6uUhD_i7XjsIPDDM"></script>
+		<script>
+			function resizeMap(){
+				var mapGrid = null;
+				if(document.getElementById("mapGrid")!=null){
+					mapGrid = document.getElementById("mapGrid");
+				} else {
+					mapGrid = document.getElementById("form:mapGrid");
+				}
+				var height = mapGrid.style.height;
+				if(height=="400px"){
+					mapGrid.style.height="600px";
+				} else {
+					mapGrid.style.height="400px";
+				}
+			}
+		</script> 	
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" sticky="true"/>
+			
+            <p:layout widgetVar="capPublicationLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">	
+					
+				<p:panelGrid columns="3" style="width:100%">
+					
+						<p:panelGrid>
+							<p:row>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['cap_pub_period_from']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['cap_pub_to']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['cap_pub_select_all']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CAPACITY_PUBLICATION.SHOW">
+										<p:calendar id="fecInicio" size="10" pattern="dd/MM/yyyy" value="#{capacityPublicationView.filters.startDate}"
+											showOn="button" navigator="true">
+											<p:ajax event="dateSelect" update="fecInicio"></p:ajax>
+											<p:ajax event="change" update="fecInicio"></p:ajax>
+										</p:calendar>
+									</shiro:hasPermission> 
+									<shiro:lacksPermission name="#{changeSystemView.system}.BOOKING.CAPACITY_PUBLICATION.SHOW">
+										<p:calendar id="fecInicio" size="10" pattern="dd/MM/yyyy" mindate="#{capacityPublicationView.currentDate}" value="#{capacityPublicationView.filters.startDate}"
+											showOn="button" navigator="true">
+											<p:ajax event="dateSelect" update="fecInicio"></p:ajax>
+											<p:ajax event="change" update="fecInicio"></p:ajax>
+										</p:calendar>
+									</shiro:lacksPermission>
+								</p:column>
+								<p:column>
+									<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CAPACITY_PUBLICATION.SHOW">
+										<p:calendar id="fecFin" size="10" pattern="dd/MM/yyyy" value="#{capacityPublicationView.filters.endDate}"
+											showOn="button" navigator="true">
+											<p:ajax event="dateSelect" update="fecFin"></p:ajax>
+											<p:ajax event="change" update="fecFin"></p:ajax>
+										</p:calendar>
+									</shiro:hasPermission>
+									<shiro:lacksPermission name="#{changeSystemView.system}.BOOKING.CAPACITY_PUBLICATION.SHOW">
+										<p:calendar id="fecFin" size="10" pattern="dd/MM/yyyy" mindate="#{capacityPublicationView.currentDate}" 
+											value="#{capacityPublicationView.filters.endDate}"
+											showOn="button" navigator="true">
+											<p:ajax event="dateSelect" update="fecFin"></p:ajax>
+											<p:ajax event="change" update="fecFin"></p:ajax>
+										</p:calendar>
+									</shiro:lacksPermission>
+								</p:column>
+ 								<p:column style="text-align:center">
+									<p:selectBooleanCheckbox id="area_all" value="#{capacityPublicationView.filters.selectAll}" >
+										<p:ajax listener="#{capacityPublicationView.selectAll}" update=":#{p:component('area_a1')},
+										:#{p:component('area_a2')},:#{p:component('area_a3')},:#{p:component('area_b')},:#{p:component('area_c1')},
+										:#{p:component('area_c2')},:#{p:component('area_c4')},:#{p:component('area_c5')},
+										:#{p:component('area_c6')},:#{p:component('area_d')},:#{p:component('area_e')},:#{p:component('area_f1')},
+										:#{p:component('area_f2')},:#{p:component('area_g')},:#{p:component('area_h')},:#{p:component('area_r')},
+										:#{p:component('area_x1')},:#{p:component('area_x2')},:#{p:component('area_x3')},
+										:#{p:component('area_y')}" /> <!-- Must be added later :#{p:component('area_c3')},:#{p:component('area_s')}, -->
+									</p:selectBooleanCheckbox>						
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column colspan="3">
+									<h:outputText style="color:red" value="#{msg['cap_not_official']}" />
+								</p:column>
+							</p:row>
+						</p:panelGrid>	
+						<p:panelGrid>
+							<p:row>
+								<p:column style="font-weight: bold;font-size:15pt;" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<h:outputText value="A1" style="padding-left:5px;padding-right:5px;border:3px solid #0C63E6" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt;" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<h:outputText value="A2" style="padding-left:5px;padding-right:5px;border:3px solid #002673" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt;" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<h:outputText value="A3" style="padding-left:5px;padding-right:5px;border:3px solid #00C5FF" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<h:outputText value="B" style="padding-left:5px;padding-right:5px;border:3px solid #4DDEB7" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<h:outputText value="C1" style="padding-left:5px;padding-right:5px;border:3px solid #E60000" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<h:outputText value="C2" style="padding-left:5px;padding-right:5px;border:3px solid #737300" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<h:outputText value="C3" style="padding-left:5px;padding-right:5px;border:3px solid #A80000" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<h:outputText value="C4" style="padding-left:5px;padding-right:5px;border:3px solid #FF7A00" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<h:outputText value="C5" style="padding-left:5px;padding-right:5px;border:3px solid #73DFFF" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<h:outputText value="C6" style="padding-left:5px;padding-right:5px;border:3px solid #FFAD07" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column style="text-align:center" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_a1" value="#{capacityPublicationView.filters.area_a1}" >
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_a2" value="#{capacityPublicationView.filters.area_a2}" >
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_a3" value="#{capacityPublicationView.filters.area_a3}" >
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_b" value="#{capacityPublicationView.filters.area_b}" >
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_c1" value="#{capacityPublicationView.filters.area_c1}" >						
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_c2" value="#{capacityPublicationView.filters.area_c2}" >						
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_c3" value="" disabled="true">	<!-- Must be enable later value="#{capacityPublicationView.filters.area_c3}"  -->					
+										<!-- <p:ajax update=":#{p:component('area_all')}"/> -->
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_c4" value="#{capacityPublicationView.filters.area_c4}" >						
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_c5" value="#{capacityPublicationView.filters.area_c5}" >						
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_c6" value="#{capacityPublicationView.filters.area_c6}" >						
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<h:outputText value="D" style="padding-left:5px;padding-right:5px;border:3px solid #70A800" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<h:outputText value="E" style="padding-left:5px;padding-right:5px;border:3px solid #F6EA66" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<h:outputText value="F1" style="padding-left:5px;padding-right:5px;border:3px solid #E600A9" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<h:outputText value="F2" style="padding-left:5px;padding-right:5px;border:3px solid #FF00C5" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<h:outputText value="G" style="padding-left:5px;padding-right:5px;border:3px solid #8400A8" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<h:outputText value="H" style="padding-left:5px;padding-right:5px;border:3px solid #9C9C9C" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<h:outputText value="R" style="padding-left:5px;padding-right:5px;border:3px solid #005CE6" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<h:outputText value="S" style="padding-left:5px;padding-right:5px;border:3px solid purple" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<h:outputText value="X1" style="padding-left:5px;padding-right:5px;border:3px solid darkgreen" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<h:outputText value="X2" style="padding-left:5px;padding-right:5px;border:3px solid darkgreen" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<h:outputText value="X3" style="padding-left:5px;padding-right:5px;border:3px solid darkgreen" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<h:outputText value="Y" style="padding-left:5px;padding-right:5px;border:3px solid black" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column style="text-align:center" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_d" value="#{capacityPublicationView.filters.area_d}" >						
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_e" value="#{capacityPublicationView.filters.area_e}" >						
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_f1" value="#{capacityPublicationView.filters.area_f1}" >						
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_f2" value="#{capacityPublicationView.filters.area_f2}" >						
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_g" value="#{capacityPublicationView.filters.area_g}" >						
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_h" value="#{capacityPublicationView.filters.area_h}" >						
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_r" value="#{capacityPublicationView.filters.area_r}" >						
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_s" value="" disabled="true">	<!-- Must be enable later 	value="#{capacityPublicationView.filters.area_s}"  -->				
+										<!-- <p:ajax update=":#{p:component('area_all')}"/> -->
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_x1" value="#{capacityPublicationView.filters.area_x1}" >						
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_x2" value="#{capacityPublicationView.filters.area_x2}" >						
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_x3" value="#{capacityPublicationView.filters.area_x3}" >						
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityPublicationView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_y" value="#{capacityPublicationView.filters.area_y}" >						
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>						
+							</p:row>
+						</p:panelGrid>
+						<p:panelGrid columns="2" style="float:right;top:0px">
+							<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CAPACITY_PUBLICATION.QUERY">
+								<p:commandButton value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{capacityPublicationView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,:#{p:component('capPub')},:#{p:component('mapGrid')}"/>
+							</shiro:hasPermission>
+
+							<p:commandButton  onclick="PF('capPublicationLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+
+							<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CAPACITY_PUBLICATION.QUERY">
+								<p:commandButton value="#{msg['clear']}"
+									actionListener="#{capacityPublicationView.onClear}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" 
+									update=":form:msgs,:#{p:component('fecInicio')},:#{p:component('fecFin')},:#{p:component('capPub')},:#{p:component('area_a1')},
+										:#{p:component('area_a2')},:#{p:component('area_a3')},:#{p:component('area_b')},:#{p:component('area_c1')},
+										:#{p:component('area_c2')},:#{p:component('area_c4')},:#{p:component('area_c5')},
+										:#{p:component('area_c6')},:#{p:component('area_d')},:#{p:component('area_e')},:#{p:component('area_f1')},
+										:#{p:component('area_f2')},:#{p:component('area_g')},:#{p:component('area_h')},:#{p:component('area_r')},
+										:#{p:component('area_x1')},:#{p:component('area_x2')},:#{p:component('area_x3')},
+										:#{p:component('area_y')}"/>
+							</shiro:hasPermission>
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center"
+					resizable="false" closable="false" collapsible="false">
+					
+					<p:panelGrid style="width:100%;height:100%;border:none !important;padding:0px !important" columns="1" layout="grid">
+						<f:facet name="header" style="padding:0px !important">
+							<p:outputPanel style="height:25px">
+	        					 	<p:commandButton id="resize" type="button" value="Resize Map" icon="ui-icon fa fa-arrows-alt" style="float:right;"
+	        							onclick="resizeMap()"/>
+								</p:outputPanel> 
+						</f:facet>
+						<p:panelGrid id="mapGrid" style="width:100%;height:90%;border:none !important" columns="1" layout="grid">
+							<p:gmap center="#{capacityPublicationView.mapCenter}" zoom="#{capacityPublicationView.mapZoom}" type="hibrid" widgetVar="homeMap"
+									style="width:100%;height:400px;border:none !important" model="#{capacityPublicationView.mapModel}"
+									mapTypeControl="false" navigationControl="false" >
+									
+									<p:ajax event="overlaySelect" listener="#{capacityPublicationView.onPolylineSelect}" update="msgs"/>
+							</p:gmap>
+						</p:panelGrid>
+						<!-- style="width:1200px;height:400px;border:none !important" model="#{capacityPublicationView.mapModel}"-->									
+						
+						<p:remoteCommand name="onRowEdit" action="#{capacityPublicationView.onRowSearch}" onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,:#{p:component('capPub')}" />
+						<p:dataTable widgetVar="w_capPublication"  id="capPub" var="cap" value="#{capacityPublicationView.items}" reflow="true" 
+							 editable="true"
+							style="margin-bottom:20px;border-collapse:collapse"
+						    paginator="true" rows="15" rowsPerPageTemplate="5,10,15,20,25">
+							<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CAPACITY_PUBLICATION.QUERY">
+							
+								<f:facet name="header">
+									<p:outputPanel style="height:25px">
+										<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+										<p:columnToggler datasource="capPub" trigger="toggler" style="width:200px"/>
+										<h:commandLink style="float:right">
+							                <p:graphicImage name="/images/excel.png" width="24"/>
+							                <p:dataExporter type="xls" target="capPub" fileName="capacityPublication" postProcessor="#{capacityPublicationView.postProcessXLS}"/>
+							            </h:commandLink>	        							
+									</p:outputPanel>								
+								</f:facet>
+								
+								<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CAPACITY_PUBLICATION.MOD">
+							 		<p:ajax event="rowEditInit" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','hidden')});" />
+									<p:ajax event="rowEdit" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});PF('cargando').hide();onRowEdit()" listener="#{capacityPublicationView.onRowEdit}" update=":form:msgs" onstart="PF('cargando').show()"/>   
+									<p:ajax event="rowEditCancel" listener="#{capacityPublicationView.onRowCancel}" update=":form:msgs" onstart="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>
+								 </shiro:hasPermission>
+								
+						       <p:column >
+									<f:facet name="header">
+						                <h:outputText value="#{msg['cap_pub_area']}" />
+						            </f:facet>
+						       		<h:outputText value="#{cap.area}" />
+						       </p:column>
+						       <p:column headerText="#{msg['cap_pub_date_from']}" >
+									<p:cellEditor>
+					               <f:facet name="output">
+					               			<h:outputText value="#{cap.monthYear}" >
+					              				<f:convertDateTime pattern="dd/MM/yyyy" />
+					              		 </h:outputText>
+					               </f:facet>
+					               <f:facet name="input">
+					               		<p:calendar required="true" id="startDate" value="#{cap.monthYear}" pattern="dd/MM/yyyy" 
+					               			readonlyInput="true"   mindate="#{(capacityPublicationView.sysdate).getTime()}" 
+											requiredMessage="#{msg['cap_pub_date_from']}: #{msg['empty_field']}" validatorMessage="#{msg['cap_pub_date_from']}: #{msg['empty_field']}">
+											<f:convertDateTime pattern="dd/MM/yyyy"/>
+										</p:calendar>
+					               </f:facet>
+					           </p:cellEditor>
+						       </p:column>		
+						       <p:column headerText="#{msg['cap_pub_date_to']}" >
+									<p:cellEditor>
+					               <f:facet name="output">
+					               			<h:outputText value="#{cap.endDate}" >
+					              				<f:convertDateTime pattern="dd/MM/yyyy" />
+					              		 </h:outputText>
+					               </f:facet>
+					               <f:facet name="input">
+					               		<p:calendar required="true" id="endDate" value="#{cap.endDate}" pattern="dd/MM/yyyy" 
+					               			readonlyInput="true"   mindate="#{(capacityPublicationView.sysdate).getTime()}" 
+											requiredMessage="#{msg['cap_pub_date_to']}: #{msg['empty_field']}" validatorMessage="#{msg['cap_pub_date_to']}: #{msg['empty_field']}">
+											<f:convertDateTime pattern="dd/MM/yyyy"/>
+										</p:calendar>
+					               </f:facet>
+					           </p:cellEditor>
+						       		
+						       </p:column>
+						       <shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CAPACITY_PUBLICATION.SHOW">
+						       <p:column >
+									<f:facet name="header">
+						                <h:outputText value="#{msg['cap_pub_tech_cap']}" />
+						            </f:facet>
+						       		<h:outputText style="float:right" value="#{cap.tech_cap}" >
+						       			<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3" />
+						       		</h:outputText>
+						       </p:column>
+						       </shiro:hasPermission>
+						       
+ 				      		  <p:column headerText="#{msg['cap_pub_available_cap']}">
+									<p:cellEditor>
+									<f:facet name="output">
+										<h:outputText style="float:right" value="#{cap.available_cap}" >
+						       				<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3" />
+						       			</h:outputText>
+									</f:facet>
+									<f:facet name="input">
+										<p:inputText value="#{cap.available_cap}" style="width:100%;text-align: right" label="#{msg['cap_pub_available_cap']}"/></f:facet>
+									</p:cellEditor>
+								</p:column>
+						       
+						       
+						       <shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CAPACITY_PUBLICATION.SHOW">
+								<p:column >
+									<f:facet name="header">
+						                <h:outputText value="#{msg['cap_pub_booked_cap']}" />
+						            </f:facet>
+						       		<h:outputText style="float:right" value="#{cap.booked_cap}" >
+						       			<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3" />
+						       		</h:outputText>
+						       </p:column>
+								</shiro:hasPermission>
+								
+								
+								<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CAPACITY_PUBLICATION.MOD">
+							       <p:column style="width:32px">
+							           <p:rowEditor/>
+							       </p:column>
+						       </shiro:hasPermission>
+								
+								
+							</shiro:hasPermission>       
+						</p:dataTable>
+					</p:panelGrid>
+				</p:layoutUnit>
+
+			</p:layout>
+		</h:form>
+
+	</ui:define>
+
+
+</ui:composition>

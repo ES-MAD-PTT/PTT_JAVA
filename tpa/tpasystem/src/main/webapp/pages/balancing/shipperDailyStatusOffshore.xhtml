@@ -1,0 +1,95 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core">
+
+<p:dataTable widgetVar="w_shipperDailyStatusOffshore"  id="shipperDailyStatusOffshore" var="shipperDailyOff" value="#{shipperDailyStatusView.itemsOffshore}"
+	reflow="true" style="width:100%;margin-bottom:20px;border-collapse:collapse"				
+	scrollable="true" scrollHeight="100%" scrollWidth="100%"
+	resizableColumns="true" tableStyle="width:auto"
+	paginator="true" rows="15" rowsPerPageTemplate="5,10,15,20,25, #{shipperDailyStatusView.itemsOffShoreSize}"
+	selectionMode="single" selection="#{shipperDailyStatusView.selectedOffshore}" rowKey="#{shipperDailyOff.dailyStatusId}">
+
+	<f:facet name="header"> 
+		<p:outputPanel style="height:25px">
+			<!-- <shiro:hasPermission name="#{changeSystemView.system}.BALANCING.SHIPPER_DAILY_STATUS.QUERY">
+       			<h:commandLink style="float:right">
+				       <p:graphicImage name="/images/excel.png" width="24"/>
+				       <p:dataExporter type="xls" target="shipperDailyStatusOnshore" fileName="ShipperDailyStatus" postProcessor="#{shipperDailyStatusView.processXLS}"/>
+				</h:commandLink>	 
+			</shiro:hasPermission> -->
+		</p:outputPanel>        										          
+	</f:facet>
+	
+	<p:columnGroup type="header" >
+		<p:row>
+			<p:column rowspan="2" headerText="&lt;br&gt;&lt;br&gt;#{msg['shipp_daily_date']}&lt;br&gt;&lt;br&gt;&lt;br&gt;"
+				style="min-width: 70px;max-width: 70px;font-size:16px;"/>
+			<p:column colspan="7" headerText="#{msg['shipp_daily_sum_pane']}"  style="font-size:15px;"/>
+		</p:row>
+		<p:row>
+			<p:column headerText="#{msg['shipp_daily_shipper']}" style="min-width: 140px;max-width: 140px;font-size:15px;"/>
+			<p:column headerText="#{msg['shipp_daily_contract']}" style="min-width: 140px;max-width: 140px;font-size:15px;"/>
+			
+			<p:column headerText="#{msg['shipp_daily_EOTD_Park']}" style="min-width: 160px;max-width: 160px;"/>
+			<p:column headerText="#{msg['shipp_daily_EOTD_Min_Inventory']}&lt;br&gt;#{msg['shipp_daily_mmbtud']}" 
+				style="min-width: 160px;max-width: 160px;"/>
+			<p:column headerText="#{msg['shipp_daily_EOTD_Reserve_Bal']}&lt;br&gt;#{msg['shipp_daily_mmbtud']}" 
+				style="min-width: 160px;max-width: 160px;"/>
+			<p:column headerText="#{msg['shipp_daily_Stock_IMB']}" style="min-width: 160px;max-width: 160px;"/>
+			<p:column headerText="#{msg['shipp_daily_Stock_Acc_IMB']}" style="min-width: 160px;max-width: 160px;"/>
+		</p:row>
+	</p:columnGroup>
+
+	<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.SHIPPER_DAILY_STATUS.QUERY">
+
+		<p:column styleClass="#{shipperDailyOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 70px;max-width: 70px;">
+			<h:outputText style="float:right" value="#{shipperDailyOff.isTotal eq 'Y'? ' ' : shipperDailyOff.gasDay}">
+				<f:convertDateTime pattern="dd/MM/yyyy" />
+			</h:outputText>
+		</p:column>
+
+		<p:column styleClass="#{shipperDailyOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width:140px;max-width: 140px;">
+			<h:outputText value="#{shipperDailyOff.isTotal eq 'Y'? 'TOTAL: ' : ''}#{shipperDailyOff.shipperCode}" />
+		</p:column>
+
+		<p:column styleClass="#{shipperDailyOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 140px;max-width: 140px;">
+			<h:outputText value="#{shipperDailyOff.isTotal eq 'Y'? '' : shipperDailyOff.contractCode}" />
+		</p:column>
+
+		<p:column styleClass="#{shipperDailyOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 160px;max-width: 160px;">
+			<h:outputText style="float:right" value="#{shipperDailyOff.eotdPark}">
+				<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4" />
+			</h:outputText>
+		</p:column>
+
+		<p:column styleClass="#{shipperDailyOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 160px;max-width: 160px;">
+			<h:outputText style="float:right" value="#{shipperDailyOff.eotdMinInv}">
+				<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4" />
+			</h:outputText>
+		</p:column>
+
+		<p:column styleClass="#{shipperDailyOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 160px;max-width: 160px;">
+			<h:outputText style="float:right" value="#{shipperDailyOff.eotdBalGas}">
+				<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4" />
+			</h:outputText>
+		</p:column>
+
+		<p:column styleClass="#{shipperDailyOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 160px;max-width: 160px;">
+			<h:outputText style="float:right" value="#{shipperDailyOff.imbalanceStock}">
+				<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4" />
+			</h:outputText>
+		</p:column>
+
+		<p:column styleClass="#{shipperDailyOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 160px;max-width: 160px;">
+			<h:outputText style="float:right" value="#{shipperDailyOff.accImbalanceStock}">
+				<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4" />
+			</h:outputText>
+		</p:column>
+	</shiro:hasPermission>
+</p:dataTable>
+</ui:composition>

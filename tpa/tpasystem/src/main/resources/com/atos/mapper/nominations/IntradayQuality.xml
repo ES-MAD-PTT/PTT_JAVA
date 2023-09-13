@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<!-- Namespace -->
+<mapper namespace="com.atos.mapper.nominations.IntradayQualityMapper">
+
+	<!-- En esta query solo se muestran estas 3 zonas, que corresponden a las pestañas visibles en Daily Nomination 
+	Management y Weekly Nomination Management. Solo se muestran las zonas ONSHORE, no las OFFSHORE ('O-EAST'). -->
+	<select id="selectZones" resultType="com.atos.beans.ComboFilterNS">
+		select idn_zone as key, zone_code as value
+		  from TPA_TZONE t
+		 where zone_code in ('EAST', 'WEST', 'EAST-WEST')
+	</select>
+	
+	<!-- offshore -->
+	<select id="selectAreasSystem" parameterType="java.math.BigDecimal" resultType="com.atos.beans.ComboFilterNS">
+		SELECT DISTINCT a.idn_area as key, a.area_code as value
+		FROM tpa_tarea_capacity ac,
+		tpa_tarea_capacity_point acp,
+		tpa_varea_tpa a,
+		tpa_tsystem_point_type spt,
+		tpa_vzone_tpa z
+		WHERE ac.idn_area_capacity = acp.idn_area_capacity
+		AND acp.idn_system_point_type = spt.idn_system_point_type
+		AND ac.idn_area = a.idn_area
+		AND type_code = 'ENTRY'
+		AND a.idn_zone = z.idn_zone
+		AND z.idn_pipeline_system = #{idn_pipeline}
+		order by area_code
+	</select>
+	
+	
+    <resultMap type="com.atos.beans.nominations.IntradayQualityBean" id="IntradayQuality">
+        <result property="nominationDate" column="start_date"/>    
+        <result property="areaId" column="idn_area"/>
+        <result property="areaCode" column="area_code"/>
+        <result property="parameterCode" column="parameter_code"/>
+        <result property="value" column="val"/>
+        <result property="unitDesc" column="unit_desc"/> 
+        <result property="isWarned" column="is_warned"/> 
+    </resultMap>
+    
+    <select id="selectIntradayQuality" resultMap="IntradayQuality">
+    	WITH best_operation AS
+		(SELECT n.idn_nomination,
+		n.idn_operation,
+		n.idn_contract,		
+		CASE n.is_intraday		
+		WHEN 'Y' THEN 1
+		ELSE 		  2	
+		END AS priority	
+		FROM tpa_tnomination n,		
+		     tpa_voperation o		
+		WHERE n.is_contracted = 'Y'		
+		<if test="startDate != null">		
+			AND trunc(n.end_date) >= #{startDate}		
+		</if>		
+		<if test="endDate != null">		
+			AND #{endDate} >= trunc(n.start_date)		
+		</if>		
+		AND n.nomination_version in
+		(SELECT MAX(nx.nomination_version) FROM tpa_tnomination nx WHERE nx.nomination_code = n.nomination_code AND nx.is_intraday = 'N' 
+		UNION ALL
+		SELECT MAX(nx.nomination_version) FROM tpa_tnomination nx WHERE nx.nomination_code = n.nomination_code AND nx.is_intraday = 'Y')		
+		AND NOT (n.is_responsed = 'Y' AND n.is_valid = 'N')		
+		AND n.idn_operation = o.idn_operation	
+        AND o.term_code = 'DAILY'		
+		AND o.category_code = 'NOMINATION'),
+	
+gas_q_parameters AS
+(SELECT m.gas_day, 
+        qp.parameter_code, 
+        qp.idn_gas_quality_param, 
+        spr.nomination_point_idn,
+        qp.idn_unit,
+       CASE WHEN SUM(m.volume) = 0 THEN NULL 
+       ELSE SUM(mgq.value*m.volume)/SUM(m.volume) END AS parameter_value
+FROM tpa_tmetering m, 
+     tpa_tmetering_type mt,
+     tpa_vsystem_point  sp,
+     tpa_tmetering_gasq mgq,
+     TPA_TGAS_QUALITY_PARAM qp,
+     tpa_vsystem_point_relation spr
+WHERE  mt.type_code = 'VOLUME'   
+  AND sp.GROUP_CODE = 'METERED'
+  AND sp.TYPE_CODE = 'ENTRY'   
+  AND  m.idn_metering_type = mt.idn_metering_type
+  AND m.idn_system_point = sp.IDN_SYSTEM_POINT
+  AND m.idn_metering = mgq.idn_metering
+  AND mgq.idn_gas_quality_param = qp.idn_gas_quality_param
+  AND qp.parameter_code in ('HV','SG') 
+  
+  AND sp.idn_system_point = spr.metered_point_idn
+  AND m.gas_day BETWEEN spr.max_start_date AND spr.min_end_date
+
+ 
+    <if test="startDate != null">
+      AND trunc(m.gas_day) >= #{startDate}
+    </if>
+    <if test="endDate != null">
+      AND #{endDate} >= trunc(m.gas_day)
+    </if>
+		
+  AND m.version_date = (SELECT MAX(mx.version_date) 
+                        FROM tpa_tmetering mx
+                        WHERE m.idn_system_point = mx.idn_system_point
+                         AND m.gas_day = mx.gas_day
+						 AND m.idn_metering_type = mx.idn_metering_type)
+						 
+GROUP BY m.gas_day, qp.parameter_code, qp.idn_gas_quality_param, spr.nomination_point_idn, mgq.value, m.volume, qp.idn_unit
+),
+	
+gas_q_values AS
+ (SELECT n.idn_contract,
+         ndq.gas_day,
+         ne.idn_zone,
+         ne.zone_code,
+         ne.idn_area,
+         ne.area_code,
+         gp.parameter_code,
+         ndq.day_matched_quantity AS day_matched_quantity,
+         gp.parameter_value as quality_value,
+         u.unit_desc,
+         n.idn_nomination,
+         n.priority         
+    FROM tpa_tunit                     u,
+         best_operation                n,
+         tpa_vnomination_day_quantity  ndq,
+         tpa_vnomination_entity        ne,
+         tpa_vnomination_main_concepts nmc,
+         tpa_tnomination_xls_headr     nxh,  
+         tpa_tsystem_point_type        spt,
+		 gas_q_parameters              gp
+   WHERE gp.parameter_code IN ('HV', 'SG')
+     AND gp.idn_unit = u.idn_unit
+     AND n.idn_nomination = ndq.idn_nomination
+     AND n.idn_nomination = ne.idn_nomination   
+     AND ndq.gas_day = gp.gas_day
+     AND gp.nomination_point_idn = ne.idn_system_point	 
+	 
+	    <if test="startDate != null">
+        AND trunc(ndq.gas_day) >= #{startDate}
+        </if>
+        <if test="endDate != null">
+        AND #{endDate} >= trunc(ndq.gas_day)
+        </if>
+             
+     AND ndq.idn_nomination_entity = ne.idn_nomination_entity
+     AND ndq.idn_nomination_entity = nxh.idn_nomination_entity
+     AND ndq.idn_nomination_concept = nmc.idn_nomination_concept
+     AND ndq.idn_nomination_concept = nxh.idn_nomination_concept
+     AND ne.idn_nomination_entity = nxh.idn_nomination_entity
+     AND ne.is_point_entity = nmc.is_point_concept
+     AND ne.is_area_entity = nmc.is_area_concept
+     AND ne.is_zone_entity = nmc.is_zone_concept
+     AND nmc.idn_nomination_concept = nxh.idn_nomination_concept
+     AND nxh.idn_system_point_type = spt.idn_system_point_type
+    -- AND ngq.idn_gas_quality_param = gp.idn_gas_quality_param
+     AND spt.type_code = 'ENTRY'
+     AND nmc.CONCEPT_CODE = 'VOLUME'
+	 
+	   <choose>
+		  <when test="areaId != null and areaId.length > 0">
+		  <foreach item="item" index="index" collection="areaId"
+		  open="AND ne.idn_area in (" separator="," close=")">
+		  #{item}
+			  </foreach>
+		  </when>
+		  <otherwise>
+		  AND ne.idn_area in (-1)
+		  </otherwise>
+	   </choose>
+
+  ),
+
+best_gas_q_values AS
+ (SELECT idn_contract,
+         gas_day,
+         idn_zone,
+         zone_code,
+         idn_area,
+         area_code,
+         parameter_code,
+         SUM(day_matched_quantity) keep(dense_rank FIRST ORDER BY priority) AS day_matched_quantity,
+         SUM(day_matched_quantity * quality_value) keep(dense_rank FIRST ORDER BY priority) AS quality_value_weighted,
+         unit_desc
+    FROM gas_q_values
+   GROUP BY idn_contract,
+            gas_day,
+            idn_zone,
+            zone_code,
+            idn_area,
+            area_code,
+            parameter_code,
+            unit_desc),
+
+wi_calculation_values AS
+ (SELECT idn_contract,
+         gas_day,
+         idn_zone,
+         zone_code,
+         idn_area,
+         area_code,
+         parameter_code,
+     day_matched_quantity AS day_matched_quantity,
+     quality_value_weighted AS quality_value_weighted_hv,
+     (SELECT quality_value_weighted
+        FROM best_gas_q_values sg
+       WHERE sg.idn_contract = hv.idn_contract
+         AND sg.gas_day = hv.gas_day
+       AND sg.idn_zone = hv.idn_zone
+       AND sg.zone_code = hv.zone_code
+       AND sg.idn_area = hv.idn_area
+       AND sg.area_code = hv.area_code
+       AND sg.parameter_code = 'SG') AS quality_value_weighted_sg,
+		   hv.unit_desc
+		  FROM best_gas_q_values hv
+		   WHERE hv.parameter_code = 'HV'),
+   
+wi_hv_prorrated_values AS
+(SELECT gas_day AS start_date,
+       idn_zone AS idn_zone,
+       zone_code AS zone_code,
+       idn_area AS idn_area,
+       area_code AS area_code,
+       parameter_code AS parameter_code,
+       to_number(decode(SUM(day_matched_quantity), 0, NULL, round(SUM(quality_value_weighted) / SUM(day_matched_quantity), 3))) AS val,
+       unit_desc AS unit_desc
+  FROM best_gas_q_values
+ WHERE parameter_code IN ('HV', 'CO2')
+ GROUP BY gas_day,
+          idn_zone,
+          zone_code,
+          idn_area,
+          area_code,
+          parameter_code,
+          unit_desc
+
+UNION ALL
+
+SELECT gas_day AS start_date,
+       idn_zone AS idn_zone,
+       zone_code AS zone_code,
+       idn_area AS idn_area,
+       area_code AS area_code,
+       'WI' AS parameter_code,
+       to_number(decode(sign(SUM(quality_value_weighted_sg) * SUM(day_matched_quantity)),
+              0,
+              NULL,
+              -1,
+              NULL,
+              round(SUM(quality_value_weighted_hv) / sqrt(SUM(quality_value_weighted_sg) * SUM(day_matched_quantity)) / 0.982596, 3))) AS val,
+       unit_desc AS unit_desc
+  FROM wi_calculation_values
+ GROUP BY gas_day,
+          idn_zone,
+          zone_code,
+          idn_area,
+          area_code,
+          parameter_code,
+          unit_desc  ),
+          
+zone_gasq_limit AS         
+(SELECT zgq.idn_zone_gas_quality,
+       zgq.idn_zone,
+       zgq.start_date, 
+       COALESCE(zgq.end_date,
+                 (SELECT zgqy.start_date -1
+                    FROM tpa_tzone_gas_quality zgqy
+                   WHERE zgqy.idn_zone = zgq.idn_zone
+                     AND zgqy.idn_zone_gasq_type = zgq.idn_zone_gasq_type
+                     AND zgqy.start_date > zgq.start_date
+                     AND zgqy.version_date = (SELECT MAX(zgqyx.version_date)
+                                                 FROM tpa_tzone_gas_quality zgqyx
+                                                WHERE zgqy.idn_zone = zgqyx.idn_zone
+                                                  AND zgqy.idn_zone_gasq_type = zgqyx.idn_zone_gasq_type
+                                                  AND zgqy.start_date = zgqyx.start_date)
+                 ),
+                 to_date('9999-12-31', 'YYYY-MM-DD')) AS end_date,
+       zgqt.type_code AS type_code, 
+       gqp.parameter_code,
+       zgqv.idn_gas_quality_param,
+       zgqv.min_value,
+       zgqv.max_value
+  FROM tpa_tzone_gas_quality  zgq,
+       tpa_tzone_gasq_type    zgqt,
+       tpa_tzone_gasq_value   zgqv,
+       tpa_tgas_quality_param gqp
+ WHERE zgq.idn_zone_gasq_type = zgqt.idn_zone_gasq_type
+   AND zgqt.type_code = 'ENTRY'
+   AND zgqv.idn_zone_gas_quality = zgq.idn_zone_gas_quality
+   AND zgqv.idn_gas_quality_param = gqp.idn_gas_quality_param
+   AND gqp.parameter_code IN ('HV', 'WI')
+   AND nvl(zgq.end_date, zgq.start_date) >= zgq.start_date
+   AND zgq.version_date = (SELECT MAX(zgqx.version_date) 
+                             FROM tpa_tzone_gas_quality zgqx
+                            WHERE zgq.idn_zone = zgqx.idn_zone
+                              AND zgq.idn_zone_gasq_type = zgqx.idn_zone_gasq_type
+                              AND zgq.start_date = zgqx.start_date))
+                                                        
+SELECT pv.start_date AS start_date,      
+       pv.idn_area AS idn_area,
+       pv.area_code AS area_code,
+       pv.parameter_code AS parameter_code,
+       pv.val AS val,
+       pv.unit_desc AS unit_desc,               
+       CASE WHEN  pv.val <![CDATA[ <= ]]> nvl(zgql.min_value,0) AND pv.val >= nvl(zgql.max_value,0) THEN 1
+            ELSE 0              
+        END AS is_warned   
+  FROM wi_hv_prorrated_values  pv
+  LEFT JOIN zone_gasq_limit  zgql ON  pv.idn_zone = zgql.idn_zone
+   AND pv.parameter_code = zgql.parameter_code
+   AND pv.start_date between zgql.start_date and zgql.end_date
+                 
+ ORDER BY start_date,
+          area_code,
+          parameter_code
+    </select>
+</mapper>

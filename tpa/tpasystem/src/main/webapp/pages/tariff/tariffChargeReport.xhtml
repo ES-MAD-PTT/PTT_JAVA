@@ -1,0 +1,837 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_tariff']}" url="#" />
+			<p:menuitem value="#{msg['menu_tariff_charge_report']}" url="/pages/tariff/tariffChargeReport.xhtml" />
+			                           
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="5000"/>
+			
+            <p:layout widgetVar="tariffChargeReportLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">	
+					
+				<p:panelGrid columns="2" style="width:100%">
+					
+						<p:panelGrid>
+							<p:row>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['tariffChargeReport_Shipper']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['tariffChargeReport_Month_Year_Charge']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['tariffChargeReportTariff_ID']}" />
+								</p:column>
+							</p:row>
+							
+							<p:row>
+								<p:column>
+									<p:selectOneMenu id="shipper"  style="width:100px"   value="#{tariffChargeReportView.filters.idn_user_group}" 
+										rendered="#{!tariffChargeReportView.isShipper()}">
+										<f:selectItem itemValue=" " itemLabel=" "> </f:selectItem>
+        								<f:selectItems value="#{tariffChargeReportView.shippers.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+        								<p:ajax event="change"  update="tariffID"></p:ajax>
+					           		</p:selectOneMenu>
+					           		<h:outputText value="#{tariffChargeReportView.user.user_group_id}" style="float:left" rendered="#{tariffChargeReportView.isShipper()}"/>
+								</p:column>
+								<p:column>
+									<p:calendar id="shortDate"  size="10" pattern="MMMM/yyyy"  value="#{tariffChargeReportView.filters.shortDate}"
+												showOn="button" navigator="true"  locale="en_EN" >	
+									<p:ajax event="change"  update="tariffID"></p:ajax>
+									<p:ajax event="dateSelect"  update="tariffID"></p:ajax>	
+									</p:calendar>
+								</p:column>
+								<p:column>
+									<p:selectOneMenu id="tariffID"  style="width:100px"   value="#{tariffChargeReportView.filters.idn_tariff_charge}" >
+										<f:selectItem itemLabel="" itemValue="" />						
+        								<f:selectItems value="#{tariffChargeReportView.tariffIdComboFiltro.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>									
+								</p:column>
+							</p:row>
+					</p:panelGrid>
+						<p:panelGrid  columns="2" style="float:right;top:0px">
+						
+							<p:column    style="font-weight: bold; ">
+								<shiro:hasPermission name="#{changeSystemView.system}.TARIFF.CHARGE.REPORT.QUERY">
+									<p:commandButton value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{tariffChargeReportView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()"
+									update="form,msgs,:#{p:component('selectType')},:#{p:component('selectMode')}"/>
+									<!-- Se elimina dependencia con el elemento BacCalc, porque no se genera si el usuario no tiene permisos de management y daria error al cargar la pantalla.
+									update="msgs,:#{p:component('tariffChargeReports1')},:#{p:component('labelCompare')}, :#{p:component('cbxInvoiceSent')}, :#{p:component('BacCalc')},:#{p:component('OffSpec')},:#{p:component('dlgIdComment')}"/> -->
+								</shiro:hasPermission>
+							</p:column>
+							
+							<p:column  style="font-weight: bold;">
+								<p:commandButton  onclick="PF('tariffChargeReportLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+							</p:column>
+															
+							<p:column  style="font-weight: bold;">
+								<p:commandButton value="#{msg['clear']}"  style="float:left"
+									actionListener="#{tariffChargeReportView.onClear}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" 
+									process="@this" 
+									update="form"/> 
+							</p:column>
+							
+						</p:panelGrid>
+						
+						<p:panelGrid>
+							<p:row>
+								<h:outputText value="#{tariffChargeReportView.getOffSpec()}" id="OffSpec"  style="color:red;" />
+							</p:row>
+						</p:panelGrid>
+						
+					</p:panelGrid>
+					
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center"
+					resizable="false" closable="false" collapsible="false" >
+	  
+					<p:dataTable widgetVar="w_tariffChargeReport1"  id="tariffChargeReports1" var="tariffChargeReport" value="#{tariffChargeReportView.items}" 
+						editable="true" 
+						scrollable="true"  scrollHeight="100%"
+						style="width:100%; margin-bottom:20px;border-collapse:collapse;table-layout:fixed"
+						selection="#{tariffChargeReportView.selected}"
+					    paginator="true" rows="20"	paginatorPosition="top"		
+					    rowsPerPageTemplate="5,10,15,20,25, #{tariffChargeReportView.itemsSize}" 
+					    sortBy="#{tariffChargeReport.charge_date}"> <!-- short by se usa para el campo sumary -->
+
+							<f:facet name="header">
+								<p:outputPanel style="height:25px">
+								
+									<shiro:hasPermission name="#{changeSystemView.system}.TARIFF.CHARGE.REPORT.MAN">
+										<p:commandButton value="#{msg['tariffChargeReport_Edit_Block']}" id="editBlock" icon="ui-icon fa fa-save" style="float:right;"
+			        							update="form" process="@this" rendered="#{tariffChargeReportView.renderEditBlock()}" ajax="false"
+			        							actionListener="#{tariffChargeReportView.onEditInBlock}"/>  
+			        					<!-- <p:commandButton value="#{msg['tariffChargeReport_Edit_Block']}" rendered="#{tariffChargeReportView.renderEditBlock()}" id="editBlock" 
+			        						actionListener="#{tariffChargeReportView.onEditInBlock}" process="@this" update="@form" icon="ui-icon fa fa-save" style="float:right;"/>  -->
+			        					<p:commandButton value="#{msg['tariffChargeReport_Cancel_Block']}" rendered="#{!tariffChargeReportView.allowEdit}" id="cancelBlock"  
+			        						update="form" process="@this"
+			        						actionListener="#{tariffChargeReportView.onCancelInBlock}" icon="ui-icon fa fa-save" style="float:right;" ajax="false"/>
+										<p:commandButton value="#{msg['tariffChargeReport_Save_Block']}" rendered="#{!tariffChargeReportView.allowEdit}" id="saveBlock"  
+											update="form" process="@this"
+											actionListener="#{tariffChargeReportView.onSaveInBlock}" icon="ui-icon fa fa-save" style="float:right;" ajax="false"/>
+									</shiro:hasPermission>
+								
+	 								<shiro:hasPermission name="#{changeSystemView.system}.TARIFF.CHARGE.REPORT.MAN">
+			        					<p:commandButton value="#{msg['tariffChargeReport_Run_Tariff']}"  id="new" type="button"  icon="ui-icon fa fa-save" style="float:right;"
+			        						onclick="PF('dlgRunTariff').show();"/>
+									</shiro:hasPermission>
+									
+									
+									
+									<shiro:hasPermission name="#{changeSystemView.system}.TARIFF.CHARGE.REPORT.MAN">
+			        					<p:commandButton value="#{msg['tariffChargeReport_Bac_Calc']}"  id="BacCalc"   icon="ui-icon fa fa-save" style="float:right;"
+			        							update="formBacCalc,labelCompare,:#{p:component('tariffChargeReports1')}" process="@this" 
+			        							disabled="#{tariffChargeReportView.renderBacCalc()}"
+			        							actionListener="#{tariffChargeReportView.datosBac()}"
+			        							oncomplete="PF('cargando').hide(),PF('dlgBacCalc').show()"/>  
+			        				</shiro:hasPermission>	
+								
+								
+								
+								<p:outputLabel value="#{msg['tariffChargeReport_Tariff_ID_Compare']}"  style="float:left"  />
+								<h:outputText value="#{tariffChargeReportView.getCodeCompareTarifCharge()}" id="labelCompare"  style="float:left"  />
+								
+								
+								
+								  <!-- rosa: se añade el update:  -->
+							        <p:commandButton value="#{msg['tariffChargeReport_Comments']}"    icon="" style="float: center;"			        							
+			        							disabled="#{tariffChargeReportView.renderInvoiceSent()}"
+			        							update=":#{p:component('dlgIdComment')}"
+												actionListener="#{tariffChargeReportView.getComments()}"   
+												oncomplete="PF('cargando').hide(), PF('dlgComment').show()"/>       							
+			        							
+						        
+								<shiro:hasPermission name="#{changeSystemView.system}.TARIFF.CHARGE.REPORT.MAN"> 
+								  	<h:outputText value="   Invoice Sent " />
+							        <p:selectBooleanCheckbox id="cbxInvoiceSent" value="#{tariffChargeReportView.b_invoiceSent}" disabled="#{tariffChargeReportView.renderInvoiceSent()}">
+							            <p:ajax  listener="#{tariffChargeReportView.invoiceSentUpdate()}" />
+							        </p:selectBooleanCheckbox>
+						        </shiro:hasPermission>
+						        
+						      
+								<shiro:hasPermission name="#{changeSystemView.system}.TARIFF.CHARGE.REPORT.MAN"> 
+								  	<h:outputText value="   Select Type " />
+								  	<p:selectOneMenu id="selectType"  style="width:100px"   value="#{tariffChargeReportView.typeSelected}" disabled="#{tariffChargeReportView.compare()}">
+								  		<f:selectItem itemValue="" itemLabel=""> </f:selectItem>
+        								<f:selectItems value="#{tariffChargeReportView.typeCriteria.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+        								<p:ajax listener="#{tariffChargeReportView.selectTypeUpdate()}" onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()" update="form"/>
+					           		</p:selectOneMenu>
+					           		 </shiro:hasPermission>
+					           		<shiro:lacksPermission name="#{changeSystemView.system}.TARIFF.CHARGE.REPORT.MAN"> 
+								  	<p:selectOneMenu id="selectType"  style="width:100px" rendered="false" value="#{tariffChargeReportView.typeSelected}" disabled="#{tariffChargeReportView.compare()}">
+								  		<f:selectItem itemValue="" itemLabel=""> </f:selectItem>
+        								<f:selectItems value="#{tariffChargeReportView.typeCriteria.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+        								<p:ajax listener="#{tariffChargeReportView.selectTypeUpdate()}" onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()" update="form"/>
+        								</p:selectOneMenu>
+					           		</shiro:lacksPermission>
+					           		<shiro:hasPermission name="#{changeSystemView.system}.TARIFF.CHARGE.REPORT.MAN"> 
+					           		<h:outputText value="  " />
+								  	<p:selectOneMenu id="selectMode"  style="width:100px"   value="#{tariffChargeReportView.modeSelected}" disabled="#{tariffChargeReportView.compare()}">
+								  		<f:selectItem itemValue="" itemLabel=""> </f:selectItem>
+        								<f:selectItems value="#{tariffChargeReportView.modeCriteria.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+        								<p:ajax listener="#{tariffChargeReportView.selectModeUpdate()}" onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()" update="form"/>
+					           		</p:selectOneMenu>
+					           		</shiro:hasPermission>
+					           		<shiro:lacksPermission name="#{changeSystemView.system}.TARIFF.CHARGE.REPORT.MAN"> 
+					           		<p:selectOneMenu id="selectMode"  style="width:100px" rendered="false"  value="#{tariffChargeReportView.modeSelected}" disabled="#{tariffChargeReportView.compare()}">
+								  		<f:selectItem itemValue="" itemLabel=""> </f:selectItem>
+        								<f:selectItems value="#{tariffChargeReportView.modeCriteria.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+        								<p:ajax listener="#{tariffChargeReportView.selectModeUpdate()}" onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()" update="form"/>
+					           		</p:selectOneMenu>
+					           		</shiro:lacksPermission>
+
+						        
+						      
+						        
+								<shiro:hasPermission name="#{changeSystemView.system}.TARIFF.CHARGE.REPORT.MAN">
+					        			<h:commandLink style="float:right">
+										       <p:graphicImage name="/images/excel.png" width="24"/>
+										       <p:dataExporter type="xls" target="tariffChargeReports1" fileName="TariffPublication" postProcessor="#{tariffChargeReportView.postProcessXLS2}"/>
+										</h:commandLink>	 
+								</shiro:hasPermission>
+								</p:outputPanel>        										          
+					        </f:facet>
+					        
+					      <shiro:hasPermission name="#{changeSystemView.system}.TARIFF.CHARGE.REPORT.MAN">
+						 		<p:ajax event="rowEditInit" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','hidden')});" />
+								<p:ajax event="rowEdit" listener="#{tariffChargeReportView.onRowEdit}" update=":form:msgs,:#{p:component('tariffChargeReports1')},:#{p:component('tariffID')},:#{p:component('labelCompare')}" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>   
+								<p:ajax event="rowEditCancel" listener="#{tariffChargeReportView.onRowCancel}" update=":form:msgs" onstart="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>
+					 		</shiro:hasPermission>
+					    	
+					  
+					    	<p:column headerText="#{msg['tariffChargeReport_Charges']}" style="width: 100px;" >
+					       		<h:outputText value="#{tariffChargeReport.tariff_desc}" />
+					       </p:column>
+					    	
+					       <p:column headerText="#{msg['tariffChargeReport_Description']}" style="width: 200px;"  >
+					       		<h:outputText value="#{tariffChargeReport.detail_desc}" />
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['tariffChargeReport_Contract']}" style="width: 60px;"  >
+					         		<h:outputText  value="#{tariffChargeReport.contract_code eq null ? '_': tariffChargeReport.contract_code}"  			         		
+					         		style="display: block; background-color: #{tariffChargeReport.contract_code eq null ? '#D8D8D8' : ''}; color:#{tariffChargeReport.contract_code eq null ? '#D8D8D8' : ''}"/>
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['tariffChargeReport_Contract_Type']}" style="width: 100px;" >
+					       		<!-- <h:outputText value="#{tariffChargeReport.operation_desc}" /> -->
+					       		<h:outputText value="#{tariffChargeReport.operation_desc eq null ? '_' : tariffChargeReport.operation_desc}" 
+					       		 style="display: block; background-color: #{tariffChargeReport.operation_desc eq null ? '#D8D8D8' : ''}; color:#{tariffChargeReport.operation_desc eq null ? '#D8D8D8' : ''}"/>
+					       </p:column>
+					       
+					        <p:column headerText="#{msg['tariffChargeReport_Quantity']}" style="width: 60px;">
+					       		<p:cellEditor>
+					               <f:facet name="output">
+					                        		
+					               		<h:outputText value="#{tariffChargeReport.quantity}" style="float:right"  >
+					               			<f:convertNumber groupingUsed="true" minFractionDigits="0" maxFractionDigits="0"/>
+					               		</h:outputText>
+					         
+					               	</f:facet>
+					               <f:facet name="input">
+					               		<p:inputNumber value="#{tariffChargeReport.quantity}"  style="width:100%" 
+					               						label="#{msg['tariffChargeReport_Quantity']}" disabled="#{tariffChargeReportView.disabledField(tariffChargeReport)}"
+					               						requiredMessage="#{msg['tariffChargeReport_Quantity']}: #{msg['empty_field']}" 
+					               						validatorMessage="#{msg['tariffChargeReport_Quantity']}: #{msg['lenght_field']} "
+					               						decimalSeparator="." thousandSeparator="," decimalPlaces="0">
+					               		</p:inputNumber>
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					        <p:column headerText="#{msg['tariffChargeReport_Unit']}" style="width: 40px;"  >
+					       		 <h:outputText value="#{tariffChargeReport.unit_desc}"/>
+					       		
+						    </p:column>
+					    
+					        <p:column headerText="#{msg['tariffChargeReport_Coefficient']}" style="width: 70px;">
+					       		<!-- <h:outputText value="#{tariffChargeReport.reduction}"  style="float:right" 
+					       		<f:convertNumber pattern="#,##0.00" />/>
+								style="display: block; background-color: #{tariffChargeReport.reduction eq null ? '#D8D8D8' : ''}; color:#{tariffChargeReport.reduction eq null ? '#D8D8D8' : ''}"/>
+					 			value="#{tariffChargeReport.reduction eq null ? 'XX' : tariffChargeReport.reduction}"
+-->
+					       		<h:outputText value="#{tariffChargeReport.tariff_code ne 'OVERUSAGE.CHARGE' ? '_' :  tariffChargeReport.reduction}"
+					       		     style=" display: #{tariffChargeReport.tariff_code ne 'OVERUSAGE.CHARGE' ? 'block' : '' }; 
+					               		background-color: #{tariffChargeReport.tariff_code ne 'OVERUSAGE.CHARGE' ? '#D8D8D8':  ''  }; 
+					               		color: #{tariffChargeReport.tariff_code ne 'OVERUSAGE.CHARGE' ? '#D8D8D8' :  '' };
+					               		float: #{tariffChargeReport.tariff_code ne 'OVERUSAGE.CHARGE' ? '' :  'right' } " >
+					               		
+								</h:outputText>
+					       </p:column>
+					       
+					        <p:column headerText="#{msg['tariffChargeReport_Fee']}" style="width: 80px;" >
+					       		<p:cellEditor>
+					               <f:facet name="output">
+					               	  <h:outputText value="#{tariffChargeReport.fee}" style="float:right"  >
+					               	  		<f:convertNumber pattern="#,##0.0000" />
+					               	  </h:outputText>
+					               	  <!-- Deberia ir en gris? es campo que puede ir informado puesto que es editable por el usuario
+					               	  	<h:outputText 
+						               		 value="#{tariffChargeReport.tariff_code eq 'BAC.CHARGE' ? 'xx' : (tariffChargeReport.tariff_code eq 'DAMAGE.CHARGE' ? 'xx' : tariffChargeReport.fee )}"
+						               		 style="
+						               		        display: #{tariffChargeReport.tariff_code eq 'BAC.CHARGE' ? 'block' : (tariffChargeReport.tariff_code eq 'DAMAGE.CHARGE' ? 'block' : '' )}; 
+						               		        background-color: #{tariffChargeReport.tariff_code eq 'BAC.CHARGE' ? '#D8D8D8': (tariffChargeReport.tariff_code eq 'DAMAGE.CHARGE' ? '#D8D8D8' : '' ) }; 
+						               		        color: #{tariffChargeReport.tariff_code eq 'BAC.CHARGE' ? '#D8D8D8' : (tariffChargeReport.tariff_code eq 'DAMAGE.CHARGE' ? '#D8D8D8' : '' )};
+						               		        float: #{tariffChargeReport.tariff_code eq 'BAC.CHARGE' ? '' : (tariffChargeReport.tariff_code eq 'DAMAGE.CHARGE' ? '' : 'right' )} " >
+						               			<f:convertNumber pattern="#,##0.000" />
+					               		</h:outputText>
+					             
+					               	  
+					               	   -->
+					              </f:facet>
+					               <f:facet name="input">
+					               		<p:inputNumber value="#{tariffChargeReport.fee}"  style="width:100%" 
+					               						label="#{msg['tariffChargeReport_Fee']}"
+					               						disabled="#{tariffChargeReportView.disabledField(tariffChargeReport)}"
+					               						requiredMessage="#{msg['tariffChargeReport_Fee']}: #{msg['empty_field']}" 
+					               						validatorMessage="#{msg['tariffChargeReport_Fee']}: #{msg['lenght_field']} "
+					               						decimalSeparator="." thousandSeparator="," decimalPlaces="4">
+					               		</p:inputNumber>
+					               		
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       <p:column headerText="#{msg['tariffChargeReport_Amount']}" style="width: 100px;" rendered="#{tariffChargeReportView.isOperator}">
+					       		
+					       		<p:cellEditor>
+					               <f:facet name="output">
+					               		<h:outputText value="#{tariffChargeReport.amount}" style="float:right"  >
+					               			<f:convertNumber pattern="#,##0.00" />
+					               		</h:outputText>
+					               	</f:facet>
+					               <f:facet name="input">
+					               		<p:inputNumber value="#{tariffChargeReport.amount}"  style="width:100%" 
+					               						label="#{msg['tariffChargeReport_Amount']}" 
+					               						disabled="#{tariffChargeReportView.disabledField(tariffChargeReport)}"
+					               						requiredMessage="#{msg['tariffChargeReport_Fee']}: #{msg['empty_field']}" 
+					               						validatorMessage="#{msg['tariffChargeReport_Fee']}: #{msg['lenght_field']} "
+					               						decimalSeparator="." thousandSeparator="," decimalPlaces="2">
+					               						
+					               		</p:inputNumber>
+					               </f:facet>
+					           </p:cellEditor>
+					           </p:column>
+					        <p:column headerText="#{msg['tariffChargeReport_Amount_Shipper']}" style="width: 100px;" rendered="#{tariffChargeReportView.isShipper}">				       		
+				               		<h:outputText value="#{tariffChargeReport.amount_shipper}" style="float:right"  >
+				               			<f:convertNumber pattern="#,##0.00" />
+				               		</h:outputText>
+					        </p:column>
+				           <p:column headerText="#{msg['tariffChargeReport_Amount_Operator']}" style="width: 100px;" rendered="#{tariffChargeReportView.isOperator}">
+				               		<h:outputText value="#{tariffChargeReport.amount_operator}" rendered="#{!tariffChargeReportView.editingInBlock}" style="float:right"  >
+				               			<f:convertNumber pattern="#,##0.00" />
+				               		</h:outputText>
+				               		<p:inputNumber value="#{tariffChargeReport.amount_operator}" rendered="#{tariffChargeReportView.editingInBlock}" inputStyle="width:100%;"  
+				               			decimalSeparator="." thousandSeparator="," decimalPlaces="2"/>
+					       </p:column>
+					       <p:column headerText="#{msg['tariffChargeReport_Amount_Compare']}" style="width: 100px;">
+					       		<h:outputText value="#{tariffChargeReport.amount_compare}" style="float:right"  >
+					            	<f:convertNumber pattern="#,##0.00" />
+					          	</h:outputText>
+					       </p:column>
+					      
+					       <p:column headerText="#{msg['tariffChargeReport_Difference']}" style="width: 100px;">
+					       		<h:outputText value="#{tariffChargeReport.difference}" style="float:right"  >
+					            	<f:convertNumber pattern="#,##0.00" />
+					          	</h:outputText>
+					       </p:column>
+					      
+					      <!-- boton SeeDatil -->
+					     <shiro:hasPermission name="#{changeSystemView.system}.TARIFF.CHARGE.REPORT.MAN">
+						     <p:column headerText="#{msg['tariffChargeReport_See_Detail']}" style="width: 50px; text-align: center;">
+						     <!-- 
+	  					       		<p:commandButton disabled="#{tariffChargeReportView.disabledSeeDatil(tariffChargeReport)}" 
+	  					       		icon="ui-icon-document" action="#{tariffChargeReportView.seeDetail(tariffChargeReport)}" update=":seeDetailFormId"
+										onstart="PF('cargando').show()"	oncomplete="PF('cargando').hide(),PF('seeDetailDlg').show()"
+	  					       			rendered="true">
+										<f:setPropertyActionListener value="#{tariffChargeReport}" target="#{tariffChargeReportView.selected}" />
+									</p:commandButton>
+								-->	
+									<p:commandButton disabled="false" 
+	  					       		icon="ui-icon-document" action="#{tariffChargeReportView.seeDetail(tariffChargeReport)}" update=":seeDetailFormId"
+										onstart="PF('cargando').show()"	oncomplete="PF('cargando').hide(),PF('seeDetailDlg').show()"
+	  					       			rendered="#{tariffChargeReportView.renderSeeDatil(tariffChargeReport)}">
+										<f:setPropertyActionListener value="#{tariffChargeReport}" target="#{tariffChargeReportView.selected}" />
+									</p:commandButton>
+									
+						      </p:column>
+					     </shiro:hasPermission>
+	
+						       <p:column headerText="#{msg['tariffChargeReport_Comments_Charge_Month']}" style="width: 100px;">
+						               <h:outputText value="#{tariffChargeReport.comments_charge_month}" rendered="#{!tariffChargeReportView.editingInBlock}"/>
+						               <h:inputText value="#{tariffChargeReport.comments_charge_month}" rendered="#{tariffChargeReportView.editingInBlock}" style="width: 100%;"/>
+						       </p:column>
+					     
+					     <!-- El lapiz --> 
+					      <shiro:hasPermission name="#{changeSystemView.system}.TARIFF.CHARGE.REPORT.MAN">			      
+						       <p:column style="width:32px">
+						            <p:rowEditor rendered="#{tariffChargeReportView.renderItemEditor(tariffChargeReport)}"/>
+						       </p:column>
+					     </shiro:hasPermission>
+					       
+ 						<!-- ch721  sacar el bac fuera del grid. El colspan no funciona -->
+    			        <f:facet name="footer">
+						        <p:column colspan="8" style="text-align:right; width:500px">
+						               <h:outputText value="#{msg['tariffChargeReport_Balancing_Adjustment_Charge_(BAC)']} :" />
+						        </p:column>
+	        					<p:column style="text-align: right">
+						               <h:outputText value="#{tariffChargeReportView.getFooterBac()}">
+						                	<f:convertNumber  pattern="#,##0.00" />
+						                </h:outputText>
+						        </p:column>
+    			          </f:facet>
+ 						<p:summaryRow id="summary" >
+ 						
+				            	<p:column colspan="8" style="text-align:right;">
+					                <h:outputText value="#{msg['tariffChargeReport_total_Bac_Excl']} :" />
+					            </p:column>
+					            <p:column colspan="#{tariffChargeReportView.columnsShipperOperator}" style="text-align:left">
+					                <h:outputText value="#{tariffChargeReportView.getTotalAmount()}">
+					                    <f:convertNumber  pattern="#,##0.00" />
+					                </h:outputText>
+					            </p:column>
+					            <p:column style="text-align:right">
+					                <h:outputText value="#{tariffChargeReportView.getTotalAmountCompare()}">
+					                    <f:convertNumber  pattern="#,##0.00" />
+					                </h:outputText>
+					            </p:column>
+					     
+					     </p:summaryRow>
+					    							      
+					   </p:dataTable>
+					  
+				</p:layoutUnit>
+
+			</p:layout>
+		</h:form>
+
+
+<!-- dialogo dlgRunTariff  -->
+		<shiro:hasPermission name="#{changeSystemView.system}.TARIFF.CHARGE.REPORT.MAN">
+		<p:dialog widgetVar="dlgRunTariff" resizable="false"  closable="true" modal="true" appendTo="@(body)" header="Run Tariff">
+		<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario
+		 <p:ajax event="close" update="formRunTariff"  process="@this" listener="#{shipperView.cancel}" />	-->
+		<h:form id="formRunTariff">
+			<p:growl id="msgs" showDetail="true"  life="5000"/>
+				<p:panelGrid columns="4" style="width:100%">
+					<p:panelGrid>
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['tariffChargeReport_Shipper']}" />
+							</p:column>
+							
+							<p:column>
+								<p:selectOneMenu id="shipper"  style="width:90px"   value="#{tariffChargeReportView.newRunTariff.idn_user_group}" 
+									required="true" requiredMessage="#{msg['tariffChargeReport_Shipper']}: #{msg['empty_field']}">
+							              <f:selectItems value="#{tariffChargeReportView.shippers.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" /> 				               
+			               		</p:selectOneMenu>
+								<p:message for="shipper" />
+							</p:column>
+							<p:column>
+								<h:outputText value="Month/Year Charge" />
+							</p:column>
+							<p:column>
+							<!--  
+								<p:calendar required="true" id="run_tariff_date" showOn="button"
+									value="#{tariffChargeReportView.newRunTariff.runTariffDate}" pattern="MMMM/yyyy"
+									readonlyInput="true" 
+									requiredMessage="#{msg['tariffChargeReport_Month_Year_Charge']}: #{msg['empty_field']}" validatorMessage="#{msg['tariffChargeReport_Month_Year_Charge']}: #{msg['lenght_field']}">
+									<p:ajax event="dateSelect"  update="run_tariff_date"></p:ajax>
+									<p:ajax event="change"  update="run_tariff_date"></p:ajax>
+								</p:calendar>
+								<p:message for="run_tariff_date" />
+							-->	
+								<p:calendar id="run_tariff_date"  size="10" pattern="MMMM/yyyy"  value="#{tariffChargeReportView.newRunTariff.runTariffDate}"
+												showOn="button" navigator="true"  locale="en_EN" >	
+									<p:ajax event="change"  update="run_tariff_date"></p:ajax>		
+									<p:ajax event="dateSelect"  update="run_tariff_date"></p:ajax>	
+								</p:calendar>
+								
+								
+							</p:column>
+							
+						</p:row>
+					
+					</p:panelGrid>
+				</p:panelGrid>
+				
+				<p:separator/>
+				<p:panelGrid>
+					<p:row>
+						<p:column>
+							<p:commandButton value="#{msg['tariffChargeReport_Run_Tariff']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" validateClient="true"
+								action="#{tariffChargeReportView.runTariff}" update=":#{p:component('tariffChargeReports1')},:formRunTariff"
+								onstart="PF('cargando').show()"
+								oncomplete="PF('dlgRunTariff').hide(),PF('cargando').hide()" />
+			        		<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close" 
+			        			update=":formRunTariff" process="@this" actionListener="#{tariffChargeReportView.cancelRunTariff}"
+			        			oncomplete="PF('dlgRunTariff').hide()"/>
+						</p:column>					
+					</p:row>
+				</p:panelGrid>							
+			</h:form>			
+		</p:dialog>
+		</shiro:hasPermission>
+
+
+	
+<!-- dialogo formBacCalc  -->
+	<shiro:hasPermission name="#{changeSystemView.system}.TARIFF.CHARGE.REPORT.MAN">
+		<p:dialog widgetVar="dlgBacCalc" resizable="false"  closable="true" modal="true" appendTo="@(body)" header="BAC Calc.">
+		<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario
+		 <p:ajax event="close" update="formBacCalc"  process="@this" listener="#{shipperView.cancel}" />	-->
+		<h:form id="formBacCalc">
+			<p:growl id="msgs" showDetail="true"  life="5000"/>
+				<p:panelGrid columns="4" style="width:100%">
+					<p:panelGrid>
+					<p:row>
+						<p:column  style="font-weight: bold;">
+							<h:outputText value="#{msg['tariffChargeReport_Shipper']}" />
+						</p:column>
+						<p:column style="font-weight: bold;">
+							<h:outputText value="#{msg['tariffChargeReport_Month_Year_Charge']}" />
+						</p:column>
+						<p:column style="font-weight: bold;">
+							<h:outputText value="#{msg['tariffChargeReportLastTariff_ID']}" />
+						</p:column>
+						<p:column style="font-weight: bold;">
+							<h:outputText value="#{msg['tariffChargeReport_Tariff_ID_Compare2']}" />
+						</p:column>
+					</p:row>
+					<p:row>
+						<p:column  style="font-weight: bold;">
+							<h:outputText value="#{tariffChargeReportView.newBacCalc.bac_user_group_id}" />
+						</p:column>
+						<p:column style="font-weight: bold;">
+							<h:outputText value="#{tariffChargeReportView.newBacCalc.bac_shortDate}" >
+					       		<f:convertDateTime pattern="MMMM/yyyy" />
+					        </h:outputText>
+					              		
+						</p:column>
+						<p:column style="font-weight: bold;">
+							<h:outputText value="#{tariffChargeReportView.newBacCalc.bac_code_tariff_charge_last}" />
+						</p:column>
+						<p:column>
+							<p:selectOneMenu id="BacCalctariffID"  style="width:100px"   value="#{tariffChargeReportView.newBacCalc.bac_idn_tariff_charge_comp}" >
+        						<f:selectItems value="#{tariffChargeReportView.tariffIdComboBac.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					    	</p:selectOneMenu>									
+						</p:column>
+					</p:row>
+					
+						
+					</p:panelGrid>
+				</p:panelGrid>
+				
+				<p:separator/>
+				<p:panelGrid>
+					<p:row>
+						<p:column>
+							<p:commandButton value="#{msg['tariffChargeReport_Bac_Calc']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" validateClient="true"
+								actionListener="#{tariffChargeReportView.bacCalc}" 
+								onstart="PF('cargando').show()"
+								oncomplete="PF('dlgBacCalc').hide(),PF('cargando').hide()" 
+								update=":#{p:component('tariffChargeReports1')},:formBacCalc, :#{p:component('tariffID')}, :#{p:component('labelCompare')},:#{p:component('dlgIdComment')}"/>
+			        		<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close" 
+			        			update="formBacCalc" process="@this" actionListener="#{tariffChargeReportView.cancelBacCalc}"
+			        			oncomplete="PF('dlgBacCalc').hide()"/>
+			        			
+						</p:column>					
+					</p:row>
+				</p:panelGrid>							
+			</h:form>			
+		</p:dialog>
+		</shiro:hasPermission>
+		
+
+	<shiro:hasPermission name="#{changeSystemView.system}.TARIFF.CHARGE.REPORT.MAN">
+	<p:dialog  header="#{msg['tariffChargeReport_Daily_Overview']}" widgetVar="seeDetailDlg" modal="true" appendTo="@(body)" height="600" width="900" >
+			<h:form id="seeDetailFormId" style="width:100%;height:98%;border-collapse:collapse">
+			
+					<p:panelGrid>
+							<p:row>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['tariffChargeReport_Shipper']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['tariffChargeReport_Month_Year_Charge']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['tariffChargeReport_Charges']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['tariffChargeReport_Contract']}" />
+								</p:column>
+							</p:row>
+							
+							<p:row>
+								<p:column>
+										<h:outputText value="#{tariffChargeReportView.selected.bac_user_group_id}" />
+								</p:column>
+							
+								<p:column>
+										<h:outputText value="#{tariffChargeReportView.selected.charge_date}" >
+										<f:convertDateTime pattern="MMMM/yyyy" />
+										</h:outputText>
+								</p:column>
+								<p:column>
+										<h:outputText value="#{tariffChargeReportView.selected.tariff_desc}" />
+								</p:column>
+								<p:column>
+										<h:outputText value="#{tariffChargeReportView.selected.contract_code}" />
+								</p:column>
+								
+							</p:row>
+						</p:panelGrid>
+			
+			
+			
+				<p:dataTable widgetVar="w_seeDetailTable1"  id="seeDetail1" 
+					value="#{tariffChargeReportView.itemsDetail}"
+					var="seeDetail" 
+					reflow="true" style="margin-bottom:20px;border-collapse:collapse"
+					scrollable="true" scrollHeight="100%" >
+
+					<f:facet name="header">
+ 						<p:outputPanel style="height:30px">
+ 							<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+	        				<p:columnToggler datasource="seeDetail1" trigger="toggler" style="width:200px"/>
+ 						
+							<shiro:hasPermission name="#{changeSystemView.system}.TARIFF.CHARGE.REPORT.MAN">
+					        			<h:commandLink style="float:right">
+										       <p:graphicImage name="/images/excel.png" width="24"/>
+										       <p:dataExporter type="xls" target="seeDetail1" fileName="DetailOverview" postProcessor="#{tariffChargeReportView.detailProcessXLS2}"/>
+										</h:commandLink>	 
+							</shiro:hasPermission>
+ 						</p:outputPanel>       										          
+			        </f:facet>
+
+
+			       
+
+			       	<p:column headerText="#{msg['tariffChargeReport_Gas_Day']}" style="width: 55px; text-align: center;" sortBy="#{seeDetail.detailGasDay}" >
+	               		<h:outputText value="#{seeDetail.detailGasDay}" >
+	              				<f:convertDateTime pattern="dd/MM/yyyy" />
+	              		</h:outputText>
+			       	</p:column>
+					       
+			      <!-- Pestaña: ‘Daily Capacity Charge’ 
+				      private BigDecimal dailyBookedEntryCapacity;
+	  				  private BigDecimal dailyCapacityCharge;
+			      -->
+			       	<p:column	rendered="#{tariffChargeReportView.renderColumnDetail(tariffChargeReportView.selected,1)}"   
+			       		headerText="#{msg['tariffChargeReport_Daily_Booked_Entry_Capacity']}" style="width: 100px; text-align: center;" >
+
+ 						<h:outputText value="#{seeDetail.dailyBookedEntryCapacity}" style="float:right"  >
+					               			<f:convertNumber pattern="#,##0.0000" />
+					    </h:outputText>
+ 										
+			       	</p:column>
+			       	
+			       	<p:column rendered="#{tariffChargeReportView.renderColumnDetail(tariffChargeReportView.selected,2)}"  
+						headerText="#{msg['tariffChargeReport_Daily_Capacity_Charge']}" style="width: 100px; text-align: center;" >
+ 						<h:outputText value="#{seeDetail.dailyCapacityCharge}" style="float:right"  >
+					               			<f:convertNumber pattern="#,##0.00" />
+					    </h:outputText>			
+			       	</p:column>
+			       	
+			        <!--Pestaña: ‘Daily Commodity Charge’
+			        
+			        		  private BigDecimal dailyAllocatedExitValue
+			            CH715 (nuevo label Entry para offshore )
+			             private BigDecimal dailyAllocatedEntryValue; (para OFFSHORE) COLUMNA 3.2
+    					 private BigDecimal dailyCommodityCharge;  -->
+    					 
+					<p:column rendered="#{tariffChargeReportView.renderColumnDetail(tariffChargeReportView.selected,31)}"   headerText="#{msg['tariffChargeReport_Daily_Allocated_Exit_Value']}" style="width: 100px; text-align: center;" >
+ 						<h:outputText  value="#{seeDetail.dailyAllocatedExitValue}" style="float:right"  >
+					        <f:convertNumber pattern="#,##0.0000" />
+					    </h:outputText>					
+			       	</p:column>
+			       	
+			       	<p:column rendered="#{tariffChargeReportView.renderColumnDetail(tariffChargeReportView.selected,32)}"   headerText="#{msg['tariffChargeReport_Daily_Allocated_Entry_Value']}" style="width: 100px; text-align: center;" >
+ 						<h:outputText  value="#{seeDetail.dailyAllocatedEntryValue}" style="float:right"  >
+					        <f:convertNumber pattern="#,##0.0000" />
+					    </h:outputText>					
+			       	</p:column>
+			       	
+			       	<p:column rendered="#{tariffChargeReportView.renderColumnDetail(tariffChargeReportView.selected,4)}"  headerText="#{msg['tariffChargeReport_Daily_Commodity_Charge']}" style="width: 100px; text-align: center;" >
+ 						<h:outputText value="#{seeDetail.dailyCommodityCharge}" style="float:right"  >
+					    	<f:convertNumber pattern="#,##0.00" />
+					    </h:outputText>					
+			       	</p:column>
+			
+					<!--Pestaña: ‘Daily Entry Capacity Over Used Charge’
+					private BigDecimal dailyEntryCapacityOU;
+				    private BigDecimal dailyOriginalEntryCapacityOU; //CH710 SAT FASE III
+				    private BigDecimal dailyReducedEntryCapacityOU;
+				    private BigDecimal dailyEntryCapacityOUCharge;-->
+								    
+				   <p:column rendered="#{tariffChargeReportView.renderColumnDetail(tariffChargeReportView.selected,5)}"  headerText="#{msg['tariffChargeReport_Daily_Entry_Capacity_Over_Used']}" style="width: 100px; text-align: center;" >
+ 						
+ 						<h:outputText value="#{seeDetail.dailyEntryCapacityOU}" style="float:right"  >
+					        <f:convertNumber pattern="#,##0.0000" />
+					    </h:outputText>					
+			       </p:column>
+			       
+			       <!-- SAT CH710 añadir columna-->
+			       <p:column rendered="#{tariffChargeReportView.renderColumnDetail(tariffChargeReportView.selected,6)}"  headerText="#{msg['tariffChargeReport_Daily_Entry_Capacity_Over_Used_Excl_Tolerance']}" style="width: 100px; text-align: center;" >
+ 						<h:outputText value="#{seeDetail.dailyOriginalEntryCapacityOU}" style="float:right"  >
+					        <f:convertNumber pattern="#,##0.0000" />
+					    </h:outputText>					
+			       </p:column>
+			        <!-- SAT CH522 quitar columna
+			       <p:column rendered="#{tariffChargeReportView.renderColumnDetail(tariffChargeReportView.selected,6)}"  headerText="#{msg['tariffChargeReport_Daily_Reduced_Entry_Capacity_Over_Used']}" style="width: 100px; text-align: center;" >
+ 						<h:outputText value="#{seeDetail.dailyReducedEntryCapacityOU}" style="float:right"  >
+					        <f:convertNumber pattern="#,##0.000" />
+					    </h:outputText>					
+			       </p:column>
+			       -->
+			       <p:column rendered="#{tariffChargeReportView.renderColumnDetail(tariffChargeReportView.selected,7)}"   headerText="#{msg['tariffChargeReport_Daily_Entry_Capacity_Over_Used_Charge']}" style="width: 100px; text-align: center;" >
+ 						<h:outputText value="#{seeDetail.dailyEntryCapacityOUCharge}" style="float:right"  >
+					        <f:convertNumber pattern="#,##0.00" />
+					    </h:outputText>					
+			       </p:column> 
+			       
+			       <!-- Pestaña: ‘Daily Exit Capacity Over Used Charge’
+			       		private BigDecimal dailyExitCapacityOverUsed;
+					    private BigDecimal dailyReducedExitCapacityOverUsed;
+    					private BigDecimal dailyExitCapacityOverUsedCharge;  
+    					
+    					
+    					private BigDecimal dailyExitCapacityOU;
+    				    private BigDecimal dailyReducedExitCapacityOU;
+    					private BigDecimal dailyExitCapacityOUCharge;
+    					
+    					-->
+			       <p:column rendered="#{tariffChargeReportView.renderColumnDetail(tariffChargeReportView.selected,8)}"  
+					 	     headerText="#{msg['tariffChargeReport_Daily_Exit_Capacity_Over_Used']}" style="width: 100px; text-align: center;" >
+ 						
+ 						<h:outputText value="#{seeDetail.dailyExitCapacityOU}" style="float:right"  >
+					        <f:convertNumber pattern="#,##0.0000" />
+					    </h:outputText>	
+ 						                                 				
+			       </p:column>
+			       
+			        <!-- SAT CH710 añadir columna-->
+			       <p:column rendered="#{tariffChargeReportView.renderColumnDetail(tariffChargeReportView.selected,9)}"  headerText="#{msg['tariffChargeReport_Daily_Exit_Capacity_Over_Used_Excl_Tolerance']}" style="width: 100px; text-align: center;" >
+ 						<h:outputText value="#{seeDetail.dailyOriginalExitCapacityOU}" style="float:right"  >
+					        <f:convertNumber pattern="#,##0.0000" />
+					    </h:outputText>					
+			       </p:column>
+			       
+			       <!-- SAT CH522 quitar columna
+			       <p:column rendered="#{tariffChargeReportView.renderColumnDetail(tariffChargeReportView.selected,9)}"  
+					 	     headerText="#{msg['tariffChargeReport_Daily_Reduced_Exit_Capacity_Over_Used']}" style="width: 100px; text-align: center;" >
+ 						
+ 						<h:outputText value="#{seeDetail.dailyReducedExitCapacityOU}" style="float:right"  >
+					        <f:convertNumber pattern="#,##0.000" />
+					    </h:outputText>	
+ 						                                 				
+			       </p:column>
+			        -->
+			       <p:column rendered="#{tariffChargeReportView.renderColumnDetail(tariffChargeReportView.selected,10)}"  
+					 	     headerText="#{msg['tariffChargeReport_Daily_Exit_Capacity_Over_Used_Charge']}" style="width: 100px; text-align: center;" >
+ 						
+ 						<h:outputText value="#{seeDetail.dailyExitCapacityOUCharge}" style="float:right"  >
+					        <f:convertNumber pattern="#,##0.00" />
+					    </h:outputText>					
+			       </p:column>
+				    
+	   <!--Pestaña: ‘Daily Imbalance Penalty Charge’
+	   					private BigDecimal dailyOriginalImbalance; CH711 SAT FASE III  se añade dailyOriginalImbalance
+				        private BigDecimal dailyImbalance;
+    					private BigDecimal dailyImbalanceCharge;  -->
+    					
+    				<p:column rendered="#{tariffChargeReportView.renderColumnDetail(tariffChargeReportView.selected,11)}"  
+					 	      headerText="#{msg['tariffChargeReport_Daily_Imbalance_Excl']}" style="width: 100px; text-align: center;" >
+ 						<h:outputText value="#{seeDetail.dailyOriginalImbalance}" style="float:right"  >
+					        <f:convertNumber pattern="#,##0.0000" />
+					    </h:outputText>				
+			        </p:column>		
+    				<p:column rendered="#{tariffChargeReportView.renderColumnDetail(tariffChargeReportView.selected,12)}"  
+					 	      headerText="#{msg['tariffChargeReport_Daily_Imbalance']}" style="width: 100px; text-align: center;" >
+ 						<h:outputText value="#{seeDetail.dailyImbalance}" style="float:right"  >
+					        <f:convertNumber pattern="#,##0.0000" />
+					    </h:outputText>				
+			        </p:column>	
+			        <p:column rendered="#{tariffChargeReportView.renderColumnDetail(tariffChargeReportView.selected,13)}"  
+					 	      headerText="#{msg['tariffChargeReport_Daily_Imbalance_Charge']}" style="width: 100px; text-align: center;" >
+ 						<h:outputText value="#{seeDetail.dailyImbalanceCharge}" style="float:right"  >
+					        <f:convertNumber pattern="#,##0.00" />
+					    </h:outputText>				
+			        </p:column>	
+				    
+				</p:dataTable>
+			</h:form>
+		</p:dialog>	
+	</shiro:hasPermission>
+	
+	
+	
+	<p:dialog header="#{msg['cr_man_submission_comments']}" widgetVar="submissionCommentsDlg" modal="true" appendTo="@(body)" height="200" width="800">
+			<h:form id="subCommentsFormId" style="width:100%;height:98%;border-collapse:collapse">
+  				<h:inputTextarea value="#{CRManagementView.selected.submissionComments}" readonly="true" rows="12" cols="105" style="border-color: white"/>
+			</h:form> 
+		</p:dialog>	
+		
+	<!-- dialogo dlgComment  -->
+		<p:dialog widgetVar="dlgComment" id="dlgIdComment" resizable="false"  closable="true" modal="true" appendTo="@(body)" header="Tariff ID: #{tariffChargeReportView.getIdTariff()}">
+		<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario
+		 <p:ajax event="close" update="formComment"  process="@this" listener="#{shipperView.cancel}" />	-->
+		<h:form id="formComment">
+			<p:growl id="msgs" showDetail="true"  life="5000"/>
+				<p:panelGrid columns="2" style="width:100%">
+					<p:panelGrid>
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['tariffChargeReport_Comments']}" />
+							</p:column>
+							<p:column>
+								<h:inputTextarea value="#{tariffChargeReportView.comments}"  rows="12" cols="105" rendered="#{tariffChargeReportView.isOperator}"/>
+							</p:column>
+							<p:column>
+								<h:outputText value="#{tariffChargeReportView.comments}"  rows="12" cols="105" rendered="#{tariffChargeReportView.isShipper}"/>
+							</p:column>	
+						</p:row>
+					
+					</p:panelGrid>
+				</p:panelGrid>
+				
+				<p:separator/>
+				<p:panelGrid>
+					<p:row>
+						<p:column>
+							<p:commandButton value="#{msg['save']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" validateClient="true"
+								action="#{tariffChargeReportView.updateComment}" update=":formComment"
+								onstart="PF('cargando').show()"
+								oncomplete="PF('dlgComment').hide(),PF('cargando').hide()" />
+			        		<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close" 
+			        			update=":formComment" process="@this" actionListener="#{tariffChargeReportView.cancelComment}"
+			        			oncomplete="PF('dlgComment').hide()"/>
+						</p:column>					
+					</p:row>
+				</p:panelGrid>							
+			</h:form>			
+		</p:dialog>
+	</ui:define>
+</ui:composition>

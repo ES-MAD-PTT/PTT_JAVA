@@ -1,0 +1,449 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_nominations']}" url="#" />
+			<p:menuitem value="#{msg['menu_week_nom']}" url="/pages/nomination/weeklyNomination.xhtml"/>
+		</p:breadCrumb> 
+	</ui:define>
+	<ui:define name="content">
+		<script>
+				function enableOnlyOneDay(date) {
+					var sunday = 0, monday = 1, tuesday = 2, wednesday = 3, thursday = 4, friday = 5, saturday = 6;
+				    var day = date.getDay();
+				    if(day==#{weekNom.dayStartWeek}){
+				    	return [true];
+				    }
+				    return [false];
+				}				
+		</script>
+	
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="5000"/>
+
+			<pe:masterDetail id="masterDetail">  
+			   
+			    <pe:masterDetailLevel level="1" >  
+		            <p:layout widgetVar="weekNomLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+						
+						<p:layoutUnit position="north" resizable="false" closable="false"
+							collapsible="true" id="page_filters">	
+							
+						<p:panelGrid columns="2" style="width:100%">
+							
+								<p:panelGrid id="filters">
+									<p:row>
+										<p:column  style="font-weight: bold;">
+											<h:outputText value="#{msg['nom_shipper_code']}" />
+										</p:column>
+										<p:column  style="font-weight: bold;">
+											<h:outputText value="#{msg['gas_week']}" />
+										</p:column>
+										<p:column  style="font-weight: bold;">
+											<h:outputText value="#{msg['contract_code']}" />
+										</p:column>
+										<p:column  style="font-weight: bold;">
+											<h:outputText value="#{msg['not_meet']}" />
+										</p:column>
+									</p:row>
+									<p:row>
+										<p:column>					
+											<p:selectOneMenu widgetVar="shipper_code_operator" onchange="" id="shipper_code_operator" style="width:100px" 
+												value="#{weekNom.filters.shipper_code}" rendered="#{!weekNom.isShipper()}">
+												<f:selectItem itemLabel="" itemValue="" />
+		        								<f:selectItems value="#{weekNom.shipperCodes.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+												<p:ajax update="contract_code"/>
+							           		</p:selectOneMenu>
+							           		<h:outputText value="#{weekNom.user.user_group_id}" style="float:left" rendered="#{weekNom.isShipper()}"/>
+										</p:column>
+										<p:column>
+											<p:calendar required="true" id="fecInicio" size="10" pattern="dd/MM/yyyy" mask="true" value="#{weekNom.filters.start_date}"
+												requiredMessage="You need to select a date"
+												readonlyInput="true" showOn="button" navigator="true" beforeShowDay="enableOnlyOneDay">
+												<p:ajax event="dateSelect" update="fecInicio,contract_code"></p:ajax>
+												<p:ajax event="change" update="fecInicio,contract_code"></p:ajax>
+											</p:calendar>
+										</p:column>
+										<p:column>
+											<p:selectOneMenu widgetVar="contract_code" id="contract_code" style="width:100px" value="#{weekNom.filters.contract_code}" >
+												<f:selectItem itemLabel="" itemValue="" />
+			       								<f:selectItems value="#{weekNom.contractCodes.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+											
+												<p:ajax event="change" update="contract_code"></p:ajax>
+							           		</p:selectOneMenu>							
+										</p:column>
+										<p:column>
+											<p:selectOneMenu widgetVar="rows_not_meet" onchange="" id="rows_not_meet" style="width:100px" 
+												value="#{weekNom.filters.not_meet}" >
+												<f:selectItem itemLabel="" itemValue="" />
+		        								<f:selectItem itemLabel="Y" itemValue="Y" />
+							           		</p:selectOneMenu>
+							           		<h:outputText value="#{weekNom.user.user_group_id}" style="float:left" rendered="#{weekNom.isShipper()}"/>
+										</p:column>
+									</p:row>
+								</p:panelGrid>
+								<p:panelGrid columns="2" style="float:right;top:0px">
+									<shiro:hasPermission name="#{changeSystemView.system}.NOMINATIONS.WEEKLY.MANAGEMENT.QUERY">
+										<p:commandButton value="#{msg['search']}" icon="ui-icon fa fa-search" 
+											actionListener="#{weekNom.onSearch}"
+											onstart="PF('cargando').show()"
+											oncomplete="PF('cargando').hide()" 
+											update="msgs,:#{p:component('weekNomTable')}"/>
+									</shiro:hasPermission>		
+										<p:commandButton  onclick="PF('weekNomLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+									<shiro:hasPermission name="#{changeSystemView.system}.NOMINATIONS.WEEKLY.MANAGEMENT.QUERY">
+										 <p:commandButton value="#{msg['clear']}"
+											actionListener="#{weekNom.onClear}"
+											onstart="PF('limpiando').show()"
+											oncomplete="PF('limpiando').hide()" 
+											process="@this" 
+											update="msgs,@form"/>
+									</shiro:hasPermission>		 
+								</p:panelGrid>
+							</p:panelGrid>
+		
+						</p:layoutUnit>
+		
+						<p:layoutUnit id="table_center_layout" position="center"
+							resizable="false" closable="false" collapsible="false">
+		
+							<p:dataTable widgetVar="w_weekNomTable"  id="weekNomTable" var="queryNom" value="#{weekNom.items}" reflow="true"
+								style="margin-bottom:20px;border-collapse:collapse;width:2050px" 
+							    paginator="true" rows="15" rowsPerPageTemplate="5,10,15,20,25, #{weekNom.itemsSize}">
+									<f:facet name="header">
+									<p:outputPanel style="height:25px">
+										<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+		        						<p:columnToggler datasource="weekNomTable" trigger="toggler" style="width:200px"/>
+									</p:outputPanel>        										          
+					       			 </f:facet>	
+							       <p:column style="width:130px" headerText="#{msg['day_nom_code']}" sortBy="#{queryNom.nomination_code}" filterMatchMode="contains" filterBy="#{queryNom.nomination_code}">
+							       		<p:commandLink value="#{queryNom.nomination_code}" onstart="PF('cargando').show()"
+											oncomplete="PF('cargando').hide()">
+						                    <pe:selectDetailLevel level="2" listener="#{weekNom.onRowSelect(queryNom)}"/>  
+						                </p:commandLink> 
+							       </p:column>
+							 
+							       <p:column headerText="#{msg['day_nom_version']}" sortBy="#{queryNom.nomination_version}" filterMatchMode="contains" filterBy="#{queryNom.nomination_version}">
+							           <h:outputText style="float:right" value="#{queryNom.nomination_version}" />
+							       </p:column>
+							       
+							       <p:column headerText="#{msg['gas_week']}" sortBy="#{queryNom.start_date}" filterMatchMode="contains"  filterBy="#{queryNom.start_date}">
+							          <h:outputText value="#{queryNom.start_date}" >
+							          	<f:convertDateTime pattern="dd/MM/yyyy" />
+							          </h:outputText>
+							       </p:column>
+							       
+							       <p:column headerText="#{msg['day_nom_shipper']}" sortBy="#{queryNom.user_group_id}" filterMatchMode="contains" filterBy="#{queryNom.user_group_id}">
+							           <h:outputText value="#{queryNom.user_group_id}" />
+							       </p:column>
+							       
+							       <p:column headerText="#{msg['day_nom_shipper_name']}" sortBy="#{queryNom.user_group_name}" filterMatchMode="contains" filterBy="#{queryNom.user_group_name}">
+							           <h:outputText value="#{queryNom.user_group_name}" />
+							       </p:column>
+
+									<p:column style="width:150px" headerText="#{msg['day_nom_shipper_comment']}" sortBy="#{queryNom.shipper_comments}" filterMatchMode="contains" filterBy="#{queryNom.shipper_comments}">
+						                <p:commandButton icon="fa fa-search-plus"
+						                	action="#{dayNom.setShipperLongMessage(queryNom.shipper_comments)}"
+						                	oncomplete="PF('viewShipperComment').show()"
+						                	update=":#{p:component('viewShipperComment')}"
+						                	rendered="#{not empty queryNom.shipper_comments}"
+						                />
+						                <h:outputText value="#{queryNom.shipper_comments.length() gt 100 ? queryNom.shipper_comments.substring(0,100).concat('...') : queryNom.shipper_comments}" escape="false"/>
+						           	</p:column>
+						           								       
+							       <p:column headerText="#{msg['day_nom_contract_code']}" sortBy="#{queryNom.contract_code}" filterMatchMode="contains" filterBy="#{queryNom.contract_code}">
+							           <h:outputText value="#{queryNom.contract_code}" />
+							       </p:column>
+							       
+									<p:column style="width:150px" headerText="#{msg['day_nom_submission_comment']}" sortBy="#{queryNom.submission_comments}" filterMatchMode="contains" filterBy="#{queryNom.submission_comments}">
+						                <p:commandButton icon="fa fa-search-plus"
+						                	action="#{weekNom.setLongMessage(queryNom.submission_comments)}"
+						                	oncomplete="PF('viewSubmissionComment').show()"
+						                	update=":#{p:component('viewSubmissionComment')}"
+						                	rendered="#{not empty queryNom.submission_comments}"
+						                />
+						                <h:outputText value="#{queryNom.submission_comments.length() gt 100 ? queryNom.submission_comments.substring(0,100).concat('...') : queryNom.submission_comments}" escape="false"/>
+						            </p:column>							       
+
+								   <p:column headerText="#{msg['day_nom_status']}" sortBy="#{queryNom.status}" filterMatchMode="contains" filterBy="#{queryNom.status}"
+								   	style="width: 100px;" >
+							           <h:outputText value="#{queryNom.status}" />
+							       </p:column>
+
+								   <p:column headerText="#{msg['day_nom_feasibility_comment']}" sortBy="#{queryNom.operator_comments}" filterMatchMode="contains" filterBy="#{queryNom.operator_comments}">
+							           <h:outputText value="#{queryNom.operator_comments}" />
+							       </p:column>
+		
+							       <p:column style="width:250px" headerText="#{msg['nom_shipper_inter_xls_file']}">
+							            <p:commandButton ajax="false" 
+							            	oncomplete="PrimeFaces.monitorDownload(start, stop);" icon="ui-icon fa fa-save">
+											<f:setPropertyActionListener value="#{queryNom}" target="#{weekNom.selected}" />
+									        <p:fileDownload value="#{weekNom.shipperFile}"/>
+									    </p:commandButton>
+										<h:outputText value="#{queryNom.shipper_file_name}"  title="#{queryNom.shipper_file_name}"  />
+							       </p:column>
+							       
+							       <p:column style="width:250px" headerText="#{msg['nom_inter_xls_file']}">
+							            <p:commandButton ajax="false" 
+							            	oncomplete="PrimeFaces.monitorDownload(start, stop);" icon="ui-icon fa fa-save" rendered="#{weekNom.showFile(queryNom)}">
+											<f:setPropertyActionListener value="#{queryNom}" target="#{weekNom.selected}" />
+									        <p:fileDownload value="#{weekNom.intermediateFile}"/>
+									    </p:commandButton>
+										<h:outputText value="#{queryNom.operator_file_name}" title="#{queryNom.operator_file_name}"  rendered="#{weekNom.showFile(queryNom)}"/>
+							       </p:column>
+							       
+							       <p:column headerText="#{msg['day_nom_renomination']}" sortBy="#{queryNom.is_renomination}" filterMatchMode="contains" filterBy="#{queryNom.is_renomination}">
+							           <h:outputText value="#{queryNom.is_renomination}" />
+							       </p:column>
+
+							       <p:column headerText="#{msg['day_nom_timestamp']}" sortBy="#{queryNom.aud_ins_date}" filterMatchMode="contains" filterBy="#{queryNom.aud_ins_date}">
+							           	<h:outputText value="#{queryNom.aud_ins_date}" >
+							           		<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+							           	</h:outputText>
+
+							       </p:column>
+							       
+							   </p:dataTable>
+						</p:layoutUnit>
+		
+					</p:layout>
+			    </pe:masterDetailLevel>  
+			  
+			    <pe:masterDetailLevel level="2" levelLabel="#{msg['nom_detail']}">  
+		            <p:layout widgetVar="weekNomDetailLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+						
+						<!-- Se definen estas variables para ahorrar llamadas a la vista java y mejorar el rendimiento.
+							 No mover al MasterDetailLeve de arriba, porque en esa pantalla, es posible que no se haya definido startDate.  -->
+						<c:set var="isFutureDate" value="#{weekNom.compareDates(weekNom.selected.start_date,1)}" scope="request" />
+						<c:set var="hasManagOrModifPermission" value="#{weekNom.hasManagOrModifPermission()}" scope="request" />
+						<c:set var="header_day_1" value="#{msg['nom_day_1'].concat('&lt;br/&gt;').concat(weekNom.formatAddDate(weekNom.selected.start_date,0))}" scope="request" />
+						<c:set var="header_day_2" value="#{msg['nom_day_2'].concat('&lt;br/&gt;').concat(weekNom.formatAddDate(weekNom.selected.start_date,1))}" scope="request" />
+						<c:set var="header_day_3" value="#{msg['nom_day_3'].concat('&lt;br/&gt;').concat(weekNom.formatAddDate(weekNom.selected.start_date,2))}" scope="request" />
+						<c:set var="header_day_4" value="#{msg['nom_day_4'].concat('&lt;br/&gt;').concat(weekNom.formatAddDate(weekNom.selected.start_date,3))}" scope="request" />
+						<c:set var="header_day_5" value="#{msg['nom_day_5'].concat('&lt;br/&gt;').concat(weekNom.formatAddDate(weekNom.selected.start_date,4))}" scope="request" />
+						<c:set var="header_day_6" value="#{msg['nom_day_6'].concat('&lt;br/&gt;').concat(weekNom.formatAddDate(weekNom.selected.start_date,5))}" scope="request" />
+						<c:set var="header_day_7" value="#{msg['nom_day_7'].concat('&lt;br/&gt;').concat(weekNom.formatAddDate(weekNom.selected.start_date,6))}" scope="request" />
+
+						<p:layoutUnit position="north" resizable="false" closable="false"
+							collapsible="true" id="page_details">	
+							
+						<p:panelGrid columns="2" style="width:100%">
+							
+								<p:panelGrid id="detail_filters">
+									<p:row>
+										<p:column  style="font-weight: bold;">
+											<h:outputText value="#{msg['nom_shipper_code']}" />
+										</p:column>
+										<p:column  style="font-weight: bold;">
+											<h:outputText value="#{msg['gas_week']}" />
+										</p:column>
+										<p:column  style="font-weight: bold;">
+											<h:outputText value="#{msg['contract_code']}" />
+										</p:column>
+									</p:row>
+									<p:row>
+										<p:column>
+											<h:outputText value="#{weekNom.selected.user_group_id}"/>					
+										</p:column>
+										<p:column>
+											<h:outputText value="#{weekNom.selected.start_date}" >
+							          			<f:convertDateTime pattern="dd/MM/yyyy" />
+							          		</h:outputText>					
+										</p:column>
+										<p:column>
+											<h:outputText value="#{weekNom.selected.contract_code}" />			
+										</p:column>
+										
+									</p:row>
+									<p:row>
+										<p:column style="font-weight: bold;">
+											<h:outputText value="#{msg['day_nom_shipper_comment']}" />
+										</p:column>
+									  <shiro:hasPermission name="#{changeSystemView.system}.NOMINATIONS.WEEKLY.MANAGEMENT.MOD">
+										<p:column colspan="2" rendered="#{isFutureDate}">
+											<p:inputTextarea id="shipper_comments_detail" readonly="false" rows="3" cols="30" value="#{weekNom.selected.shipper_comments}"
+												maxlength="250" autoresize="false" />
+										</p:column>
+										<p:column colspan="2" rendered="#{!isFutureDate}">
+											<p:inputTextarea id="shipper_comments_detail2" readonly="true" rows="3" cols="30" value="#{weekNom.selected.shipper_comments}"/>
+										</p:column>
+									  </shiro:hasPermission>
+									  <shiro:lacksPermission name="#{changeSystemView.system}.NOMINATIONS.WEEKLY.MANAGEMENT.MOD">
+									  	<p:column colspan="2">
+											<p:inputTextarea id="shipper_comments_detail2" readonly="true" rows="3" cols="30" value="#{weekNom.selected.shipper_comments}"/>
+										</p:column>
+									  </shiro:lacksPermission> 
+									  
+										<p:column style="font-weight: bold;">
+											<h:outputText value="#{msg['day_nom_feasibility_comment']}" />
+										</p:column>
+									  <shiro:hasPermission name="#{changeSystemView.system}.NOMINATIONS.WEEKLY.MANAGEMENT.MAN">
+										<p:column colspan="2" rendered="#{isFutureDate}">
+											<p:inputTextarea id="comments_detail" readonly="false" rows="3" cols="30" value="#{weekNom.selected.operator_comments}"
+												maxlength="250" autoresize="false" />
+										</p:column>
+										<p:column colspan="2" rendered="#{!isFutureDate}">
+											<p:inputTextarea id="comments_detail2" readonly="true" rows="3" cols="30" value="#{weekNom.selected.operator_comments}"/>
+										</p:column>
+									  </shiro:hasPermission>
+									  <shiro:lacksPermission name="#{changeSystemView.system}.NOMINATIONS.WEEKLY.MANAGEMENT.MAN">
+									  	<p:column colspan="2">
+											<p:inputTextarea id="comments_detail2" readonly="true" rows="3" cols="30" value="#{weekNom.selected.operator_comments}"/>
+											<!-- Este outputText solo se usa para tener un elemento con id comments_detail, para poder actualizarlo al hacer Save. -->
+											<h:outputText id="comments_detail" value=""/>
+										</p:column>
+									  </shiro:lacksPermission>
+									</p:row>
+								</p:panelGrid>
+								<p:panelGrid columns="3" style="float:right;top:0px">
+										 <h:outputText/> 
+								        <p:commandButton value="Back" icon="ui-icon fa fa-arrow-left"
+								        	actionListener="#{weekNom.onSearch}"
+								        	onstart="PF('cargando').show()"
+											oncomplete="PF('cargando').hide()" >  
+								            <pe:selectDetailLevel level="1"/>  
+								        </p:commandButton>  
+										<p:commandButton  onclick="PF('weekNomDetailLayout').toggle('north')" id="detail_collapse" icon="fa fa-minus" value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+									<shiro:hasPermission name="#{changeSystemView.system}.NOMINATIONS.WEEKLY.MANAGEMENT.MAN">
+										<!-- Al hacer Accept y Reject, solo se refresca el inputTextArea con comentarios del operador de solo lectura (comments_detail2).
+											El componente de lectura/escritura (comments_detail), no se refresca porque siempre va a tener el dato 
+											que se acaba de guardar en la BD.-->
+										<p:commandButton value="#{msg['accept']}" icon="ui-icon fa fa-check"
+											actionListener="#{weekNom.accept}"
+											onstart="PF('cargando').show()"
+											oncomplete="PF('cargando').hide()" 
+											update="msgs,:#{p:component('east_quality_table')},:#{p:component('west_quality_table')},:#{p:component('mix_quality_table')},
+													:#{p:component('east_table')},:#{p:component('west_table')},:#{p:component('mix_table')},:#{p:component('o_east_table')},
+ 													:#{p:component('quality_table')},:#{p:component('comments_detail2')}"
+											/>
+										<p:commandButton value="#{msg['reject']}" icon="ui-icon fa fa-close"
+											actionListener="#{weekNom.reject}"
+											onstart="PF('cargando').show()"
+											oncomplete="PF('cargando').hide()" 
+											update="msgs,:#{p:component('east_quality_table')},:#{p:component('west_quality_table')},:#{p:component('mix_quality_table')},
+													:#{p:component('east_table')},:#{p:component('west_table')},:#{p:component('mix_table')},:#{p:component('o_east_table')},
+ 													:#{p:component('quality_table')},:#{p:component('comments_detail2')}"
+											/>
+									</shiro:hasPermission>
+									<shiro:lacksPermission name="#{changeSystemView.system}.NOMINATIONS.WEEKLY.MANAGEMENT.MAN">
+									<!-- Para colocar el boton Save a la derecha, si no se pintan los botones Accept y Reject. -->
+										<p:spacer width="85" height="10"/>
+										<p:spacer width="85" height="10"/>
+									</shiro:lacksPermission>
+									<shiro:hasPermission name="#{changeSystemView.system}.NOMINATIONS.WEEKLY.MANAGEMENT.MOD">	
+										<!-- Al hacer Save, solo se refresca el inputTextArea con comentarios del operador de solo lectura (comments_detail2).
+											Para el caso, por ejemplo, del shipper que guarda una version de nominacion y se borran los comentarios
+											del operador.
+											El componente de lectura/escritura (comments_detail), no se refresca porque siempre va a tener el dato 
+											que se acaba de guardar en la BD.-->
+										<p:commandButton value="#{msg['save']}" icon="ui-icon fa fa-save" 
+											actionListener="#{weekNom.save}"
+											onstart="PF('cargando').show()"
+											oncomplete="PF('cargando').hide()" 
+											update="msgs,:#{p:component('east_quality_table')},:#{p:component('west_quality_table')},:#{p:component('mix_quality_table')},
+													:#{p:component('east_table')},:#{p:component('west_table')},:#{p:component('mix_table')},:#{p:component('o_east_table')},
+ 													:#{p:component('quality_table')},:#{p:component('comments_detail')},:#{p:component('comments_detail2')}"
+											/>
+									</shiro:hasPermission>
+
+								</p:panelGrid>
+							</p:panelGrid>
+		
+						</p:layoutUnit>
+		
+						<p:layoutUnit id="detail_table_center_layout" position="center"
+							resizable="false" closable="false" collapsible="false">
+
+							<p:tabView scrollable="true">
+		
+								<p:tab title="#{msg['nom_east']}" rendered="#{changeSystemView.isOnshore()}">
+								
+									<p:tabView scrollable="true" >
+										<p:tab title="#{msg['nom_points_concepts']}">
+											<ui:include src="/pages/nomination/weekly_nominations/east.xhtml" />
+										</p:tab>
+		 								<p:tab title="#{msg['nom_quality_parameters']}">
+											<ui:include src="/pages/nomination/weekly_nominations/east_quality.xhtml" />
+										</p:tab> 
+									</p:tabView>
+								</p:tab>
+								<p:tab title="#{msg['nom_west']}" rendered="#{changeSystemView.isOnshore()}">
+								
+									<p:tabView scrollable="true" >
+										<p:tab title="#{msg['nom_points_concepts']}">
+											<ui:include src="/pages/nomination/weekly_nominations/west.xhtml" />
+										</p:tab>
+		 								<p:tab title="#{msg['nom_quality_parameters']}">
+											<ui:include src="/pages/nomination/weekly_nominations/west_quality.xhtml" />
+										</p:tab> 
+									</p:tabView>
+		
+		
+								</p:tab>
+								<p:tab title="#{msg['nom_mix']}" rendered="#{changeSystemView.isOnshore()}">
+								
+									<p:tabView scrollable="true" >
+										<p:tab title="#{msg['nom_points_concepts']}">
+											<ui:include src="/pages/nomination/weekly_nominations/mix.xhtml" />
+										</p:tab>
+		 								<p:tab title="#{msg['nom_quality_parameters']}">
+											<ui:include src="/pages/nomination/weekly_nominations/mix_quality.xhtml" />
+										</p:tab> 
+									</p:tabView>
+		
+								</p:tab>
+
+								<p:tab title="#{msg['nom_o_east']}" rendered="#{changeSystemView.isOffshore()}">
+								
+									<p:tabView scrollable="true" >
+										<p:tab title="#{msg['nom_points_concepts']}">
+											<ui:include src="/pages/nomination/weekly_nominations/o_east.xhtml" />
+										</p:tab>
+										
+										<!-- En offshore no se muestran Zone Quality Parameters. -->
+		 								<!-- <p:tab title="#{msg['nom_quality_parameters']}">
+											<ui:include src="/pages/nomination/weekly_nominations/o_east_quality.xhtml" />
+										</p:tab> --> 
+									</p:tabView>
+								</p:tab>
+		
+								<p:tab title="#{msg['nom_gas_quality']}">
+									<ui:include src="/pages/nomination/weekly_nominations/quality.xhtml" />
+								</p:tab> 
+							</p:tabView>
+
+		
+						</p:layoutUnit>
+		
+					</p:layout>
+			    </pe:masterDetailLevel>  
+			  
+			</pe:masterDetail>  
+
+			<p:dialog widgetVar="viewShipperComment" id="viewShipperComment" header="#{msg['day_nom_shipper_comment']}" modal="true" appendTo="@(body)">
+				<p:panelGrid columns="1">
+					<p:inputTextarea rows="25" cols="60" readonly="true" autoResize="false" value="#{dayNom.shipperLongMessage}" />
+				</p:panelGrid>
+			</p:dialog>
+			              			
+			<p:dialog widgetVar="viewSubmissionComment" id="viewSubmissionComment" header="#{msg['day_nom_submission_comment']}" modal="true" appendTo="@(body)">
+				<p:panelGrid columns="1">
+					<p:inputTextarea rows="25" cols="60" readonly="true" autoResize="false" value="#{weekNom.longMessage}" />
+				</p:panelGrid>
+			</p:dialog>
+	
+		</h:form>
+	</ui:define>
+
+
+</ui:composition>

@@ -1,0 +1,331 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_allocation']}" url="#" />
+			<p:menuitem value="#{msg['menu_intraday_report']}" url="/pages/allocation/intradayReport.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+				
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="10000" />
+			
+            <p:layout widgetVar="AllocationIntradayLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">	
+					
+				<p:panelGrid columns="2" style="width:100%">
+					
+						<p:panelGrid>
+							<p:row>
+								<p:column  style="font-weight: bold;width=150px">
+									<h:outputText value="#{msg['alloc_intraday_report_date_from']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;width=150px">
+									<h:outputText value="#{msg['alloc_intraday_report_date_to']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['alloc_intraday_report_shipper_code']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['alloc_intraday_report_contract_code']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['alloc_intraday_report_contract_point']}" />
+								</p:column>
+								<ui:remove>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['alloc_intraday_report_status']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['alloc_intraday_report_review_code']}" />
+								</p:column>
+								</ui:remove>
+							</p:row>
+							<p:row>
+
+								<p:column>
+									<p:calendar id="dateFrom" size="6" pattern="dd/MM/yyyy" mask="true" value="#{allocationIntradayView.filters.dateFrom}"
+										showOn="button" navigator="true" maxdate="#{(intradayNomSummaryView.sysdate).getTime()}">
+										<p:ajax event="dateSelect" update="dateFrom,contractId"></p:ajax>
+										<p:ajax event="change" update="dateFrom,contractId"></p:ajax>
+									</p:calendar>
+								</p:column>
+								<p:column>
+									<p:calendar id="dateTo" size="6" pattern="dd/MM/yyyy" mask="true" value="#{allocationIntradayView.filters.dateTo}"
+										showOn="button" navigator="true" maxdate="#{(allocationIntradayView.sysdate).getTime()}">
+										<p:ajax event="dateSelect" update="dateTo,contractId"></p:ajax>
+										<p:ajax event="change" update="dateTo,contractId"></p:ajax>
+									</p:calendar>
+								</p:column>
+								
+								<p:column>
+									<p:selectOneMenu id="shipperId" autoWidth="false" style="width:85px" value="#{allocationIntradayView.filters.shipperId}" 
+										rendered="#{!allocationIntradayView.isShipper}" >
+ 								   		<f:selectItem itemLabel="" itemValue=""  />
+      									<f:selectItems value="#{allocationIntradayView.shipperIds.entrySet()}" var="entry" 
+      											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+										<p:ajax event="change" update="contractId" />
+					           		</p:selectOneMenu>
+					           		<h:outputText value="#{allocationIntradayView.user.user_group_id}" style="float:left" rendered="#{allocationIntradayView.isShipper()}"/>
+								</p:column>
+
+								<p:column>
+									<p:selectOneMenu id="contractId" autoWidth="false" style="width:100px" value="#{allocationIntradayView.filters.contractId}" >
+								   		<f:selectItem itemLabel="" itemValue="" />
+      									<f:selectItems value="#{allocationIntradayView.contractIds.entrySet()}" var="entry" 
+      										itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>						
+								</p:column>
+
+								<p:column>
+									<p:selectOneMenu id="pointId" autoWidth="false" style="width:100px" value="#{allocationIntradayView.filters.nomPointId}" >
+								   		<f:selectItem itemLabel="" itemValue="" />
+      									<f:selectItems value="#{allocationIntradayView.pointIds.entrySet()}" var="entry" 
+      										itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>						
+								</p:column>
+									
+							</p:row>
+							<p:row><p:column  style="font-weight: bold;"><br/></p:column></p:row>
+
+
+						</p:panelGrid>
+						<p:panelGrid columns="2" style="float:right;top:0px">
+
+							<shiro:hasPermission name="#{changeSystemView.system}.ALLOCATION.INTRADAY_REPORT.QUERY">									
+								<p:commandButton value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{allocationIntradayView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,:#{p:component('allocations1')}"/>
+							</shiro:hasPermission>
+
+							<p:commandButton  onclick="PF('AllocationIntradayLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" 
+								value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+
+							<shiro:hasPermission name="#{changeSystemView.system}.ALLOCATION.INTRADAY_REPORT.QUERY">
+								 <p:commandButton value="#{msg['clear']}"
+									actionListener="#{allocationIntradayView.onClear}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" 
+									process="@this"
+									update="msgs,@form"/>
+							</shiro:hasPermission>
+							
+							<shiro:hasPermission name="#{changeSystemView.system}.ALLOCATION.INTRADAY_REPORT.RUN">
+								<p:commandButton id="executeButton" type="button" value="#{msg['all_man_execute']}" style="float:left;"
+        							icon="ui-icon fa fa-gears" onclick="PF('dlgExecute').show();" disabled="false"/>
+							</shiro:hasPermission>
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center" resizable="false" closable="false" collapsible="false" style="border: 0;">
+					
+					<!--No funciona demasiado bien. scrollWidth="80%" frozenColumns="4"  -->
+					<shiro:hasPermission name="#{changeSystemView.system}.ALLOCATION.INTRADAY_REPORT.QUERY">		
+					<p:dataTable widgetVar="w_allocations1"  id="allocations1" var="item" value="#{allocationIntradayView.items}"
+						reflow="true"  style="margin-bottom:20px;border-collapse:collapse"
+						scrollable="true" scrollHeight="400" 
+					    paginator="true" rows="15" rowsPerPageTemplate="5,10,15,20,25, #{allocationIntradayView.itemsSize}">
+
+	  						<f:facet name="header"> 
+								<p:outputPanel style="height:25px">
+				        			<h:commandLink style="float:right">
+								       <p:graphicImage name="/images/excel.png" width="24"/>
+								       <p:dataExporter type="xlsx" target="allocations1" fileName="allocationReport" 
+								       			postProcessor="#{allocationIntradayView.postProcessXLS}"/>
+								       <p:spacer width="10" height="10"/>
+									</h:commandLink>
+								</p:outputPanel>        										          
+	 				        </f:facet>
+					    <p:column style="width:16px">
+            <p:rowToggler />
+        </p:column>
+
+					       <p:column headerText="#{msg['all_rev_gas_day']}" style="width: 70px;"  >
+			               		<h:outputText value="#{item.gasDay}" >
+			              				<f:convertDateTime pattern="dd/MM/yyyy" />
+			              		</h:outputText>
+					       </p:column>
+					       <p:column headerText="#{msg['all_rev_shipper_code']}" style="width: 100px;">
+					       		<h:outputText value="#{item.shipperCode}" />
+					       </p:column>
+					       <p:column headerText="#{msg['all_rev_shipper_name']}" style="width: 100px;">
+					       		<h:outputText value="#{item.shipperName}" />
+					       </p:column>
+					       <p:column headerText="#{msg['all_rev_contract_code']}" style="width: 100px;" >
+					       		<h:outputText value="#{item.contractCode}" />
+					       </p:column>
+
+					       <p:column headerText="#{msg['alloc_report_contract_point']}" style="width: 100px;" >
+					       		<h:outputText value="#{item.pointCode}" />
+					       </p:column>
+
+
+
+					       <p:column headerText="#{msg['alloc_report_point_type']}" style="width: 100px;" >
+					       		<h:outputText value="#{item.pointTypeCode}" />
+					       </p:column>
+							<p:column headerText="#{msg['all_rev_booked_cap']}" style="width: 100px;" >
+								<h:outputText style="float:right" value="#{item.contractedValue}">
+									<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['all_rev_nominated_cap']}" style="width: 100px;">
+								<h:outputText style="float:right" value="#{item.nominatedValue}">
+									<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['all_rev_allocation_tpa']}" style="width: 100px;" >
+								<h:outputText style="float:right" value="#{item.allocatedValue}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+								</h:outputText>
+							</p:column>
+
+							<p:column headerText="#{msg['alloc_report_overusage']}" style="width: 100px;" >
+								<h:outputText style="float:right" value="#{item.overusage}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+								</h:outputText>
+							</p:column>
+							<p:rowExpansion>
+
+					<p:dataTable widgetVar="w_detail"  id="detail" var="det" value="#{allocationIntradayView.getDetails(item)}"
+						  style="margin-bottom:20px;border-collapse:collapse"
+					    >
+
+					       <p:column headerText="#{msg['all_rev_gas_day']}" style="width: 70px;"  >
+			               		<h:outputText value="#{det.gasDay}" >
+			              				<f:convertDateTime pattern="dd/MM/yyyy" />
+			              		</h:outputText>
+					       </p:column>
+					       <p:column headerText="#{msg['all_rev_shipper_code']}" style="width: 100px;">
+					       		<h:outputText value="#{det.shipperCode}" />
+					       </p:column>
+					       <p:column headerText="#{msg['all_rev_shipper_name']}" style="width: 100px;">
+					       		<h:outputText value="#{det.shipperName}" />
+					       </p:column>
+					       <p:column headerText="#{msg['all_rev_contract_code']}" style="width: 100px;" >
+					       		<h:outputText value="#{det.contractCode}" />
+					       </p:column>
+
+					       <p:column headerText="#{msg['alloc_report_contract_point']}" style="width: 100px;" >
+					       		<h:outputText value="#{det.pointCode}" />
+					       </p:column>
+					       <p:column headerText="#{msg['all_rev_nomination_point_id']}" style="width: 100px;" >
+					       		<h:outputText value="#{det.nominationPoint}" />
+					       </p:column>
+
+					       <p:column headerText="#{msg['alloc_report_point_type']}" style="width: 100px;" >
+					       		<h:outputText value="#{det.pointTypeCode}" />
+					       </p:column>
+							<p:column headerText="#{msg['all_rev_booked_cap']}" style="width: 100px;" >
+								<h:outputText style="float:right" value="#{det.contractedValue}">
+									<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['all_rev_nominated_cap']}" style="width: 100px;">
+								<h:outputText style="float:right" value="#{det.nominatedValue}">
+									<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['all_rev_allocation_tpa']}" style="width: 100px;" >
+								<h:outputText style="float:right" value="#{det.allocatedValue}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['alloc_report_res_bal_gas']}" style="width: 100px;" >
+								<h:outputText style="float:right" value="#{det.balancingGas}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+								</h:outputText>
+							</p:column>
+
+					    </p:dataTable>
+							</p:rowExpansion>
+					    </p:dataTable>
+					    </shiro:hasPermission>
+				</p:layoutUnit>
+			</p:layout>
+		</h:form>
+	
+	<shiro:hasPermission name="#{changeSystemView.system}.ALLOCATION.INTRADAY_REPORT.RUN">
+		<!-- Si no se usa appendTo="@(body)", la ventana modal bloquea toda la interfaz. -->
+		<p:dialog header="#{msg['all_man_execution_dialog_header']}" widgetVar="dlgExecute" modal="true" appendTo="@(body)" minHeight="150" width="350">
+			<h:form id="executeFormId" style="width:100%;height:98%;border-collapse:collapse">
+
+				<p:growl id="msgs" showDetail="true" life="10000" globalOnly="true" />
+				<p:panelGrid id="executePanelGridId">
+					<p:panelGrid id="executePanelGridLeftId">
+						<p:row>
+							<p:column colspan="2">
+								<h:outputText value="#{msg['all_man_intraday_execution_intro']}" />
+							</p:column>
+						</p:row>
+						<!-- <p:row>
+							<p:column style="font-weight: bold;">
+								<h:outputText value="#{msg['all_man_date']}" />
+							</p:column>
+							<p:column>
+			               		<h:outputText value="#{allocationIntradayView.responsePeriodStartDate}" >
+		              				<f:convertDateTime pattern="dd/MM/yyyy" />
+			              		</h:outputText>
+							</p:column>
+						</p:row>  -->
+						<!-- <p:row>
+							<p:column style="font-weight: bold;">
+								<h:outputText value="#{msg['all_man_to']}" />
+							</p:column>
+							<p:column>
+			               		<h:outputText value="#{allocationIntradayView.responsePeriodEndDate}" >
+		              				<f:convertDateTime pattern="dd/MM/yyyy" />
+			              		</h:outputText>
+							</p:column>
+						</p:row>  -->
+						<p:row><p:column/><p:column/></p:row>
+						<p:row><p:column/><p:column/></p:row>						
+						<p:row>
+							<p:column  style="font-weight: bold;">
+					       		<p:commandButton value="#{msg['execute']}" style="float:right;"
+					       			actionListener="#{allocationIntradayView.onExecute}" 
+					       			update="#{p:component('msgs')}"
+									onstart="PF('grabando').show()" 
+									oncomplete="PF('grabando').hide();PF('dlgExecute').hide()" />						
+							</p:column>
+							<p:column  style="font-weight: bold;">
+					       		<p:commandButton value="#{msg['cancel']}"
+					       			oncomplete="PF('dlgExecute').hide()"/>
+							</p:column>
+						</p:row>
+					</p:panelGrid>
+				</p:panelGrid>
+			</h:form> 	    
+		</p:dialog> 
+	</shiro:hasPermission>
+
+		
+	</ui:define>
+	
+	<script type="text/javascript">
+	function start() {
+	    PF('cargando').show();
+	}
+	 
+	function stop() {
+	    PF('cargando').hide();
+	}
+	</script>
+</ui:composition>

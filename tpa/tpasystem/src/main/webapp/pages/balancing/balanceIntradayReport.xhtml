@@ -1,0 +1,175 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_balancing']}" url="#" />
+			<p:menuitem value="#{msg['menu_balance_intraday_report']}" url="/pages/balancing/balanceIntradayReport.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+				
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="10000" />
+			
+            <p:layout widgetVar="balIntraReportLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">	
+					
+					<p:panelGrid columns="2" style="width:100%">
+					
+						<p:panelGrid>
+							<p:row>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['bal_rep_shipper']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['bal_int_gasday']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['bal_int_generated_from']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['bal_int_generated_to']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['bal_int_last_version']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['bal_int_timestamp']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['bal_int_total_rows']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['bal_rep_total_all_shippers']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<p:selectOneMenu id="shipperId" style="width:100px" value="#{balIntraReportView.filters.shipperId}" 
+										rendered="#{!balIntraReportView.isShipper()}" >
+ 								   		<f:selectItem itemLabel="" itemValue="" />
+      									<f:selectItems value="#{balIntraReportView.shipperIds.entrySet()}" var="entry" 
+      											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>
+					           		<h:outputText value="#{balIntraReportView.user.user_group_id}" style="float:left" rendered="#{balIntraReportView.isShipper()}"/>
+								</p:column>
+								
+								<p:column>
+									<p:calendar id="gasDay" size="6" pattern="dd/MM/yyyy" mask="true" value="#{balIntraReportView.filters.gasDay}"
+										showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="gasDay,timestampId"></p:ajax>
+										<p:ajax event="change" update="gasDay,timestampId"></p:ajax>
+									</p:calendar>
+								</p:column>
+
+								<p:column>
+									<p:calendar id="generatedFrom" size="13" pattern="dd/MM/yyyy HH:mm:ss" value="#{balIntraReportView.filters.generatedFrom}"
+										mask="true" showButtonPanel="true" showOn="button" navigator="true" disabled="#{balIntraReportView.filters.lastVersion}">
+									</p:calendar>
+								</p:column>
+								
+								<p:column>
+									<p:calendar id="generatedTo" size="13" pattern="dd/MM/yyyy HH:mm:ss" value="#{balIntraReportView.filters.generatedTo}"
+										mask="true" showButtonPanel="true" showOn="button" navigator="true" disabled="#{balIntraReportView.filters.lastVersion}">
+									</p:calendar>
+								</p:column>
+								
+								<p:column style="text-align:center">
+									<p:selectBooleanCheckbox id="lastVersionCheckbox" value="#{balIntraReportView.filters.lastVersion}" >
+ 										<p:ajax event="change" listener="#{balIntraReportView.updateTimestamp}" update=":#{p:component('generatedFrom')},:#{p:component('generatedTo')},:#{p:component('timestampId')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								
+								<p:column>
+									<p:selectOneMenu id="timestampId" style="width:70px" value="#{balIntraReportView.filters.timestampVar}" 
+										disabled="#{balIntraReportView.filters.lastVersion}" >
+ 								   		<f:selectItem itemLabel="" itemValue="" />
+      									<f:selectItems value="#{balIntraReportView.timestamp.entrySet()}" var="entry" 
+      											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>
+								</p:column>
+								
+								<p:column style="text-align:center">
+									<p:selectBooleanCheckbox id="totalRowsCheckbox" value="#{balIntraReportView.filters.totalRows}" disabled="#{balIntraReportView.filters.totalAllShippers}" >
+										<p:ajax event="change" update=":#{p:component('totalAllShippersCheckbox')}" />		
+									</p:selectBooleanCheckbox>		
+								</p:column>
+								
+								<p:column style="text-align:center">
+									<p:selectBooleanCheckbox id="totalAllShippersCheckbox" value="#{balIntraReportView.filters.totalAllShippers}" disabled="#{balIntraReportView.filters.totalRows}">
+										<p:ajax event="change" update=":#{p:component('totalRowsCheckbox')}" />		
+									</p:selectBooleanCheckbox>			
+								</p:column>
+
+								<!-- Para insertar la plantilla excel en la BD. Solo se usa en Desarrollo.-->
+   								<!-- <p:column>
+									<p:fileUpload id="docUpload" style="width:100%" fileUploadListener="#{balIntraReportView.handleDocFileUpload}" 
+										mode="advanced" dragDropSupport="true" fileLimit="1" ajax="true" update=":form:msgs"
+				     					onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()"/>
+								</p:column> -->
+							</p:row>
+						</p:panelGrid>
+
+						<p:panelGrid columns="2" style="float:right;top:0px">
+							<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.BALANCE.INTRADAY.REPORT.QUERY">									
+								<p:commandButton value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{balIntraReportView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,@form"/>
+							</shiro:hasPermission>
+
+							<p:commandButton  onclick="PF('balIntraReportLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" 
+								value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+
+							<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.BALANCE.INTRADAY.REPORT.QUERY">	
+								 <p:commandButton value="#{msg['clear']}"
+									actionListener="#{balIntraReportView.onClear}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" 
+									process="@this"
+									update="msgs,@form"/>
+							</shiro:hasPermission>
+
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center" resizable="false" closable="false" collapsible="false" style="border: 0;">
+
+					<c:if test="#{changeSystemView.isOnshore()}">
+						<ui:include src="/pages/balancing/balanceIntradayReportOnshore.xhtml" />
+					</c:if>
+					
+					<c:if test="#{changeSystemView.isOffshore()}">
+						<ui:include src="/pages/balancing/balanceIntradayReportOffshore.xhtml" />
+					</c:if>
+					
+				</p:layoutUnit>
+			</p:layout>
+		</h:form> 
+	</ui:define>
+	
+	<script type="text/javascript">
+	function start() {
+	    PF('cargando').show();
+	}
+	 
+	function stop() {
+	    PF('cargando').hide();
+	}
+	</script>
+</ui:composition>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<!-- Namespace -->
+<mapper namespace="com.atos.mapper.booking.CapacityPublicationMapper">
+
+	<select id="selectCapacityPublication" resultType="com.atos.beans.booking.CapacityPublicationBean" parameterType="com.atos.filters.booking.CapacityPublicationFilter">
+		
+		select idn_val_avail as idn_val_avail_capacity, area, cap_date as monthYear, end_date as endDate, tech_cap, available_cap, booked_cap
+		  from table(fun_tbl_query_capacity_public(#{startDate},
+		                                           #{endDate},
+		                                           #{zones_query},
+		                                           #{par_chart}))
+	</select>
+
+	<select id="selectCapacityChart" resultType="com.atos.beans.booking.CapacityPublicationBean" parameterType="com.atos.filters.booking.CapacityPublicationFilter">
+		
+		select area, cap_date as monthYear, tech_cap, available_cap, booked_cap
+		  from table(fun_tbl_query_capacity_chart(#{startDate},
+		                                           #{endDate},
+		                                           #{zones_query},
+		                                           #{par_chart}))
+	</select>
+
+	<select id="selectCapacityBean" resultType="com.atos.beans.booking.CapacityPublicationBean" parameterType="com.atos.beans.booking.CapacityPublicationBean">
+		
+		select  IDN_VAL_AVAIL_CAPACITY as idn_val_avail_capacity,
+		AREA as area,
+		AVAILABLE_CAPACITY_VALUE as available_cap,
+		START_DATE as monthYear,
+		END_DATE as endDate
+		
+		  from TPA_TVALUES_AVAILABLE_CAPACITY
+		  	where area = #{area}
+		  	<if test="idn_val_avail_capacity != null">
+		  		and idn_val_avail_capacity = #{idn_val_avail_capacity}
+		  	</if>
+	</select>
+
+	<insert id="insertAvailableCapacityPublication" useGeneratedKeys="true" keyProperty="idn_val_avail_capacity" keyColumn="idn_val_avail_capacity" parameterType="com.atos.beans.booking.CapacityPublicationBean">
+		INSERT INTO TPA_TVALUES_AVAILABLE_CAPACITY
+			(idn_val_avail_capacity,area,available_capacity_value,start_date, end_date, aud_ins_user,aud_last_user)
+		VALUES
+			(TPA_SVALUES_AVAIL_CAP.nextval,
+			 #{area},
+			 #{available_cap}, 
+			 #{monthYear},
+			 #{endDate},
+		     #{username},
+			 #{username})
+	</insert>
+	
+	<update id="updateAvailableCapacityPublication" parameterType="com.atos.beans.booking.CapacityPublicationBean">
+		UPDATE TPA_TVALUES_AVAILABLE_CAPACITY set
+			available_capacity_value = #{available_cap},
+			start_date=#{monthYear},
+			end_date=#{endDate},
+			aud_last_user=#{username}
+		WHERE idn_val_avail_capacity = #{idn_val_avail_capacity} 
+			and area=#{area}
+	</update>
+	 	
+
+</mapper>

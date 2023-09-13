@@ -1,0 +1,488 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_metering']}" url="#" />
+			<p:menuitem value="#{msg['menu_metering_management']}" url="/pages/metering/MeteringManagement.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+				
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="10000" />
+			
+			<script type="text/javascript">
+				function disableSearch(){
+					$("[id$='btnSearch']").prop('disabled', true);
+					$("[id$='btnSearch']").css('color', '#a8a8a8');
+				}
+				function enableSearch(){
+					$("[id$='btnSearch']").prop('disabled',false);
+					$("[id$='btnSearch']").css('color', '#4d4d4d');
+				}
+				// El boton Search y los combos se deshabilitan por javascript.
+				// Luego el boton Search se habilitara tras cargarse el combo de puntos.
+				// Los combos se habilitaran al hacer update, porque por definicion no estan deshabilidatos.
+ 				function disableFromZonesCombo(){
+					$("[id$='btnSearch']").prop('disabled', true);
+ 					$("[id$='btnSearch']").css('color', '#a8a8a8');
+					PF('areasWidget').disabled='true';
+					PF('pointsWidget').disabled='true';
+					PF('inputCodesWidget').disabled='true';
+				}
+				function disableFromAreasCombo(){
+					$("[id$='btnSearch']").prop('disabled', true);
+ 					$("[id$='btnSearch']").css('color', '#a8a8a8');
+					PF('pointsWidget').disabled='true';
+					PF('inputCodesWidget').disabled='true';
+				}
+				function disableFromPointsCombo(){
+					$("[id$='btnSearch']").prop('disabled', true);
+ 					$("[id$='btnSearch']").css('color', '#a8a8a8');
+					PF('inputCodesWidget').disabled='true';
+				}
+			</script>
+	
+            <p:layout widgetVar="MetManagementLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">	
+					
+				<p:panelGrid columns="2" style="width:100%">
+					
+						<p:panelGrid>
+							<p:row>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['met_man_from']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['met_man_to']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<p:calendar id="gasDayFrom" size="6" pattern="dd/MM/yyyy" mask="true" value="#{MetManagementView.filters.gasDayFrom}"
+										showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="gasDayFrom,meteringInput" listener="#{MetManagementView.onDateChanged}"></p:ajax>
+										<p:ajax event="change" update="gasDayFrom,meteringInput" listener="#{MetManagementView.onDateChanged}"></p:ajax>
+									</p:calendar>
+								</p:column>
+								<p:column>
+									<p:calendar id="gasDayTo" size="6" pattern="dd/MM/yyyy" mask="true" value="#{MetManagementView.filters.gasDayTo}"
+										showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="gasDayTo,meteringInput" listener="#{MetManagementView.onDateChanged}"></p:ajax>
+										<p:ajax event="change" update="gasDayTo,meteringInput" listener="#{MetManagementView.onDateChanged}"></p:ajax>
+									</p:calendar>
+								</p:column>							
+							</p:row>
+							<p:row>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['met_man_zone']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['met_man_area']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['met_man_metering_point_id']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['met_man_retrieving_id']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['met_man_las_met_input']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<p:selectCheckboxMenu id="zones" widgetVar="zonesWidget" autoWidth="false" style="width:80px" 
+											onHide="reloadAreasOnhide();" onShow="disableFromZonesCombo();"
+										   	value="#{MetManagementView.filters.zoneIds}" label="#{msg['met_man_zone']}">
+      									<f:selectItems value="#{MetManagementView.getZones(changeSystemView.system).entrySet()}" var="entry" 
+      										itemValue="#{entry.key}" itemLabel="#{entry.value}" />										
+					           		</p:selectCheckboxMenu>
+								</p:column>
+								<!-- remoteCommand para que actualice los otros combos cuando se haga el onHide (se cierre el combo anterior). -->
+								<p:remoteCommand  name="reloadAreasOnhide" update="zones,areas,meteringPoints,meteringInput" process="@this form:zones"/>
+
+								<p:column>
+									<p:selectCheckboxMenu id="areas" widgetVar="areasWidget" autoWidth="false" style="width:80px"
+											onHide="reloadPointsOnhide();" onShow="disableFromAreasCombo();"
+										   	value="#{MetManagementView.filters.areaIds}" label="#{msg['met_man_area']}">
+      									<f:selectItems value="#{MetManagementView.areas.entrySet()}" var="entry" 
+      										itemValue="#{entry.key}" itemLabel="#{entry.value}" />										
+					           		</p:selectCheckboxMenu>						
+								</p:column>
+								<!-- remoteCommand para que actualice los otros combos cuando se haga el onHide (se cierre el combo anterior). -->
+								<p:remoteCommand  name="reloadPointsOnhide" update="areas,meteringPoints,meteringInput" process="@this form:areas"/>
+
+								<p:column>
+									<p:selectCheckboxMenu id="meteringPoints" widgetVar="pointsWidget" autoWidth="false" style="width:150px"
+											onHide="reloadMetInputOnhide();" onShow="disableFromPointsCombo();" filter="true" filterMatchMode="startsWith"
+											multiple="true" value="#{MetManagementView.filters.systemPointId}" label="#{msg['met_man_metering_point_id']}">
+      									<f:selectItems value="#{MetManagementView.meteringPoints.entrySet()}" var="entry" 
+      										itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectCheckboxMenu>						
+								</p:column>
+								<!-- remoteCommand para que actualice los otros combos cuando se haga el onHide (se cierre el combo anterior). -->
+								<p:remoteCommand  name="reloadMetInputOnhide" update="meteringPoints,meteringInput" process="@this form:meteringPoints"/>
+
+								<p:column>
+									<p:selectOneMenu id="meteringInput" widgetVar="inputCodesWidget" style="width:120px" value="#{MetManagementView.filters.meteringInputId}" >
+								   		<f:selectItem itemLabel="#{msg['met_man_last_version']}" itemValue="" />
+      									<f:selectItems value="#{MetManagementView.meteringInputCodes.entrySet()}" var="entry" 
+      											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>
+					           	</p:column>
+								<p:column>
+				               		<h:outputText id="lastOKMeteringInputDate" value="#{MetManagementView.lastOKMeteringInputDate}" >
+				              			<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+				              		</h:outputText>
+								</p:column>
+							</p:row>
+						</p:panelGrid>
+						<p:panelGrid columns="3" style="float:right;top:0px">
+ 							<shiro:hasPermission name="#{changeSystemView.system}.METERING.RETRIEVING.QUERY">
+								<p:commandButton id="btnSearch" value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{MetManagementView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,@form,:executeFormId"/>
+							</shiro:hasPermission>
+
+							<p:commandButton  onclick="PF('MetManagementLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" 
+								value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+
+ 							<shiro:hasPermission name="#{changeSystemView.system}.METERING.RETRIEVING.QUERY">
+								<p:commandButton value="#{msg['check']}"  
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide();PF('w_checkDlg').show()" 
+									update="msgs"/>
+							</shiro:hasPermission>
+ 							<shiro:hasPermission name="#{changeSystemView.system}.METERING.RETRIEVING.QUERY">																	
+								 <p:commandButton value="#{msg['clear']}"
+									actionListener="#{MetManagementView.onClear}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" 
+									process="@this"
+									update="msgs,@form,:executeFormId"/>
+							</shiro:hasPermission>
+							<shiro:hasPermission name="#{changeSystemView.system}.METERING.RETRIEVING.ADD">
+								<p:commandButton id="executeButton" type="button" value="#{msg['met_man_execute']}" icon="ui-icon fa fa-gears" style="float:left;"
+        							onclick="PF('dlgExecute').show();"/>
+							</shiro:hasPermission>
+							<shiro:hasPermission name="#{changeSystemView.system}.METERING.RETRIEVING.FILE">
+								<p:commandButton id="fileExecuteButton" type="button" value="#{msg['met_man_load_file']}" icon="ui-icon fa fa-file-excel-o" style="float:left;"
+        							onclick="PF('dlgFileExecute').show();"/>
+							</shiro:hasPermission>
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center" resizable="false" closable="false" collapsible="false" style="border: 0;">
+
+					<p:dataTable widgetVar="w_measurements1"  id="measurements1" var="measurement" value="#{MetManagementView.items}"
+						reflow="true" style="margin-bottom:20px;border-collapse:collapse"
+						scrollable="true" scrollHeight="100%"
+					    paginator="true" rows="15" rowsPerPageTemplate="5,10,15,20,25, #{MetManagementView.itemsSize}" >
+
+ 						<shiro:hasPermission name="#{changeSystemView.system}.METERING.RETRIEVING.QUERY">
+ 						
+	  						<f:facet name="header"> 
+								<p:outputPanel style="height:25px">
+									<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+	        						<p:columnToggler datasource="measurements1" trigger="toggler" style="width:200px"/>
+									
+				        			<h:commandLink style="float:right">
+								       <p:graphicImage name="/images/excel.png" width="24"/>
+								       <p:dataExporter type="xlsx" target="measurements1" fileName="measurementsReport" 
+								       			postProcessor="#{MetManagementView.postProcessXLS}"/>
+								       <p:spacer width="10" height="10"/>
+									</h:commandLink>
+								</p:outputPanel>        										          
+	 				        </f:facet>
+ 				        
+							<!-- evento del click del p:rowExpansion -->
+							<!-- Esta preparado para cargar los datos de calidad cuando se pulsa el Expand. 
+							No se utiliza asi porque, cuando se genere la excel se quiere que se registren todos los datos de calidad de gas.
+							<p:ajax event="rowToggle" listener="#{MetManagementView.onRowToggle}" update=":form:msgs" /> -->   						 
+							<p:column style="width:16px">
+		         			   <p:rowToggler />
+		       				</p:column>
+	       				
+					       <p:column headerText="#{msg['met_man_gas_day']}" style="width: 70px;" sortBy="#{measurement.gasDay}" >
+			               		<h:outputText value="#{measurement.gasDay}" >
+			              				<f:convertDateTime pattern="dd/MM/yyyy" />
+			              		</h:outputText>
+					       </p:column>
+					      	<p:column headerText="#{msg['met_man_metering_point_id']}" sortBy="#{measurement.meteringPointCode}">
+					       		<h:outputText value="#{measurement.meteringPointCode}" />
+					       	</p:column>
+
+					       <p:column headerText="#{msg['met_man_zone']}" style="width: 45px;" sortBy="#{measurement.zoneCode}">
+					       		<h:outputText value="#{measurement.zoneCode}" />
+					       </p:column>
+					       
+					      	<p:column headerText="#{msg['met_man_area']}" style="width: 35px;" sortBy="#{measurement.areaCode}">
+					       		<h:outputText value="#{measurement.areaCode}" />
+					       	</p:column>
+
+					      	<p:column headerText="#{msg['met_man_customer_type']}" style="width: 80px;" sortBy="#{measurement.customerTypeDesc}">
+					       		<h:outputText value="#{measurement.customerTypeDesc}" />
+					       	</p:column>
+
+					       <p:column headerText="#{msg['met_man_volume']}" style="width: 100px;" sortBy="#{measurement.volume}">
+					       		<h:outputText style="float:right" value="#{measurement.volume}">
+									<f:convertNumber groupingUsed="true" minFractionDigits="6" maxFractionDigits="6"/>
+								</h:outputText>
+					       </p:column>
+
+					       <p:column headerText="#{msg['met_man_hv']}" style="width: 70px;" sortBy="#{measurement.hv}">
+					       		<h:outputText style="float:right" value="#{measurement.hv}">
+									<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+								</h:outputText>
+					       </p:column>
+
+					       <p:column headerText="#{msg['met_man_energy']}" style="width: 100px;" sortBy="#{measurement.energy}">
+					       		<h:outputText style="float:right" value="#{measurement.energy}">
+									<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+								</h:outputText>
+					       </p:column>
+
+					       <p:column headerText="#{msg['met_man_timestamp']}" sortBy="#{measurement.registerTimestamp}">
+			               		<h:outputText value="#{measurement.registerTimestamp}" >
+			              			<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+			              		</h:outputText>
+					       </p:column>
+
+					       <p:column headerText="#{msg['met_man_tpa_insert_timestamp']}" sortBy="#{measurement.versionDate}">
+			               		<h:outputText value="#{measurement.versionDate}" >
+			              			<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+			              		</h:outputText>
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['met_man_retrieving_id']}" sortBy="#{measurement.metInputCode}">
+					       		<h:outputText value="#{measurement.metInputCode}" />
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['met_man_origin']}" sortBy="#{measurement.origin}">
+					       		<h:outputText value="#{measurement.origin}" />
+					       </p:column>
+					       
+				        <p:rowExpansion >
+
+				        	<p:panelGrid style="width: 100%">
+								<p:row>
+									<p:column>								 
+										<h:outputText value="#{msg['osgr_man_parameter']}: " style="font-weight: bold;"/>
+									</p:column>
+									<p:column>								 
+										<h:outputText value="#{msg['osgr_man_value']}: " style="font-weight: bold;"/>
+									</p:column>
+									<p:column>								 
+										<h:outputText value="#{msg['osgr_man_parameter']}: " style="font-weight: bold;"/>
+									</p:column>
+									<p:column>								 
+										<h:outputText value="#{msg['osgr_man_value']}: " style="font-weight: bold;"/>
+									</p:column>
+									<p:column>								 
+										<h:outputText value="#{msg['osgr_man_parameter']}: " style="font-weight: bold;"/>
+									</p:column>
+									<p:column>								 
+										<h:outputText value="#{msg['osgr_man_value']}: " style="font-weight: bold;"/>
+									</p:column>
+								</p:row>
+	        				</p:panelGrid>
+						    <p:dataGrid var="gasParam" value="#{measurement.gasParams}" columns="3" layout="grid" id="gasParams">
+								<p:panelGrid columns="2" style="width: 100%">
+						       		<h:outputText value="#{gasParam.paramDesc} (#{gasParam.unitDesc}): "/>
+						       		<h:outputText value="#{gasParam.value}" style="width: 10px;">
+										<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+									</h:outputText>
+	     						</p:panelGrid>
+							</p:dataGrid>
+
+				      	</p:rowExpansion>
+				      	
+						</shiro:hasPermission>
+
+					</p:dataTable>
+				</p:layoutUnit>
+			</p:layout>
+		</h:form> 
+
+
+		<!-- Si no se usa appendTo="@(body)", la ventana modal bloquea toda la interfaz. -->
+	<p:dialog header="#{msg['met_man_execution_dialog_header']}" widgetVar="dlgExecute" modal="true" appendTo="@(body)" minHeight="150">
+		<h:form id="executeFormId" style="width:100%;height:98%;border-collapse:collapse">
+			
+			<shiro:hasPermission name="#{changeSystemView.system}.METERING.RETRIEVING.ADD">
+				<p:growl id="msgs" showDetail="true" life="10000" globalOnly="true" />
+				<p:panelGrid id="executePanelGridId" columns="2">
+					<p:panelGrid id="executePanelGridLeftId">
+						<p:row>
+							<p:column style="font-weight: bold;">
+								<h:outputText value="#{msg['met_man_from']}" />
+							</p:column>
+							<p:column style="font-weight: bold;">
+								<h:outputText value="#{msg['met_man_to']}" />
+							</p:column>
+						</p:row>
+						<p:row>
+							<p:column>
+								<p:calendar id="execGasDayFrom" size="6" pattern="dd/MM/yyyy" mask="true" value="#{MetManagementView.updateMetsfilters.gasDayFrom}"
+									showOn="button" navigator="true">
+									<p:ajax event="dateSelect" update="execGasDayFrom"></p:ajax>
+									<p:ajax event="change" update="execGasDayFrom"></p:ajax>
+								</p:calendar>
+							</p:column>
+							<p:column>
+								<p:calendar id="execGasDayTo" size="6" pattern="dd/MM/yyyy" mask="true" value="#{MetManagementView.updateMetsfilters.gasDayTo}"
+									showOn="button" navigator="true">
+									<p:ajax event="dateSelect" update="execGasDayTo"></p:ajax>
+									<p:ajax event="change" update="execGasDayTo"></p:ajax>
+								</p:calendar>
+							</p:column>	
+						</p:row>
+						<p:row><p:column/><p:column/></p:row>
+						<p:row><p:column/><p:column/></p:row>						
+						<p:row>
+							<p:column  style="font-weight: bold;">
+					       		<p:commandButton value="#{msg['met_man_execute']}" style="float:right;"
+					       			actionListener="#{MetManagementView.onExecute}" 
+					       			update="#{p:component('measurements1')},#{p:component('msgs')}"
+									onstart="PF('grabando').show()" 
+									oncomplete="PF('grabando').hide();PF('dlgExecute').hide()" />						
+							</p:column>
+							<p:column  style="font-weight: bold;">
+					       		<p:commandButton value="#{msg['cancel']}"
+					       			oncomplete="PF('dlgExecute').hide()"/>
+							</p:column>
+						</p:row>
+					</p:panelGrid>
+				</p:panelGrid>
+			</shiro:hasPermission>
+		</h:form> 	    
+	</p:dialog> 
+
+	
+
+	<!-- Si no se usa appendTo="@(body)", la ventana modal bloquea toda la interfaz. -->
+	<p:dialog header="#{msg['met_man_file_execution_dialog_header']}" widgetVar="dlgFileExecute" modal="true" appendTo="@(body)" minHeight="150">
+		<h:form id="fileExecuteFormId" style="width:100%;height:98%;border-collapse:collapse">
+
+			<shiro:hasPermission name="#{changeSystemView.system}.METERING.RETRIEVING.FILE">
+				<p:growl id="msgs" showDetail="true" life="10000" globalOnly="true" />
+				<p:panelGrid id="fileExecutePanelGridId">
+					<p:row><p:column/></p:row>						
+					<p:row>
+						<p:column>
+				      		<!-- No se limita el tipo de fichero ni el tamaño. -->
+							<p:fileUpload id="fileUpload" style="width:100%" fileUploadListener="#{MetManagementView.handleFileUpload}" 
+								mode="advanced" dragDropSupport="true" fileLimit="1" sizeLimit="1000000" allowTypes="/(\.|\/)(xlsx|xls)$/" 
+								ajax="true" update=":form:msgs,fileUpload" onstart="PF('cargando').show()" oncomplete="PF('cargando').hide();PF('dlgFileExecute').hide()"
+		     					label="#{msg['met_man_choose_file']}"/>
+						</p:column>
+					</p:row>
+					<p:row>
+						<p:column>
+						    <p:commandLink value="#{msg['cr_bb_download_template']}" ajax="false" actionListener="#{MetManagementView.selectTemplateFile()}" 
+						    	oncomplete="PrimeFaces.monitorDownload(start, stop);" >
+						        <p:fileDownload value="#{MetManagementView.templateFile}"/>
+						    </p:commandLink>
+						</p:column>
+					</p:row>
+				</p:panelGrid>
+			</shiro:hasPermission>
+		</h:form> 	    
+	</p:dialog> 
+
+		<p:dialog header="#{msg['met_man_check_title']}" widgetVar="w_checkDlg" modal="true" appendTo="@(body)" height="450" width="460">
+
+			<h:form id="checkMeteringForm">
+
+				<p:growl id="msgs" showDetail="true" life="10000" globalOnly="true" />
+				<p:panelGrid id="checkMet" style="width=100%">
+					<p:row>
+						<p:column>
+							<p:outputLabel value="#{msg['bal_int_gasday']}" />
+						</p:column>
+						<p:column>
+
+						<p:calendar id="checkDate" size="10" pattern="dd/MM/yyyy"
+							value="#{MetManagementView.checkDate}"
+							showOn="button" navigator="true" locale="en_EN">
+						</p:calendar>
+						</p:column>
+						<p:column>
+ 							<shiro:hasPermission name="#{changeSystemView.system}.METERING.RETRIEVING.QUERY">
+								<p:commandButton value="#{msg['check']}"  
+									actionListener="#{MetManagementView.onCheck}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide();" 
+									update="msgs,checkedTable"/>
+							</shiro:hasPermission>
+							</p:column>
+					</p:row>
+
+				</p:panelGrid>
+				<p:panel>
+
+					<p:dataTable   id="checkedTable" var="it" value="#{MetManagementView.checkedPoints}"
+						reflow="true" style="margin-bottom:20px;border-collapse:collapse"
+						
+						scrollable="true" scrollHeight="200"
+					    paginator="true" rows="5" rowsPerPageTemplate="5,10,15,20,25">
+ 						<shiro:hasPermission name="#{changeSystemView.system}.METERING.RETRIEVING.QUERY">
+
+	  						<f:facet name="header"> 
+								<p:outputPanel style="height:25px">
+									<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+	        						<p:columnToggler datasource="checkedTable" trigger="toggler" style="width:200px"/>
+									
+				        			<h:commandLink style="float:right">
+								       <p:graphicImage name="/images/excel.png" width="24"/>
+								       <p:dataExporter type="xlsx" target="checkedTable" fileName="MeteringDataCheck" 
+								       			postProcessor="#{MetManagementView.exportChecks}"/>
+								       <p:spacer width="10" height="10"/>
+									</h:commandLink>
+								</p:outputPanel>        										          
+	 				        </f:facet>
+ 							
+					       <p:column headerText="#{msg['met_man_point_code']}" >
+					       		<h:outputText value="#{it.pointCode}" />
+					       </p:column>
+
+					       <p:column headerText="#{msg['met_man_point_desc']}" >
+					       		<h:outputText value="#{it.pointDesc}" />
+					       </p:column>
+ 						</shiro:hasPermission>
+ 						</p:dataTable>
+
+ 					       	<p:commandButton value="#{msg['cancel']}" icon="ui-icon-close" style="float:right;"
+								oncomplete="PF('w_checkDlg').hide()"/>
+				</p:panel>
+			</h:form>
+		</p:dialog>
+	
+	</ui:define>
+	
+	<script type="text/javascript">
+	function start() {
+	    PF('cargando').show();
+	}
+	 
+	function stop() {
+	    PF('cargando').hide();
+	}
+	</script>
+</ui:composition>

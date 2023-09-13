@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+Built-By: Atos
+Build-Jdk: 1.8
+Created-By: Apache Maven
+Archiver-Version: Plexus Archiver

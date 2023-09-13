@@ -1,0 +1,289 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define> 
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_dam']}" url="#" />
+			<p:menuitem value="#{msg['menu_assets']}" url="#" />
+			<p:menuitem value="#{msg['menu_metered_points_query']}" url="/pages/dam/meteredPointsQuery.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="5000"/>
+			
+            <p:layout widgetVar="meteredPointLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">	
+					
+				<p:panelGrid columns="2" style="width:100%">
+					
+						<p:panelGrid>
+							<p:row>
+								<p:column  style="font-weight: bold;" >
+									<h:outputText value="#{msg['meteredPoint_ID']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['nominationPoint_Point_Type']}" />
+								</p:column>
+								<!-- offshore
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['meteredPoint_System']}" />
+								</p:column>
+								-->
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['meteredPoint_Zone']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['meteredPoint_Area']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['all_que_last_version']}" />
+								</p:column>
+								
+							</p:row>
+							<p:row>
+								<p:column>
+									<p:selectOneMenu id="id"  style="width:100px"   value="#{meteredPointView.filters.id}" >
+							       		<f:selectItem itemLabel="" itemValue="" />
+        								<f:selectItems value="#{meteredPointView.ids.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>									
+								</p:column>
+								
+								<p:column>
+									<p:selectOneMenu id="pointType"  style="width:100px"   value="#{meteredPointView.filters.pointType}" >
+							        	<f:selectItem itemLabel="" itemValue="" />
+        								<f:selectItems value="#{meteredPointView.pointTypes.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>									
+								</p:column>
+								<!-- offshore
+								<p:column>
+									<p:selectOneMenu id="system"  style="width:100px"    value="#{meteredPointView.filters.systemCode}" >
+										<f:selectItem itemLabel="" itemValue="" />
+							            <f:selectItems value="#{meteredPointView.systems.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					               	</p:selectOneMenu>										
+								</p:column>
+								-->
+								<p:column>
+									<p:selectOneMenu id="zone"  style="width:100px"   value="#{meteredPointView.filters.zone}" >
+										<f:selectItem itemLabel="" itemValue="" />
+										<!--offshore
+							            <f:selectItems value="#{meteredPointView.zones.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />-->
+							            <f:selectItems value="#{meteredPointView.zonesSystem.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					               	</p:selectOneMenu>									
+								</p:column>
+								<p:column >
+									<p:selectOneMenu  id="area" style="width:100px" value="#{meteredPointView.filters.area}" >
+										<f:selectItem itemLabel="" itemValue="" />
+							            <!--offshore  
+							            <f:selectItems value="#{meteredPointView.areas.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />-->
+							            <f:selectItems value="#{nominationPointView.areasSystem.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					               	</p:selectOneMenu>								
+								</p:column>
+								<p:column >
+									<p:selectBooleanCheckbox id="version_date" value="#{meteredPointView.filters.check_version_date}" />
+								</p:column>		
+							</p:row>
+							<p:row>
+							<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['meteredPoint_Start_Date']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['meteredPoint_End_Date']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+							<p:column>
+								<p:calendar id="fecInicio" size="8" pattern="dd/MM/yyyy" mask="true" value="#{meteredPointView.filters.startDate}"
+										showOn="button" navigator="true" style="width: 100%;">
+										<p:ajax event="dateSelect" update="fecInicio"></p:ajax>
+										<p:ajax event="change" update="fecInicio"></p:ajax>
+									</p:calendar>
+								</p:column>
+								<p:column>
+									<p:calendar id="fecFin" size="8" pattern="dd/MM/yyyy" mask="true" value="#{meteredPointView.filters.endDate}"
+										showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="fecFin"></p:ajax>
+										<p:ajax event="change" update="fecFin"></p:ajax>
+									</p:calendar>
+								</p:column>
+							</p:row>
+						</p:panelGrid>
+						<p:panelGrid columns="2" style="float:right;top:0px">
+							<shiro:hasPermission name="#{changeSystemView.system}.DAM.METERED_POINTS.QUERY">
+								<p:commandButton value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{meteredPointView.onSearchQuery}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,:#{p:component('meteredPoints1')}"/>
+							</shiro:hasPermission>
+							
+							<p:commandButton  onclick="PF('meteredPointLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+							
+							<shiro:hasPermission name="#{changeSystemView.system}.DAM.METERED_POINTS.QUERY">
+								 <p:commandButton value="#{msg['clear']}"
+									actionListener="#{meteredPointView.onClear}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" 
+									process="@this" 
+									update="form"/>  
+							</shiro:hasPermission>								
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center" 
+					resizable="false" closable="false" collapsible="false">
+
+					<p:dataTable widgetVar="w_meteredPoint1"  id="meteredPoints1" var="meteredPoint" value="#{meteredPointView.items}" reflow="true" editable="true" 
+						style="width:3250px; margin-bottom:20px;border-collapse:collapse"
+					    paginator="true" rows="25"
+					    scrollable="true"  scrollHeight="100%" 
+					    rowsPerPageTemplate="5,10,15,20,25, #{meteredPointView.itemsSize}" >
+
+							<f:facet name="header">
+								<p:outputPanel style="height:25px">
+									<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+	        						<p:columnToggler datasource="meteredPoints1" trigger="toggler" style="width:200px"/>
+	        						
+	        						<shiro:hasPermission name="#{changeSystemView.system}.DAM.METERED_POINTS.QUERY">
+					        			<h:commandLink style="float:right">
+										       <p:graphicImage name="/images/excel.png" width="24"/>
+										       <!-- <p:dataExporter type="xls" target="meteredPoints1" fileName="MeteredPoints"/> -->
+										       <p:dataExporter type="xls" target="meteredPoints1" fileName="MeteredPoints" postProcessor="#{meteredPointView.postProcessXLS}"/>
+										</h:commandLink>	 
+								  </shiro:hasPermission>
+								</p:outputPanel>        										          
+					        </f:facet>
+					        				 
+					  	   <p:column headerText="#{msg['meteredPoint_Metering_ID']}" style="width: 130px;" sortBy="#{meteredPoint.meteringID}" filterMatchMode="contains" filterBy="#{meteredPoint.meteringID}">
+					       		<h:outputText value="#{meteredPoint.meteringID}" />
+					       </p:column>
+					 
+					       <p:column headerText="#{msg['meteredPoint_ID']}" style="width: 130px;" sortBy="#{meteredPoint.id}" filterMatchMode="contains" filterBy="#{meteredPoint.id}">
+								<h:outputText value="#{meteredPoint.id}" />
+					       </p:column>
+					 
+					       <p:column headerText="#{msg['meteredPoint_Name']}" style="width: 150px;" sortBy="#{meteredPoint.name}" filterMatchMode="contains" filterBy="#{meteredPoint.name}">
+								<h:outputText value="#{meteredPoint.name}" />
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['meteredPoint_Point_Type']}" style="width: 70px;" sortBy="#{meteredPoint.pointType}" filterMatchMode="contains"  filterBy="#{meteredPoint.pointType}">
+								<h:outputText value="#{meteredPoint.pointType}" />
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['meteredPoint_Nominal_Capacity']}" style="width: 90px;" sortBy="#{meteredPoint.nominalCapacity}" filterMatchMode="contains" filterBy="#{meteredPoint.nominalCapacity}">
+								<h:outputText value="#{meteredPoint.nominalCapacity}"  style="float:right" >
+					            	<f:convertNumber pattern="#,##0" />
+					           	</h:outputText>
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['meteredPoint_Min_Pressure']}" style="width: 70px;" sortBy="#{meteredPoint.minPressure}" filterMatchMode="contains" filterBy="#{meteredPoint.minPressure}">
+								<h:outputText value="#{meteredPoint.minPressure}" style="float:right"  >
+					            	<f:convertNumber pattern="#,##0" />
+					            </h:outputText>
+					       </p:column>
+					       
+					 	   <p:column headerText="#{msg['meteredPoint_Max_Pressure']}" style="width: 70px;" sortBy="#{meteredPoint.maxPressure}" filterMatchMode="contains" filterBy="#{meteredPoint.maxPressure}">
+								<h:outputText value="#{meteredPoint.maxPressure}" style="float:right"  >
+					            	<f:convertNumber pattern="#,##0" />
+					            </h:outputText>
+					       </p:column>
+					       <p:column headerText="#{msg['meteredPoint_Customer_Type']}" style="width:70px;" sortBy="#{meteredPoint.customerType}" filterMatchMode="contains" filterBy="#{meteredPoint.customerType}">
+								<h:outputText value="#{meteredPoint.customerType}" />
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['meteredPoint_Nomination_Point']}" style="width: 100px;" sortBy="#{meteredPoint.nominationPoint}" filterMatchMode="contains" filterBy="#{meteredPoint.nominationPoint}">
+								<h:outputText value="#{meteredPoint.nominationPoint}" />
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['meteredPoint_Group_ID']}" style="width: 110px;" sortBy="#{meteredPoint.contractPoint}" filterMatchMode="contains" filterBy="#{meteredPoint.contractPoint}">
+								<h:outputText value="#{meteredPoint.contractPoint}" />
+					       </p:column>
+					       
+					      <p:column headerText="#{msg['meteredPoint_Quality_Point']}" style="width: 110px;" sortBy="#{meteredPoint.qualityPoint}" filterMatchMode="contains" filterBy="#{meteredPoint.qualityPoint}">
+								<h:outputText value="#{meteredPoint.qualityPoint}" />
+							</p:column>
+					       
+					       <p:column headerText="#{msg['meteredPoint_Latitude']}" style="width: 70px;" sortBy="#{meteredPoint.latitude}" filterMatchMode="contains" filterBy="#{meteredPoint.latitude}">
+								<h:outputText value="#{meteredPoint.latitude}" style="float:right" >
+			               			<!--  sin formato ... poner lo que venga de la bd
+			               			<f:convertNumber pattern="#00.00000" />-->
+			               		</h:outputText>
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['meteredPoint_Longitude']}" style="width: 70px;" sortBy="#{meteredPoint.longitud}" filterMatchMode="contains" filterBy="#{meteredPoint.longitud}">
+								<h:outputText value="#{meteredPoint.longitud}"  style="float:right">
+			               			<!--  sin formato ... poner lo que venga de la bd
+			               			<f:convertNumber pattern="#00.00000" />-->
+			               		</h:outputText>
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['meteredPoint_System']}" style="width: 70px;" sortBy="#{meteredPoint.systemCode}" filterMatchMode="contains" filterBy="#{meteredPoint.systemCode}">
+					          <!--se le pasa el bean para buscar el system porque es el system del punto de Nominacion asociado al punto de Medida que estamos tratando.  -->
+					           <h:outputText id="system" value="#{meteredPointView.getSystemCode(meteredPoint)}" />   
+					       </p:column>
+					       
+					       
+					       <p:column headerText="#{msg['meteredPoint_Zone']}" style="width: 70px;" sortBy="#{meteredPoint.zone}" filterMatchMode="contains" filterBy="#{meteredPoint.zone}">
+					        	<!--se le pasa el bean par buscar la zona Porque es la zona del punto de Nominacion asociado al punto de Medida que estamos tratando.  -->
+					         	<h:outputText  id="zone" value="#{meteredPointView.getZoneCode(meteredPoint)}" /> 
+					       </p:column>
+					     
+					       <p:column headerText="#{msg['meteredPoint_Area']}" style="width: 70px;" sortBy="#{meteredPoint.area}" filterMatchMode="contains" filterBy="#{meteredPoint.area}">
+						        <!--se le pasa el bean par buscar el Area Porque es el Area del punto de Nominacion asociado al punto de Medida que estamos tratando.  -->
+						        <h:outputText  id="area" value="#{meteredPointView.getAreaCode(meteredPoint)}" />
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['meteredPoint_Subarea']}" style="width: 70px;" sortBy="#{meteredPoint.subarea}" filterMatchMode="contains" filterBy="#{meteredPoint.subarea}">
+								<h:outputText value="#{meteredPoint.subarea}" />
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['meteredPoint_Conecting_Party_Name']}" style="width: 100px;" sortBy="#{meteredPoint.conectingPartyName}" filterMatchMode="contains" filterBy="#{meteredPoint.conectingPartyName}">
+								<h:outputText value="#{meteredPoint.conectingPartyName}" />
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['meteredPoint_Conecting_Party_Phone_Number']}" style="width: 100px;" sortBy="#{meteredPoint.conectingPartyPhoneNumber}" filterMatchMode="contains" filterBy="#{meteredPoint.conectingPartyPhoneNumber}">
+								<h:outputText value="#{meteredPoint.conectingPartyPhoneNumber}" />
+					       </p:column>
+					       
+					       <!-- esto produce la  
+					       <p:tooltip id="toolTipMail" for="mail" value="#{meteredPoint.conectingPartyEmail}" trackMouse="true" /> -->
+					       <p:column headerText="#{msg['meteredPoint_Conecting_Party_Email']}" style="width: 150px;" sortBy="#{meteredPoint.conectingPartyEmail}" filterMatchMode="contains" filterBy="#{meteredPoint.conectingPartyEmail}">
+								<h:outputText id="mail" value="#{meteredPoint.conectingPartyEmail}" />
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['meteredPoint_Start_Date']}" style="width: 70px;" sortBy="#{meteredPoint.startDate}" >
+								<h:outputText value="#{meteredPoint.startDate}" >
+					              	<f:convertDateTime pattern="dd/MM/yyyy" />
+					            </h:outputText>
+					       </p:column>
+	 				       
+					       <p:column headerText="#{msg['meteredPoint_End_Date']}"  style="width: 70px;" sortBy="#{meteredPoint.endDate}" >
+								<h:outputText value="#{meteredPoint.endDate}" >
+					              	<f:convertDateTime pattern="dd/MM/yyyy" />
+					          	</h:outputText>
+					       </p:column>
+					       <p:column headerText="#{msg['meteredPoint_version_date']}"  style="width: 120px;" sortBy="#{meteredPoint.versionDate}" >
+								<h:outputText value="#{meteredPoint.versionDate}" >
+					              	<f:convertDateTime pattern="dd/MM/yyyy" />
+					          	</h:outputText>
+					       </p:column>
+					   </p:dataTable>
+				</p:layoutUnit>
+
+			</p:layout>
+		</h:form>
+
+	</ui:define>
+</ui:composition>

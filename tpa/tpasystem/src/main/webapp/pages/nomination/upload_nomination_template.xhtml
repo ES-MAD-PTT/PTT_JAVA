@@ -1,0 +1,360 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:f="http://java.sun.com/jsf/core"
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home"
+				style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_nominations']}" url="#" />
+			<p:menuitem value="#{msg['menu_upload_nomination_template']}"
+				url="/pages/nomination/upload_nomination_template.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+		<h:form id="form"
+			style="width:100%;height:98%;border-collapse:collapse"
+			fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="5000" />
+			<p:layout widgetVar="templateForShipperLayout"
+				style="width:100%;height:100%" showEffect="clip" hideEffect="clip">
+				<p:layoutUnit id="table_center_layout" position="center"
+					resizable="false" closable="false" collapsible="false">
+					<p:panelGrid columns="2" style="width:100%">
+						<p:panelGrid>
+							<p:row>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['upload_template_shipper_code']}"
+										rendered="#{!uploadNomTemplateShipperView.isShipper}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['upload_template_contract_code']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<p:selectOneMenu id="shipperId" autoWidth="false"
+										style="width:85px"
+										value="#{uploadNomTemplateShipperView.filters.shipperId}"
+										rendered="#{!uploadNomTemplateShipperView.isShipper}">
+										<f:selectItem itemLabel="" itemValue="" />
+										<f:selectItems
+											value="#{uploadNomTemplateShipperView.shipperIds.entrySet()}"
+											var="entry" itemValue="#{entry.key}"
+											itemLabel="#{entry.value}" />
+										<p:ajax event="change" update="contractId" />
+									</p:selectOneMenu>
+								</p:column>
+
+								<p:column>
+									<p:selectOneMenu id="contractId" autoWidth="false"
+										style="width:100px"
+										value="#{uploadNomTemplateShipperView.filters.contractId}">
+										<f:selectItem itemLabel="" itemValue="" />
+										<f:selectItems
+											value="#{uploadNomTemplateShipperView.contractIds.entrySet()}"
+											var="entry" itemValue="#{entry.key}"
+											itemLabel="#{entry.value}" />
+									</p:selectOneMenu>
+								</p:column>
+							</p:row>
+						</p:panelGrid>
+						<p:panelGrid columns="2" style="float:right;top:0px">
+
+							<shiro:hasPermission
+								name="#{changeSystemView.system}.NOMINATIONS.UPLOAD_NOMINATION.QUERY">
+								<p:commandButton value="#{msg['search']}"
+									icon="ui-icon fa fa-search"
+									actionListener="#{uploadNomTemplateShipperView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()"
+									update="msgs,:#{p:component('templateForShipper1')}" />
+							</shiro:hasPermission>
+
+							<p:commandButton
+								onclick="PF('templateForShipperLayout').toggle('north')"
+								id="header_collapse" icon="fa fa-minus"
+								value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+
+
+							<shiro:hasPermission
+								name="#{changeSystemView.system}.NOMINATIONS.UPLOAD_NOMINATION.QUERY">
+								<p:commandButton value="#{msg['clear']}"
+									actionListener="#{uploadNomTemplateShipperView.onClear}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" process="@this"
+									update="msgs,@form" />
+							</shiro:hasPermission>
+						</p:panelGrid>
+					</p:panelGrid>
+
+					<p:dataTable widgetVar="w_templateForShipper1"
+						id="templateForShipper1" var="templateForShipper"
+						value="#{uploadNomTemplateShipperView.items}" reflow="true"
+						editable="true"
+						style="margin-bottom:20px;border-collapse:collapse"
+						paginator="true" rows="15" scrollable="true" scrollHeight="100%"
+						rowsPerPageTemplate="5,10,15,20,25">
+
+						<f:facet name="header">
+							<p:outputPanel style="height:25px">
+								<p:commandButton id="toggler" type="button" value="Columns"
+									style="float:right" icon="ui-icon-calculator" />
+								<p:columnToggler datasource="templateForShipper1"
+									trigger="toggler" style="width:200px" />
+								<shiro:hasPermission
+									name="#{changeSystemView.system}.NOMINATIONS.UPLOAD_NOMINATION.ADD">
+									<p:commandButton id="new" type="button" value="New" 
+										icon="ui-icon fa fa-save" style="float:right;"
+										onclick="PF('dlgNewTemplateForShipper').show();" />
+								</shiro:hasPermission>
+							</p:outputPanel>
+						</f:facet>
+
+						<p:column headerText="#{msg['upload_template_shipper_code']}"
+							style="width: 80px;"
+							sortBy="#{templateForShipper.shipperGroupId}"
+							filterMatchMode="contains"
+							filterBy="#{templateForShipper.shipperGroupId}">
+							<h:outputText value="#{templateForShipper.shipperGroupId}">
+							</h:outputText>
+						</p:column>
+						<p:column headerText="#{msg['upload_template_contract_code']}"
+							style="width: 80px;" sortBy="#{templateForShipper.contractId}"
+							filterMatchMode="contains"
+							filterBy="#{templateForShipper.contractId}">
+							<h:outputText value="#{templateForShipper.contractId}">
+							</h:outputText>
+						</p:column>
+						<p:column headerText="#{msg['upload_template_operation_desc']}"
+							style="width: 80px;"
+							sortBy="#{templateForShipper.operation_desc}"
+							filterMatchMode="contains"
+							filterBy="#{templateForShipper.operation_desc}">
+							<h:outputText value="#{templateForShipper.operation_desc}">
+							</h:outputText>
+						</p:column>
+						<p:column headerText="#{msg['upload_template_doc_name']}"
+							style="width: 80px;" sortBy="#{templateForShipper.document_name}"
+							filterMatchMode="contains"
+							filterBy="#{templateForShipper.document_name}"
+							title="#{templateForShipper.document_name}">
+							<h:outputText value="#{templateForShipper.document_name}">
+							</h:outputText>
+						</p:column>
+
+						<p:column headerText="#{msg['userGuide_File']}"
+							style="width: 220px;"
+							sortBy="#{templateForShipper.document_name}">
+							<p:commandButton ajax="false"
+								rendered="#{templateForShipper.document_name!=null and templateForShipper.document_name!=''}"
+								oncomplete="PrimeFaces.monitorDownload(start, stop);"
+								icon="ui-icon fa fa-save"
+								title="#{templateForShipper.document_name}">
+								<f:setPropertyActionListener value="#{templateForShipper}"
+									target="#{uploadNomTemplateShipperView.selected}" />
+								<p:fileDownload
+									value="#{uploadNomTemplateShipperView.getTemplate(templateForShipper)}" />
+							</p:commandButton>
+							<h:outputText value="#{templateForShipper.document_name}"
+								title="#{templateForShipper.document_name}" />
+						</p:column>
+
+						<p:column headerText="#{msg['upload_template_comments']}"
+							style="width: 220px;" sortBy="#{templateForShipper.comments}"
+							filterMatchMode="contains"
+							filterBy="#{templateForShipper.comments}">
+							<h:outputText value="#{templateForShipper.comments}" />
+						</p:column>
+						<shiro:hasPermission
+							name="#{changeSystemView.system}.NOMINATIONS.UPLOAD_NOMINATION.MOD">
+							<p:column style="width:32px">
+								<p:commandButton type="submit" validateClient="true" ajax="true"
+									icon="ui-icon fa fa-pencil"
+									rendered="#{!uploadNomTemplateShipperView.isShipper}"
+									actionListener="#{uploadNomTemplateShipperView.setEditTemplateShipper(templateForShipper)}"
+									process="@this" onclick="PF('dlgEditTemplate').show();"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" update=":formEditShipper" />
+							</p:column>
+						</shiro:hasPermission>
+					</p:dataTable>
+				</p:layoutUnit>
+			</p:layout>
+		</h:form>
+
+		<shiro:hasPermission
+			name="#{changeSystemView.system}.NOMINATIONS.UPLOAD_NOMINATION.ADD">
+			<p:dialog widgetVar="dlgNewTemplateForShipper" resizable="false"
+				closable="true" modal="true" appendTo="@(body)"
+				header="New Template For Shipper">
+				<h:form id="formNewType">
+					<p:growl id="msgs" showDetail="true" life="5000" />
+					<p:panelGrid columns="4" style="width:100%">
+						<p:panelGrid>
+							<p:row>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['upload_template_shipper_code']}" />
+								</p:column>
+								<p:column>
+									<p:selectOneMenu id="newShipperId" autoWidth="false"
+										style="width:200px"
+										value="#{uploadNomTemplateShipperView.newTemplate.shipperGroupId}"
+										rendered="#{!uploadNomTemplateShipperView.isShipper}">
+										<f:selectItem itemLabel="" itemValue="" />
+										<f:selectItems
+											value="#{uploadNomTemplateShipperView.shipperIds.entrySet()}"
+											var="entry" itemValue="#{entry.key}"
+											itemLabel="#{entry.value}" />
+										<p:ajax event="change" update="newContractId" />
+									</p:selectOneMenu>
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['upload_template_contract_code']}" />
+								</p:column>
+								<p:column>
+									<p:selectOneMenu id="newContractId" autoWidth="false"
+										style="width:100px"
+										value="#{uploadNomTemplateShipperView.newTemplate.contractId}">
+										<f:selectItem itemLabel="" itemValue="" />
+										<f:selectItems
+											value="#{uploadNomTemplateShipperView.contractIdsNew.entrySet()}"
+											var="entry" itemValue="#{entry.key}"
+											itemLabel="#{entry.value}" />
+									</p:selectOneMenu>
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['upload_template_operation_code']}" />
+								</p:column>
+								<p:column>
+									<p:selectOneMenu id="newOperationId" autoWidth="false"
+										style="width:200px"
+										value="#{uploadNomTemplateShipperView.newTemplate.operation_desc}">
+										<f:selectItem itemLabel="" itemValue="" />
+										<f:selectItems
+											value="#{uploadNomTemplateShipperView.operationIds.entrySet()}"
+											var="entry" itemValue="#{entry.key}"
+											itemLabel="#{entry.value}" />
+									</p:selectOneMenu>
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['upload_template_document']}" />
+								</p:column>
+								<p:column>
+									<p:fileUpload id="upload" style="width:100%;" required="true"
+										fileUploadListener="#{uploadNomTemplateShipperView.handleFileUpload}"
+										mode="advanced" dragDropSupport="true" fileLimit="1"
+										ajax="true" update="msgs,upload,:#{p:component('fileUpload')}"
+										sizeLimit="3000000" allowTypes="/(\.|\/)(xlsx)$/"
+										onstart="PF('cargando').show()"
+										oncomplete="PF('cargando').hide()" />
+									<p:message for="upload" />
+									<br />
+									<h:outputText id="fileUpload"
+										value="Pending file: #{uploadNomTemplateShipperView.file.getFileName()}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['upload_template_comments']}" />
+								</p:column>
+								<p:column>
+									<p:inputTextarea id="newComments"
+										value="#{uploadNomTemplateShipperView.newTemplate.comments}"
+										cols="40" rows="10" autoResize="false" maxlength="500" />
+									<p:message for="newComments" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column colspan="4">
+									<p:commandButton value="#{msg['cancel']}" style="float:right;"
+										actionListener="#{uploadNomTemplateShipperView.cancel}"
+										update=":form:msgs,:formNewType,:#{p:component('templateForShipper1')}"
+										onstart="PF('cancelando').show()"
+										oncomplete="PF('cancelando').hide();PF('dlgNewTemplateForShipper').hide();" />
+									<p:commandButton value="#{msg['save']}" style="float:right;"
+										actionListener="#{uploadNomTemplateShipperView.save}"
+										update=":form:msgs,:formNewType,:#{p:component('templateForShipper1')}"
+										onstart="PF('grabando').show()"
+										oncomplete="PF('grabando').hide();PF('dlgNewTemplateForShipper').hide();" />
+								</p:column>
+							</p:row>
+						</p:panelGrid>
+					</p:panelGrid>
+					<p:separator />
+				</h:form>
+			</p:dialog>
+		</shiro:hasPermission>
+
+		<shiro:hasPermission
+			name="#{changeSystemView.system}.NOMINATIONS.UPLOAD_NOMINATION.MOD">
+			<p:dialog widgetVar="dlgEditTemplate" resizable="false"
+				closable="true" modal="true" appendTo="@(body)"
+				header="Edit Template for Shipper">
+				<h:form id="formEditShipper">
+					<p:growl id="msgs" showDetail="true" life="5000" />
+					<p:panelGrid columns="3" style="width:100%">
+						<p:panelGrid>
+							<p:row>
+								<p:column>
+									<h:outputText value="#{msg['upload_template_comments']}" />
+								</p:column>
+								<p:column>
+									<p:inputTextarea id="commentsTemplateForShipperEdit"
+										value="#{uploadNomTemplateShipperView.editTemplateShipper.comments}"
+										cols="60" autoResize="false" maxlength="500" />
+								</p:column>
+								<p:column>
+									<h:outputText value="#{msg['userGuide_File']}" />
+								</p:column>
+								<p:column>
+									<h:outputText id="docTemplateForShipperEdit"
+										value="Saved file: #{uploadNomTemplateShipperView.editTemplateShipper.document_name}" />
+									<p:fileUpload id="fileUploadEditShipper" style="width:100%;"
+										required="true"
+										fileUploadListener="#{uploadNomTemplateShipperView.handleFileUpload}"
+										mode="advanced" dragDropSupport="true" fileLimit="1"
+										ajax="true"
+										update="msgs,fileUploadEditShipper,:#{p:component('uploadEditShipper')}"
+										sizeLimit="3000000" allowTypes="/(\.|\/)(xlsx)$/"
+										onstart="PF('cargando').show()"
+										oncomplete="PF('cargando').hide()" />
+									<br />
+									<h:outputText id="uploadEditShipper"
+										value="Pending file: #{uploadNomTemplateShipperView.file.getFileName()}" />
+								</p:column>
+							</p:row>
+						</p:panelGrid>
+					</p:panelGrid>
+					<p:separator />
+					<p:panelGrid>
+						<p:row>
+							<p:column>
+								<p:commandButton value="#{msg['save']}"
+									styleClass="ui-confirmdialog-yes" icon="ui-icon-check"
+									validateClient="true"
+									action="#{uploadNomTemplateShipperView.saveTemplateEditShipper}"
+									update=":form:msgs,:#{p:component('templateForShipper1')}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('dlgEditTemplate').hide(),PF('cargando').hide()" />
+								<p:commandButton value="#{msg['cancel']}"
+									styleClass="ui-confirmdialog-no" icon="ui-icon-close"
+									process="@this"
+									actionListener="#{uploadNomTemplateShipperView.calcelTemplateEditShipper}"
+									oncomplete="PF('dlgEditTemplate').hide()" />
+							</p:column>
+						</p:row>
+					</p:panelGrid>
+				</h:form>
+			</p:dialog>
+		</shiro:hasPermission>
+	</ui:define>
+</ui:composition>

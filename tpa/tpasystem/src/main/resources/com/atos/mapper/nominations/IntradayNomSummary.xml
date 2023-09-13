@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atos.mapper.nominations.IntradayNomSummaryMapper">
+<resultMap type="com.atos.beans.nominations.IntradayNomSummaryBean" id="IntradayNomSummaryBean">
+        <result property="gasDay" column="gas_day"/>    
+        <result property="nominationCode" column="nomination_code"/>
+        <result property="intraday" column="is_intraday"/>
+        <result property="contractCode" column="contract_code"/>  
+        <result property="shipperName" column="user_group_name"/>
+        <result property="systemPoint" column="point_code"/>
+        <result property="unit" column="unit_code"/>
+        <result property="h1" column="hour_01"/>
+        <result property="h2" column="hour_02"/>
+        <result property="h3" column="hour_03"/>
+        <result property="h4" column="hour_04"/>
+        <result property="h5" column="hour_05"/>
+        <result property="h6" column="hour_06"/>
+        <result property="h7" column="hour_07"/>
+        <result property="h8" column="hour_08"/>
+        <result property="h9" column="hour_09"/>
+        <result property="h10" column="hour_10"/>
+        <result property="h11" column="hour_11"/>
+        <result property="h12" column="hour_12"/>
+        <result property="h13" column="hour_13"/>
+        <result property="h14" column="hour_14"/>
+        <result property="h15" column="hour_15"/>
+        <result property="h16" column="hour_16"/>
+        <result property="h17" column="hour_17"/>
+        <result property="h18" column="hour_18"/>
+        <result property="h19" column="hour_19"/>
+        <result property="h20" column="hour_20"/>
+        <result property="h21" column="hour_21"/>
+        <result property="h22" column="hour_22"/>
+        <result property="h23" column="hour_23"/>
+        <result property="h24" column="hour_24"/>
+        <result property="total" column="total"/>
+    </resultMap>
+
+   <select id="selectShipperId" resultType="com.atos.beans.ComboFilterNS">
+		
+	SELECT tuser.idn_user_group as key, tuser.user_group_id as value
+    FROM tpa_tuser_group tuser
+    WHERE tuser.idn_user_group_type = (SELECT idn_user_group_type 
+	         FROM tpa_tuser_group_type 
+			 WHERE type_code = 'SHIPPER')                      
+   </select>
+   
+   <select id="selectContractId" parameterType="com.atos.filters.nominations.IntradayNomSummaryFilter" resultType="com.atos.beans.ComboFilterNS">
+		select tcon.idn_contract as key, tcon.contract_code as value
+		  from tpa_tcontract tcon
+	     where EXISTS (SELECT 1
+	             FROM tpa_tcontract_consolidate tconso
+	            WHERE tconso.idn_contract = tcon.idn_contract)
+	            and tcon.idn_pipeline_system = #{idn_system}
+				<if test="gasDayFrom != null and test=gasDayTo != null">
+				and #{gasDayFrom} >= tcon.start_date and tcon.end_date >= #{gasDayTo} 
+				</if>
+		       	<if test="shipperId != null">
+		       	and tcon.idn_user_group = #{shipperId}
+		       	</if>
+	     order by upper(tcon.contract_code) asc
+	</select>
+   <select id="selectSystemPointId" resultType="com.atos.beans.ComboFilterNS">
+	    select distinct tsysp.idn_system_point as key, tsysp.point_code as value
+        from tpa_Vsystem_point tsysp, tpa_tnomination_entity ne
+          where tsysp.idn_system_point = ne.idn_system_point
+                and tsysp.TYPE_CODE = 'ENTRY'                
+                and trunc(sysdate) between tsysp.start_date and nvl(tsysp.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+          order by upper(tsysp.point_code) asc
+    </select>
+   
+   <select id="selectIntradayNomSummary" parameterType="com.atos.filters.nominations.IntradayNomSummaryFilter" resultMap="IntradayNomSummaryBean">
+
+	WITH w_nomination AS (
+
+SELECT n.*, c.idn_contract, c.contract_code, ug.idn_user_group, ug.user_group_id, ug.user_group_name
+
+FROM tpa_tnomination n,
+
+     tpa_voperation  o,
+
+     tpa_tcontract   c,
+
+     tpa_tuser_group ug
+
+WHERE n.nomination_version IN (SELECT MAX(nx.nomination_version) FROM tpa_tnomination nx WHERE n.nomination_code = nx.nomination_code AND nx.is_intraday = 'Y'
+
+                               UNION ALL
+
+                               SELECT MAX(ny.nomination_version) FROM tpa_tnomination ny WHERE n.nomination_code = ny.nomination_code AND ny.is_intraday = 'N')
+
+   AND NOT (n.is_responsed = 'Y' AND n.is_valid = 'N')
+
+   AND n.idn_operation = o.idn_operation
+
+   AND o.TERM_CODE = 'DAILY'
+
+   AND n.idn_contract = c.idn_contract
+
+   AND n.idn_user_group = ug.idn_user_group
+
+	<if test="gasDayFrom != null and gasDayTo != null">
+
+   AND n.start_date between #{gasDayFrom} and #{gasDayTo}
+   
+   </if>
+
+   <if test="contractId != null and contractId != ''">
+
+   AND c.idn_contract = #{contractId}
+   
+   </if>
+
+    <if test="shipperId != null and shipperId != ''">
+   AND n.idn_user_group = #{shipperId}
+   </if>
+
+)
+
+     
+
+SELECT ndq.gas_day,
+
+       n.nomination_code,
+
+       n.is_intraday,
+
+       n.contract_code,
+
+       ne.idn_system_point,
+
+       n.user_group_name,
+
+       sp.POINT_CODE,
+
+       ucfd.unit_code, 
+
+       SUM(decode(nhq.hour, 1, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_01,
+
+       SUM(decode(nhq.hour, 2, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_02,
+
+       SUM(decode(nhq.hour, 3, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_03,
+
+       SUM(decode(nhq.hour, 4, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_04,
+
+       SUM(decode(nhq.hour, 5, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_05,
+
+       SUM(decode(nhq.hour, 6, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_06,
+
+       SUM(decode(nhq.hour, 7, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_07,
+
+       SUM(decode(nhq.hour, 8, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_08,
+
+       SUM(decode(nhq.hour, 9, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_09,
+
+       SUM(decode(nhq.hour, 10, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_10,
+
+       SUM(decode(nhq.hour, 11, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_11,
+
+       SUM(decode(nhq.hour, 12, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_12,
+
+       SUM(decode(nhq.hour, 13, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_13,
+
+       SUM(decode(nhq.hour, 14, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_14,
+
+       SUM(decode(nhq.hour, 15, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_15,
+
+       SUM(decode(nhq.hour, 16, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_16,
+
+       SUM(decode(nhq.hour, 17, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_17,
+
+       SUM(decode(nhq.hour, 18, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_18,
+
+       SUM(decode(nhq.hour, 19, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_19,
+
+       SUM(decode(nhq.hour, 20, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_20,
+
+       SUM(decode(nhq.hour, 21, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_21,
+
+       SUM(decode(nhq.hour, 22, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_22,
+
+       SUM(decode(nhq.hour, 23, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_23,
+
+       SUM(decode(nhq.hour, 24, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_24,
+
+       MIN(ndq.day_matched_quantity * ucfd.conversion_factor) AS total
+
+FROM w_nomination                    n,
+
+       tpa_vnomination_entity         ne,
+
+       tpa_vsystem_point              sp,
+
+       tpa_vnomination_excel_header   neh,
+
+       tpa_vnomination_day_quantity   ndq,
+
+       tpa_vnomination_hour_quantity  nhq,
+
+       tpa_vnomination_main_concepts  nmc,
+
+       tpa_vunit_convert_from_default ucfd
+
+WHERE 
+
+    ndq.idn_nomination = n.idn_nomination
+
+   AND n.idn_nomination = ne.idn_nomination 
+
+   AND sp.idn_system_point = ne.idn_system_point
+
+   AND sp.TYPE_CODE = 'ENTRY'
+
+   AND neh.idn_nomination_entity = ne.idn_nomination_entity
+
+   AND neh.idn_nomination_concept = nmc.idn_nomination_concept
+
+   AND ndq.idn_nomination_entity = ne.idn_nomination_entity
+
+   AND ndq.idn_nomination_concept = nmc.idn_nomination_concept
+
+   AND nhq.idn_nomination_day(+) = ndq.idn_nomination_day
+
+   AND nhq.idn_nomination_entity = ne.idn_nomination_entity
+
+   AND nhq.idn_nomination_concept = nmc.idn_nomination_concept
+
+   AND nhq.idn_nomination_entity = ndq.idn_nomination_entity
+
+   AND nhq.idn_nomination_concept = ndq.idn_nomination_concept
+
+   AND neh.idn_nomination_entity = ndq.idn_nomination_entity
+
+   AND neh.idn_nomination_concept = ndq.idn_nomination_concept
+
+   AND neh.idn_nomination_entity = nhq.idn_nomination_entity
+
+   AND neh.idn_nomination_concept = nhq.idn_nomination_concept
+
+   AND neh.idn_unit = ucfd.idn_unit
+
+  <if test="systemPoint != null and systemPoint != ''">
+
+   AND sp.IDN_SYSTEM_POINT = #{systemPoint}
+   
+   </if>
+   
+   <choose>
+                <when test='strCheckIntraday != null and "Y".equals(strCheckIntraday)'>
+                 AND  n.is_intraday = 'Y'  
+                </when>
+           </choose>  
+
+
+GROUP BY ndq.gas_day,
+
+         n.nomination_code,
+
+         n.is_intraday,
+
+         n.contract_code,
+
+         ne.idn_system_point,
+
+         n.user_group_name,
+
+         sp.POINT_CODE,
+
+         ucfd.unit_code
+
+ORDER BY n.user_group_name,
+
+         n.contract_code,
+
+         ne.idn_system_point,
+         
+         ucfd.unit_code,
+
+         n.is_intraday
+
+   </select>
+</mapper>

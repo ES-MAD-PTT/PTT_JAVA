@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<!-- Namespace 
+private String zone;
+	private Integer sF;
+	private Date startDate; 
+-->
+<mapper namespace="com.atos.mapper.dam.StrippingFactorMapper">
+    <resultMap type="com.atos.beans.dam.StrippingFactorBean" id="StrippingFactor">
+      
+	 <id column="idn_stripping_factor" property="idn_stripping_factor"/>
+        
+        <result property="idn_zone" column="idn_zone"/>
+        <result property="zone_code" column="idn_zone_code"/>   
+        <result property="zone_desc" column="idn_zone_desc"/>   
+        <result property="sF" column="stripping_factor"/>   
+        <result property="startDate" column="start_date"/>   
+        <result property="endDate" column="end_date"/>   
+    </resultMap>
+     
+    <select id="selectStrippingFactors" resultMap="StrippingFactor" >
+	SELECT 	sf.idn_stripping_factor as idn_stripping_factor,
+         	sf.idn_zone as idn_zone,
+		    z.zone_desc as zone_desc,
+		    z.zone_code as zone_code, 
+         	sf.stripping_factor as stripping_factor,
+		    sf.start_date as start_date,
+		    sf.end_date as end_date
+	FROM TPA_TSTRIPPING_FACTOR sf,
+	     TPA_VZONE_TPA z
+    WHERE sf.idn_zone= z.idn_zone
+     	AND nvl(sf.end_date, sf.start_date) >= sf.start_date      
+     	AND sf.version_date = (SELECT MAX(sfx.version_date)
+                               FROM TPA_TSTRIPPING_FACTOR sfx
+                               WHERE sf.idn_zone = sfx.idn_zone
+                               AND sf.start_date = sfx.start_date)
+                               
+    <!-- offshore búsqueda y sólo para el sistema cargado en la pantalla principal de la aplicación -->
+	 AND z.idn_pipeline_system = #{idn_system}
+	                             
+  <if test = "startDate != null" >
+     AND nvl(sf.end_date, nvl((SELECT MIN(sfy.start_date) - 1
+                               FROM TPA_TSTRIPPING_FACTOR sfy
+                               WHERE sfy.idn_zone = sf.idn_zone
+                               AND sfy.start_date > sf.start_date
+                               AND nvl(sfy.end_date, sfy.start_date) >= sfy.start_date
+                               AND sfy.version_date = (SELECT MAX(sfz.version_date)
+                                                       FROM TPA_TSTRIPPING_FACTOR sfz
+                                                       WHERE sfz.idn_zone = sfy.idn_zone
+                                                       AND sfz.start_date = sfy.start_date)), to_date('9999/12/31', 'yyyy/mm/dd'))) >= #{startDate}
+     												   AND nvl(z.end_date, to_date('9999/12/31', 'yyyy/mm/dd')) >= #{startDate} 
+	</if>
+	<if test="endDate != null">
+	     AND #{endDate} >= sf.start_date
+	     AND #{endDate} >= z.start_date 
+	</if>
+	
+	<if test="zone != null and zone != ''">
+     	AND sf.idn_zone = #{zone} 
+	</if>
+		order by UPPER (z.zone_code), sf.start_date DESC
+    </select>
+    
+    <select id="selectStrippingFactorZoneSystem" resultType="com.atos.beans.ComboFilterNS">
+    	SELECT z.idn_zone as key, z.zone_code as value
+	    FROM TPA_VZONE_TPA z
+	    WHERE z.idn_pipeline_system =#{idn_system}
+	    order by UPPER(z.zone_code)
+    </select>    
+        
+        
+	<insert id="insertStrippingFactor" useGeneratedKeys="true" keyProperty="idn_stripping_factor" keyColumn="idn_stripping_factor" parameterType="com.atos.beans.dam.StrippingFactorBean">
+		 INSERT INTO tpa_tstripping_factor
+			(idn_stripping_factor,idn_zone, start_date, stripping_factor,
+			aud_ins_user,aud_last_user)
+		VALUES 
+			(tpa_sstripping_factor.nextval,
+			 #{idn_zone},
+			 #{startDate}, 
+			 #{sF},
+			 #{username},
+			 #{username})
+	</insert>
+	
+	<update id="deleteStrippingFactor" parameterType="com.atos.beans.dam.StrippingFactorBean">
+		UPDATE tpa_tstripping_factor set
+			   end_date = #{endDate},
+			   aud_last_user=#{username}
+		WHERE idn_stripping_factor = #{idn_stripping_factor}
+	</update>
+	
+	<select id="getStrippingFactorStarDate" resultType="java.util.Date">
+		SELECT  sf.start_date as start_date
+	 	FROM tpa_tstripping_factor sf
+		WHERE idn_stripping_factor = #{idn_stripping_factor}
+	</select>
+	
+	<select id="getStrippingFactors" resultType="java.math.BigDecimal">
+		SELECT 	sf.idn_stripping_factor as idn_stripping_factor
+        FROM TPA_TSTRIPPING_FACTOR sf
+        WHERE sf.idn_zone= #{idn_zone} 
+          AND sf.start_date=#{startDate}
+	</select>
+</mapper>

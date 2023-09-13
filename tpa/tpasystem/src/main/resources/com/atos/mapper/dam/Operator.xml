@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<!-- Namespace -->
+<mapper namespace="com.atos.mapper.dam.OperatorMapper">
+
+    <resultMap type="com.atos.beans.dam.OperatorBean" id="Operator">
+        <id column="idn_operator" property="idn_operator"  />
+		<result property="idn_user_group" column="idn_user_group"/>
+        <result property="id" column="user_group_id"/>   
+        <result property="name" column="user_group_name"/>   
+        <result property="division" column="division"/>
+        <result property="telephone" column="phone"/>   
+        <result property="fax" column="fax"/>
+        <result property="email" column="email"/>      
+        <result property="startDate" column="start_date"/>   
+        <result property="endDate" column="end_date"/>   
+    </resultMap>
+     
+    <select id="selectOperators" resultMap="Operator">
+	   SELECT  toperator.idn_operator as idn_operator,
+	 	       tuser.idn_user_group as idn_user_group,
+		       tuser.user_group_id as user_group_id,
+		       tuser.user_group_name as user_group_name,
+               toperator.division as division,
+		       tuser.phone as phone,
+		       tuser.fax as fax,
+               toperator.email as email,
+		       tuser.start_date as start_date,
+		       tuser.end_date as end_date
+		FROM tpa_tuser_group tuser, tpa_toperator toperator
+		WHERE tuser.idn_user_group_type = (SELECT idn_user_group_type 
+										  FROM tpa_tuser_group_type 
+										  WHERE type_code = 'OPERATOR')
+		AND toperator.idn_user_group = tuser.idn_user_group
+ 		
+	 	<if test="startDate != null">
+			AND nvl(tuser.end_date,to_date('9999/12/31','yyyy/mm/dd'))>=  #{startDate}
+		</if>
+		<if test="endDate != null">
+			AND #{endDate} >= tuser.start_date 
+		</if>
+		
+		<if test="id != null and id != ''">
+			AND tuser.user_group_id = #{id}
+		</if>
+		<if test="name != null and name != ''">
+			AND tuser.user_group_name = #{name}
+		</if> 
+    	order by UPPER (tuser.user_group_id)
+    </select>
+    
+     <select id="selectOperatorId" resultType="com.atos.beans.ComboFilter">
+		SELECT tuser.user_group_id as key, tuser.user_group_id as value
+		FROM tpa_tuser_group tuser
+		WHERE tuser.idn_user_group_type = (SELECT idn_user_group_type FROM tpa_tuser_group_type WHERE type_code = 'OPERATOR')
+    </select>
+
+    <select id="selectName" resultType="java.lang.String">
+		SELECT tuser.user_group_name as user_group_name
+		FROM tpa_tuser_group tuser
+		WHERE tuser.idn_user_group_type = (SELECT idn_user_group_type FROM tpa_tuser_group_type WHERE type_code = 'OPERATOR')
+		AND tuser.user_group_name like #{query}
+    </select>
+	<select id="getOperatorId" resultType="java.lang.String">
+		SELECT tuser.user_group_id   
+		FROM tpa_tuser_group tuser 
+		WHERE tuser.idn_user_group_type = (SELECT idn_user_group_type FROM tpa_tuser_group_type WHERE type_code = 'OPERATOR')
+		AND tuser.user_group_id = #{id}	
+	</select>
+
+	<update id="updateUserGroup" parameterType="com.atos.beans.dam.OperatorBean">
+		UPDATE tpa_tuser_group set
+			start_date = #{startDate},
+		    end_date = #{endDate},
+		    user_group_name = #{name},
+		    phone = #{telephone},
+		    fax = #{fax},
+		    aud_last_user=#{username}
+		WHERE idn_user_group = #{idn_user_group}
+	</update>
+
+	<update id="updateOperator" parameterType="com.atos.beans.dam.OperatorBean">
+		UPDATE tpa_toperator set
+			idn_user_group = #{idn_user_group},
+			division= #{division}, 
+			email = #{email},
+			aud_last_user=#{username}
+		WHERE idn_operator = #{idn_operator}
+	</update>
+
+	<insert id="insertUserGroup" useGeneratedKeys="true" keyProperty="idn_user_group" keyColumn="idn_user_group" parameterType="com.atos.beans.dam.OperatorBean">
+		INSERT INTO tpa_tuser_group
+		      (idn_user_group, user_group_id, idn_user_group_type, start_date, end_date, user_group_name, phone, fax,
+		      aud_ins_user,aud_last_user)
+		   VALUES
+		      (tpa_suser_group.nextval,
+		       #{id},
+		       (SELECT t.idn_user_group_type FROM tpa_tuser_group_type t WHERE t.type_code = 'OPERATOR'),
+		       #{startDate},
+		       #{endDate},
+		       #{name},
+		       #{telephone},
+		       #{fax},
+		       #{username},
+			   #{username})		  
+	</insert>
+	<insert id="insertOperator" useGeneratedKeys="true" keyProperty="idn_operator" keyColumn="idn_operator" parameterType="com.atos.beans.dam.OperatorBean">
+		INSERT INTO tpa_toperator
+			(idn_operator,idn_user_group, division, email,
+			aud_ins_user,aud_last_user)
+		VALUES
+			(tpa_soperator.nextval,
+			 #{idn_user_group},
+			 #{division}, 
+			 #{email},
+			 #{username},
+			 #{username})
+			 
+	</insert>
+</mapper>

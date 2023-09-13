@@ -1,0 +1,228 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_dam']}" url="#" />
+			<p:menuitem value="#{msg['menu_parameters']}" url="#" />
+			<p:menuitem value="#{msg['menu_mode_zone_Base_Inventory']}" url="/pages/dam/modeZoneBaseInventory.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="5000"/>
+			
+            <p:layout widgetVar="modeZoneBaseInvLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">	
+					
+				<p:panelGrid columns="2" style="width:100%">
+					
+						<p:panelGrid>
+							<p:row>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['modeZoneBaseInvarea_Zone']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['modeZoneBaseInvarea_Mode']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['modeZoneBaseInvarea_Start_Date']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<p:selectOneMenu id="zone" style="width:100px"  value="#{modeZoneBaseInvView.filters.idn_zone}" >
+							        	<f:selectItem itemLabel="" itemValue="" />
+							        	 <f:selectItems value="#{modeZoneBaseInvView.zonesSystem.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					               		<p:ajax event="change" update="mode"></p:ajax>
+					               	</p:selectOneMenu>										
+								</p:column>
+								<p:column>
+									<p:selectOneMenu id="mode"  style="width:100px"   value="#{modeZoneBaseInvView.filters.idn_mode}" >
+							       		<f:selectItem itemLabel="" itemValue="" />
+        								<f:selectItems value="#{modeZoneBaseInvView.modesSystem.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>									
+								</p:column>
+								<p:column>
+									<p:calendar id="fecInicio"  size="10" pattern="dd/MM/yyyy" mask="true" value="#{modeZoneBaseInvView.filters.startDate}" 
+										showOn="button" navigator="true" >
+										<p:ajax event="dateSelect" update="fecInicio"></p:ajax>
+										<p:ajax event="change" update="fecInicio"></p:ajax>
+									</p:calendar>
+								</p:column>
+							</p:row>
+						</p:panelGrid>
+						<p:panelGrid columns="2" style="float:right;top:0px">
+							<shiro:hasPermission name="#{changeSystemView.system}.DAM.ZONE.BASE.INVENTORY.QUERY">
+								<p:commandButton value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{modeZoneBaseInvView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,:#{p:component('modeZoneBaseInv1')}"/> 
+							</shiro:hasPermission>
+							
+							<p:commandButton  onclick="PF('modeZoneBaseInvLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+							
+							<shiro:hasPermission name="#{changeSystemView.system}.DAM.ZONE.BASE.INVENTORY.QUERY">								
+								<p:commandButton value="#{msg['clear']}"
+									actionListener="#{modeZoneBaseInvView.onClear}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" 
+									process="@this" 
+									update="msgs,@form"/> 
+							</shiro:hasPermission>
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center"
+					resizable="false" closable="false" collapsible="false">
+
+ 					<p:dataTable widgetVar="w_modeZoneBaseInv1"  id="modeZoneBaseInv1" var="modeZoneBaseInv" value="#{modeZoneBaseInvView.items}" reflow="true" editable="true" 
+						style="margin-bottom:20px;border-collapse:collapse"
+					    paginator="true" rows="15"
+					    scrollable="true"  scrollHeight="100%"
+					    rowsPerPageTemplate="5,10,15,20,25, #{modeZoneBaseInvView.itemsSize}" >
+
+							<f:facet name="header">
+								<p:outputPanel style="height:25px">
+									<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+	        						<p:columnToggler datasource="modeZoneBaseInv1" trigger="toggler" style="width:200px"/>
+	        						<shiro:hasPermission name="#{changeSystemView.system}.DAM.ZONE.BASE.INVENTORY.ADD">      						
+		        						<p:commandButton id="new" type="button" value="New"  icon="ui-icon fa fa-save" style="float:right;"
+		        							onclick="PF('dlgNewModeZoneBaseInv').show();" >
+		        						</p:commandButton>	
+	        						</shiro:hasPermission>
+								</p:outputPanel>        										          
+					        </f:facet>
+					       <shiro:hasPermission name="#{changeSystemView.system}.DAM.ZONE.BASE.INVENTORY.MOD"> 
+						 		
+						 		<p:ajax event="rowEditInit" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','hidden')});" />
+								<p:ajax event="rowEdit" listener="#{modeZoneBaseInvView.onRowEdit}" update=":form:msgs" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>
+								<p:ajax event="rowEditCancel" listener="#{modeZoneBaseInvView.onRowCancel}" update=":form:msgs" onstart="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>   
+								    	
+					    	</shiro:hasPermission>
+					    	
+					    	<p:column headerText="#{msg['area_Start_Date']}" style="width: 100px;" sortBy="#{modeZoneBaseInv.startDate}"  >
+					         
+					               			<h:outputText value="#{modeZoneBaseInv.startDate}" >
+					              				<f:convertDateTime pattern="dd/MM/yyyy" />
+					              		 </h:outputText>
+					              
+					       </p:column>
+					       
+					        <p:column headerText="#{msg['modeZoneBaseInvarea_Zone']}" style="width: 100px;" sortBy="#{modeZoneBaseInv.zone}" filterMatchMode="contains" filterBy="#{modeZoneBaseInv.zone}">
+					       		
+					               		<h:outputText value="#{modeZoneBaseInv.zone}" />
+					              
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['modeZoneBaseInvarea_Mode']}" style="width: 100px;" sortBy="#{modeZoneBaseInv.mode}" filterMatchMode="contains" filterBy="#{modeZoneBaseInv.mode}">
+					       		<p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{modeZoneBaseInv.mode}" /></f:facet>
+					               <f:facet name="input" >
+					               		<p:selectOneMenu id="mode"  style="width:85%" value="#{modeZoneBaseInv.idn_mode}" 
+									               		required="true" 
+									               		requiredMessage="#{msg['modeZoneBaseInv_Mode']}: #{msg['empty_field']}">	
+									               	<f:selectItem itemLabel="" itemValue="" />				               		
+								           	<f:selectItems value="#{modeZoneBaseInvView.selectModesSystemZone(modeZoneBaseInv.idn_zone).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					               		</p:selectOneMenu>
+					               	</f:facet>
+					           </p:cellEditor> 
+					       </p:column>					      					   	   
+					       
+					     <shiro:hasPermission name="#{changeSystemView.system}.DAM.ZONE.BASE.INVENTORY.MOD"> 
+					       <p:column style="width:32px">
+					           <p:rowEditor rendered="#{modeZoneBaseInvView.renderItemEditor(modeZoneBaseInv)}"/>
+					       </p:column>
+					     </shiro:hasPermission>  
+					   </p:dataTable> 
+				</p:layoutUnit>
+
+			</p:layout> 
+		</h:form>
+		
+	<shiro:hasPermission name="#{changeSystemView.system}.DAM.ZONE.BASE.INVENTORY.ADD">
+		<p:dialog widgetVar="dlgNewModeZoneBaseInv" resizable="false"  closable="true" modal="true" appendTo="@(body)" header="New Mode/Zone Base Inventory">
+
+			<h:form id="formNewEntity">
+				<p:growl id="msgs" showDetail="true" life="5000" globalOnly="true"/>
+				<p:panelGrid columns="4" style="width:100%">
+					<p:panelGrid>
+						
+						<p:row>							
+							
+							<p:column>
+								<h:outputText value="#{msg['modeZoneBaseInvarea_Zone']}" />
+							</p:column>
+							<p:column>
+								<p:selectOneMenu required="true" id="new_zone" style="width:100px"  value="#{modeZoneBaseInvView.newModeZoneBaseInv.idn_zone}" 
+									requiredMessage="#{msg['area_Zone']}: #{msg['empty_field']}" >
+								 	<f:selectItem itemLabel="" itemValue="" />
+								   	<f:selectItems value="#{modeZoneBaseInvView.zonesSystem.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+								   	<p:ajax event="change" update="new_mode"></p:ajax>
+					           	</p:selectOneMenu>	
+					           	<p:message for="new_zone" />									
+							</p:column>
+							
+							<p:column>
+								<h:outputText value="#{msg['modeZoneBaseInvarea_Mode']}" />
+							</p:column>
+							<p:column>
+								<p:selectOneMenu required="true" id="new_mode" style="width:100px"  value="#{modeZoneBaseInvView.newModeZoneBaseInv.idn_mode}" 
+									requiredMessage="#{msg['area_Zone']}: #{msg['empty_field']}" >
+								 	<f:selectItem itemLabel="" itemValue="" />
+								   	<f:selectItems value="#{modeZoneBaseInvView.modesSystemNew.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           	</p:selectOneMenu>	
+					           	<p:message for="new_mode" />									
+							</p:column>
+					
+							<p:column>
+								<h:outputText value="#{msg['modeZoneBaseInvarea_Start_Date']}"/>
+							</p:column>
+							<p:column>
+								<p:calendar required="true" id="new_startDate" value="#{modeZoneBaseInvView.newModeZoneBaseInv.startDate}" pattern="dd/MM/yyyy"
+									readonlyInput="true"  mindate="#{(modeZoneBaseInvView.sysdate).getTime()}" 
+									requiredMessage="#{msg['area_Start_Date']}: #{msg['empty_field']}" 
+									validatorMessage="#{msg['area_Start_Date']}: #{msg['lenght_field']}">
+								</p:calendar>
+								<p:message for="new_startDate" />
+							</p:column>							
+						</p:row>					
+						
+					</p:panelGrid>
+				</p:panelGrid>
+				
+				<p:separator/>
+				<p:panelGrid>
+					<p:row>
+						<p:column>
+							<p:commandButton value="#{msg['save']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" validateClient="true"
+								action="#{modeZoneBaseInvView.save}" update=":formNewEntity,:#{p:component('modeZoneBaseInv1')}"
+								onstart="PF('cargando').show()"
+								oncomplete="PF('dlgNewModeZoneBaseInv').hide(),PF('cargando').hide()" />
+			        	     	<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close"
+			        	     	update="formNewEntity" process="@this" actionListener="#{modeZoneBaseInvView.cancel}"  
+			        			oncomplete="PF('dlgNewModeZoneBaseInv').hide()"/>
+			        			
+						</p:column>					
+					</p:row>
+				</p:panelGrid>							
+			</h:form>			
+		</p:dialog>
+	</shiro:hasPermission>
+	</ui:define>
+
+
+</ui:composition>

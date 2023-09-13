@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atos.mapper.SystemParameterMapper">
+
+	<select id="getSysdate" resultType="java.util.Date">
+		select sysdate from dual
+	</select>
+
+	<select id="getIntegerSystemParameter" statementType="CALLABLE" parameterType="com.atos.beans.SystemParameterBean">
+		{call #{integer_exit,jdbcType=INTEGER,mode=OUT} :=
+			pck_parameter.get_integer_value(
+				#{parameter_name,jdbcType=VARCHAR,mode=IN},
+				#{date,jdbcType=DATE,mode=IN},
+				#{user_id,jdbcType=VARCHAR,mode=IN},
+				#{language,jdbcType=VARCHAR,mode=IN},
+				#{error_code,jdbcType=INTEGER,mode=OUT},
+				#{error_desc,jdbcType=VARCHAR,mode=OUT})}
+	</select>
+
+	<select id="getStringSystemParameter" statementType="CALLABLE" parameterType="com.atos.beans.SystemParameterBean">
+		{call #{string_exit,jdbcType=VARCHAR,mode=OUT} :=
+			pck_parameter.get_value(
+				#{parameter_name,jdbcType=VARCHAR,mode=IN},
+				#{date,jdbcType=DATE,mode=IN},
+				#{user_id,jdbcType=VARCHAR,mode=IN},
+				#{language,jdbcType=VARCHAR,mode=IN},
+				#{error_code,jdbcType=INTEGER,mode=OUT},
+				#{error_desc,jdbcType=VARCHAR,mode=OUT})}
+	</select>
+	
+	<select id="getFloatSystemParameter" statementType="CALLABLE" parameterType="com.atos.beans.SystemParameterBean">
+		{call #{float_exit,jdbcType=FLOAT,mode=OUT} :=
+			pck_parameter.get_float_value(
+				#{parameter_name,jdbcType=VARCHAR,mode=IN},
+				#{date,jdbcType=DATE,mode=IN},
+				#{user_id,jdbcType=VARCHAR,mode=IN},
+				#{language,jdbcType=VARCHAR,mode=IN},
+				#{error_code,jdbcType=INTEGER,mode=OUT},
+				#{error_desc,jdbcType=VARCHAR,mode=OUT})}
+	</select>
+	
+	<select id="getDateSystemParameter" statementType="CALLABLE" parameterType="com.atos.beans.SystemParameterBean">
+		{call #{date_exit,jdbcType=DATE,mode=OUT} :=
+			pck_parameter.get_date_value(
+				#{parameter_name,jdbcType=VARCHAR,mode=IN},
+				#{date,jdbcType=DATE,mode=IN},
+				#{user_id,jdbcType=VARCHAR,mode=IN},
+				#{language,jdbcType=VARCHAR,mode=IN},
+				#{error_code,jdbcType=INTEGER,mode=OUT},
+				#{error_desc,jdbcType=VARCHAR,mode=OUT})}
+	</select>
+	
+	<select id="getValidateDeadline" statementType="CALLABLE" parameterType="com.atos.beans.ValidateDeadlineBean">
+		{call #{valid,jdbcType=INTEGER,mode=OUT} :=
+			pck_operation_deadline.validate_deadline(
+				#{category_code,jdbcType=VARCHAR,mode=IN},
+				#{term_code,jdbcType=VARCHAR,mode=IN},
+				#{deadline_type,jdbcType=VARCHAR,mode=IN},
+				#{reference_date,jdbcType=DATE,mode=IN},
+				#{user,jdbcType=VARCHAR,mode=IN},
+				#{language,jdbcType=VARCHAR,mode=IN},
+				#{error_desc,jdbcType=VARCHAR,mode=OUT})}
+
+		
+	</select>
+	<select id="getValidateInterval" statementType="CALLABLE" parameterType="com.atos.beans.ValidateIntervalBean">
+		{call #{valid,jdbcType=INTEGER,mode=OUT} :=
+			pck_operation_interval.validate_interval(
+				#{category_code,jdbcType=VARCHAR,mode=IN},
+				#{term_code,jdbcType=VARCHAR,mode=IN},
+				#{interval_start ,jdbcType=DATE,mode=IN},
+				#{interval_end ,jdbcType=DATE,mode=IN},				
+				#{user,jdbcType=VARCHAR,mode=IN},
+				#{language,jdbcType=DATE,mode=IN},
+				#{error_desc,jdbcType=VARCHAR,mode=OUT})}	
+	</select>
+	<select id="getValidateForecastingXml" statementType="CALLABLE" parameterType="com.atos.beans.forecasting.ValidateForecastingXmlBean">
+		{call #{valid,jdbcType=INTEGER,mode=OUT} :=
+		PCK_FORECASTING.fun_generate_forecasting(	
+				#{codOperationFile,jdbcType=INTEGER,mode=IN},	
+				#{idnSystem, jdbcType=INTEGER, mode=IN},	
+				#{parType,jdbcType=VARCHAR,mode=IN},
+				#{user,jdbcType=VARCHAR,mode=IN},
+				#{language,jdbcType=DATE,mode=IN},
+				#{idn_forecasting,jdbcType=INTEGER,mode=OUT},
+				#{errorDesc,jdbcType=VARCHAR,mode=OUT})}
+	</select>
+	<select id="getValidateForecastingInterval" statementType="CALLABLE" parameterType="com.atos.beans.ValidateIntervalBean">
+		{call #{valid,jdbcType=INTEGER,mode=OUT} :=
+		pck_operation_interval.generate_end_dates(
+				#{category_code,jdbcType=VARCHAR,mode=IN},
+				#{term_code,jdbcType=VARCHAR,mode=IN},
+				#{interval_start ,jdbcType=DATE,mode=IN},				
+				#{user,jdbcType=VARCHAR,mode=IN},
+				#{language,jdbcType=DATE,mode=IN},
+				#{min_end_date,jdbcType=DATE,mode=OUT},
+				#{max_end_date,jdbcType=DATE,mode=OUT},
+				#{error_desc,jdbcType=VARCHAR,mode=OUT})}
+	</select>
+	<select id="getElementId" statementType="CALLABLE" parameterType="com.atos.beans.ElementIdBean">
+		{call #{integerExit,jdbcType=INTEGER,mode=OUT} :=
+		pck_id_generation.get_id(
+				#{generationCode,jdbcType=VARCHAR,mode=IN},
+				#{date ,jdbcType=DATE,mode=IN},				
+				#{user,jdbcType=VARCHAR,mode=IN},
+				#{language,jdbcType=VARCHAR,mode=IN},
+				#{id,jdbcType=VARCHAR,mode=OUT},
+				#{errorDesc,jdbcType=VARCHAR,mode=OUT})}
+	</select>
+</mapper>

@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="com.atos.mapper.balancing.InstructedFlowExPostMapper">
+
+
+    <resultMap type="com.atos.beans.balancing.InstructedFlowExPostBean" id="InstructedFlowExPost">
+              <id column="gas_day" property="gas_day"  />  
+        <result property="shipper_code" column="shipper_id"/> 
+		<result property="contrac_code" column="contrac_code"/>
+		
+		<result property="concept" column="concept"/>
+		<result property="allocated_value" column="allocated_value"/> 
+		
+		<result property="idn_contract" column="idn_contract"/>
+		<result property="idn_user_group" column="idn_user_group"/>
+		
+		<result property="zone_code" column="zone_code"/>
+        <result property="idn_zone" column="idn_zone"/>
+    </resultMap>
+     
+     
+    <select id="selectInstructedFlowExPosts" parameterType="com.atos.filters.balancing.InstructedFlowExPostFilter" resultMap="InstructedFlowExPost">
+	  SELECT ie.gas_day        gas_day,
+       ug.user_group_id         shipper_id,
+       c.contract_code          contrac_code,
+       nc.concept_desc          concept,
+       ie.allocated_flow        allocated_value,
+       z.zone_code              zone_code,
+       z.idn_zone               idn_zone
+	  FROM tpa_tinstructed_expost  ie,
+	       tpa_tcontract           c,
+	       tpa_tuser_group         ug,
+	       tpa_tnomination_concept nc,
+	       tpa_tuser_group_type    b,
+           tpa_tzone                z
+	 WHERE ie.idn_contract = c.idn_contract
+	   AND ie.idn_nomination_concept = nc.idn_nomination_concept
+	   AND ie.version_date = (SELECT MAX(iex.version_date)
+	                            FROM tpa_tinstructed_expost iex
+	                           WHERE iex.gas_day = ie.gas_day
+	                             AND iex.idn_contract = ie.idn_contract
+	                             AND iex.idn_zone = ie.idn_zone) 
+	   AND c.idn_user_group = ug.idn_user_group
+	   AND EXISTS (SELECT 1 FROM tpa_tcontract_consolidate cc WHERE cc.idn_contract = c.idn_contract)
+	   AND ug.idn_user_group_type = b.idn_user_group_type
+	   AND b.type_code = 'SHIPPER'
+	   and z.idn_zone = ie.idn_zone
+	   <!-- offshore -->
+	   and c.idn_pipeline_system= #{idn_system}
+	   
+	   
+		<if test="idn_user_group != null">
+			and ug.idn_user_group = #{idn_user_group}
+		</if>
+		  
+		<if test="idn_contract != null">
+				and c.idn_contract = #{idn_contract}
+		</if>
+		
+		<if test="idn_zone != null">
+				and z.idn_zone = #{idn_zone}
+		</if>
+		 
+		<if test="startDate != null">
+			and ie.gas_day >= #{startDate}
+		</if>
+		
+		<if test="endDate != null">
+	    	and #{endDate} >=ie.gas_day 
+	    </if>
+	     	order by UPPER(gas_day), UPPER(shipper_id), UPPER(contrac_code)
+    </select>
+    
+    
+    <select id="selectShippersComboFilter"  resultType="com.atos.beans.ComboFilterNS">
+		SELECT tuser.idn_user_group as key, tuser.user_group_id as value
+		FROM tpa_tuser_group tuser
+		WHERE tuser.idn_user_group_type = (SELECT idn_user_group_type FROM tpa_tuser_group_type WHERE type_code = 'SHIPPER')
+		<!-- id 439163 quitar la restriccion en los filtros
+		   and trunc(sysdate) between tuser.start_date and nvl(tuser.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))-->		
+		order by UPPER(value)
+    </select>
+    
+    <select id="selectShippersComboNew"  resultType="com.atos.beans.ComboFilterNS">
+    <!-- id 439163 aqui Si aplica la restriccion   and trunc(sysdate) between tuser.start_date and nvl(tuser.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))-->	
+		SELECT tuser.idn_user_group as key, tuser.user_group_id as value
+		FROM tpa_tuser_group tuser
+		WHERE tuser.idn_user_group_type = (SELECT idn_user_group_type FROM tpa_tuser_group_type WHERE type_code = 'SHIPPER')
+		and trunc(sysdate) between tuser.start_date and nvl(tuser.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))		
+		order by UPPER(value)
+    </select>
+    
+    
+     <select id="selectShippersComboAlone" parameterType="java.math.BigDecimal"  resultType="com.atos.beans.ComboFilterNS">
+     <!-- cargamos el filtro solo con el usuario que ha entrado en pantalla, al ser shipper -->
+		SELECT tuser.idn_user_group as key, tuser.user_group_id as value
+		FROM tpa_tuser_group tuser
+		WHERE tuser.idn_user_group_type = (SELECT idn_user_group_type FROM tpa_tuser_group_type WHERE type_code = 'SHIPPER')
+		 and trunc(sysdate) between tuser.start_date and nvl(tuser.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+	   	 and tuser.idn_user_group = #{idn_user_group}
+		order by UPPER(value)
+    </select>
+    
+    
+    <select id="selectContractsFilter" parameterType="com.atos.beans.balancing.InstructedFlowExPostBean" resultType="com.atos.beans.ComboFilterNS">
+    <!-- 'completed' se está comprabando 'implicitamente' en la consulta  porque TODO contrato COMPLETED TIENE 
+    registro en tpa_tcontract_consolidate y en la consulta ponemos: 
+    and exists (SELECT 1 FROM tpa_tcontract_consolidate cc WHERE cc.idn_contract = c.idn_contract)
+	luego si eso se cumple esta COMPLETED
+    -->
+     <!-- offshore 
+    	SELECT distinct c.idn_contract as key, c.contract_code as value
+		 FROM tpa_tcontract c, tpa_tuser_group ug, tpa_tuser u
+		 WHERE c.idn_user_group = ug.idn_user_group
+			   and ug.idn_user_group = #{idn_user_group}
+			   and u.idn_user_group = ug.idn_user_group
+			   and exists (SELECT 1 FROM tpa_tcontract_consolidate cc WHERE cc.idn_contract = c.idn_contract)
+		 order by UPPER(value)
+		 -->
+		  
+		 SELECT c.idn_contract  AS key, 
+                c.contract_code AS VALUE 
+  		 FROM tpa_tcontract c 
+ 		 WHERE c.idn_user_group = #{idn_user_group} 
+   		 AND c.idn_pipeline_system = #{idn_system}
+   		 AND EXISTS (SELECT 1 FROM tpa_tcontract_consolidate cc WHERE cc.idn_contract = c.idn_contract) 
+ 		ORDER BY upper(VALUE)
+		 
+		 
+    </select>
+    
+    <select id="selectContractsNew" parameterType="com.atos.beans.balancing.InstructedFlowExPostBean" resultType="com.atos.beans.ComboFilterNS">
+   
+    <!-- 'completed' se está comprabando 'implicitamente' en la consulta  porque TODO contrato COMPLETED TIENE 
+    registro en tpa_tcontract_consolidate y en la consulta ponemos: 
+    and exists (SELECT 1 FROM tpa_tcontract_consolidate cc WHERE cc.idn_contract = c.idn_contract)
+	luego si eso se cumple esta COMPLETED
+	Añadimos la restriccion: vigentes para el Gas Day
+    -->
+    
+   <!-- offshore
+		SELECT distinct c.idn_contract as key, c.contract_code as value
+		 FROM tpa_tcontract c, tpa_tuser_group ug, tpa_tuser u
+		 WHERE c.idn_user_group = ug.idn_user_group
+			   and ug.idn_user_group = #{idn_user_group}
+			   and u.idn_user_group = ug.idn_user_group
+			   and exists (SELECT 1 FROM tpa_tcontract_consolidate cc WHERE cc.idn_contract = c.idn_contract)
+			    and #{gas_day} between c.start_date and c.end_date
+		 order by UPPER(value)
+	 -->	 
+		 SELECT c.idn_contract  AS key, 
+                c.contract_code AS VALUE 
+  		 FROM tpa_tcontract c 
+ 		 WHERE c.idn_user_group = #{idn_user_group} 
+   		 AND   c.idn_pipeline_system = #{idn_system}
+   		 AND EXISTS (SELECT 1 FROM tpa_tcontract_consolidate cc WHERE cc.idn_contract = c.idn_contract) 
+		 and #{gas_day} between c.start_date and c.end_date
+		 order by UPPER(value)
+		 
+		 
+	</select>
+	
+	
+     <select id="selectZones" parameterType="com.atos.filters.balancing.InstructedFlowExPostFilter" resultType="com.atos.beans.ComboFilterNS">
+		<!--  select z.idn_zone as key, z.zone_code as value
+		from TPA_VZONE_TPA z
+		order by UPPER(z.zone_code)
+		-->
+		 select z.idn_zone as key, z.zone_code as value
+	     from TPA_VZONE_TPA z
+	     where z.idn_pipeline_system =
+	           (select tps.idn_pipeline_system
+	              from tpa_tpipeline_system tps
+	             where tps.pipeline_system_code = #{systemCode})
+	     order by UPPER(z.zone_code)
+		
+	</select>
+  
+	<select id="selectConcepts"   resultType="com.atos.beans.ComboFilterNS">
+	    SELECT idn_nomination_concept as key, concept_desc as value
+		FROM TPA_TNOMINATION_CONCEPT
+		WHERE CONCEPT_CODE IN('Instructed_Entry', 'Instructed_Exit')
+		order by UPPER(value)
+    </select>
+        
+ 	
+	<insert id="insertInstructedFlowExPost" useGeneratedKeys="true" keyProperty="idn_instructed_expost" keyColumn="idn_instructed_expost" parameterType="com.atos.beans.balancing.InstructedFlowExPostBean">
+		INSERT INTO tpa_tinstructed_expost
+			(idn_instructed_expost,gas_day,idn_contract,idn_zone,idn_nomination_concept,allocated_flow,
+	                                        aud_ins_user,
+	                                        aud_last_user)
+		VALUES
+			(tpa_sinstructed_expost.nextval,
+			 #{gas_day},
+			 #{idn_contract}, 
+			 #{idn_zone}, 
+			 #{idn_nomination_concept},
+			 #{allocated_value},
+	      #{username},
+	      #{username})
+		     
+	</insert>
+	
+	<select id="getContracCode" resultType="java.lang.String">
+        select  c.contract_code 
+		from tpa_tcontract c
+		where c.idn_contract = #{idn_contract}  
+
+	</select>
+	
+</mapper>

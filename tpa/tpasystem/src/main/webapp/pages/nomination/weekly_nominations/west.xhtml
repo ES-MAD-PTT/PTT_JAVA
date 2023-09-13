@@ -1,0 +1,210 @@
+<ui:composition
+	xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+<p:dataTable id="west_table" var="west" value="#{weekNom.west_tab}" editable="true" style="margin-bottom:20px;border-collapse:collapse;width:1900px"
+paginator="true" rows="15" rowsPerPageTemplate="5,10,15,20,25">
+	<f:facet name="header">
+	 						<p:outputPanel style="height:30px">
+							<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+      						<p:columnToggler datasource="west_table" trigger="toggler" style="width:200px"/>
+							</p:outputPanel>
+							</f:facet>
+	<!-- Se permite editar con cualquiera de los dos permisos, Management o Modification -->
+<shiro:hasPermission name="#{changeSystemView.system}.NOMINATIONS.WEEKLY.MANAGEMENT.MAN">
+	<p:ajax event="rowEdit" listener="#{weekNom.onRowEdit}" update=":form:msgs,:#{p:component('west_quality_table')}" />
+	<p:ajax event="rowEditCancel" listener="#{weekNom.onRowCancel}" update=":form:msgs" />
+</shiro:hasPermission>
+<shiro:hasPermission name="#{changeSystemView.system}.NOMINATIONS.WEEKLY.MANAGEMENT.MOD">
+	<p:ajax event="rowEdit" listener="#{weekNom.onRowEdit}" update=":form:msgs,:#{p:component('west_quality_table')}" />
+	<p:ajax event="rowEditCancel" listener="#{weekNom.onRowCancel}" update=":form:msgs" />
+</shiro:hasPermission>
+
+	<p:column style="width:140px" headerText="#{msg['nom_supply_demand']}">
+	<h:outputText value="#{west.supply_demand}" />
+	</p:column>
+	<p:column headerText="#{msg['nom_area_desc']}">
+	<h:outputText value="#{west.area}" />
+	</p:column>
+	<p:column headerText="#{msg['nom_area_code']}">
+	<h:outputText value="#{west.area_code}" />
+	</p:column>
+	<p:column headerText="#{msg['nom_subarea']}">
+	<h:outputText value="#{west.subarea}" />
+	</p:column>
+	<p:column style="width:250px" headerText="#{msg['nom_point_id']}" rendered="#{!west.emptyPointId()}">
+	<h:outputText value="#{west.point_id}" styleClass="#{weekNom.pointRed(west) ? 'overnomValue' : 'nonOvernomValue'}"/>/>
+	</p:column>
+	<p:column style="width:250px" headerText="#{msg['nom_point_id']}" rendered="#{west.emptyPointId()}">
+	<h:outputText value="#{west.area_concept}" />
+	</p:column>
+	<p:column headerText="#{msg['nom_type']}">
+	<h:outputText value="#{west.cust_type}" />
+	</p:column>
+	<p:column headerText="#{msg['nom_unit']}">
+	<h:outputText value="#{west.unit}" />
+	</p:column>
+	<p:column headerText="#{msg['nom_entry_exit']}">
+	<h:outputText value="#{west.entry_exit}" />
+	</p:column>
+	<p:column headerText="#{msg['nom_wi']}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" styleClass="#{west.is_warned_wi eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{west.wi}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column headerText="#{msg['nom_wi']}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" styleClass="#{west.is_warned_wi eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{west.wi}" >
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{west.wi}" style="width:100%;text-align: right" 
+									styleClass="#{west.is_warned_wi eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_wi']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	<p:column headerText="#{msg['nom_hv']}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" styleClass="#{west.is_warned_hv eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{west.hv}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column headerText="#{msg['nom_hv']}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" styleClass="#{west.is_warned_hv eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{west.hv}" >
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{west.hv}" style="width:100%;text-align: right" 
+									styleClass="#{west.is_warned_hv eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_hv']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	<p:column headerText="#{msg['nom_sg']}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" styleClass="#{west.is_warned_sg eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{west.sg}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column headerText="#{msg['nom_sg']}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" styleClass="#{west.is_warned_sg eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{west.sg}" >
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{west.sg}" style="width:100%;text-align: right" 
+									styleClass="#{west.is_warned_sg eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_sg']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	<p:column headerText="#{header_day_1}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" styleClass="#{west.is_warned_day_1 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{west.day_1}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column headerText="#{header_day_1}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" styleClass="#{west.is_warned_day_1 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{west.day_1}" >
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{west.day_1}" style="width:100%;text-align: right" 
+									styleClass="#{west.is_warned_day_1 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_day_1']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	<p:column headerText="#{header_day_2}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" styleClass="#{west.is_warned_day_2 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{west.day_2}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column headerText="#{header_day_2}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" styleClass="#{west.is_warned_day_2 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{west.day_2}" >
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{west.day_2}" style="width:100%;text-align: right" 
+									styleClass="#{west.is_warned_day_2 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_day_2']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	<p:column headerText="#{header_day_3}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" styleClass="#{west.is_warned_day_3 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{west.day_3}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column headerText="#{header_day_3}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" styleClass="#{west.is_warned_day_3 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{west.day_3}" >
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{west.day_3}" style="width:100%;text-align: right" 
+									styleClass="#{west.is_warned_day_3 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_day_3']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	<p:column headerText="#{header_day_4}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" styleClass="#{west.is_warned_day_4 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{west.day_4}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column headerText="#{header_day_4}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" styleClass="#{west.is_warned_day_4 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{west.day_4}" >
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{west.day_4}" style="width:100%;text-align: right" 
+									styleClass="#{west.is_warned_day_4 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_day_4']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	<p:column headerText="#{header_day_5}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" styleClass="#{west.is_warned_day_5 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{west.day_5}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column headerText="#{header_day_5}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" styleClass="#{west.is_warned_day_5 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{west.day_5}" >
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{west.day_5}" style="width:100%;text-align: right" 
+									styleClass="#{west.is_warned_day_5 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_day_5']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	<p:column headerText="#{header_day_6}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" styleClass="#{west.is_warned_day_6 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{west.day_6}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column headerText="#{header_day_6}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" styleClass="#{west.is_warned_day_6 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{west.day_6}" >
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{west.day_6}" style="width:100%;text-align: right" 
+									styleClass="#{west.is_warned_day_6 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_day_6']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	<p:column headerText="#{header_day_7}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" styleClass="#{west.is_warned_day_7 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{west.day_7}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column headerText="#{header_day_7}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" styleClass="#{west.is_warned_day_7 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{west.day_7}" >
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{west.day_7}" style="width:100%;text-align: right" 
+									styleClass="#{west.is_warned_day_7 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_day_7']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+
+	<!-- Se permite editar con cualquiera de los dos permisos, Management o Modification -->
+	<p:column style="width:32px" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:rowEditor />
+	</p:column>
+
+</p:dataTable>
+</ui:composition>

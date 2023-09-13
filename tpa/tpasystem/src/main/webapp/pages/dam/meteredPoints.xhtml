@@ -1,0 +1,1162 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define> 
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_dam']}" url="#" />
+			<p:menuitem value="#{msg['menu_assets']}" url="#" />
+			<p:menuitem value="#{msg['menu_metered_points']}" url="/pages/dam/meteredPoints.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="5000"/>
+			
+            <p:layout widgetVar="meteredPointLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">	
+					
+				<p:panelGrid columns="2" style="width:100%">
+					
+						<p:panelGrid>
+							<p:row>
+								<p:column  style="font-weight: bold;" >
+									<h:outputText value="#{msg['meteredPoint_ID']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['nominationPoint_Point_Type']}" />
+								</p:column>
+								<!-- offshore
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['meteredPoint_System']}" />
+								</p:column>
+								-->
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['meteredPoint_Zone']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['meteredPoint_Area']}" />
+								</p:column>
+								
+							</p:row>
+							<p:row>
+								<p:column>
+									<p:selectOneMenu id="id"  style="width:100px"   value="#{meteredPointView.filters.id}" >
+							       		<f:selectItem itemLabel="" itemValue="" />
+        								<f:selectItems value="#{meteredPointView.ids.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>									
+								</p:column>
+								
+								<p:column>
+									<p:selectOneMenu id="pointType"  style="width:100px"   value="#{meteredPointView.filters.pointType}" >
+							        	<f:selectItem itemLabel="" itemValue="" />
+        								<f:selectItems value="#{meteredPointView.pointTypes.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>									
+								</p:column>
+								<!-- offshore
+								<p:column>
+									<p:selectOneMenu id="system"  style="width:100px"    value="#{meteredPointView.filters.systemCode}" >
+										<f:selectItem itemLabel="" itemValue="" />
+							            <f:selectItems value="#{meteredPointView.systems.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					               	</p:selectOneMenu>										
+								</p:column>
+								-->
+								<p:column>
+									<p:selectOneMenu id="zone"  style="width:100px"   value="#{meteredPointView.filters.zone}" >
+										<f:selectItem itemLabel="" itemValue="" />
+										<!--offshore
+							            <f:selectItems value="#{meteredPointView.zones.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />-->
+							            <f:selectItems value="#{meteredPointView.zonesSystem.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					               	</p:selectOneMenu>									
+								</p:column>
+								<p:column >
+									<p:selectOneMenu  id="area" style="width:100px" value="#{meteredPointView.filters.area}" >
+										<f:selectItem itemLabel="" itemValue="" />
+							            <!--offshore  
+							            <f:selectItems value="#{meteredPointView.areas.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />-->
+							            <f:selectItems value="#{nominationPointView.areasSystem.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					               	</p:selectOneMenu>								
+								</p:column>
+								
+							</p:row>
+							<p:row>
+							<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['meteredPoint_Start_Date']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['meteredPoint_End_Date']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+							<p:column>
+								<p:calendar id="fecInicio" size="8" pattern="dd/MM/yyyy" mask="true" value="#{meteredPointView.filters.startDate}"
+										showOn="button" navigator="true" style="width: 100%;">
+										<p:ajax event="dateSelect" update="fecInicio"></p:ajax>
+										<p:ajax event="change" update="fecInicio"></p:ajax>
+									</p:calendar>
+								</p:column>
+								<p:column>
+									<p:calendar id="fecFin" size="8" pattern="dd/MM/yyyy" mask="true" value="#{meteredPointView.filters.endDate}"
+										showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="fecFin"></p:ajax>
+										<p:ajax event="change" update="fecFin"></p:ajax>
+									</p:calendar>
+								</p:column>
+							</p:row>
+						</p:panelGrid>
+						<p:panelGrid columns="2" style="float:right;top:0px">
+							<shiro:hasPermission name="#{changeSystemView.system}.DAM.METERED_POINTS.QUERY">
+								<p:commandButton value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{meteredPointView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,:#{p:component('meteredPoints1')}"/>
+							</shiro:hasPermission>
+							
+							<p:commandButton  onclick="PF('meteredPointLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+							
+							<shiro:hasPermission name="#{changeSystemView.system}.DAM.METERED_POINTS.QUERY">
+								 <p:commandButton value="#{msg['clear']}"
+									actionListener="#{meteredPointView.onClear}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" 
+									process="@this" 
+									update="form"/>  
+							</shiro:hasPermission>								
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center" 
+					resizable="false" closable="false" collapsible="false">
+
+					<p:dataTable widgetVar="w_meteredPoint1"  id="meteredPoints1" var="meteredPoint" value="#{meteredPointView.items}" reflow="true" editable="true" 
+						style="width:3000px; margin-bottom:20px;border-collapse:collapse"
+					    paginator="true" rows="25"
+					    scrollable="true"  scrollHeight="100%" 
+					    rowsPerPageTemplate="5,10,15,20,25, #{meteredPointView.itemsSize}" >
+
+							<f:facet name="header">
+								<p:outputPanel style="height:25px">
+									<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+	        						<p:columnToggler datasource="meteredPoints1" trigger="toggler" style="width:200px"/>
+	        						<shiro:hasPermission name="#{changeSystemView.system}.DAM.METERED_POINTS.ADD">
+		        						<p:commandButton id="new" type="button" value="New" icon="ui-icon fa fa-save" style="float:right;"
+		        							onclick="PF('dlgNewMeteredPoint').show();"
+		        						/>
+		        						<p:commandButton id="new_period" type="button" value="New Period" icon="ui-icon fa fa-save" style="float:right;"
+		        							onclick="PF('dlgNewPeriodMeteredPoint').show();"
+		        						/>
+	        						</shiro:hasPermission>
+	        						
+	        						<shiro:hasPermission name="#{changeSystemView.system}.DAM.METERED_POINTS.QUERY">
+					        			<h:commandLink style="float:right">
+										       <p:graphicImage name="/images/excel.png" width="24"/>
+										       <p:dataExporter type="xls" target="meteredPoints1" fileName="MeteredPoints" postProcessor="#{meteredPointView.postProcessXLS}"/>
+										</h:commandLink>	 
+								  </shiro:hasPermission>
+								</p:outputPanel>        										          
+					        </f:facet>
+					        
+					        <shiro:hasPermission name="#{changeSystemView.system}.DAM.METERED_POINTS.MOD">
+						 		<p:ajax event="rowEditInit" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','hidden')});" />
+								<p:ajax event="rowEdit" listener="#{meteredPointView.onRowEdit}" update=":form:msgs" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>   
+								<p:ajax event="rowEditCancel" listener="#{meteredPointView.onRowCancel}" update=":form:msgs" onstart="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>
+							</shiro:hasPermission>
+					 
+					  	   <p:column headerText="#{msg['meteredPoint_Metering_ID']}" style="width: 130px;" sortBy="#{meteredPoint.meteringID}" filterMatchMode="contains" filterBy="#{meteredPoint.meteringID}">
+					       		<h:outputText value="#{meteredPoint.meteringID}" />
+					       </p:column>
+					 
+					       <p:column headerText="#{msg['meteredPoint_ID']}" style="width: 130px;" sortBy="#{meteredPoint.id}" filterMatchMode="contains" filterBy="#{meteredPoint.id}">
+					           <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{meteredPoint.id}" title="#{meteredPoint.id}" /></f:facet>
+					               <f:facet name="input">
+					               			<p:inputText value="#{meteredPoint.id}" style="width:100%" label="#{msg['meteredPoint_ID']}" disabled="#{meteredPointView.disabledField(meteredPoint)}"
+					               				 required="true"  
+					               				 requiredMessage="#{msg['meteredPoint_ID']}: #{msg['empty_field']}"  maxlength="20"
+					               				 validatorMessage="#{msg['meteredPoint_ID']}: #{msg['lenght_field']} 20">
+					               				<f:validateLength maximum="20"/>
+					               				<f:validateRequired/>
+					               			</p:inputText>	
+					               	</f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					 
+					       <p:column headerText="#{msg['meteredPoint_Name']}" style="width: 150px;" sortBy="#{meteredPoint.name}" filterMatchMode="contains" filterBy="#{meteredPoint.name}">
+					           <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{meteredPoint.name}" title="#{meteredPoint.name}" /></f:facet>
+					               <f:facet name="input">
+					               			<p:inputText value="#{meteredPoint.name}" style="width:100%" label="#{msg['meteredPoint_Name']}" disabled="#{meteredPointView.disabledField(meteredPoint)}"
+					               				 required="true"  
+					               				 requiredMessage="#{msg['meteredPoint_Name']}: #{msg['empty_field']}"  maxlength="120"
+					               				 validatorMessage="#{msg['meteredPoint_Name']}: #{msg['lenght_field']} 120">
+					               				<f:validateLength maximum="250"/>
+					               				<f:validateRequired/>
+					               			</p:inputText>	
+					               	</f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['meteredPoint_Point_Type']}" style="width: 70px;" sortBy="#{meteredPoint.pointType}" filterMatchMode="contains"  filterBy="#{meteredPoint.pointType}">
+					          <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{meteredPoint.pointType}" /></f:facet>
+					               <f:facet name="input">
+					               			
+					               		<p:selectOneMenu id="pointType" style="width:75%"  value="#{meteredPoint.idn_system_point_type}" 
+					               				required="true" disabled="#{meteredPointView.disabledPointType(meteredPoint)}"
+					               				requiredMessage="#{msg['meteredPoint_Point_Type']}: #{msg['empty_field']}">
+							               		<f:selectItems value="#{meteredPointView.pointTypes.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />			               		
+							               		<p:ajax update="customerType,nominationPoint,contractPoint,qualityPoint"/>
+							               		
+					               		</p:selectOneMenu>
+					               	</f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['meteredPoint_Nominal_Capacity']}" style="width: 90px;" sortBy="#{meteredPoint.nominalCapacity}" filterMatchMode="contains" filterBy="#{meteredPoint.nominalCapacity}">
+					          <p:cellEditor>
+					               <f:facet name="output">
+					               		<h:outputText value="#{meteredPoint.nominalCapacity}"  style="float:right" >
+					               			<f:convertNumber pattern="#,##0" />
+					               		</h:outputText>
+					               	</f:facet>
+					               <f:facet name="input">
+					             
+					              	 <p:inputText value="#{meteredPoint.nominalCapacity}" required="true" style="width:100%" 
+											label="#{msg['meteredPoint_Nominal_Capacity']}" disabled="#{meteredPointView.disabledField(meteredPoint)}"
+					               			requiredMessage="#{msg['meteredPoint_Nominal_Capacity']}: #{msg['empty_field']}" 
+					               			validatorMessage="#{msg['meteredPoint_Nominal_Capacity']}: #{msg['lenght_field']}">
+					               			<f:convertNumber pattern="#,##0" />
+					               		</p:inputText>	
+					               
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['meteredPoint_Min_Pressure']}" style="width: 70px;" sortBy="#{meteredPoint.minPressure}" filterMatchMode="contains" filterBy="#{meteredPoint.minPressure}">
+					          <p:cellEditor>
+					               <f:facet name="output">
+					               		<h:outputText value="#{meteredPoint.minPressure}" style="float:right"  >
+					               			<f:convertNumber pattern="#,##0" />
+					               		</h:outputText>
+					               	</f:facet>
+					               <f:facet name="input">
+					               		<p:inputNumber value="#{meteredPoint.minPressure}"  style="width:100%" 
+					               						label="#{msg['meteredPoint_Min_Pressure']}" disabled="#{meteredPointView.disabledField(meteredPoint)}"
+					               						requiredMessage="#{msg['meteredPoint_Min_Pressure']}: #{msg['empty_field']}" 
+					               						validatorMessage="#{msg['meteredPoint_Min_Pressure']}: #{msg['lenght_field']} "
+					               						decimalSeparator="." thousandSeparator="," decimalPlaces="0">
+					               		</p:inputNumber>
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					 	   <p:column headerText="#{msg['meteredPoint_Max_Pressure']}" style="width: 70px;" sortBy="#{meteredPoint.maxPressure}" filterMatchMode="contains" filterBy="#{meteredPoint.maxPressure}">
+					          <p:cellEditor>
+					               <f:facet name="output">
+					               	<h:outputText value="#{meteredPoint.maxPressure}" style="float:right"  >
+					               			<f:convertNumber pattern="#,##0" />
+					               		</h:outputText>
+					               </f:facet>
+					               <f:facet name="input">
+					               		<p:inputNumber value="#{meteredPoint.maxPressure}"  style="width:100%" 
+					               		label="#{msg['meteredPoint_Max_Pressure']}" disabled="#{meteredPointView.disabledField(meteredPoint)}"
+						               		requiredMessage="#{msg['meteredPoint_Max_Pressure']}: #{msg['empty_field']}" 
+						               		validatorMessage="#{msg['meteredPoint_Max_Pressure']}: #{msg['lenght_field']}"
+						               		decimalSeparator="." thousandSeparator="," decimalPlaces="0">
+					               		</p:inputNumber>
+					               	</f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       <p:column headerText="#{msg['meteredPoint_Customer_Type']}" style="width:70px;" sortBy="#{meteredPoint.customerType}" filterMatchMode="contains" filterBy="#{meteredPoint.customerType}">
+					          <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{meteredPoint.customerType}" /></f:facet>
+					               <f:facet name="input">			               					              
+						               <p:selectOneMenu id="customerType" style="width:75%"  value="#{meteredPoint.idn_customer_type}" required="true" disabled="#{meteredPointView.disabledField(meteredPoint)}">
+								               		<f:selectItems value="#{meteredPointView.getCustomerTypes(meteredPoint).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" >						               			
+								               		</f:selectItems>
+						               </p:selectOneMenu>
+					              </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['meteredPoint_Nomination_Point']}" style="width: 100px;" sortBy="#{meteredPoint.nominationPoint}" filterMatchMode="contains" filterBy="#{meteredPoint.nominationPoint}">
+					          <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{meteredPoint.nominationPoint}" /></f:facet>
+					               <f:facet name="input">
+					               		<p:selectOneMenu id="nominationPoint" style="width:75%"   value="#{meteredPoint.idn_system_point_nomination}"
+					               				 required="true" disabled="#{meteredPointView.disabledField(meteredPoint)}"
+					               				 requiredMessage="#{msg['meteredPoint_Nomination_Point']}: #{msg['empty_field']}">
+					               			<!--<f:selectItem  itemValue="#{-1}" itemLabel="" />  -->	
+							               	<!-- offshore 	
+							               		<f:selectItems value="#{meteredPointView.getNominationPoints(meteredPoint).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" /> -->
+							               		<f:selectItems value="#{meteredPointView.getNominationPointsSystem(meteredPoint).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+							               		<p:ajax  update="area,subarea,contractPoint, system,zone" />
+					               		</p:selectOneMenu>
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       <p:column headerText="#{msg['meteredPoint_Group_ID']}" style="width: 110px;" sortBy="#{meteredPoint.contractPoint}" filterMatchMode="contains" filterBy="#{meteredPoint.contractPoint}">
+					          <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{meteredPoint.contractPoint}" /></f:facet>
+					               <f:facet name="input">
+					               <p:selectOneMenu id="contractPoint" style="width:75%"   value="#{meteredPoint.idn_system_point_contract}"
+					               				 required="true" disabled="#{meteredPointView.disabledField(meteredPoint)}"
+					               				 requiredMessage="#{msg['meteredPoint_Group_ID']}: #{msg['empty_field']}">
+							               		<!--offshore
+							               		<f:selectItems value="#{meteredPointView.getContractPoints(meteredPoint).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />-->
+							               		<f:selectItems value="#{meteredPointView.getContractPointsSystem(meteredPoint).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					               	</p:selectOneMenu>
+					              
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					       
+					       
+					      <p:column headerText="#{msg['meteredPoint_Quality_Point']}" style="width: 110px;" sortBy="#{meteredPoint.qualityPoint}" filterMatchMode="contains" filterBy="#{meteredPoint.qualityPoint}">
+					      	 	<p:cellEditor>
+					      	 	 	<f:facet name="output"><h:outputText value="#{meteredPoint.qualityPoint}" /></f:facet>
+					      	 	 	<f:facet name="input">
+										<p:selectOneMenu id="qualityPoint"  style="width:75%"  value="#{meteredPoint.idn_system_point_quality}" 
+												  disabled="#{meteredPointView.disabledField(meteredPoint)}" 
+												requiredMessage="#{msg['meteredPoint_Quality_Point']}: #{msg['empty_field']}">
+									    		<!--offshore
+									    		<f:selectItems value="#{meteredPointView.qualityPoint.entrySet()}"  var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" /> -->
+									    		<f:selectItems value="#{meteredPointView.getQualityPointSystem(meteredPoint).entrySet()}"  var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+										</p:selectOneMenu>
+										<p:message for="qualityPoint" />
+									</f:facet>
+								</p:cellEditor>
+							</p:column>
+					       
+					       
+					       <p:column headerText="#{msg['meteredPoint_Latitude']}" style="width: 70px;" sortBy="#{meteredPoint.latitude}" filterMatchMode="contains" filterBy="#{meteredPoint.latitude}">
+					          <p:cellEditor>
+					               <f:facet name="output">
+					               		<h:outputText value="#{meteredPoint.latitude}" style="float:right" >
+					               			<!--  sin formato ... poner lo que venga de la bd
+					               			<f:convertNumber pattern="#00.00000" />-->
+					               		</h:outputText>
+					               	</f:facet>
+					               <f:facet name="input">
+					               		<p:inputNumber value="#{meteredPoint.latitude}"  style="width:100%" 
+					               					label="#{msg['meteredPoint_Latitude']}" disabled="#{meteredPointView.disabledField(meteredPoint)}"
+					               					requiredMessage="#{msg['meteredPoint_Latitude']}: #{msg['empty_field']}" 
+					               					validatorMessage="#{msg['meteredPoint_Latitude']}: #{msg['lenght_field']} "
+					               					decimalSeparator="." thousandSeparator="," > 	
+					               		</p:inputNumber>
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       <p:column headerText="#{msg['meteredPoint_Longitude']}" style="width: 70px;" sortBy="#{meteredPoint.longitud}" filterMatchMode="contains" filterBy="#{meteredPoint.longitud}">
+					          <p:cellEditor>
+					               <f:facet name="output">
+					               		<h:outputText value="#{meteredPoint.longitud}"  style="float:right">
+					               			<!--  sin formato ... poner lo que venga de la bd
+					               			<f:convertNumber pattern="##,##0.00####" />-->
+					               		</h:outputText>
+					               	</f:facet>
+					               <f:facet name="input">
+					               		<p:inputNumber value="#{meteredPoint.longitud}"  style="width:100%" 
+					               					label="#{msg['meteredPoint_Longitude']}" disabled="#{meteredPointView.disabledField(meteredPoint)}"
+					               					requiredMessage="#{msg['meteredPoint_Longitude']}: #{msg['empty_field']}" 
+					               					validatorMessage="#{msg['meteredPoint_Longitude']}: #{msg['lenght_field']} "
+					               					decimalSeparator="." thousandSeparator="," > 
+					               			
+					               		</p:inputNumber>
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['meteredPoint_System']}" style="width: 70px;" sortBy="#{meteredPoint.systemCode}" filterMatchMode="contains" filterBy="#{meteredPoint.systemCode}">
+					          <!--se le pasa el bean para buscar el system porque es el system del punto de Nominacion asociado al punto de Medida que estamos tratando.  -->
+					           <h:outputText id="system" value="#{meteredPointView.getSystemCode(meteredPoint)}" />
+					           
+					        <!--  <h:outputText id="system" value="#{meteredPointView.getSystemCode(meteredPoint)}" />
+					              <p:inputText disabled="true" id="system" value="#{meteredPointView.getSystemCode(meteredPoint)}"   style="width:75%" maxlength="120"
+									requiredMessage="#{msg['meteredPoint_System']}: #{msg['empty_field']}" validatorMessage="#{msg['meteredPoint_System']}: #{msg['lenght_field']} 250">
+									<f:validateLength maximum="250"/>
+							  </p:inputText>
+							  -->
+							   
+					       </p:column>
+					       
+					       
+					       <p:column headerText="#{msg['meteredPoint_Zone']}" style="width: 70px;" sortBy="#{meteredPoint.zone}" filterMatchMode="contains" filterBy="#{meteredPoint.zone}">
+					        	<!--se le pasa el bean par buscar la zona Porque es la zona del punto de Nominacion asociado al punto de Medida que estamos tratando.  -->
+					         	<h:outputText  id="zone" value="#{meteredPointView.getZoneCode(meteredPoint)}" /> 
+					         	  
+					      <!--  <p:inputText disabled="true" id="zone" value="#{meteredPointView.getZoneCode(meteredPoint)}"   style="width:75%" maxlength="120"
+										requiredMessage="#{msg['meteredPoint_Zone']}: #{msg['empty_field']}" validatorMessage="#{msg['meteredPoint_Zone']}: #{msg['lenght_field']} 250">
+									<f:validateLength maximum="250"/>
+							</p:inputText>-->
+					       </p:column>
+					     
+					       <p:column headerText="#{msg['meteredPoint_Area']}" style="width: 70px;" sortBy="#{meteredPoint.area}" filterMatchMode="contains" filterBy="#{meteredPoint.area}">
+					        <!--se le pasa el bean par buscar el Area Porque es el Area del punto de Nominacion asociado al punto de Medida que estamos tratando.  -->
+					        <h:outputText  id="area" value="#{meteredPoint.area}" />
+					         
+					      <!--     <p:inputText disabled="true" required="true" id="area" value="#{meteredPointView.getAreaCode(meteredPoint)}"   style="width:75%"
+									requiredMessage="#{msg['meteredPoint_Area']}: #{msg['empty_field']}" validatorMessage="#{msg['meteredPoint_Area']}: #{msg['lenght_field']} 250">
+									<f:validateLength maximum="250"/>
+							</p:inputText>
+							--> 
+					       </p:column>
+					       
+					       
+					       
+					       <p:column headerText="#{msg['meteredPoint_Subarea']}" style="width: 70px;" sortBy="#{meteredPoint.subarea}" filterMatchMode="contains" filterBy="#{meteredPoint.subarea}">
+					          <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{meteredPoint.subarea}" /></f:facet>
+					               <f:facet name="input">
+					               <p:selectOneMenu id="subarea" style="width:75%" value="#{meteredPoint.idn_subarea}"  disabled="#{meteredPointView.disabledField(meteredPoint)}">
+							               		<f:selectItems value="#{meteredPointView.getSubAreasNomination(meteredPoint).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" >		</f:selectItems>
+					               </p:selectOneMenu>
+					              </f:facet>
+					           </p:cellEditor>
+					          
+					       </p:column>
+					       <p:column headerText="#{msg['meteredPoint_Conecting_Party_Name']}" style="width: 100px;" sortBy="#{meteredPoint.conectingPartyName}" filterMatchMode="contains" filterBy="#{meteredPoint.conectingPartyName}">
+					          <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{meteredPoint.conectingPartyName}" /></f:facet>
+					               <f:facet name="input">
+					               		<p:inputText value="#{meteredPoint.conectingPartyName}" required="false"  style="width:100%" 
+					               			label="#{msg['meteredPoint_Conecting_Party_Name']}" disabled="#{meteredPointView.disabledField(meteredPoint)}"
+					               			requiredMessage="#{msg['meteredPoint_Conecting_Party_Name']}: #{msg['empty_field']}" 
+					               			validatorMessage="#{msg['meteredPoint_Conecting_Party_Name']}: #{msg['lenght_field']} 120"
+					               			maxlength="120">
+					               			<f:validateLength maximum="120"/>
+					               		</p:inputText>
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       <p:column headerText="#{msg['meteredPoint_Conecting_Party_Phone_Number']}" style="width: 100px;" sortBy="#{meteredPoint.conectingPartyPhoneNumber}" filterMatchMode="contains" filterBy="#{meteredPoint.conectingPartyPhoneNumber}">
+					          <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{meteredPoint.conectingPartyPhoneNumber}" /></f:facet>
+					               <f:facet name="input">
+					               		<p:inputText value="#{meteredPoint.conectingPartyPhoneNumber}" required="false"  style="width:100%" 
+					               			label="#{msg['meteredPoint_Conecting_Party_Phone_Number']}" disabled="#{meteredPointView.disabledField(meteredPoint)}"
+					               			requiredMessage="#{msg['meteredPoint_Conecting_Party_Phone_Number']}: #{msg['empty_field']}" 
+					               			validatorMessage="#{msg['meteredPoint_Conecting_Party_Phone_Number']}: #{msg['lenght_field']} 120"
+					               			maxlength="120">
+					               			<f:validateLength maximum="120"/>
+					               		</p:inputText>
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					       <!-- esto produce la  
+					       <p:tooltip id="toolTipMail" for="mail" value="#{meteredPoint.conectingPartyEmail}" trackMouse="true" /> -->
+					       <p:column headerText="#{msg['meteredPoint_Conecting_Party_Email']}" style="width: 150px;" sortBy="#{meteredPoint.conectingPartyEmail}" filterMatchMode="contains" filterBy="#{meteredPoint.conectingPartyEmail}">
+					          <p:cellEditor>
+					               <f:facet name="output"><h:outputText id="mail" value="#{meteredPoint.conectingPartyEmail}" />
+					               
+					               </f:facet>
+					              
+					               
+					               <f:facet name="input">
+					               		<p:inputText value="#{meteredPoint.conectingPartyEmail}" required="false"  style="width:100%" 
+					               			label="#{msg['meteredPoint_Conecting_Party_Email']}" disabled="#{meteredPointView.disabledField(meteredPoint)}"
+					               			requiredMessage="#{msg['meteredPoint_Conecting_Party_Email']}: #{msg['empty_field']}" 
+					               			validatorMessage= "#{msg['meteredPoint_Invalid_Email_Format']}" >
+									        <f:validateRegex pattern="^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$" />		
+					               			<f:validateLength maximum="120"/>
+					               		</p:inputText>
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['meteredPoint_Start_Date']}" style="width: 70px;" sortBy="#{meteredPoint.startDate}" >
+					          <p:cellEditor>
+					               <f:facet name="output">
+					               			<h:outputText value="#{meteredPoint.startDate}" >
+					              				<f:convertDateTime pattern="dd/MM/yyyy" />
+					              		 </h:outputText>
+					               </f:facet>
+					               <f:facet name="input">
+					               		<p:calendar required="true" id="startDate" 
+					               			value="#{meteredPoint.startDate}" pattern="dd/MM/yyyy"
+					               			readonlyInput="true"   mindate="#{(meteredPointView.sysdate).getTime()}"  
+					               			disabled="#{meteredPointView.disabledField(meteredPoint)}"
+											requiredMessage="#{msg['meteredPoint_Start_Date']}: #{msg['empty_field']}"	validatorMessage="#{msg['meteredPoint_Start_Date']}: #{msg['empty_field']}">
+											<f:convertDateTime pattern="dd/MM/yyyy"/>
+										</p:calendar>
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+	 				       
+					       <p:column headerText="#{msg['meteredPoint_End_Date']}"  style="width: 70px;" sortBy="#{meteredPoint.endDate}" >
+					          <p:cellEditor>
+					               <f:facet name="output">
+					               		<h:outputText value="#{meteredPoint.endDate}" >
+					              			<f:convertDateTime pattern="dd/MM/yyyy" />
+					              		 </h:outputText>
+					               </f:facet>
+					               <f:facet name="input">
+					            	    <p:calendar  id="endDate" value="#{meteredPoint.endDate}" pattern="dd/MM/yyyy" 
+						            	    mindate="#{(meteredPointView.sysdate).getTime()}" 
+						            	    disabled="#{meteredPointView.disabledEndDate(meteredPoint)}"
+											requiredMessage="#{msg['meteredPoint_End_Date']}: #{msg['empty_field']}" validatorMessage="#{msg['meteredPoint_End_Date']}: #{msg['empty_field']}">
+											<f:convertDateTime pattern="dd/MM/yyyy"/>
+										</p:calendar>
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					      <shiro:hasPermission name="#{changeSystemView.system}.DAM.METERED_POINTS.MOD">
+						       <p:column style="width:32px">
+						     		 <p:rowEditor rendered="#{meteredPointView.renderItemEditor(meteredPoint)}"/>
+						       </p:column>
+					       </shiro:hasPermission>
+					   </p:dataTable>
+				</p:layoutUnit>
+
+			</p:layout>
+		</h:form>
+
+	<shiro:hasPermission name="#{changeSystemView.system}.DAM.METERED_POINTS.ADD">
+		<p:dialog widgetVar="dlgNewMeteredPoint"  resizable="false"  closable="true" modal="true" appendTo="@(body)" header="New Metered Points">
+		<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario
+		 <p:ajax event="close" update="formNewEntity"  process="@this" listener="#{meteredPointView.cancel}" />-->		 
+			<h:form id="formNewEntity">
+			<p:growl id="msgs" showDetail="true"  life="5000"/>
+				<p:panelGrid columns="4" style="width:100%">
+					<p:panelGrid>
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_Metering_ID']}" />
+							</p:column>
+							<p:column>	
+								<p:selectOneMenu id="meteringID"  style="width:130px"  value="#{meteredPointView.newMeteredPoint.meteringID}" required="true"
+												requiredMessage="#{msg['meteredPoint_Metering_ID']}: #{msg['empty_field']}">
+							    	<f:selectItems value="#{meteredPointView.meteringIds.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					            </p:selectOneMenu>
+								<p:message for="meteringID" />
+							</p:column>
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_ID']}" />
+							</p:column>
+							<p:column>
+								<p:inputText required="true" id="id" style="width:130px" value="#{meteredPointView.newMeteredPoint.id}"  maxlength="20" 
+											requiredMessage="#{msg['meteredPoint_ID']}: #{msg['empty_field']}" 
+											validatorMessage="#{msg['meteredPoint_ID']}: #{msg['lenght_field']} 20">
+									<f:validateLength maximum="20"/>
+								</p:inputText>
+								<p:message for="id" />
+							</p:column>
+
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_Name']}" />
+							</p:column>
+							<p:column>
+								<p:inputText required="true" id="name" value="#{meteredPointView.newMeteredPoint.name}"  maxlength="120"
+									requiredMessage="#{msg['meteredPoint_Name']}: #{msg['empty_field']}"
+									validatorMessage="#{msg['meteredPoint_Name']}: #{msg['lenght_field']} 120">
+									 <f:validateLength maximum="250"/>
+								</p:inputText>
+								<p:message for="name" />
+							</p:column>
+						</p:row>
+					
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_Point_Type']}" />
+							</p:column>
+							<p:column>
+								<p:selectOneMenu id="pointType"  style="width:90px"   value="#{meteredPointView.newMeteredPoint.idn_system_point_type}" 
+									required="true" requiredMessage="#{msg['meteredPoint_Point_Type']}: #{msg['empty_field']}">
+										  <f:selectItem  itemValue="#{-1}" itemLabel="" />
+							              <f:selectItems value="#{meteredPointView.pointTypes.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+							              <p:ajax update="customerType,nominationPoint,contractPoint,area,subarea,qualityPoint"/>					               
+			               		</p:selectOneMenu>
+							<p:message for="pointType" />
+							</p:column>
+
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_Customer_Type']}" />
+							</p:column>
+							<p:column>
+								<p:selectOneMenu id="customerType"  style="width:90px"  value="#{meteredPointView.newMeteredPoint.idn_customer_type}"
+												 required="true"  requiredMessage="#{msg['meteredPoint_Customer_Type']}: #{msg['empty_field']}">
+									    <f:selectItems value="#{meteredPointView.getCustomerTypesNew(meteredPointView.newMeteredPoint).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+				             	</p:selectOneMenu>
+								<p:message for="customerType" />
+							</p:column>
+						</p:row>
+					
+						<p:row>
+
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_Nominal_Capacity']}" />
+							</p:column>
+							<p:column>
+							 <!--No acepta num negativos.
+								  <p:inputText required="true" id="nominalCapacity" value="#{meteredPointView.newMeteredPoint.nominalCapacity}" size="10"
+									requiredMessage="#{msg['meteredPoint_Nominal_Capacity']}: #{msg['empty_field']}" 
+									validatorMessage="#{msg['meteredPoint_Nominal_Capacity']}: #{msg['lenght_field']}" onkeypress="validateInput('[09]*')"
+									>
+									<f:convertNumber pattern="#,##0" />
+								</p:inputText>
+								<p:message for="nominalCapacity" />
+							-->	 
+							<!-- el imputnumber no saca el mensaje de obligatorio -->
+								<p:inputNumber required="true" id="nominalCapacity" value="#{meteredPointView.newMeteredPoint.nominalCapacity}" 
+											   requiredMessage="#{msg['meteredPoint_Nominal_Capacity']}: #{msg['empty_field']}" 
+                               				   decimalSeparator="." thousandSeparator="," decimalPlaces="0" minValue="0"> 
+                               	<p:ajax update="msgNominalCapacity" event="change" />   
+           					    </p:inputNumber>  
+               					 
+								<p:message for="nominalCapacity"  id="msgNominalCapacity"/>
+								
+							</p:column>
+
+
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_Min_Pressure']}" />
+							</p:column>
+							<p:column>
+								<p:inputNumber required="false" id="minPressure" value="#{meteredPointView.newMeteredPoint.minPressure}" size="12"
+												requiredMessage="#{msg['meteredPoint_Min_Pressure']}: #{msg['empty_field']}" 
+												validatorMessage="#{msg['meteredPoint_Min_Pressure']}: #{msg['lenght_field']}"
+												decimalSeparator="." thousandSeparator="," decimalPlaces="0">
+								</p:inputNumber>
+								<p:message for="minPressure" />
+							</p:column>
+							
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_Max_Pressure']}" />
+							</p:column>
+							<p:column>
+								<p:inputNumber required="false" id="maxPressure" value="#{meteredPointView.newMeteredPoint.maxPressure}" size="12"
+												requiredMessage="#{msg['meteredPoint_Max_Pressure']}: #{msg['empty_field']}"
+									 			validatorMessage="#{msg['meteredPoint_Max_Pressure']}: #{msg['range_pressure']} "
+									 			decimalSeparator="." thousandSeparator="," decimalPlaces="0">
+								</p:inputNumber>
+								<p:message for="maxPressure" />
+							</p:column>
+						</p:row>
+					
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_Nomination_Point']}" />
+							</p:column>
+							<p:column>
+								<p:selectOneMenu id="nominationPoint"  style="width:90px"  value="#{meteredPointView.newMeteredPoint.idn_system_point_nomination}" 
+										required="true" requiredMessage="#{msg['meteredPoint_Nomination_Point']}: #{msg['empty_field']}">
+										<f:selectItem  itemValue="#{-1}" itemLabel="" />
+							    		<!--offshore
+							    		 <f:selectItems value="#{meteredPointView.getNominationPoints(meteredPointView.newMeteredPoint).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" /> -->
+							    		<f:selectItems value="#{meteredPointView.getNominationPointsSystem(meteredPointView.newMeteredPoint).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+							       	  	<p:ajax  update="area,subarea,contractPoint" />
+							       	  
+								</p:selectOneMenu>
+								<p:message for="nominationPoint" />
+							</p:column>
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_Group_ID']}" />
+							</p:column>
+							<p:column>
+								<p:selectOneMenu id="contractPoint"  style="width:90px"  value="#{meteredPointView.newMeteredPoint.idn_system_point_contract}" 
+										required="true"  requiredMessage="#{msg['meteredPoint_Group_ID']}: #{msg['empty_field']}">
+										<f:selectItem  itemValue="#{null}" itemLabel="" />
+							    		<!--offshore  
+							    		<f:selectItems value="#{meteredPointView.getContractPoints(meteredPointView.newMeteredPoint).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />-->
+							    		<f:selectItems value="#{meteredPointView.getContractPointsSystem(meteredPointView.newMeteredPoint).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+								</p:selectOneMenu>
+								<p:message for="contractPoint" />
+							</p:column>
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_Quality_Point']}" />
+							</p:column>
+							<p:column>
+								<p:selectOneMenu id="qualityPoint"  style="width:90px"  value="#{meteredPointView.newMeteredPoint.idn_system_point_quality}" 
+										 requiredMessage="#{msg['meteredPoint_Quality_Point']}: #{msg['empty_field']}">						
+							    		<!--offshore
+							    		<f:selectItems value="#{meteredPointView.qualityPoint.entrySet()}"  var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />-->
+							    		<f:selectItems value="#{meteredPointView.getQualityPointSystem(meteredPointView.newMeteredPoint).entrySet()}"  var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+								</p:selectOneMenu>
+								<p:message for="qualityPoint" />
+							</p:column>
+						</p:row>	
+						
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_Latitude']}" />
+							</p:column>
+							<p:column>
+								<p:inputNumber required="false" id="latitude" value="#{meteredPointView.newMeteredPoint.latitude}" size="12"
+												requiredMessage="#{msg['meteredPoint_Latitude']}: #{msg['empty_field']}"
+												validatorMessage="#{msg['meteredPoint_Latitude']}: #{msg['lenght_field']}"
+												decimalSeparator="." thousandSeparator="," decimalPlaces="6">
+								</p:inputNumber>
+								<p:message for="latitude" />
+							</p:column>
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_Longitude']}" />
+							</p:column>
+							<p:column>
+								<p:inputNumber required="false" id="longitud" value="#{meteredPointView.newMeteredPoint.longitud}" size="12"
+												requiredMessage="#{msg['meteredPoint_Longitude']}: #{msg['empty_field']}" 
+												validatorMessage="#{msg['meteredPoint_Longitude']}: #{msg['lenght_field']}"
+												decimalSeparator="." thousandSeparator="," decimalPlaces="6">							
+								</p:inputNumber>
+								<p:message for="longitud" />
+							</p:column>
+
+						</p:row>
+						
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_Area']}"  />
+							</p:column>
+							<p:column>
+							<!-- 
+								<p:selectOneMenu id="area" style="width:90px" value="#{meteredPointView.newMeteredPoint.idn_area}" 
+										required="true"  requiredMessage="#{msg['meteredPoint_Area']}: #{msg['empty_field']}">
+										<f:selectItem  itemValue="#{-1}" itemLabel="" />
+									    <f:selectItems value="#{meteredPointView.areasNomination.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+									    <p:ajax  update="subarea,contractPoint" /> 					    
+					             </p:selectOneMenu>
+					            --> 
+					            <p:inputText disabled="true" required="true" id="area" value="#{meteredPointView.getAreaCode(meteredPointView.newMeteredPoint)}"  maxlength="120"
+									requiredMessage="#{msg['meteredPoint_Area']}: #{msg['empty_field']}" validatorMessage="#{msg['meteredPoint_Area']}: #{msg['lenght_field']} 250">
+									<f:validateLength maximum="250"/>
+								</p:inputText> 
+					            
+								<p:message for="area" />
+								
+							</p:column>
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_Subarea']}" />
+							</p:column>
+							<p:column>							
+								<p:selectOneMenu id="subarea"  style="width:90px"  value="#{meteredPointView.newMeteredPoint.idn_subarea}">
+							   <!--     <f:selectItems value="#{meteredPointView.subAreasNomination.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />-->
+									     <f:selectItems value="#{meteredPointView.getSubAreasNomination(meteredPointView.newMeteredPoint).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					             </p:selectOneMenu>
+								<p:message for="subarea" />
+							</p:column>
+						</p:row>
+						
+						<p:row>
+							
+							
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_Conecting_Party_Name']}" />
+							</p:column>
+							<p:column> 
+								<p:inputText required="false" id="conectingPartyName" value="#{meteredPointView.newMeteredPoint.conectingPartyName}"  maxlength="120"
+									requiredMessage="#{msg['meteredPoint_Conecting_Party_Name']}: #{msg['empty_field']}" validatorMessage="#{msg['meteredPoint_Conecting_Party_Name']}: #{msg['lenght_field']} 250">
+									<f:validateLength maximum="250"/>
+								</p:inputText>
+								<p:message for="conectingPartyName" />
+							</p:column>
+							
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_Conecting_Party_Phone_Number']}" />
+							</p:column>
+							<p:column>
+								<p:inputText required="false" id="conectingPartyPhoneNumber" value="#{meteredPointView.newMeteredPoint.conectingPartyPhoneNumber}" maxlength="120"
+									requiredMessage="#{msg['meteredPoint_Conecting_Party_Phone_Number']}: #{msg['empty_field']}" validatorMessage="#{msg['meteredPoint_Conecting_Party_Phone_Number']}: #{msg['lenght_field']} 50">
+									<f:validateLength maximum="50"/>							
+								</p:inputText>
+								<p:message for="conectingPartyPhoneNumber" />
+							</p:column>
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_Conecting_Party_Email']}"/>
+							</p:column>
+							<p:column>
+								<p:inputText required="false" id="conectingPartyEmail" value="#{meteredPointView.newMeteredPoint.conectingPartyEmail}" maxlength="120"
+									requiredMessage="#{msg['meteredPoint_Conecting_Party_Email']}: #{msg['empty_field']}"
+									validatorMessage= "#{msg['meteredPoint_Invalid_Email_Format']}" >
+									<f:validateRegex pattern="^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$" />							
+								</p:inputText>
+								
+								<p:message for="conectingPartyEmail" />
+							</p:column>
+						</p:row>
+						
+															
+						<p:row>
+							
+						
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_Start_Date']}"/>
+							</p:column>
+							<p:column>
+								<p:calendar required="true" id="startDate" 
+									value="#{meteredPointView.newMeteredPoint.startDate}" pattern="dd/MM/yyyy"
+									readonlyInput="true"  mindate="#{(meteredPointView.sysdate).getTime()}" 
+									requiredMessage="#{msg['meteredPoint_Start_Date']}: #{msg['empty_field']}" 
+									validatorMessage="#{msg['meteredPoint_Start_Date']}: #{msg['lenght_field']}">
+								</p:calendar>
+								<p:message for="startDate" />
+							</p:column>
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_End_Date']}"/>
+							</p:column>
+							<p:column>
+								<p:calendar  id="endDate" 
+									value="#{meteredPointView.newMeteredPoint.endDate}" pattern="dd/MM/yyyy" 
+									mask="true" mindate="#{(meteredPointView.sysdate).getTime()}" 
+									validatorMessage="#{msg['meteredPoint_End_Date']}: #{msg['lenght_field']}">
+								</p:calendar>
+								<p:message for="endDate" />
+							</p:column>
+						</p:row>
+					</p:panelGrid>
+				</p:panelGrid>
+				
+				<p:separator/>
+				<p:panelGrid>
+					<p:row>
+						<p:column>
+							<p:commandButton value="#{msg['save']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" validateClient="true"
+								action="#{meteredPointView.save}" update=":#{p:component('meteredPoints1')},:formNewEntity,:formNewPeriodEntity,:#{p:component('id')}"
+								onstart="PF('cargando').show()"
+								oncomplete="PF('dlgNewMeteredPoint').hide(),PF('cargando').hide()" />
+			        		<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close"
+			        			update="formNewEntity" process="@this" actionListener="#{meteredPointView.cancel}"
+			        			oncomplete="PF('dlgNewMeteredPoint').hide()"/>
+			        		<p:commandButton value="#{msg['MOC']}" styleClass="ui-confirmdialog-no" icon="ui-icon fa fa-gears"
+			        			update="meteringID,:#{p:component('msgs')}"  process="@this" actionListener="#{meteredPointView.generarMOC}" 
+			        			
+			        			/>	
+						</p:column>					
+					</p:row>
+				</p:panelGrid>							
+			</h:form>			
+		</p:dialog>
+
+		<p:dialog widgetVar="dlgNewPeriodMeteredPoint"  resizable="false"  closable="true" modal="true" appendTo="@(body)" header="New Period">
+		<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario
+		 <p:ajax event="close" update="formNewPeriodEntity"  process="@this" listener="#{meteredPointView.cancel}" />-->		 
+			<h:form id="formNewPeriodEntity">
+			<p:growl id="msgs" showDetail="true"  life="5000"/>
+				<p:panelGrid columns="4" style="width:100%">
+					<p:panelGrid>
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_ID']}" />
+							</p:column>
+							<p:column>
+								<p:selectOneMenu id="id"  style="width:130px"  value="#{meteredPointView.newPeriodMeteredPoint.id}" required="true"
+												requiredMessage="#{msg['meteredPoint_ID']}: #{msg['empty_field']}" valueChangeListener="#{meteredPointView.selectMeteredPointID}">
+									<f:selectItem itemValue="" itemLabel=""/>
+							    	<f:selectItems value="#{meteredPointView.meteringPointIds.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+							    	<p:ajax onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()" update="meteringID,name, pointType,latitude, longitud, customerType,nominationPoint,qualityPoint"/>	
+
+					            </p:selectOneMenu>
+								<p:message for="id" />
+							</p:column>
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_Metering_ID']}" />
+							</p:column>
+							<p:column>	
+								<p:inputText disabled="true" required="true" id="meteringID" style="width:130px" value="#{meteredPointView.newPeriodMeteredPoint.meteringID}"  maxlength="20" 
+											requiredMessage="#{msg['meteredPoint_ID']}: #{msg['empty_field']}"
+											validatorMessage="#{msg['meteredPoint_ID']}: #{msg['lenght_field']} 20">
+									<f:validateLength maximum="20"/>
+								</p:inputText>
+								
+								<p:message for="meteringID" />
+							</p:column>
+
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_Name']}" />
+							</p:column>
+							<p:column>
+								<p:inputText disabled="true" required="true" id="name" value="#{meteredPointView.newPeriodMeteredPoint.name}"  maxlength="120"
+									requiredMessage="#{msg['meteredPoint_Name']}: #{msg['empty_field']}"
+									validatorMessage="#{msg['meteredPoint_Name']}: #{msg['lenght_field']} 120">
+									 <f:validateLength maximum="250"/>
+								</p:inputText>
+								<p:message for="name" />
+							</p:column>
+						</p:row>
+					
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_Point_Type']}" />
+							</p:column>
+							<p:column>
+								<p:inputText disabled="true" required="true" id="pointType" value="#{meteredPointView.newPeriodMeteredPoint.pointType}"  maxlength="120"
+									requiredMessage="#{msg['meteredPoint_Point_Type']}: #{msg['empty_field']}"
+									validatorMessage="#{msg['meteredPoint_Point_Type']}: #{msg['lenght_field']} 120">
+									 <f:validateLength maximum="250"/>
+								</p:inputText>
+								<p:message for="pointType" />
+								
+							</p:column>
+
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_Customer_Type']}" />
+							</p:column>
+							<p:column>
+								<p:selectOneMenu id="customerType"  style="width:90px"  value="#{meteredPointView.newPeriodMeteredPoint.idn_customer_type}"
+												 required="true"  requiredMessage="#{msg['meteredPoint_Customer_Type']}: #{msg['empty_field']}">
+									    <f:selectItems value="#{meteredPointView.getCustomerTypesNew(meteredPointView.newPeriodMeteredPoint).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+				             	</p:selectOneMenu>
+								<p:message for="customerType" />
+							</p:column>
+						</p:row>
+					
+						<p:row>
+
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_Nominal_Capacity']}" />
+							</p:column>
+							<p:column>
+							 <!--No acepta num negativos.
+								  <p:inputText required="true" id="nominalCapacity" value="#{meteredPointView.newPeriodMeteredPoint.nominalCapacity}" size="10"
+									requiredMessage="#{msg['meteredPoint_Nominal_Capacity']}: #{msg['empty_field']}" 
+									validatorMessage="#{msg['meteredPoint_Nominal_Capacity']}: #{msg['lenght_field']}" onkeypress="validateInput('[09]*')"
+									>
+									<f:convertNumber pattern="#,##0" />
+								</p:inputText>
+								<p:message for="nominalCapacity" />
+							-->	 
+							<!-- el imputnumber no saca el mensaje de obligatorio -->
+								<p:inputNumber required="true" id="nominalCapacity" value="#{meteredPointView.newPeriodMeteredPoint.nominalCapacity}" 
+											   requiredMessage="#{msg['meteredPoint_Nominal_Capacity']}: #{msg['empty_field']}" 
+                               				   decimalSeparator="." thousandSeparator="," decimalPlaces="0" minValue="0"> 
+                               	<p:ajax update="msgNominalCapacity" event="change" />   
+           					    </p:inputNumber>  
+               					 
+								<p:message for="nominalCapacity"  id="msgNominalCapacity"/>
+								
+							</p:column>
+
+
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_Min_Pressure']}" />
+							</p:column>
+							<p:column>
+								<p:inputNumber required="false" id="minPressure" value="#{meteredPointView.newPeriodMeteredPoint.minPressure}" size="12"
+												requiredMessage="#{msg['meteredPoint_Min_Pressure']}: #{msg['empty_field']}" 
+												validatorMessage="#{msg['meteredPoint_Min_Pressure']}: #{msg['lenght_field']}"
+												decimalSeparator="." thousandSeparator="," decimalPlaces="0">
+								</p:inputNumber>
+								<p:message for="minPressure" />
+							</p:column>
+							
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_Max_Pressure']}" />
+							</p:column>
+							<p:column>
+								<p:inputNumber required="false" id="maxPressure" value="#{meteredPointView.newPeriodMeteredPoint.maxPressure}" size="12"
+												requiredMessage="#{msg['meteredPoint_Max_Pressure']}: #{msg['empty_field']}"
+									 			validatorMessage="#{msg['meteredPoint_Max_Pressure']}: #{msg['range_pressure']} "
+									 			decimalSeparator="." thousandSeparator="," decimalPlaces="0">
+								</p:inputNumber>
+								<p:message for="maxPressure" />
+							</p:column>
+						</p:row>
+					
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_Nomination_Point']}" />
+							</p:column>
+							<p:column>
+								<p:selectOneMenu id="nominationPoint"  style="width:90px"  value="#{meteredPointView.newPeriodMeteredPoint.idn_system_point_nomination}" 
+										required="true" requiredMessage="#{msg['meteredPoint_Nomination_Point']}: #{msg['empty_field']}">
+										<f:selectItem  itemValue="#{-1}" itemLabel="" />
+							    		<!--offshore
+							    		 <f:selectItems value="#{meteredPointView.getNominationPoints(meteredPointView.newPeriodMeteredPoint).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" /> -->
+							    		<f:selectItems value="#{meteredPointView.getNominationPointsSystem(meteredPointView.newPeriodMeteredPoint).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+							       	  	<p:ajax onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()" update="area,subarea,contractPoint" />
+							       	  
+								</p:selectOneMenu>
+								<p:message for="nominationPoint" />
+							</p:column>
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_Group_ID']}" />
+							</p:column>
+							<p:column>
+								<p:selectOneMenu id="contractPoint"  style="width:90px"  value="#{meteredPointView.newPeriodMeteredPoint.idn_system_point_contract}" 
+										required="true"  requiredMessage="#{msg['meteredPoint_Group_ID']}: #{msg['empty_field']}">
+										<f:selectItem  itemValue="#{null}" itemLabel="" />
+							    		<!--offshore  
+							    		<f:selectItems value="#{meteredPointView.getContractPoints(meteredPointView.newPeriodMeteredPoint).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />-->
+							    		<f:selectItems value="#{meteredPointView.getContractPointsSystem(meteredPointView.newPeriodMeteredPoint).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+								</p:selectOneMenu>
+								<p:message for="contractPoint" />
+							</p:column>
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_Quality_Point']}" />
+							</p:column>
+							<p:column>
+								<p:selectOneMenu id="qualityPoint"  style="width:90px"  value="#{meteredPointView.newPeriodMeteredPoint.idn_system_point_quality}" 
+										 requiredMessage="#{msg['meteredPoint_Quality_Point']}: #{msg['empty_field']}">						
+							    		<!--offshore
+							    		<f:selectItems value="#{meteredPointView.qualityPoint.entrySet()}"  var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />-->
+							    		<f:selectItems value="#{meteredPointView.getQualityPointSystem(meteredPointView.newPeriodMeteredPoint).entrySet()}"  var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+								</p:selectOneMenu>
+								<p:message for="qualityPoint" />
+							</p:column>
+						</p:row>	
+						
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_Latitude']}" />
+							</p:column>
+							<p:column>
+								<p:inputNumber disabled="true" required="false" id="latitude" value="#{meteredPointView.newPeriodMeteredPoint.latitude}" size="12"
+												requiredMessage="#{msg['meteredPoint_Latitude']}: #{msg['empty_field']}"
+												validatorMessage="#{msg['meteredPoint_Latitude']}: #{msg['lenght_field']}"
+												decimalSeparator="." thousandSeparator="," decimalPlaces="6">
+								</p:inputNumber>
+								<p:message for="latitude" />
+							</p:column>
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_Longitude']}" />
+							</p:column>
+							<p:column>
+								<p:inputNumber disabled="true" required="false" id="longitud" value="#{meteredPointView.newPeriodMeteredPoint.longitud}" size="12"
+												requiredMessage="#{msg['meteredPoint_Longitude']}: #{msg['empty_field']}" 
+												validatorMessage="#{msg['meteredPoint_Longitude']}: #{msg['lenght_field']}"
+												decimalSeparator="." thousandSeparator="," decimalPlaces="6">							
+								</p:inputNumber>
+								<p:message for="longitud" />
+							</p:column>
+
+						</p:row>
+						
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_Area']}"  />
+							</p:column>
+							<p:column>
+							<!-- 
+								<p:selectOneMenu id="area" style="width:90px" value="#{meteredPointView.newPeriodMeteredPoint.idn_area}" 
+										required="true"  requiredMessage="#{msg['meteredPoint_Area']}: #{msg['empty_field']}">
+										<f:selectItem  itemValue="#{-1}" itemLabel="" />
+									    <f:selectItems value="#{meteredPointView.areasNomination.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+									    <p:ajax  update="subarea,contractPoint" /> 					    
+					             </p:selectOneMenu>
+					            --> 
+					            <p:inputText disabled="true" required="true" id="area" value="#{meteredPointView.getAreaCode(meteredPointView.newPeriodMeteredPoint)}"  maxlength="120"
+									requiredMessage="#{msg['meteredPoint_Area']}: #{msg['empty_field']}" validatorMessage="#{msg['meteredPoint_Area']}: #{msg['lenght_field']} 250">
+									<f:validateLength maximum="250"/>
+								</p:inputText> 
+					            
+								<p:message for="area" />
+								
+							</p:column>
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_Subarea']}" />
+							</p:column>
+							<p:column>							
+								<p:selectOneMenu id="subarea"  style="width:90px"  value="#{meteredPointView.newPeriodMeteredPoint.idn_subarea}">
+							   <!--     <f:selectItems value="#{meteredPointView.subAreasNomination.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />-->
+									     <f:selectItems value="#{meteredPointView.getSubAreasNomination(meteredPointView.newPeriodMeteredPoint).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					             </p:selectOneMenu>
+								<p:message for="subarea" />
+							</p:column>
+						</p:row>
+						
+						<p:row>
+							
+							
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_Conecting_Party_Name']}" />
+							</p:column>
+							<p:column> 
+								<p:inputText required="false" id="conectingPartyName" value="#{meteredPointView.newPeriodMeteredPoint.conectingPartyName}"  maxlength="120"
+									requiredMessage="#{msg['meteredPoint_Conecting_Party_Name']}: #{msg['empty_field']}" validatorMessage="#{msg['meteredPoint_Conecting_Party_Name']}: #{msg['lenght_field']} 250">
+									<f:validateLength maximum="250"/>
+								</p:inputText>
+								<p:message for="conectingPartyName" />
+							</p:column>
+							
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_Conecting_Party_Phone_Number']}" />
+							</p:column>
+							<p:column>
+								<p:inputText required="false" id="conectingPartyPhoneNumber" value="#{meteredPointView.newPeriodMeteredPoint.conectingPartyPhoneNumber}" maxlength="120"
+									requiredMessage="#{msg['meteredPoint_Conecting_Party_Phone_Number']}: #{msg['empty_field']}" validatorMessage="#{msg['meteredPoint_Conecting_Party_Phone_Number']}: #{msg['lenght_field']} 50">
+									<f:validateLength maximum="50"/>							
+								</p:inputText>
+								<p:message for="conectingPartyPhoneNumber" />
+							</p:column>
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_Conecting_Party_Email']}"/>
+							</p:column>
+							<p:column>
+								<p:inputText required="false" id="conectingPartyEmail" value="#{meteredPointView.newPeriodMeteredPoint.conectingPartyEmail}" maxlength="120"
+									requiredMessage="#{msg['meteredPoint_Conecting_Party_Email']}: #{msg['empty_field']}"
+									validatorMessage= "#{msg['meteredPoint_Invalid_Email_Format']}" >
+									<f:validateRegex pattern="^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$" />							
+								</p:inputText>
+								
+								<p:message for="conectingPartyEmail" />
+							</p:column>
+						</p:row>
+						
+															
+						<p:row>
+							
+						
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_Start_Date']}"/>
+							</p:column>
+							<p:column>
+								<p:calendar required="true" id="startDate" 
+									value="#{meteredPointView.newPeriodMeteredPoint.startDate}" pattern="dd/MM/yyyy"
+									readonlyInput="true"  mindate="#{(meteredPointView.sysdate).getTime()}" 
+									requiredMessage="#{msg['meteredPoint_Start_Date']}: #{msg['empty_field']}" 
+									validatorMessage="#{msg['meteredPoint_Start_Date']}: #{msg['lenght_field']}">
+								</p:calendar>
+								<p:message for="startDate" />
+							</p:column>
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_End_Date']}"/>
+							</p:column>
+							<p:column>
+								<p:calendar  id="endDate" 
+									value="#{meteredPointView.newPeriodMeteredPoint.endDate}" pattern="dd/MM/yyyy" 
+									mask="true" mindate="#{(meteredPointView.sysdate).getTime()}" 
+									validatorMessage="#{msg['meteredPoint_End_Date']}: #{msg['lenght_field']}">
+								</p:calendar>
+								<p:message for="endDate" />
+							</p:column>
+						</p:row>
+					</p:panelGrid>
+				</p:panelGrid>
+				
+				<p:separator/>
+				<p:panelGrid>
+					<p:row>
+						<p:column>
+							<p:commandButton value="#{msg['save']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" validateClient="true"
+								action="#{meteredPointView.savePeriod}" update=":#{p:component('meteredPoints1')},:formNewPeriodEntity,:#{p:component('id')}"
+								onstart="PF('cargando').show()"
+								oncomplete="PF('dlgNewPeriodMeteredPoint').hide(),PF('cargando').hide()" />
+			        		<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close"
+			        			update="formNewPeriodEntity" process="@this" actionListener="#{meteredPointView.cancelPeriod}"
+			        			oncomplete="PF('dlgNewPeriodMeteredPoint').hide()"/>
+			        			
+						</p:column>					
+					</p:row>
+				</p:panelGrid>							
+			</h:form>			
+		</p:dialog>
+
+
+	</shiro:hasPermission>
+	</ui:define>
+
+
+</ui:composition>

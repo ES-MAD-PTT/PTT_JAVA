@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<!-- Namespace -->
+<mapper namespace="com.atos.mapper.scadaAlarms.ScadaAlarmMapper">
+
+    <resultMap type="com.atos.beans.scadaAlarms.ScadaAlarmBean" id="ScadaAlarm">
+        <id column="idn_scadaAlarm" property="idn_scada_alarm"  />
+		<result property="scada_tag_name" column="scada_tag_name"/>
+        <result property="scada_timestamp" column="scada_timestamp"/>   
+        <result property="scada_label" column="scada_label"/>   
+        <result property="metering_point" column="metering_point"/>
+        <result property="metering_point" column="metering_point"/>   
+        <result property="capacity_restriction" column="capacity_restriction"/>
+        <result property="idn_area" column="idn_area"/>
+        <result property="area_code" column="area_code"/>
+        <result property="temp_resolution_time" column="temp_resolution_time"/>
+        <result property="severity" column="severity"/>
+        <result property="status" column="status"/>   
+        <result property="comments_remarks" column="comments_remarks"/>      
+        <result property="alarm_id" column="alarm_id"/>
+        <result property="origin" column="origin"/>
+        <result property="alarm_type" column="alarm_type"/>
+         <result property="binary" column="is_binary"/>
+        
+    </resultMap>
+     
+    <!-- Si no hay lista de status, se hace buscar por un estado inexistente
+    para que no se devuelva ningun resultado. -->
+    <select id="selectScadaAlarms" resultMap="ScadaAlarm" fetchSize="400">
+	  select a.idn_scada_alarm idn_scada_alarm, 
+	        tn.scada_tag_name scada_tag_name, 
+	        a.scada_timestamp scada_timestamp, 
+	        tn.scada_label scada_label, 
+	        tn.scada_point  metering_point,
+	        a.capacity_restricction capacity_restriction, 
+	        a.idn_area idn_area, 
+	        aa.area_code area_code,
+	        a.estimated_end_date as temp_resolution_time,
+	        a.severity severity,
+	        a.status status,
+	        a.comments comments_remarks,
+	        a.comments_shipper comments_shipper,
+	        a.alarm_id alarm_id,
+	        a.origin origin,
+	        
+	        a.alarm_type alarm_type,
+	        tn.is_binary binary
+	        
+		from  tpa_tscada_alarm a, 
+		      tpa_vscada_tag_name tn, 
+		      tpa_varea_tpa aa,
+		      TPA_TSCADA_POINT p
+		where   a.idn_scada_tag_name = tn.idn_scada_tag_name
+		   and  aa.idn_area (+)=a.idn_area
+		   and tn.idn_scada_point=p.idn_scada_point
+       	   and p.idn_pipeline_system=#{idn_system}
+ 		
+	 	<if test="startDate != null">
+			and a.scada_timestamp >=  #{startDate}
+		</if>
+		<if test="endDate != null">
+			and #{endDate} >= a.scada_timestamp 
+		</if>
+		
+		<choose>
+			<when test="status != null and status.length > 0">
+				<foreach item="item" index="index" collection="status"
+		             open="and a.status in (" separator="," close=")">
+		        		#{item}
+		    	</foreach>
+			</when>
+			<otherwise>
+				and a.status in ('no_valid_status')
+			</otherwise>
+		</choose>
+		
+		<choose>
+			<when test="origin != null and origin.length > 0">
+				<foreach item="item2" index="index" collection="origin"
+		             open="and a.origin in (" separator="," close=")">
+		        		#{item2}
+		    	</foreach>
+			</when>
+			<otherwise>
+				and a.origin in ('no_valid_origin')
+			</otherwise>
+		</choose>
+		
+    	order by scada_timestamp desc
+    </select>
+
+    <select id="selectScadaAlarmsPanel" resultMap="ScadaAlarm" parameterType="java.util.TreeMap" fetchSize="400">
+	  select a.idn_scada_alarm idn_scada_alarm, 
+	        tn.scada_tag_name scada_tag_name, 
+	        a.scada_timestamp scada_timestamp, 
+	        tn.scada_label scada_label, 
+	        tn.scada_point  metering_point,
+	        a.capacity_restricction capacity_restriction, 
+	        a.idn_area idn_area, 
+	        aa.area_code area_code,
+	        a.estimated_end_date as temp_resolution_time,
+	        a.severity severity,
+	        a.status status,
+	        a.comments comments_remarks,
+	        a.comments_shipper comments_shipper,
+	        a.alarm_id alarm_id,
+	        a.origin origin,
+	        a.alarm_type alarm_type
+		from  tpa_tscada_alarm a, 
+		      tpa_vscada_tag_name tn, 
+		      tpa_varea_tpa aa
+		where   a.idn_scada_tag_name = tn.idn_scada_tag_name
+		   and  aa.idn_area (+)=a.idn_area 
+ 		
+	 	<if test="shipper != null">
+			and a.status in ('PUBLISHED')
+		</if>
+		<if test="operator != null">
+			and a.status in ('NEW','PUBLISHED')
+		</if>
+		
+    	order by scada_timestamp desc
+    </select>
+
+
+	<update id="updateScadaAlarm" parameterType="com.atos.beans.scadaAlarms.ScadaAlarmBean">
+		UPDATE tpa_tscada_alarm  set
+            aud_last_user=#{username},
+			capacity_restricction = #{capacity_restriction},
+			idn_area= #{idn_area}, 
+			estimated_end_date= #{temp_resolution_time}, 
+			severity= #{severity}, 
+			status= #{status},
+			comments= #{comments_remarks},
+			comments_shipper= #{comments_shipper}
+		where idn_scada_alarm = #{idn_scada_alarm}
+	</update>
+    <!-- offshore 
+	 <select id="selectAreas" resultType="com.atos.beans.ComboFilterNS">
+		select a.idn_area as key, a.area_code as value
+		from tpa_varea_tpa  a   
+		order by  upper(a.area_code)
+    </select>
+    -->
+     <select id="selectAreasSystem" resultType="com.atos.beans.ComboFilterNS">
+		select a.idn_area as key,  a.area_code as value
+		from  tpa_varea_tpa a,
+			  TPA_VZONE_TPA z
+	    where z.idn_zone= a.idn_zone
+	      and z.idn_pipeline_system = #{idn_system}
+		order by UPPER(a.area_code)
+    </select>
+
+
+	<select id="selectArea" resultType="java.lang.String" parameterType="java.math.BigDecimal">
+		select a.area_code
+		from tpa_varea_tpa  a  
+		where a.idn_area = #{idn_area} 
+    </select>
+    
+    <!-- offshore 
+	 <select id="selectAlarmName" resultType="com.atos.beans.ComboFilterNS">
+		select tn.idn_scada_tag_name as key,  tn.scada_tag_name as value
+		from  tpa_vscada_tag_name tn
+		order by scada_tag_name
+    </select>
+    -->
+    <select id="selectAlarmNameSystem" resultType="com.atos.beans.ComboFilterNS">
+		select distinct tn.idn_scada_tag_name as key, tn.scada_tag_name  as value
+        from tpa_vscada_tag_name tn,
+             TPA_TSCADA_POINT p
+        where tn.idn_scada_point=p.idn_scada_point
+       	     and p.idn_pipeline_system=#{idn_system}
+       	     and tn.is_enabled='Y'
+       	     order by UPPER(tn.scada_tag_name)
+    </select>
+    
+    
+    <select id="getAlarmLabelAndPoint" resultType="com.atos.beans.ComboFilterNS">
+		select tn.idn_scada_label  tn.idn_scada_point
+		from  tpa_vscada_tag_name tn
+		where tn.idn_scada_tag_name = #{idn_scada_tag_name}
+		order by scada_tag_name
+    </select>
+    
+    <select id="selectAlarmLabel" resultType="com.atos.beans.ComboFilterNS">
+		
+	<!--  	select idn_scada_label as key, scada_label as value
+		from tpa_tscada_label
+		where idn_scada_label=#{idn_scada_label}
+		order by value-->
+		
+		
+		  select distinct tn.idn_scada_label as key , tn.scada_label  as value
+          from tpa_vscada_tag_name tn
+    	  where tn.idn_scada_tag_name = #{idn_scada_tag_name}
+    </select>
+    
+    <select id="selectAlarmMetering" resultType="com.atos.beans.ComboFilterNS">
+
+		<!--   select idn_scada_point as key, scada_point as valueº
+		from tpa_tscada_point
+		order by value-->
+		
+		
+		select distinct tn.idn_scada_point as key , tn.scada_point  as value
+        from tpa_vscada_tag_name tn
+        where tn.idn_scada_tag_name = #{idn_scada_tag_name}
+        
+    </select>
+    
+  
+     <select id="selectAlarmBinary" resultType="com.atos.beans.ComboFilter">
+		select distinct tn.is_binary as key ,  tn.is_binary as value 
+        from tpa_vscada_tag_name tn
+        where tn.idn_scada_tag_name = #{idn_scada_tag_name}
+        
+    </select>
+    
+      <select id="selectAlarmType" resultType="com.atos.beans.ComboFilter">
+		SELECT val as key, val as value
+		  FROM (SELECT 'ON' AS val FROM dual UNION SELECT 'OFF' AS val FROM dual)
+		WHERE #{binary} = 'Y'
+		UNION
+		SELECT val as key, val as value
+		  FROM (SELECT 'HIGH' AS val FROM dual UNION SELECT 'LOW' AS val FROM dual)
+		WHERE #{binary} = 'N'
+		ORDER BY 1 
+
+        
+    </select>
+  
+    	
+    
+    <insert id="insertScadaAlarms" parameterType="com.atos.beans.scadaAlarms.ScadaAlarmBean">
+		INSERT INTO tpa_tscada_alarm
+		      (idn_scada_alarm, alarm_id,idn_scada_tag_name, scada_timestamp, origin, alarm_type,
+	                                        aud_ins_user,
+	                                        aud_last_user)
+		   VALUES
+		      (tpa_sscada_alarm.nextval,
+		       #{alarm_id},
+		       #{idn_scada_tag_name},
+		       #{scada_timestamp},
+		       #{origin},
+		       #{alarm_type},
+	      #{username},
+	      #{username})
+	</insert>
+</mapper>

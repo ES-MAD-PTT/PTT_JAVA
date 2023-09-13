@@ -1,0 +1,57 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core">
+
+	<p:dataTable widgetVar="w_meteringQualityReportOff1Offshore"
+		id="meteringQualityReportOff1Offshore" var="meteringQualityReportOff"
+		value="#{meteringQualityReportView.itemsOffshore}" reflow="true"
+		style="margin-bottom:20px;border-collapse:collapse" scrollable="true"
+		scrollHeight="100%" paginator="true" rows="15"
+		rowsPerPageTemplate="5,10,15,20,25">
+
+		<shiro:hasPermission name="#{changeSystemView.system}.METERING.QUALITY.REPORT.QUERY">
+
+			<p:columnGroup type="header">
+				<p:row>
+					<p:column rowspan="2" headerText="#{msg['meteringQualityReport_Main_Specifications']}" />
+					<p:column rowspan="2" headerText="#{msg['meteringQualityReport_Unit']}" />
+					<p:column colspan="2" headerText="#{msg['meteringQualityReport_Rayong_Offshore_Mixing_Zone']}" />
+					<p:column colspan="2" headerText="#{msg['meteringQualityReport_Khanom_Offshore_Mixing_Zone']}" />
+				</p:row>
+
+				<p:row>
+					<p:column headerText="#{msg['meteringQualityReport_Min']}" />
+					<p:column headerText="#{msg['meteringQualityReport_Max']}" />
+					<p:column headerText="#{msg['meteringQualityReport_Min']}" />
+					<p:column headerText="#{msg['meteringQualityReport_Max']}" />
+				</p:row>
+			</p:columnGroup>
+
+			<p:column>
+				<h:outputText value="#{meteringQualityReportOff.gasQualityParam}" />
+			</p:column>
+			<p:column>
+				<h:outputText value="#{meteringQualityReportOff.unit}" />
+			</p:column>
+			<p:column>
+				<h:outputText value="#{meteringQualityReportOff.rayongMin}" style="float:right" />
+			</p:column>
+			<p:column>
+				<h:outputText value="#{meteringQualityReportOff.rayongMax}" style="float:right" />
+			</p:column>
+			<p:column>
+				<h:outputText value="#{meteringQualityReportOff.khanomMin}" style="float:right" />
+			</p:column>
+			<p:column>
+				<h:outputText value="#{meteringQualityReportOff.khanomMax}" style="float:right" />
+			</p:column>
+
+		</shiro:hasPermission>
+	</p:dataTable>
+
+</ui:composition>
+

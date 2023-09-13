@@ -1,0 +1,321 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:atos="http://java.sun.com/jsf/composite/atos"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home"
+				style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_allocation']}" url="#" />
+			<p:menuitem value="#{msg['menu_adjustment_allocation']}"
+				url="/pages/allocation/adjustmentAllocation.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+
+		<h:form id="form"
+			style="width:100%;height:98%;border-collapse:collapse"
+			fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="10000" />
+
+			<p:layout widgetVar="AllocationAdjustLayout"
+				style="width:100%;height:100%" showEffect="clip" hideEffect="clip">
+
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">
+
+					<p:panelGrid columns="2" style="width:100%">
+
+						<p:panelGrid>
+
+							<p:row>
+
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['adjust_alloc_start_date']}" />
+								</p:column>
+
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['adjust_alloc_end_date']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['adjust_alloc_shipper']}" />
+								</p:column>
+
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['adjust_alloc_zones']}" />
+								</p:column>
+
+
+							</p:row>
+
+							<p:row>
+								<p:column>
+									<p:calendar id="startDate" size="11" pattern="dd/MM/yyyy" value="#{adjustAlloc.filters.startDate}"
+										mask="true" showButtonPanel="true" showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="startDate"></p:ajax>
+										<p:ajax event="change" update="startDate"></p:ajax>
+									</p:calendar>
+								</p:column>
+								<p:column>
+									<p:calendar id="endDate" size="11" pattern="dd/MM/yyyy" value="#{adjustAlloc.filters.endDate}"
+										mask="true" showButtonPanel="true" showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="endDate"></p:ajax>
+										<p:ajax event="change" update="endDate"></p:ajax>
+									</p:calendar>
+								</p:column>
+								<shiro:hasPermission name="#{changeSystemView.system}.ALLOCATION.ADJUSTMENT.QUERY_TOTAL">
+									<p:column>
+										<p:selectOneMenu widgetVar="w_shipper" id="shipper" style="width:100px" value="#{adjustAlloc.filters.shipperId}" >
+											<f:selectItem itemLabel=" " itemValue="" />
+	        								<f:selectItems value="#{adjustAlloc.shipperId.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+										
+						           		</p:selectOneMenu>							
+									</p:column>
+								</shiro:hasPermission>
+								<shiro:lacksPermission name="#{changeSystemView.system}.ALLOCATION.ADJUSTMENT.QUERY_TOTAL">
+									<p:column>
+										<p:selectOneMenu disabled="true" widgetVar="w_shipper" id="shipper" style="width:100px" value="#{adjustAlloc.filters.shipperId}" >
+											<f:selectItem itemLabel=" " itemValue="" />
+	        								<f:selectItems value="#{adjustAlloc.shipperId.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+										
+						           		</p:selectOneMenu>							
+									</p:column>
+								</shiro:lacksPermission>
+								<p:column>
+									<p:selectOneMenu widgetVar="w_zones" id="zones"  style="width:100px"   value="#{adjustAlloc.filters.zoneId}" >
+							       		<f:selectItem itemLabel="" itemValue="" />
+        								<f:selectItems value="#{adjustAlloc.zoneId.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>									
+								</p:column>
+							</p:row>
+
+						</p:panelGrid>
+
+
+
+						<p:panelGrid columns="2" style="float:right;top:0px">
+
+							<shiro:hasPermission
+								name="#{changeSystemView.system}.ALLOCATION.ADJUSTMENT.QUERY">
+								<p:commandButton value="#{msg['search']}"
+									icon="ui-icon fa fa-search"
+									actionListener="#{adjustAlloc.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,:#{p:component('allocations1')}" />
+							</shiro:hasPermission>
+								<p:commandButton  onclick="PF('AllocationAdjustLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+
+							<shiro:hasPermission
+								name="#{changeSystemView.system}.ALLOCATION.ADJUSTMENT.QUERY">
+								<p:commandButton value="#{msg['clear']}"
+									actionListener="#{adjustAlloc.onClear}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" process="@this"
+									update="msgs,@form" />
+							</shiro:hasPermission>
+
+							<shiro:hasPermission
+								name="#{changeSystemView.system}.ALLOCATION.ADJUSTMENT.RUN">
+								<p:commandButton id="executeButton" type="button"
+									value="#{msg['all_man_execute']}" style="float:left;"
+									icon="ui-icon fa fa-gears" onclick="PF('dlgExecute').show();" />
+							</shiro:hasPermission>
+
+
+						</p:panelGrid>
+					</p:panelGrid>
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center"
+					resizable="false" closable="false" collapsible="false"
+					style="border: 0;">
+
+					<p:dataTable widgetVar="w_allocations1" id="allocations1"
+						var="item" value="#{adjustAlloc.items}" reflow="true"
+						editable="true"
+						style="margin-bottom:20px;border-collapse:collapse"
+						scrollable="true" scrollHeight="100%"  paginator="true" rows="15"
+						rowsPerPageTemplate="5,10,15,20,25">
+
+						<f:facet name="header"> 
+							<p:outputPanel style="height:25px">
+								<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+      							<p:columnToggler datasource="allocations1" trigger="toggler" style="width:200px"/>
+							</p:outputPanel>
+						</f:facet>
+
+					        <shiro:hasPermission name="#{changeSystemView.system}.ALLOCATION.ADJUSTMENT.ADD">
+						 		<p:ajax event="rowEditInit" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','hidden')});" />
+								<p:ajax event="rowEdit" listener="#{adjustAlloc.onRowEdit}" update=":form:msgs,:#{p:component('allocations1')}" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>   
+								<p:ajax event="rowEditCancel" listener="#{adjustAlloc.onRowCancel}" update=":form:msgs,:#{p:component('allocations1')}" onstart="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>
+					 		</shiro:hasPermission>
+
+						<shiro:hasPermission
+							name="#{changeSystemView.system}.ALLOCATION.ADJUSTMENT.QUERY">
+
+					       <p:column headerText="#{msg['adjust_alloc_gas_day']}" style="width:70px">
+			               		<h:outputText value="#{item.gasDay}" >
+			              				<f:convertDateTime pattern="dd/MM/yyyy" />
+			              		</h:outputText>
+					       </p:column>
+
+					       <p:column headerText="#{msg['adjust_alloc_shipper_code']}">
+					       		<h:outputText value ="#{item.shipperCode}"/>
+					       </p:column>
+					       <p:column headerText="#{msg['adjust_alloc_zone']}" style="width:65px">
+					       		<h:outputText value ="#{item.zoneCode}"/>
+					       </p:column>
+
+					       <p:column headerText="#{msg['adjust_alloc_imbalanceStock']}">
+					       		<h:outputText value ="#{item.imbalanceStock}" style="float:right" >
+					       			<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+					       		</h:outputText>
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['adjust_alloc_allocatedAdjust']}">
+					       		<h:outputText value ="#{item.allocatedAdjust}" style="float:right" >
+					       		  <f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+					       		</h:outputText>
+					       </p:column>
+					       <shiro:hasPermission name="#{changeSystemView.system}.ALLOCATION.ADJUSTMENT.QUERY_TOTAL">
+						       <p:column headerText="#{msg['adjust_alloc_pendingAdjust']}">
+						       		<h:outputText value ="#{item.pendingAdjust}" style="float:right" >
+						       			<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+						       		</h:outputText>
+						       </p:column>
+						       
+						       <p:column headerText="#{msg['adjust_alloc_finalImbalanceStock']}">
+						       		<h:outputText value ="#{item.finalImbalanceStock}" style="float:right" >
+						       			<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+						       		</h:outputText>
+						       </p:column>
+	
+						       <p:column headerText="#{msg['adjust_alloc_imbalance_correction']}">
+						       		<p:cellEditor>
+						               <f:facet name="output"><h:outputText value="#{item.imbalanceCorrection}" >
+						               		<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+						               		</h:outputText>
+						               	</f:facet>
+						               <f:facet name="input">
+						               		<p:inputNumber value="#{item.imbalanceCorrection}"  required="true"  style="width:100%" 
+						               			label="#{msg['adjust_alloc_imbalance_correction']}" 
+						               			requiredMessage="#{msg['systemParameter_value']}: #{msg['empty_field']}" 
+						               			validatorMessage="#{msg['systemParameter_value']}: #{msg['lenght_field']}"
+					               				maxlength="" decimalSeparator="." thousandSeparator="," decimalPlaces="4">
+					               			</p:inputNumber>
+						               
+						           
+						               	</f:facet>
+						             
+						           </p:cellEditor>
+						       </p:column>
+						       </shiro:hasPermission>
+								   <p:column headerText="#{msg['adjust_alloc_comments']}">
+							       		<p:cellEditor>
+							               <f:facet name="output"><h:outputText value="#{item.operator_comments}" style="float:right"/></f:facet>
+							               <f:facet name="input">
+								               	<p:inputTextarea cols="22" autoResize="true"
+													value="#{item.operator_comments}"
+													style="width:100%;white-space:initial !important"
+													label="#{msg['adjust_alloc_comments']}" >
+													<f:validateLength maximum="4000" />
+												</p:inputTextarea>
+							               	</f:facet>
+							             </p:cellEditor>
+							       </p:column>	
+						       </shiro:hasPermission>
+						      <shiro:hasPermission name="#{changeSystemView.system}.ALLOCATION.ADJUSTMENT.ADD">			      
+						       <p:column style="width:32px">
+						           <p:rowEditor rendered="#{adjustAlloc.renderItemEditor(item)}"/>
+						       </p:column>
+						     </shiro:hasPermission>  
+					</p:dataTable>
+				</p:layoutUnit>
+			</p:layout>
+		</h:form>
+
+
+		<shiro:hasPermission
+			name="#{changeSystemView.system}.ALLOCATION.ADJUSTMENT.RUN">
+			<!-- Si no se usa appendTo="@(body)", la ventana modal bloquea toda la interfaz. -->
+			<p:dialog header="#{msg['adjust_alloc_execution_dialog_header']}"
+				widgetVar="dlgExecute" modal="true" appendTo="@(body)"
+				minHeight="150" width="350">
+				<h:form id="executeFormId"
+					style="width:100%;height:98%;border-collapse:collapse">
+
+					<p:growl id="msgs" showDetail="true" life="10000" globalOnly="true" />
+					<p:panelGrid id="executePanelGridId">
+						<p:panelGrid id="executePanelGridLeftId">
+							<p:row>
+								<p:column colspan="2">
+									<h:outputText value="#{msg['adjust_alloc_execution_intro']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['all_man_from']}" />
+								</p:column>
+								<p:column>
+									<h:outputText value="#{adjustAlloc.responsePeriodStartDate}">
+										<f:convertDateTime pattern="dd/MM/yyyy" />
+									</h:outputText>
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['all_man_to']}" />
+								</p:column>
+								<p:column>
+									<h:outputText value="#{adjustAlloc.responsePeriodEndDate}">
+										<f:convertDateTime pattern="dd/MM/yyyy" />
+									</h:outputText>
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column />
+								<p:column />
+							</p:row>
+							<p:row>
+								<p:column />
+								<p:column />
+							</p:row>
+							<p:row>
+								<p:column style="font-weight: bold;">
+									<p:commandButton value="#{msg['execute']}" style="float:right;"
+										actionListener="#{adjustAlloc.onExecute}"
+										update="#{p:component('msgs')}"
+										onstart="PF('grabando').show()"
+										oncomplete="PF('grabando').hide();PF('dlgExecute').hide()" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<p:commandButton value="#{msg['cancel']}"
+										oncomplete="PF('dlgExecute').hide()" />
+								</p:column>
+							</p:row>
+						</p:panelGrid>
+					</p:panelGrid>
+				</h:form>
+			</p:dialog>
+		</shiro:hasPermission>
+	</ui:define>
+
+	<script type="text/javascript">
+		function start() {
+			PF('cargando').show();
+		}
+
+		function stop() {
+			PF('cargando').hide();
+		}
+	</script>
+</ui:composition>

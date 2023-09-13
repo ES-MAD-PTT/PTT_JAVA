@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atos.mapper.forecasting.ShipperSubmissionForecastingMapper">
+    <select id="selectIdnUserGroup" parameterType="com.atos.filters.forecasting.ShipperForecastingSubmissionFileFilter" resultType="java.math.BigDecimal">
+    select u.idn_user_group
+      from tpa_tuser_group ug, tpa_tuser u
+     where ug.idn_user_group_type =
+           (select idn_user_group_type
+              from tpa_tuser_group_type
+             where type_code = 'SHIPPER')
+       and u.idn_user_group = ug.idn_user_group
+       and u.user_id = #{user}
+	order by u.idn_user_group
+    </select>
+	<select id="selectOperationCategory" resultType="java.math.BigDecimal">
+		select idn_operation_category from tpa_toperation_category where category_code = #{type}
+	</select>
+	<select id="selectOperationTerm" resultType="java.math.BigDecimal">
+		select idn_operation_term from tpa_toperation_term where term_code = #{type}
+	</select>
+	<select id="selectOperation" parameterType="java.util.TreeMap" resultType="java.math.BigDecimal">
+		select idn_operation from tpa_toperation where idn_operation_category = #{idn_operation_category} and idn_operation_term = #{idn_operation_term}
+	</select>
+
+ 	<select id="selectForecastingCode" parameterType="com.atos.beans.forecasting.ForecastingBean" resultType="java.lang.String">
+		SELECT forecasting_code
+		  FROM tpa_tforecasting
+		 WHERE idn_operation = #{idn_operation}
+		   AND idn_user_group = #{idn_user_group}
+		   AND start_date = #{start_date}
+		   AND end_date = #{end_date}
+		   AND version_date = (SELECT MAX(version_date)
+		                         FROM tpa_tforecasting p
+		                        WHERE idn_operation = #{idn_operation}
+		                          AND idn_user_group = #{idn_user_group}
+		                          AND start_date = #{start_date}
+		                          AND end_date = #{end_date}
+		                          AND IDN_PIPELINE_SYSTEM = #{idnSystem})
+			AND IDN_PIPELINE_SYSTEM = #{idnSystem}
+	</select>
+	<insert id="insertOperationFile" useGeneratedKeys="true" keyProperty="idn_operation_file" keyColumn="idn_operation_file" parameterType="com.atos.beans.forecasting.OperationFileBean">
+		insert into tpa_toperation_file
+		  (idn_operation_file,
+		   IDN_OPERATION_CATEGORY,
+		   IDN_OPERATION_TERM,
+		   FILE_NAME,		   
+		   BINARY_DATA,
+		   STATUS,
+		   XML_DATA,
+	                                        aud_ins_user,
+	                                        aud_last_user)
+		values
+		  (tpa_soperation_file.nextval,
+		   #{idn_operation_category},
+		   #{idn_operation_term},
+		   #{file_name},		 
+		   #{binary_data},
+		   'NEW',
+		   #{xml_data},
+	      #{username},
+	      #{username})
+	</insert>
+	<insert id="insertNewForecasting" useGeneratedKeys="true" keyProperty="idn_forecasting" keyColumn="idn_forecasting" parameterType="com.atos.beans.forecasting.ForecastingBean">
+		insert into tpa_tforecasting
+		  (idn_forecasting,
+		  forecasting_code,
+	      idn_operation,
+	      idn_user_group,
+	      start_date,
+	      end_date,
+	      idn_shipper_file,
+	      idn_operator_file,
+	      idn_pipeline_system,
+	                                        aud_ins_user,
+	                                        aud_last_user
+)
+		values
+		  (tpa_sforecasting.nextval,
+			#{forecasting_code},
+			#{idn_operation},
+			#{idn_user_group},
+			#{start_date},
+			#{end_date},
+			#{idn_shipper_file},
+			#{idn_operator_file},
+			#{idnSystem},
+	      #{username},
+	      #{username})
+	</insert>
+	
+	<select id="getInfoShipperSubForecastingBean" parameterType="java.math.BigDecimal" resultType="com.atos.beans.forecasting.ForecastingMailBean">
+		SELECT u.user_group_id, o.term_desc, f.start_date, f.end_date 
+		FROM tpa_tforecasting f, tpa_tuser_group u, tpa_voperation o
+		where f.idn_user_group = u.idn_user_group and f.idn_operation = o.idn_operation
+		and f.idn_forecasting = #{idn_forecasting}
+	</select>
+</mapper>

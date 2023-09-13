@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+
+<mapper namespace="com.atos.mapper.metering.MeteringQualityReportMapper">
+<!-- 
+
+	private Date gasDay;
+	
+	private String gasQualityParam;
+	private String unit;
+	
+	private BigDecimal mixEastMin;
+	private BigDecimal mixEastMax;
+	
+	private BigDecimal mixWestMin;
+	private BigDecimal mixWestMax;
+	
+	private BigDecimal delEastMin;
+	private BigDecimal delEastMax;
+	
+	private BigDecimal delWestMin;
+	private BigDecimal delWestMax;
+	
+	private BigDecimal delEastWestMin;
+	private BigDecimal delEastWestMax;
+	
+ -->
+<resultMap type="com.atos.beans.metering.MeteringQualityReportBean" id="MeteringQualityReport">
+
+	    <result property="gasQualityParam" column="gasQualityParam"/>
+    	<result property="unit" column="unit"/>
+    	
+    	<result property="mixEastMin" column="mixEastMin"/>
+    	<result property="mixEastMax" column="mixEastMax"/>
+    	<result property="mixWestMin" column="mixWestMin"/>
+    	<result property="mixWestMax" column="mixWestMax"/>
+    	
+    	<result property="delEastMin" column="delEastMin"/>
+    	<result property="delEastMax" column="delEastMax"/>
+    	
+    	<result property="delWestMin" column="delWestMin"/>
+    	<result property="delWestMax" column="delWestMax"/>
+    	
+		<result property="delEastWestMin" column="delEastWestMin"/>
+    	<result property="delEastWestMax" column="delEastWestMax"/>
+    	
+</resultMap>
+
+ <select id="selectMeteringQualityReport"  parameterType="com.atos.filters.metering.MeteringQualityReportFilter" resultMap="MeteringQualityReport"> 
+	SELECT main_query.PARAMETER_DESC AS GasQualityParam,
+       main_query.UNIT_DESC AS Unit,
+       MIN(DECODE(main_query.TYPE_ZONE, 'Mixing Zones',   DECODE(main_query.ZONE_CODE, 'EAST',      main_query.VALUE))) AS mixEastMin,
+       MAX(DECODE(main_query.TYPE_ZONE, 'Mixing Zones',   DECODE(main_query.ZONE_CODE, 'EAST',      main_query.VALUE))) AS mixEastMax,
+       MIN(DECODE(main_query.TYPE_ZONE, 'Mixing Zones',   DECODE(main_query.ZONE_CODE, 'WEST',      main_query.VALUE))) AS mixWestMin,
+       MAX(DECODE(main_query.TYPE_ZONE, 'Mixing Zones',   DECODE(main_query.ZONE_CODE, 'WEST',      main_query.VALUE))) AS mixWestMax,
+       MIN(DECODE(main_query.TYPE_ZONE, 'Delivery Zones', DECODE(main_query.ZONE_CODE, 'EAST',      main_query.VALUE))) AS delEastMin,
+       MAX(DECODE(main_query.TYPE_ZONE, 'Delivery Zones', DECODE(main_query.ZONE_CODE, 'EAST',      main_query.VALUE))) AS delEastMax,
+       MIN(DECODE(main_query.TYPE_ZONE, 'Delivery Zones', DECODE(main_query.ZONE_CODE, 'WEST',      main_query.VALUE))) AS delWestMin,
+       MAX(DECODE(main_query.TYPE_ZONE, 'Delivery Zones', DECODE(main_query.ZONE_CODE, 'WEST',      main_query.VALUE))) AS delWestMax,
+       MIN(DECODE(main_query.TYPE_ZONE, 'Delivery Zones', DECODE(main_query.ZONE_CODE, 'EAST-WEST', main_query.VALUE))) AS delEastWestMin,
+       MAX(DECODE(main_query.TYPE_ZONE, 'Delivery Zones', DECODE(main_query.ZONE_CODE, 'EAST-WEST', main_query.VALUE))) AS delEastWestMax
+  FROM
+    (SELECT vzone.ZONE_CODE,
+            qparam.PARAMETER_DESC,
+            mgasq.VALUE,
+            tunit.UNIT_DESC,
+            DECODE(ptype.TYPE_CODE, 'ENTRY', 'Mixing Zones', 'EXIT', 'Delivery Zones') TYPE_ZONE,
+            DECODE(qparam.PARAMETER_DESC, 'Wobbe Index', 1, 'Heating Value', 2, 3) SORT_VALUE
+       FROM TPA_TMETERING          tmetering,
+            TPA_TGAS_QUALITY_LIST  qlist,
+            TPA_TGASQ_LIST_ITEM    litem,
+            TPA_TGAS_QUALITY_PARAM qparam,
+            TPA_TMETERING_GASQ     mgasq,
+            TPA_TSYSTEM_POINT      spoint,
+            TPA_VAREA_TPA          varea,
+            TPA_VZONE_TPA          vzone,
+            TPA_TUNIT              tunit,
+            TPA_TSYSTEM_POINT_TYPE ptype,
+            TPA_TPIPELINE_SYSTEM   psystem
+      WHERE tmetering.GAS_DAY = #{gasDay}
+        AND tmetering.VERSION_DATE = (SELECT MAX(tmetering_mvd.VERSION_DATE)
+                                        FROM TPA_TMETERING tmetering_mvd
+                                       WHERE tmetering_mvd.GAS_DAY = tmetering.GAS_DAY
+                                         AND tmetering_mvd.IDN_SYSTEM_POINT = tmetering.IDN_SYSTEM_POINT)
+       AND mgasq.IDN_METERING(+) = tmetering.IDN_METERING
+       AND qlist.LIST_CODE = 'GQL-METERING'
+       AND qlist.IDN_GAS_QUALITY_LIST = litem.IDN_GAS_QUALITY_LIST
+       AND litem.IDN_GAS_QUALITY_PARAM = qparam.IDN_GAS_QUALITY_PARAM
+       AND qparam.IDN_GAS_QUALITY_PARAM = mgasq.IDN_GAS_QUALITY_PARAM(+)
+       AND spoint.IDN_SYSTEM_POINT = tmetering.IDN_SYSTEM_POINT
+       AND tmetering.GAS_DAY BETWEEN spoint.START_DATE AND NVL(spoint.END_DATE, TO_DATE('31/12/9999', 'dd/mm/yyyy'))
+       AND varea.IDN_AREA = spoint.IDN_AREA
+       AND tmetering.GAS_DAY BETWEEN varea.START_DATE AND NVL(varea.END_DATE, TO_DATE('31/12/9999', 'dd/mm/yyyy'))
+       AND vzone.ZONE_CODE IN ('EAST', 'WEST', 'EAST-WEST')
+       AND vzone.IDN_ZONE = varea.IDN_ZONE
+       AND tunit.IDN_UNIT = qparam.IDN_UNIT
+       AND spoint.IDN_SYSTEM_POINT_TYPE = ptype.IDN_SYSTEM_POINT_TYPE
+       AND psystem.PIPELINE_SYSTEM_CODE = 'ONSHORE'
+       AND psystem.IDN_PIPELINE_SYSTEM = vzone.IDN_PIPELINE_SYSTEM) main_query
+  GROUP BY main_query.PARAMETER_DESC, main_query.UNIT_DESC, main_query.SORT_VALUE
+  ORDER BY main_query.SORT_VALUE
+</select>
+
+<resultMap type="com.atos.beans.metering.MeteringQualityReportOffshoreBean" id="MeteringQualityReportOffshore">
+	    <result property="gasQualityParam" column="gasqualityparam"/>
+    	<result property="unit" column="unit"/>
+    	<result property="rayongMin" column="rayongMin"/>
+    	<result property="rayongMax" column="rayongMax"/>
+    	<result property="khanomMin" column="khanomMin"/>
+    	<result property="khanomMax" column="khanomMax"/>    	
+</resultMap>
+
+ <select id="selectMeteringQualityReportOffshore"  parameterType="com.atos.filters.metering.MeteringQualityReportFilter" resultMap="MeteringQualityReportOffshore"> 
+	  SELECT main_query.parameter_desc AS gasqualityparam,
+	       main_query.unit_desc AS unit,
+	       MIN(decode(main_query.contract_point, 'Gas RY', main_query.value)) AS rayongMin,
+	       MAX(decode(main_query.contract_point, 'Gas RY', main_query.value)) AS rayongMax,
+	       MIN(decode(main_query.contract_point, 'Gas KN', main_query.value)) AS khanomMin,
+	       MAX(decode(main_query.contract_point, 'Gas KN', main_query.value)) AS khanomMax
+	  FROM (SELECT qparam.parameter_desc,
+	               mgasq.value,
+	               tunit.unit_desc,
+	               cpoint.point_code AS contract_point,
+	               decode(qparam.parameter_desc, 'Wobbe Index', 1, 'Heating Value', 2, 3) sort_value
+	          FROM tpa_tmetering           tmetering,
+	               tpa_tgas_quality_list   qlist,
+	               tpa_tgasq_list_item     litem,
+	               tpa_tgas_quality_param  qparam,
+	               tpa_tmetering_gasq      mgasq,
+	               tpa_tsystem_point       spoint,
+	               tpa_varea_tpa           varea,
+	               tpa_vzone_tpa           vzone,
+	               tpa_tunit               tunit,
+	               tpa_tpipeline_system    psystem,
+	               tpa_tsystem_point_param spp,
+	               tpa_tsystem_point       cpoint
+	         WHERE tmetering.gas_day = #{gasDay}    
+	           AND tmetering.version_date =
+	               (SELECT MAX(tmetering_mvd.version_date)
+	                  FROM tpa_tmetering tmetering_mvd
+	                 WHERE tmetering_mvd.gas_day = tmetering.gas_day
+	                   AND tmetering_mvd.idn_system_point = tmetering.idn_system_point)
+	           AND mgasq.idn_metering(+) = tmetering.idn_metering
+	           AND qlist.list_code = 'GQL-METERING'
+	           AND qlist.idn_gas_quality_list = litem.idn_gas_quality_list
+	           AND litem.idn_gas_quality_param = qparam.idn_gas_quality_param
+	           AND qparam.idn_gas_quality_param = mgasq.idn_gas_quality_param(+)
+	           AND spoint.idn_system_point = tmetering.idn_system_point
+	           AND tmetering.gas_day BETWEEN spoint.start_date AND nvl(spoint.end_date, to_date('31/12/9999', 'dd/mm/yyyy'))
+	           AND varea.idn_area = spoint.idn_area
+	           AND tmetering.gas_day BETWEEN varea.start_date AND nvl(varea.end_date, to_date('31/12/9999', 'dd/mm/yyyy'))
+	           AND vzone.idn_zone = varea.idn_zone
+	           AND tunit.idn_unit = qparam.idn_unit
+	           AND psystem.pipeline_system_code = 'OFFSHORE'
+	           AND psystem.idn_pipeline_system = vzone.idn_pipeline_system 
+	           AND spoint.idn_system_point = spp.idn_system_point
+	           AND spp.idn_contract_point = cpoint.idn_system_point
+	           AND spp.version_date = (SELECT MAX(sppx.version_date)
+	                                     FROM tpa_tsystem_point_param sppx
+	                                    WHERE sppx.idn_system_point = spp.idn_system_point
+	                                      AND sppx.start_date = spp.start_date)
+	           AND tmetering.gas_day BETWEEN spp.start_date AND
+	               nvl(spp.end_date,
+	                   nvl((SELECT MIN(sppy.start_date) - 1
+	                         FROM tpa_tsystem_point_param sppy
+	                        WHERE sppy.start_date > spp.start_date
+	                          AND nvl(sppy.end_date, sppy.start_date) >= sppy.start_date
+	                          AND sppy.idn_system_point = spp.idn_system_point
+	                          AND sppy.version_date = (SELECT MAX(sppyx.version_date)
+	                                                     FROM tpa_tsystem_point_param sppyx
+	                                                    WHERE sppyx.idn_system_point = sppy.idn_system_point
+	                                                      AND sppyx.start_date = sppy.start_date)),
+	                       to_date('31/12/9999', 'dd/mm/yyyy')))) main_query
+	 GROUP BY main_query.parameter_desc,
+	          main_query.unit_desc,
+	          main_query.sort_value
+	 ORDER BY main_query.sort_value
+</select>
+
+</mapper>

@@ -1,0 +1,659 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+
+<mapper namespace="com.atos.mapper.dam.MeteredPointMapper">
+
+    <resultMap type="com.atos.beans.dam.MeteredPointBean" id="MeteredPoint">
+        <id column="idn_system_point" property="idn_system_point"  /> 
+		<result property="idn_area" column="idn_area"/>
+		<result property="idn_subarea" column="idn_subarea"/>
+		<result property="idn_system_point_group" column="idn_system_point_group"/>
+		<result property="idn_system_point_type" column="idn_system_point_type"/>
+		<result property="idn_zone" column="idn_zone"/>
+		<result property="idn_pipeline_system" column="idn_pipeline_system"/>
+		<result property="idn_customer_type" column="idn_customer_type"/>
+		<result property="idn_system_point_nomination" column="idn_system_point_nomination"/>
+        <result property="idn_system_point_contract"   column="idn_system_point_contract"/>
+			
+		<result property="meteringID" column="metering_id"/>   
+        <result property="id" column="point_code"/>   
+        	<result property="name" column="point_desc"/>
+	        <result property="pointType" column="type_desc"/>
+	        <result property="nominalCapacity" column="nominal_capacity"/>
+	        <result property="minPressure" column="min_pressure"/>
+	        <result property="maxPressure" column="max_pressure"/>
+	        <result property="customerType" column="customer_type_desc"/>
+	        <result property="nominationPoint" column="point_code_nomination"/>
+	        <result property="contractPoint" column="point_code_contract"/>
+	        <result property="qualityPoint" column="point_code_quality"/>
+        <result property="latitude" column="latitude"/>
+        <result property="longitud" column="longitude"/>
+        <result property="systemCode" column="pipeline_system_code"/>
+        <result property="zone" column="zone_code"/>
+        <result property="area" column="area_code"/>
+        <result property="subarea" column="subarea_code"/>
+	        <result property="conectingPartyPhoneNumber" column="con_party_phone"/>
+	        <result property="conectingPartyEmail" column="con_party_email"/>
+	        <result property="conectingPartyName" column="con_party_name"/>
+        <result property="startDate" column="start_date"/>   
+        <result property="endDate" column="end_date"/>  
+        <result property="versionDate" column="version_date"/>
+        
+    </resultMap>
+     
+    <select id="selectMeteredPoints" resultMap="MeteredPoint">
+	SELECT tp.idn_system_point idn_system_point, 
+            pp.METERING_ID metering_id,
+            tp.POINT_CODE point_code, 
+            tp.POINT_DESC point_desc,
+            tp.TYPE_DESC type_desc, 
+            pp.NOMINAL_CAPACITY nominal_capacity, 
+            pp.MIN_PRESSURE min_pressure,
+            pp.MAX_PRESSURE max_pressure,
+            ct.TYPE_DESC customer_type_desc,
+            nomp.point_code point_code_nomination,  
+            conp.point_code point_code_contract,
+            qual.point_code point_code_quality,
+            tp.LATITUDE latitude,
+            tp.LONGITUDE longitude,
+            ps.PIPELINE_SYSTEM_CODE pipeline_system_code, 
+            z.ZONE_CODE zone_code, 
+            a.AREA_CODE area_code, 
+            sub.SUBAREA_CODE subarea_code,
+            pp.CON_PARTY_PHONE con_party_phone, 
+            pp.CON_PARTY_NAME con_party_name, 
+            pp.CON_PARTY_EMAIL con_party_email,
+            pp.start_date, 
+            pp.end_date,
+            a.IDN_AREA idn_area, 
+            sub.idn_subarea idn_subarea,
+            tp.IDN_SYSTEM_POINT_GROUP  idn_system_point_group,
+            tp.IDN_SYSTEM_POINT_TYPE idn_system_point_type,
+            z.IDN_ZONE idn_zone,
+            ps.IDN_PIPELINE_SYSTEM  idn_pipeline_system,
+            ct.idn_customer_type idn_customer_type,
+            nomp.idn_system_point idn_system_point_nomination,
+            conp.idn_system_point idn_system_point_contract,
+            qual.idn_system_point idn_system_point_quality,
+            pp.idn_system_point_param idn_system_point_param    
+     FROM tpa_vsystem_point tp, 
+          tpa_tsystem_point_param  pp, 
+          tpa_tcustomer_type ct,
+          tpa_tsystem_point nomp, 
+          tpa_tsystem_point conp, 
+          tpa_tsystem_point qual,
+          tpa_varea_tpa a, 
+          TPA_VZONE_TPA z, 
+          tpa_tpipeline_system ps, 
+          tpa_tsubarea sub
+    WHERE tp.idn_system_point =  pp.idn_system_point
+      AND tp.group_code= 'METERED'
+      AND ct.IDN_CUSTOMER_TYPE (+)= pp.IDN_CUSTOMER_TYPE
+      AND nomp.idn_system_point (+)= pp.idn_nomination_point
+      AND conp.idn_system_point (+)= pp.idn_contract_point
+      AND qual.idn_system_point (+)= pp.idn_quality_point
+      AND sub.IDN_SUBAREA (+) = pp.IDN_SUBAREA
+      AND a.idn_area = nomp.IDN_AREA
+      AND a.IDN_ZONE = z.IDN_ZONE
+      AND z.IDN_PIPELINE_SYSTEM = ps.IDN_PIPELINE_SYSTEM 
+      AND nvl(pp.end_date, pp.start_date) >= pp.start_date
+      AND pp.version_date = (SELECT max(ppx.version_date) 
+                                FROM tpa_tsystem_point_param ppx 
+                                WHERE pp.idn_system_point = ppx.idn_system_point 
+                                AND pp.start_date = ppx.start_date)
+	
+	<if test="startDate != null">
+		  AND nvl(tp.end_date,to_date('9999/12/31','yyyy/mm/dd'))>=  #{startDate}
+		  AND nvl(pp.end_date, nvl((SELECT MIN(ppy.start_date) - 1
+                                  FROM tpa_tsystem_point_param ppy
+                                 WHERE ppy.idn_system_point = pp.idn_system_point
+                                   AND ppy.start_date > pp.start_date
+                                   AND nvl(ppy.end_date, ppy.start_date) >= ppy.start_date
+                                   AND ppy.version_date = (SELECT max(ppz.version_date) 
+                                                             FROM tpa_tsystem_point_param ppz
+                                                            WHERE ppz.idn_system_point = ppy.idn_system_point 
+                                                              AND ppz.start_date = ppy.start_date)), to_date('9999/12/31','yyyy/mm/dd')))>=  #{startDate}
+	</if>
+	<if test="endDate != null">
+		  AND #{endDate} >= tp.start_date
+		  AND #{endDate} >= pp.start_date 
+	</if>
+	<if test="id != null and id != ''">
+		 <!--  and tp.point_code = #{id} -->
+		 AND tp.idn_system_point = #{id}
+	</if>
+	<if test="pointType != null and pointType != ''">
+		 AND tp.idn_system_point_type = #{pointType}
+	</if>
+	<!-- offshore
+	<if test="systemCode != null and systemCode != ''">
+		  and ps.idn_pipeline_system = #{systemCode}
+	</if>
+	 -->
+	   AND ps.idn_pipeline_system = #{idn_system}
+	 
+	<if test="zone != null and zone != ''">
+		AND z.idn_zone = #{zone}
+	</if>
+	<if test="area != null and area != ''">
+		  AND a.idn_area = #{area}
+	</if>
+	 ORDER BY UPPER (metering_id)
+		
+    </select>
+    
+     <select id="selectMeteredPointsQuery" resultMap="MeteredPoint">
+	SELECT tp.idn_system_point idn_system_point, 
+            pp.METERING_ID metering_id,
+            tp.POINT_CODE point_code, 
+            tp.POINT_DESC point_desc,
+            tp.TYPE_DESC type_desc, 
+            pp.NOMINAL_CAPACITY nominal_capacity, 
+            pp.MIN_PRESSURE min_pressure,
+            pp.MAX_PRESSURE max_pressure,
+            ct.TYPE_DESC customer_type_desc,
+            nomp.point_code point_code_nomination,  
+            conp.point_code point_code_contract,
+            qual.point_code point_code_quality,
+            tp.LATITUDE latitude,
+            tp.LONGITUDE longitude,
+            ps.PIPELINE_SYSTEM_CODE pipeline_system_code, 
+            z.ZONE_CODE zone_code, 
+            a.AREA_CODE area_code, 
+            sub.SUBAREA_CODE subarea_code,
+            pp.CON_PARTY_PHONE con_party_phone, 
+            pp.CON_PARTY_NAME con_party_name, 
+            pp.CON_PARTY_EMAIL con_party_email,
+            pp.start_date,
+            <!--IHP 01/03/2022 CR5-CR92 - I	-->			
+            nvl(pp.end_date, nvl((SELECT MIN(ppy.start_date) - 1
+                                  FROM tpa_tsystem_point_param ppy
+                                  WHERE ppy.idn_system_point = pp.idn_system_point
+                                  AND ppy.start_date > pp.start_date
+                                  AND nvl(ppy.end_date, ppy.start_date) >= ppy.start_date
+                                  AND ppy.version_date = (SELECT max(ppz.version_date) 
+                                                          FROM tpa_tsystem_point_param ppz
+                                                          WHERE ppz.idn_system_point = ppy.idn_system_point 
+                                                          AND ppz.start_date = ppy.start_date)), '')) as end_date,
+            pp.version_date,															  
+			<!-- CR5-CR92 - F -->
+            a.IDN_AREA idn_area, 
+            sub.idn_subarea idn_subarea,
+            tp.IDN_SYSTEM_POINT_GROUP  idn_system_point_group,
+            tp.IDN_SYSTEM_POINT_TYPE idn_system_point_type,
+            z.IDN_ZONE idn_zone,
+            ps.IDN_PIPELINE_SYSTEM  idn_pipeline_system,
+            ct.idn_customer_type idn_customer_type,
+            nomp.idn_system_point idn_system_point_nomination,
+            conp.idn_system_point idn_system_point_contract,
+            qual.idn_system_point idn_system_point_quality,
+            pp.idn_system_point_param idn_system_point_param    
+     FROM tpa_vsystem_point tp, 
+          tpa_tsystem_point_param  pp, 
+          tpa_tcustomer_type ct,
+          tpa_tsystem_point nomp, 
+          tpa_tsystem_point conp, 
+          tpa_tsystem_point qual,
+          tpa_varea_tpa a, 
+          TPA_VZONE_TPA z, 
+          tpa_tpipeline_system ps, 
+          tpa_tsubarea sub
+    WHERE tp.idn_system_point =  pp.idn_system_point
+      AND tp.group_code= 'METERED'
+      AND ct.IDN_CUSTOMER_TYPE (+)= pp.IDN_CUSTOMER_TYPE
+      AND nomp.idn_system_point (+)= pp.idn_nomination_point
+      AND conp.idn_system_point (+)= pp.idn_contract_point
+      AND qual.idn_system_point (+)= pp.idn_quality_point
+      AND sub.IDN_SUBAREA (+) = pp.IDN_SUBAREA
+      AND a.idn_area = tp.IDN_AREA
+      AND a.IDN_ZONE = z.IDN_ZONE
+      AND z.IDN_PIPELINE_SYSTEM = ps.IDN_PIPELINE_SYSTEM 
+	
+    <!--IHP 01/03/2022 CR5-CR92 - I	-->
+	<!-- SI QUIEREN VER ACTIVOS , CHECK MARCADA  -->
+	<if test="version_date != null">
+	  AND nvl(pp.end_date, pp.start_date) >= pp.start_date
+      AND pp.version_date = (SELECT max(ppx.version_date) 
+                                FROM tpa_tsystem_point_param ppx 
+                                WHERE pp.idn_system_point = ppx.idn_system_point 
+                                AND pp.start_date = ppx.start_date)
+	</if>
+	<!-- CR5-CR92 - F	--> 
+	
+	<if test="startDate != null">
+		  AND nvl(tp.end_date,to_date('9999/12/31','yyyy/mm/dd'))>=  #{startDate}
+		  AND nvl(pp.end_date, nvl((SELECT MIN(ppy.start_date) - 1
+                                  FROM tpa_tsystem_point_param ppy
+                                 WHERE ppy.idn_system_point = pp.idn_system_point
+                                   AND ppy.start_date > pp.start_date
+                                   AND nvl(ppy.end_date, ppy.start_date) >= ppy.start_date
+                                   AND ppy.version_date = (SELECT max(ppz.version_date) 
+                                                             FROM tpa_tsystem_point_param ppz
+                                                            WHERE ppz.idn_system_point = ppy.idn_system_point 
+                                                              AND ppz.start_date = ppy.start_date)), to_date('9999/12/31','yyyy/mm/dd')))>=  #{startDate}
+	</if>
+	<if test="endDate != null">
+		  AND #{endDate} >= tp.start_date
+		  AND #{endDate} >= pp.start_date 
+	</if>
+	<if test="id != null and id != ''">
+		 <!--  and tp.point_code = #{id} -->
+		 AND tp.idn_system_point = #{id}
+	</if>
+	<if test="pointType != null and pointType != ''">
+		 AND tp.idn_system_point_type = #{pointType}
+	</if>
+	<!-- offshore
+	<if test="systemCode != null and systemCode != ''">
+		  and ps.idn_pipeline_system = #{systemCode}
+	</if>
+	 -->
+	   AND ps.idn_pipeline_system = #{idn_system}
+	 
+	<if test="zone != null and zone != ''">
+		AND z.idn_zone = #{zone}
+	</if>
+	<if test="area != null and area != ''">
+		  AND a.idn_area = #{area}
+	</if>
+	 ORDER BY UPPER (metering_id)
+		
+    </select>
+   
+
+    <select id="selectIds" resultType="java.lang.String">
+		SELECT tp.POINT_CODE point_code
+		FROM tpa_tsystem_point tp, tpa_tsystem_point_group pg
+		WHERE tp.idn_system_point_group = pg.idn_system_point_group
+        	AND pg.group_code= 'METERED'
+        	AND tp.POINT_CODE like #{query}
+    </select>
+   
+   <select id="selectIdsComboSystem" resultType="com.atos.beans.ComboFilterNS">
+	  SELECT sp.idn_system_point AS key, 
+             sp.point_code       AS value 
+	  FROM tpa_vsystem_point sp, 
+	       tpa_varea_tpa     a, 
+	       tpa_vzone_tpa     z 
+	 WHERE sp.group_code = 'METERED' 
+	   AND a.idn_area = sp.idn_area 
+	   AND a.idn_zone = z.idn_zone 
+	   AND z.idn_pipeline_system = #{idn_system} 
+	 ORDER BY sp.point_code
+   </select> 
+    
+    
+     <select id="selectPointTypes" resultType="com.atos.beans.ComboFilterNS">
+		SELECT pt.idn_system_point_type as key, pt.type_desc as value
+		FROM tpa_vsystem_point_type_dam pt
+		ORDER BY  pt.type_desc
+    </select>
+    
+    <select id="selectZonesSystem" resultType="com.atos.beans.ComboFilterNS">	
+		SELECT z.idn_zone as key, z.zone_code as value
+	    FROM TPA_VZONE_TPA z
+	    WHERE z.idn_pipeline_system =#{idn_system}
+	    ORDER BY UPPER(z.zone_code)
+    </select>
+
+      <select id="selectAreasSystem" resultType="com.atos.beans.ComboFilterNS">
+	 	SELECT a.idn_area as key,  a.area_code as value
+		FROM TPA_VZONE_TPA z, 
+			  tpa_varea_tpa a
+	    WHERE z.idn_zone= a.idn_zone
+	      AND z.idn_pipeline_system = #{idn_system}
+		ORDER BY UPPER(a.area_code)
+    </select>
+    
+    <select id="selectCustomerTypes" resultType="com.atos.beans.ComboFilterNS" parameterType="java.math.BigDecimal" >
+		SELECT ct.idn_customer_type as key, ct.type_code as value
+		FROM tpa_tcustomer_type ct
+		WHERE ct.IDN_SYSTEM_POINT_TYPE=#{idn_system_point_type}
+		ORDER BY ct.type_desc
+    </select>
+    
+    <select id="selectMeteringIds" resultType="com.atos.beans.ComboFilter">
+		SELECT m.metering_id  as key, m.metering_id  as value
+		FROM tpa_tmoc_metering_id m
+		 WHERE m.is_assigned='N'
+		ORDER BY  m.metering_id
+    </select>
+   
+   <select id="selectMeteredPointIds" resultType="com.atos.beans.ComboFilterNS">
+ select t.idn_system_point as key, t.point_code as value
+     from tpa_tsystem_point t, tpa_tsystem_point_param t2
+     where t.idn_system_point = t2.idn_system_point
+     and t.idn_system_point_group =(SELECT pg.idn_system_point_group  FROM tpa_tsystem_point_group pg WHERE pg.group_code='METERED')
+      and (sysdate between t.start_date and t.end_date or t.end_date is null)
+      and (sysdate between t2.start_date and t2.end_date or t2.end_date is null)
+     order by 2
+    </select>
+
+
+   <select id="selectMeteredPointValues" resultType="com.atos.beans.dam.MeteredPointBean">
+
+    select t.idn_system_point as idn_system_point,
+      (select distinct metering_id from tpa_tsystem_point_param pp where pp.idn_system_point = t.idn_system_point) as meteringID,
+      t.point_code as name, 
+      t.idn_system_point_type as idn_system_point_type,
+      (select type_desc from tpa_tsystem_point_type pt where pt.idn_system_point_type = t.idn_system_point_type) as pointType,
+      t.latitude as latitude,
+      t.longitude as longitud,
+      t.idn_area as idn_area,
+      (select a.area_code from tpa_tarea a where a.idn_area = t.idn_area) as area
+    from tpa_tsystem_point t 
+		where t.idn_system_point = #{id}
+	</select>
+
+
+    
+   <select id="selectNominationPointsSystem" resultType="com.atos.beans.ComboFilterNS" >
+    SELECT sp.idn_system_point AS key, sp.point_code  AS VALUE 
+	 FROM tpa_vsystem_point sp, 
+	       tpa_varea_tpa     a, 
+	       tpa_vzone_tpa     z 
+	 WHERE sp.group_code = 'NOMINATION' 
+	   AND sp.idn_system_point_type = #{idn_system_point_type} 
+	   AND a.idn_area = sp.idn_area 
+	   AND a.idn_zone = z.idn_zone 
+	   AND z.idn_pipeline_system = #{idn_pipeline_system} 
+	 ORDER BY sp.point_code
+    </select>
+  
+   
+    <select id="selectQualityPointSystem" resultType="com.atos.beans.ComboFilterNS">
+  
+		WITH quality_point AS
+			 (SELECT sp.idn_system_point,
+			         sp.point_code
+			    FROM tpa_vsystem_point sp
+			    WHERE sp.IDN_SYSTEM_POINT_TYPE= #{idn_system_point_type}
+			    AND sp.group_code = 'QUALITY'),
+		metered_point AS
+		 (SELECT spp.idn_quality_point
+		    FROM tpa_vsystem_point       sp,
+		         tpa_varea_tpa           a,
+		         tpa_vzone_tpa           z,
+		         tpa_tsystem_point_param spp
+		   WHERE sp.group_code = 'METERED'
+		     AND sp.idn_system_point = spp.idn_system_point
+		     AND sp.idn_area = a.idn_area
+		     AND a.idn_zone = z.idn_zone
+		     AND z.idn_pipeline_system =  #{idn_pipeline_system}
+		     AND spp.version_date = (SELECT MAX(sppx.version_date)
+		                               FROM tpa_tsystem_point_param sppx
+		                              WHERE sppx.idn_system_point = spp.idn_system_point
+		                                AND sppx.start_date = spp.start_date))
+		SELECT qp.idn_system_point AS key,
+		       qp.point_code       AS VALUE
+		FROM quality_point qp
+		WHERE NOT EXISTS (SELECT 1 FROM tpa_tsystem_point_param spp WHERE spp.idn_quality_point = qp.idn_system_point)
+		UNION
+		SELECT qp.idn_system_point AS key,
+		       qp.point_code       AS VALUE
+		  FROM quality_point qp,
+		       metered_point mp
+		 WHERE qp.idn_system_point = mp.idn_quality_point
+		 ORDER BY 2
+      
+    </select>
+  
+    <!--Los puntos contract tambien dependen del area  -->
+   <select id="selectContractPointsSystem" resultType="com.atos.beans.ComboFilterNS">
+		  SELECT sp.idn_system_point AS key, sp.point_code  AS VALUE 
+		  FROM tpa_vsystem_point sp, 
+		       tpa_varea_tpa     a, 
+		       tpa_vzone_tpa     z 
+		 WHERE sp.group_code = 'CONTRACT' 
+		   AND sp.idn_system_point_type = #{idn_system_point_type} 
+		   AND sp.idn_area=#{idn_area}
+		   AND a.idn_area = sp.idn_area 
+		   AND a.idn_zone = z.idn_zone 
+		   AND z.idn_pipeline_system = #{idn_pipeline_system} 
+		 ORDER BY sp.point_code
+    </select>
+  
+  <select id="selectAreaNominationPoint" resultType="com.atos.beans.ComboFilterNS">
+		SELECT sp.idn_area as key,a.area_code as value
+	    FROM tpa_tsystem_point sp, 
+	    	 tpa_tsystem_point_group spg, 
+	    	 tpa_varea_tpa a
+	    WHERE sp.idn_system_point_group = spg.idn_system_point_group
+		      AND  a.idn_area = sp.IDN_AREA
+		      AND spg.group_code = 'NOMINATION'
+		      AND sp.idn_system_point=#{idn_system_point_nomination}
+		      ORDER BY sp.point_code
+	</select>
+	
+  
+    <select id="selectSubAreaNominationPoint" resultType="com.atos.beans.ComboFilterNS">
+    	SELECT sa.idn_subarea as key,sa.subarea_code as value
+	    FROM 	tpa_tsystem_point sp, 
+	    		tpa_tsystem_point_group spg,
+	    		tpa_varea_tpa a, 
+	    		tpa_tsubarea sa
+	    WHERE sp.idn_system_point_group = spg.idn_system_point_group
+              AND sa.idn_area = a.idn_area 
+		      AND  a.idn_area = sp.IDN_AREA
+		      AND spg.group_code = 'NOMINATION'
+		     <!--   AND sp.idn_system_point=#{idn_system_point}-->
+		      AND sp.idn_system_point=#{idn_system_point_nomination}
+		  ORDER BY sp.point_code
+	</select>
+	
+
+	 <insert id="insertMeteredPointParam" useGeneratedKeys="true" keyProperty="idn_system_point_param" keyColumn="idn_system_point_param" parameterType="com.atos.beans.dam.MeteredPointBean">
+		INSERT INTO tpa_tsystem_point_param
+		      (idn_system_point_param, idn_system_point, metering_id, nominal_capacity, min_pressure,max_pressure,
+		       idn_subarea, idn_customer_type,idn_nomination_point, idn_contract_point, idn_quality_point, 
+		       con_party_name,con_party_email,con_party_phone,start_date, end_date,
+		       aud_ins_user,aud_last_user)
+		   VALUES
+		      (tpa_ssystem_point_param.nextval,
+		       #{idn_system_point},
+		       #{meteringID},
+		       #{nominalCapacity},
+		       #{minPressure},
+		       #{maxPressure},
+		       #{idn_subarea},
+		       #{idn_customer_type},
+		       #{idn_system_point_nomination},
+		       #{idn_system_point_contract},
+		       #{idn_system_point_quality},
+		       #{conectingPartyName},
+		       #{conectingPartyEmail},
+		       #{conectingPartyPhoneNumber},
+		       #{startDate},
+		       #{endDate},
+		       #{username},
+			   #{username})		  
+	</insert>
+	
+	
+	<insert id="insertMeteredPoint" useGeneratedKeys="true" keyProperty="idn_system_point" keyColumn="idn_system_point" parameterType="com.atos.beans.dam.MeteredPointBean">
+		INSERT INTO tpa_tsystem_point
+			(idn_system_point,IDN_SYSTEM_POINT_GROUP,point_code,point_desc, 
+			idn_system_point_type, latitude, longitude, idn_area,
+			start_date, end_date,
+			aud_ins_user,aud_last_user)
+		VALUES
+			(tpa_ssystem_point.nextval,
+			 (SELECT pg.idn_system_point_group  FROM tpa_tsystem_point_group pg WHERE pg.group_code='METERED'),
+			 #{id},
+			 #{name}, 
+			 #{idn_system_point_type},
+			 #{latitude},
+			 #{longitud},
+			 #{idn_area},
+			 #{startDate},
+		     #{endDate},
+		     #{username},
+			 #{username})
+	</insert>
+
+	<update id="updateMeteredPoint" parameterType="com.atos.beans.dam.MeteredPointBean">
+		UPDATE tpa_tsystem_point set
+			point_code = #{id},
+			point_desc = #{name},
+			idn_system_point_type=#{idn_system_point_type},
+			latitude=#{latitude},
+			longitude=#{longitud},
+		    aud_last_user=#{username}
+		WHERE idn_system_point = #{idn_system_point}
+	</update>
+	
+	 <!--no se usa... son historicos  -->
+	<update id="updateMeteredPointParam" parameterType="com.atos.beans.dam.MeteredPointBean">
+		UPDATE tpa_tsystem_point_param set
+			nominal_capacity = #{nominalCapacity},
+			max_pressure=#{maxPressure},
+			min_pressure=#{minPressure},
+			idn_customer_type=#{idn_customer_type},
+			idn_contract_point=#{idn_system_point_nomination},
+			idn_nomination_point=#{idn_system_point_nomination},
+			con_party_phone=#{conectingPartyPhoneNumber},
+			con_party_email=#{conectingPartyEmail},
+			con_party_name=#{conectingPartyName},
+			start_date=#{startDate},
+		    end_date=#{endDate},
+		    aud_last_user=#{username}
+  		 WHERE idn_system_point = #{idn_system_point}
+		       AND idn_system_point_param = #{idn_system_point_param} 
+	</update>
+	
+	
+	<select id="getMeteredPointCode" resultType="java.lang.String">
+	    SELECT p.POINT_CODE point_code
+		FROM tpa_tsystem_point p, tpa_tsystem_point_group pg
+		WHERE p.idn_system_point_group = pg.idn_system_point_group
+       		  AND pg.group_code= 'METERED'
+			  AND  p.point_code = #{id}	 
+	        
+	</select>
+	
+	<select id="getMeteredPointCodeNewPeriod" resultType="java.lang.String">
+	    SELECT p.POINT_CODE point_code
+		FROM tpa_tsystem_point p, tpa_tsystem_point_group pg
+		WHERE p.idn_system_point_group = pg.idn_system_point_group
+       		  AND pg.group_code= 'METERED'
+			  AND  p.idn_system_point = #{id}	 
+	        
+	</select>
+	
+	<update id="updateMocMetering" parameterType="com.atos.beans.dam.MeteredPointBean">
+		UPDATE tpa_tmoc_metering_id set
+			is_assigned = 'Y',
+			aud_last_user=#{username}
+		WHERE metering_id = #{meteringID}
+	</update>
+	
+	<update id="deleteMeteredPointParam" parameterType="com.atos.beans.dam.MeteredPointBean">
+		UPDATE tpa_tsystem_point_param set
+			   end_date = #{endDate},
+			   aud_last_user=#{username}
+		WHERE  idn_system_point = #{idn_system_point}
+		       AND idn_system_point_param = #{idn_system_point_param} 
+	</update>
+	
+	<select id="getMeteredPointParamStarDate" resultType="java.util.Date">
+		SELECT  pp.start_date
+	    FROM tpa_tsystem_point_param pp
+		WHERE idn_system_point = #{idn_system_point}
+		      AND idn_system_point_param = #{idn_system_point_param} 
+	</select>
+	
+	<select id="getAreaCode" resultType="java.lang.String">
+	    SELECT a.area_code
+    	FROM tpa_tsystem_point sp,  tpa_varea_tpa a
+    	WHERE a.idn_area = sp.IDN_AREA
+        AND sp.idn_system_point = #{idn_system_point}   
+	</select>  
+	
+	<select id="getAreaID" resultType="java.math.BigDecimal">
+	    SELECT sp.idn_area
+    	FROM tpa_tsystem_point sp,  tpa_varea_tpa a
+    	WHERE a.idn_area = sp.IDN_AREA
+        AND sp.idn_system_point = #{idn_system_point}   
+	</select>
+	
+		<select id="getZoneCode" resultType="java.lang.String">
+	    SELECT z.zone_code
+    	FROM tpa_tsystem_point sp,  tpa_varea_tpa a, tpa_tzone z
+    	WHERE a.idn_area = sp.IDN_AREA
+        AND z.idn_zone=a.idn_zone
+        AND sp.idn_system_point = #{idn_system_point}   
+	</select>
+	
+	<select id="getSystemCode" resultType="java.lang.String">
+	    SELECT  ps.pipeline_system_code
+    	FROM tpa_tsystem_point sp,  tpa_varea_tpa a, tpa_tzone z, tpa_tpipeline_system ps
+    	WHERE a.idn_area = sp.IDN_AREA
+        AND z.idn_zone=a.idn_zone
+        AND z.idn_pipeline_system = ps.idn_pipeline_system
+        AND sp.idn_system_point = #{idn_system_point}   
+	</select>
+	
+	<select id="getMOCavailable" resultType="java.math.BigDecimal">
+		SELECT COUNT(*)
+	  	FROM tpa_tmoc_metering_id a
+		WHERE a.metering_id = #{meteringID}
+	  	AND a.is_assigned = 'Y'
+	</select>
+	
+	<select id="generarMOC" statementType="CALLABLE" parameterType="com.atos.beans.dam.MeteredPointBean">
+		{call #{errorCode,jdbcType=INTEGER,mode=OUT} :=
+			pck_moc_metering_id.moc_insert(
+				#{user,jdbcType=VARCHAR,mode=IN},
+				#{lang,jdbcType=VARCHAR,mode=IN},
+				#{errorDesc,jdbcType=VARCHAR,mode=OUT})}
+	</select>
+	
+	<select id="getValidateDateRange" statementType="CALLABLE" parameterType="com.atos.beans.dam.MeteredPointBeanDateRange">
+		{call #{errorCode,jdbcType=INTEGER,mode=OUT} :=
+			pck_generic_validation.validate_date_range(
+				#{date_ini,jdbcType=DATE,mode=IN},
+				#{date_fin,jdbcType=DATE,mode=IN},
+				#{idn_system_point,jdbcType=INTEGER,mode=IN},
+				#{idn_system_point_param,jdbcType=INTEGER,mode=IN},
+				#{type,jdbcType=VARCHAR,mode=IN},
+				#{user,jdbcType=VARCHAR,mode=IN},
+				#{language,jdbcType=VARCHAR,mode=IN},
+				#{errorDesc,jdbcType=VARCHAR,mode=OUT})}
+	</select>
+
+	<select id="getValidateGroupID" resultType="java.math.BigDecimal" parameterType="com.atos.beans.dam.MeteredPointBean">
+		WITH 
+		point_relation AS
+		(SELECT spr.contract_point_idn,
+		         spr.nomination_point_idn
+		    FROM tpa_vsystem_point_relation spr
+		   WHERE spr.min_end_date >= #{startDate} 
+		     AND NVL(#{endDate}, spr.max_start_date) >= spr.max_start_date 
+		   GROUP BY spr.contract_point_idn, spr.nomination_point_idn)
+		SELECT pr.contract_point_idn
+		  FROM point_relation pr
+		WHERE pr.nomination_point_idn = #{idn_system_point_nomination}
+		   AND pr.contract_point_idn != #{idn_system_point_contract}
+
+	</select>
+
+	<select id="getValidateGroupIDEdit" resultType="java.math.BigDecimal" parameterType="com.atos.beans.dam.MeteredPointBean">
+		WITH 
+		point_relation AS
+		(SELECT spr.contract_point_idn,
+		         spr.nomination_point_idn
+		    FROM tpa_vsystem_point_relation spr
+		   WHERE spr.min_end_date >= #{startDate} 
+		     AND NVL(#{endDate}, spr.max_start_date) >= spr.max_start_date 
+		     AND spr.metered_point_idn != #{idn_system_point}
+		   GROUP BY spr.contract_point_idn, spr.nomination_point_idn)
+		SELECT pr.contract_point_idn
+		  FROM point_relation pr
+		WHERE pr.nomination_point_idn = #{idn_system_point_nomination}
+		   AND pr.contract_point_idn != #{idn_system_point_contract}
+
+	</select>
+
+	
+</mapper>

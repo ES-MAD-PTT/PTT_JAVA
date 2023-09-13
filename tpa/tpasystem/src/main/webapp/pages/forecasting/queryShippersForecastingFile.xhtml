@@ -1,0 +1,180 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_forecast']}" url="#" />
+			<p:menuitem value="#{msg['menu_forecast_query']}" url="/pages/forecasting/queryShippersForecastingFile.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="5000"/>
+			
+            <p:layout widgetVar="queryShipperLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">	
+					
+				<p:panelGrid columns="2" style="width:100%">
+					
+						<p:panelGrid id="filters">
+							<p:row>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['fore_forecasting_code']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['fore_shipper_code']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['for_Term']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['from']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['to']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<p:inputText id="forecastingCode" style="width:150px" value="#{queryShipperForecastingFileView.filters.forecasting_code}" />
+								</p:column>
+								<p:column>
+									<p:selectOneMenu  widgetVar="shipper_code_operator" onchange="" id="shipper_code_operator" style="width:100px" 
+										value="#{queryShipperForecastingFileView.filters.shipper_code}" rendered="#{userBean.isUser_type('OPERATOR')}">
+										<f:selectItem itemLabel="" itemValue="" />
+        								<f:selectItems value="#{queryShipperForecastingFileView.shipperCodes.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>
+					           		<h:outputText value="#{queryShipperForecastingFileView.user.user_group_id}" style="float:left" rendered="#{queryShipperForecastingFileView.isShipper()}"/>
+								</p:column>
+									
+								<p:column>
+									<p:selectOneMenu widgetVar="term_code" onchange="" id="term_code" style="width:100px" value="#{queryShipperForecastingFileView.filters.term_code}" >
+										<f:selectItem itemLabel="" itemValue="" />
+        								<f:selectItems value="#{queryShipperForecastingFileView.termCodes.entrySet()}" var="entry" itemValue="#{entry.value}" itemLabel="#{entry.value}" />
+										<!-- p:ajax update="contract_code"/> -->
+					           		</p:selectOneMenu>							
+								</p:column>
+								<p:column>
+									<p:calendar id="fecInicio" size="10" pattern="dd/MM/yyyy" yearRange="c-100:c+100"  mask="true" value="#{queryShipperForecastingFileView.filters.start_date}"
+										showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="fecInicio"></p:ajax>
+										<p:ajax event="change" update="fecInicio"></p:ajax>
+									</p:calendar>
+								</p:column>
+								<p:column>
+									<p:calendar id="fecFin" size="10" pattern="dd/MM/yyyy" yearRange="c-100:c+100" mask="true" value="#{queryShipperForecastingFileView.filters.end_date}"
+										showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="fecFin"></p:ajax>
+										<p:ajax event="change" update="fecFin"></p:ajax>
+									</p:calendar>
+								</p:column>
+								
+								
+							</p:row>
+						</p:panelGrid>
+						<p:panelGrid columns="2" style="float:right;top:0px">
+							<shiro:hasPermission name="#{changeSystemView.system}.FORECASTING.QUERY_SUB_SHIPPER.QUERY">
+								<p:commandButton value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{queryShipperForecastingFileView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,:#{p:component('queryShipperFor')}"/>
+							</shiro:hasPermission>
+
+							<p:commandButton  onclick="PF('queryShipperLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" value="#{msg['minimize']}" title="#{msg['collapse_header']}" />									
+
+							<shiro:hasPermission name="#{changeSystemView.system}.FORECASTING.QUERY_SUB_SHIPPER.QUERY">
+								<p:commandButton value="#{msg['clear']}"
+									actionListener="#{queryShipperForecastingFileView.onClear}"									 
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" 
+									process="@this" 
+									update="msgs,@form"/>
+							</shiro:hasPermission>
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center"
+					resizable="false" closable="false" collapsible="false">
+
+					<p:dataTable widgetVar="w_queryShipperFor"  id="queryShipperFor" var="queryFor" value="#{queryShipperForecastingFileView.items}" reflow="true"
+						style="margin-bottom:20px;border-collapse:collapse"
+					    paginator="true" rows="15" rowsPerPageTemplate="5,10,15,20,25">
+							<f:facet name="header">
+								<p:outputPanel style="height:25px">
+									<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+	        						<p:columnToggler datasource="queryShipperFor" trigger="toggler" style="width:200px"/>
+								</p:outputPanel>        										          
+					        </f:facet>
+					       <p:column headerText="#{msg['fore_forecasting_code']}" style="width:120px" sortBy="#{queryFor.forecasting_code}" filterMatchMode="contains" filterBy="#{queryFor.forecasting_code}">
+					       		<h:outputText value="#{queryFor.forecasting_code}" />
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['fore_shipper_code']}" sortBy="#{queryFor.user_group_id}" filterMatchMode="contains" filterBy="#{queryFor.user_group_id}">
+					       		<h:outputText value="#{queryFor.user_group_id}" />
+					       </p:column>
+					 
+					       <p:column headerText="#{msg['for_Term']}" style="width:100px" sortBy="#{queryFor.term_code}" filterMatchMode="contains" filterBy="#{queryFor.term_code}">
+					           <h:outputText value="#{queryFor.term_code}" />
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['from']}" style="width:100px" sortBy="#{queryFor.start_date}" filterMatchMode="contains"  filterBy="#{queryFor.start_date}">
+					          <h:outputText value="#{queryFor.start_date}" >
+					          	<f:convertDateTime pattern="dd/MM/yyyy" />
+					          </h:outputText>
+					       </p:column>
+					       <p:column headerText="#{msg['to']}" style="width:100px" sortBy="#{queryFor.end_date}" filterMatchMode="contains"  filterBy="#{queryFor.end_date}">
+					          <h:outputText value="#{queryFor.end_date}" >
+					          	<f:convertDateTime pattern="dd/MM/yyyy" />
+					          </h:outputText>
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['fore_shipper_xls_file']}">
+					       		<p:commandButton ajax="false"
+							    	oncomplete="PrimeFaces.monitorDownload(start, stop);" icon="ui-icon fa fa-save">
+									<f:setPropertyActionListener value="#{queryFor}" target="#{queryShipperForecastingFileView.selected}" />
+							        <p:fileDownload value="#{queryShipperForecastingFileView.shipperFile}"/>
+								</p:commandButton>
+								<h:outputText value="#{queryFor.shipper_file_name}"  title="#{queryFor.shipper_file_name}" />
+					       </p:column>
+							<p:column headerText="#{msg['Shipper_File_Submission_Date']}" style="width: 130px;" sortBy="#{queryFor.shipper_file_date}" filterMatchMode="contains"  filterBy="#{queryFor.shipper_file_date}">
+					          <h:outputText value="#{queryFor.shipper_file_date}" >
+					          	<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+					          </h:outputText>
+					       </p:column> 
+					       <p:column headerText="#{msg['fore_inter_xls_file']}">
+					            <p:commandButton ajax="false" 
+					            	oncomplete="PrimeFaces.monitorDownload(start, stop);" icon="ui-icon fa fa-save">
+									<f:setPropertyActionListener value="#{queryFor}" target="#{queryShipperForecastingFileView.selected}" />
+							        <p:fileDownload value="#{queryShipperForecastingFileView.intermediateFile}"/>
+							    </p:commandButton>
+								<h:outputText value="#{queryFor.operator_file_name}" title="#{queryFor.operator_file_name}" />
+					       </p:column> 
+					       <p:column headerText="#{msg['Intermediate_File_Submission_Date']}" style="width: 130px;" sortBy="#{queryFor.operator_file_date}" filterMatchMode="contains"  filterBy="#{queryFor.soperator_file_date}">
+					          <h:outputText value="#{queryFor.operator_file_date}" >
+					          	<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+					          </h:outputText>
+					       </p:column>
+					   </p:dataTable>
+				</p:layoutUnit>
+
+			</p:layout>
+		</h:form>
+	</ui:define>
+
+
+</ui:composition>
+	
+		

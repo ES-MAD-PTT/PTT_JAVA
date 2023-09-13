@@ -1,0 +1,298 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:f="http://java.sun.com/jsf/core"
+	>
+
+						<h:form>
+				<p:panel style="width:98%">
+					<p:dataTable var="it" value="#{cRReview.resultListGC}"
+						paginator="true" rows="15" rowsPerPageTemplate="5,10,15,20,25"
+						scrollable="true" scrollHeight="100%" scrollWidth="100%"
+						id="dtagc"
+						>
+
+						<f:facet name="header">
+							<p:outputPanel styleClass="ui-widget-header">
+
+
+
+							<h:outputText value="#{msg['crew_from']}: " styleClass="filter" />
+
+									<p:selectOneMenu id="dateFromGC" value="#{cRReview.dateFromGC}" valueChangeListener="#{cRReview.dateFromGCChange}" >
+										<f:selectItem itemLabel="" itemValue="" />
+										<f:selectItems value="#{cRReview.datesFromEntry}" var="dat" itemLabel="#{cRReview.getDateAsString(dat)}" itemValue="#{cRReview.getDateAsString(dat)}"/>
+										<p:ajax event="change" update="dtagc" />
+
+									</p:selectOneMenu>
+
+							<h:outputText value="#{msg['crew_to']}: " styleClass="filter"/>
+									 <p:selectOneMenu id="dateToGC" value="#{cRReview.dateToGC}" valueChangeListener="#{cRReview.dateToGCChange}" >
+										<f:selectItem itemLabel="" itemValue="" />
+										<f:selectItems value="#{cRReview.datesToEntry}" var="dat" itemLabel="#{cRReview.getDateAsString(dat)}" itemValue="#{cRReview.getDateAsString(dat)}"/>
+										<p:ajax event="change" update="dtagc" />
+									</p:selectOneMenu>
+
+							<h:outputText value="#{msg['crew_new_conn']}: " styleClass="filter"/>
+									<p:selectOneMenu id="newConFilterGC" 
+										value="#{cRReview.nConFilterGC}" valueChangeListener="#{cRReview.newConnChangeGC}">
+										<f:selectItem itemLabel="" itemValue="" />
+										<f:selectItem itemLabel="Y" itemValue="Y" />
+										<f:selectItem itemLabel="N" itemValue="N" />
+										<p:ajax event="change" update="dtagc" />
+										
+								</p:selectOneMenu>
+					</p:outputPanel>
+						</f:facet>
+
+						<p:columnGroup type="header">
+							<p:row>
+								<p:column headerText="#{msg['crew_zone']}" rowspan="2" styleClass="med-data" />
+								<p:column headerText="#{msg['crew_area']}" rowspan="2" styleClass="med-data" />
+								<p:column headerText="#{msg['crew_sub_area']}" rowspan="2" styleClass="med-data" />
+								<p:column headerText="#{msg['crew_exit_point']}" rowspan="2" styleClass="med-data" />
+								<p:column headerText="#{msg['crew_new_conn_a']}" rowspan="2" styleClass="small-data"/>
+								<p:column headerText="#{msg['crew_gc_meter_id']}" rowspan="2" styleClass="med-data" />
+								<p:column headerText="#{msg['crew_from']}" rowspan="2" styleClass="date" />
+								<p:column headerText="#{msg['crew_to']}" rowspan="2" styleClass="date" />
+
+								<p:column headerText="#{msg['crew_gcv']}" colspan="2" styleClass="range" />
+								<p:column headerText="#{msg['crew_wi']}" colspan="2" styleClass="range" />
+								<p:column headerText="#{msg['crew_c2']}" colspan="2" styleClass="range" />
+								<p:column headerText="#{msg['crew_co2']}" colspan="2" styleClass="range" />
+								<p:column headerText="#{msg['crew_o2']}" colspan="2" styleClass="range" />
+								<p:column headerText="#{msg['crew_n2']}" colspan="2" styleClass="range" />
+								<p:column headerText="#{msg['crew_h2s']}" colspan="2" styleClass="range" />
+								<p:column headerText="#{msg['crew_total_s']}" colspan="2" styleClass="range" />
+								<p:column headerText="#{msg['crew_hg']}" colspan="2" styleClass="range" />
+								<p:column headerText="#{msg['crew_h2o']}" colspan="2" styleClass="range" />
+								<p:column headerText="#{msg['crew_dew_point']}" colspan="2" styleClass="range" />
+
+							</p:row>
+							<p:row>
+							
+							
+								<p:column headerText="#{msg['crew_min']}" />
+								<p:column headerText="#{msg['crew_max']}" />
+
+							
+								<p:column headerText="#{msg['crew_min']}" />
+								<p:column headerText="#{msg['crew_max']}" />
+
+							
+								<p:column headerText="#{msg['crew_min']}" />
+								<p:column headerText="#{msg['crew_max']}" />
+
+							
+								<p:column headerText="#{msg['crew_min']}" />
+								<p:column headerText="#{msg['crew_max']}" />
+
+							
+								<p:column headerText="#{msg['crew_min']}" />
+								<p:column headerText="#{msg['crew_max']}" />
+
+							
+								<p:column headerText="#{msg['crew_min']}" />
+								<p:column headerText="#{msg['crew_max']}" />
+
+							
+								<p:column headerText="#{msg['crew_min']}" />
+								<p:column headerText="#{msg['crew_max']}" />
+
+							
+								<p:column headerText="#{msg['crew_min']}" />
+								<p:column headerText="#{msg['crew_max']}" />
+
+								<p:column headerText="#{msg['crew_min']}" />
+								<p:column headerText="#{msg['crew_max']}" />
+							
+								<p:column headerText="#{msg['crew_min']}" />
+								<p:column headerText="#{msg['crew_max']}" />
+
+								<p:column headerText="#{msg['crew_min']}" />
+								<p:column headerText="#{msg['crew_max']}" />
+							
+							</p:row>
+						</p:columnGroup>
+
+						<p:column>
+							<h:outputText value="#{it.zone}" />
+						</p:column>
+						<p:column>
+							<h:outputText value="#{it.area}" />
+						</p:column>
+						<p:column>
+							<h:outputText value="#{it.subarea}" />
+						</p:column>
+
+						<p:column>
+							<h:outputText value="#{it.point}"  />
+						</p:column>
+						<p:column>
+							<h:outputText value="#{it.newConn}" />
+						</p:column>
+						<p:column>
+							<h:outputText value="#{it.meterId}" />
+						</p:column>
+
+						<p:column >
+							<h:outputText value="#{it.dateFrom}" >
+								<f:convertDateTime pattern="dd/MM/yyyy" locale="en"/>
+								</h:outputText>
+						</p:column>
+						<p:column >
+							<h:outputText value="#{it.dateTo}" >
+								<f:convertDateTime pattern="dd/MM/yyyy" locale="en"/>
+								</h:outputText>
+						</p:column>
+						<p:column>
+							<h:outputText value="#{cRReview.getMinValueGC('HV', it.getPoint())}" styleClass="number" >
+							<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+						</p:column>
+						<p:column>
+							<h:outputText value="#{cRReview.getMaxValueGC('HV', it.getPoint())}" styleClass="number" >
+							<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+						</p:column>
+						<p:column>
+							<h:outputText value="#{cRReview.getMinValueGC('WI', it.getPoint())}" styleClass="number" >
+							<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+						</p:column>
+						<p:column>
+							<h:outputText value="#{cRReview.getMaxValueGC('WI', it.getPoint())}" styleClass="number" >
+							<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+						</p:column>
+
+						<p:column>
+							<h:outputText value="#{cRReview.getMinValueGC('C2', it.getPoint())}" styleClass="number" >
+							<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+						</p:column>
+
+						<p:column>
+							<h:outputText value="#{cRReview.getMaxValueGC('C2', it.getPoint())}" styleClass="number" >
+							<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+						</p:column>
+						
+						
+						<p:column>
+							<h:outputText value="#{cRReview.getMinValueGC('CO2', it.getPoint())}" styleClass="number" >
+							<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+						</p:column>
+						
+						
+						<p:column>
+							<h:outputText value="#{cRReview.getMaxValueGC('CO2', it.getPoint())}" styleClass="number" >
+							<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+						</p:column>
+						
+						
+						<p:column>
+							<h:outputText value="#{cRReview.getMinValueGC('O2', it.getPoint())}" styleClass="number" >
+							<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+						</p:column>
+						
+						
+						<p:column>
+							<h:outputText value="#{cRReview.getMaxValueGC('O2', it.getPoint())}" styleClass="number" >
+							<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+						</p:column>
+						
+						
+						<p:column>
+							<h:outputText value="#{cRReview.getMinValueGC('N2', it.getPoint())}" styleClass="number" >
+							<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+						</p:column>
+						
+						
+						<p:column>
+							<h:outputText value="#{cRReview.getMaxValueGC('N2', it.getPoint())}" styleClass="number" >
+							<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+						</p:column>
+						
+						
+						
+						<p:column>
+							<h:outputText value="#{cRReview.getMinValueGC('H2S', it.getPoint())}" styleClass="number" >
+							<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+						</p:column>
+						
+						
+						<p:column>
+							<h:outputText value="#{cRReview.getMaxValueGC('H2S', it.getPoint())}" styleClass="number" >
+							<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+						</p:column>
+						
+						
+						<p:column>
+							<h:outputText value="#{cRReview.getMinValueGC('S', it.getPoint())}" styleClass="number" >
+							<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+						</p:column>
+						
+						
+						<p:column>
+							<h:outputText value="#{cRReview.getMaxValueGC('S', it.getPoint())}" styleClass="number" >
+							<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+						</p:column>
+						
+						<p:column>
+							<h:outputText value="#{cRReview.getMinValueGC('Hg', it.getPoint())}" styleClass="number" >
+							<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+						</p:column>
+						
+						
+						<p:column>
+							<h:outputText value="#{cRReview.getMaxValueGC('Hg', it.getPoint())}" styleClass="number" >
+							<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+						</p:column>
+						
+						
+						<p:column>
+							<h:outputText value="#{cRReview.getMinValueGC('H2O', it.getPoint())}" styleClass="number" >
+							<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+						</p:column>
+						
+						
+						<p:column>
+							<h:outputText value="#{cRReview.getMaxValueGC('H2O', it.getPoint())}" styleClass="number" >
+							<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+						</p:column>
+						
+						
+						<p:column>
+							<h:outputText value="#{cRReview.getMinValueGC('HCDewPoint', it.getPoint())}" styleClass="number" >
+							<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+						</p:column>
+						
+						
+						<p:column>
+							<h:outputText value="#{cRReview.getMaxValueGC('HCDewPoint', it.getPoint())}" styleClass="number" >
+							<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+						</p:column>
+					</p:dataTable>
+				</p:panel>
+				</h:form>
+	</ui:composition>

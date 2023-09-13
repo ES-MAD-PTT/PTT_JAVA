@@ -1,0 +1,509 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_dam']}" url="#" />
+			<p:menuitem value="#{msg['menu_buss_partners']}" url="#" />
+			<p:menuitem value="#{msg['menu_users']}" url="/pages/dam/guestUsers.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="5000"/>
+			
+            <p:layout widgetVar="guestUserLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">	
+					
+				<p:panelGrid columns="2" style="width:100%">
+					
+						<p:panelGrid>
+							<p:row>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['guestUser_ID']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['guestUser_Name']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['guestUser_shipperOperator']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['guestUser_Start_Date']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['guestUser_End_Date']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column size="10"  >
+									<p:selectOneMenu id="id" style="width:100px"   value="#{guestUserView.filters.idn_user}" >
+										<f:selectItem itemLabel="" itemValue="" />
+        						        <f:selectItems value="#{guestUserView.ids.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>	
+  								<!--<p:autoComplete id="id" size="10"  maxlength="120" value="#{guestUserView.filters.id}" completeMethod="#{guestUserView.idList()}" />			-->			
+								</p:column>
+							
+								<p:column>
+									<p:autoComplete id="name" size="10"  maxlength="120" value="#{guestUserView.filters.name}" completeMethod="#{guestUserView.nameList}" />									
+								</p:column>
+								
+								<p:column>
+									<p:selectOneMenu id="shipperOperator" style="width:100px"  value="#{guestUserView.filters.shipperOperator}" >
+										<f:selectItem itemLabel="" itemValue="" />
+        						        <f:selectItems value="#{guestUserView.shipperOperatorIDs.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>										
+								</p:column>
+								<p:column>
+									<p:calendar id="fecInicio" size="10" pattern="dd/MM/yyyy" mask="true" value="#{guestUserView.filters.startDate}"
+										showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="fecInicio"></p:ajax>
+										<p:ajax event="change" update="fecInicio"></p:ajax>
+									</p:calendar>
+								</p:column>
+								<p:column>
+									<p:calendar id="fecFin"  size="10" pattern="dd/MM/yyyy" mask="true" value="#{guestUserView.filters.endDate}"
+										showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="fecFin"></p:ajax>
+										<p:ajax event="change" update="fecFin"></p:ajax>
+									</p:calendar>
+								</p:column>
+							
+								
+							</p:row>
+						</p:panelGrid>
+						<p:panelGrid columns="2" style="float:right;top:0px">
+							<shiro:hasPermission name="#{changeSystemView.system}.DAM.USER.QUERY">
+								<p:commandButton value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{guestUserView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,:#{p:component('guestUsers1')}"/>
+							</shiro:hasPermission>
+							
+							<p:commandButton  onclick="PF('guestUserLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+							
+							<shiro:hasPermission name="#{changeSystemView.system}.DAM.USER.QUERY">									
+								<p:commandButton value="#{msg['clear']}"
+									actionListener="#{guestUserView.onClear}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" 
+									process="@this" 
+									update="form"/> 
+							</shiro:hasPermission>	
+								
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center"
+					resizable="false" closable="false" collapsible="false">
+
+					<p:dataTable widgetVar="w_guestUser1"  id="guestUsers1" var="guestUser" value="#{guestUserView.items}" reflow="true" editable="true" 
+					style="width:1700px;margin-bottom:20px;border-collapse:collapse"
+				    paginator="true" rows="15"
+				    scrollable="true"  scrollHeight="100%" 
+				    rowsPerPageTemplate="5,10,15,20,25, #{guestUserView.itemsSize}" >
+
+							<f:facet name="header">
+								<p:outputPanel style="height:25px">
+									<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+	        						<p:columnToggler datasource="guestUsers1" trigger="toggler" style="width:200px"/>
+	        						<shiro:hasPermission name="#{changeSystemView.system}.DAM.USER.ADD">
+		        						<p:commandButton id="new" type="button" value="New" icon="ui-icon fa fa-save" style="float:right;"	
+		        							onclick="PF('dlgNewGuestUser').show();"
+		        						/>
+	        						</shiro:hasPermission>
+								</p:outputPanel>        										          
+					        </f:facet>
+					        
+					        <shiro:hasPermission name="#{changeSystemView.system}.DAM.USER.MOD">   
+						 		<p:ajax event="rowEditInit" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','hidden')});" />
+								<p:ajax event="rowEdit" listener="#{guestUserView.onRowEdit}" update=":form:msgs" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>   
+								<p:ajax event="rowEditCancel" listener="#{guestUserView.onRowCancel}" update=":form:msgs" onstart="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>
+							</shiro:hasPermission>
+							<!-- evento del click del p:rowExpansion -->
+						 	<p:ajax event="rowToggle" listener="#{guestUserView.onRowToggle}" update=":form:msgs" />   						 
+							 <p:column style="width:16px">
+		         					   <p:rowToggler />
+		       				 </p:column>
+		       				 
+					       <p:column headerText="#{msg['guestUser_ID']}"  style="width: 100px;"  sortBy="#{guestUser.id}" filterMatchMode="contains" filterBy="#{guestUser.id}">
+					       		<h:outputText value="#{guestUser.id}" />
+					       </p:column>
+					 
+					       <p:column headerText="#{msg['guestUser_Name']}" resizable="true" style="width: 100px;" sortBy="#{guestUser.name}" filterMatchMode="contains" filterBy="#{guestUser.name}">
+					           <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{guestUser.name}" /></f:facet>
+					               <f:facet name="input">
+					               			<p:inputText value="#{guestUser.name}" required="true"  style="width:100%" maxlength="120" 
+					               				label="#{msg['guestUser_Name']}" disabled="#{guestUserView.disabledField(guestUser)}"
+					               				requiredMessage="#{msg['guestUser_Name']}: #{msg['empty_field']}" 
+					               				validatorMessage="#{msg['guestUser_Name']}: #{msg['lenght_field']} 120">
+					               				<f:validateLength maximum="120"/>
+					               				<f:validateRequired/>
+					               			</p:inputText>	
+					               	</f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['guestUser_shipperOperator']}"  style="width: 100px;" sortBy="#{guestUser.shipperOperator}" filterMatchMode="contains" filterBy="#{guestUser.shipperOperator}">
+					          <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{guestUser.shipperOperator}" /> </f:facet>
+					               <f:facet name="input">
+					               		<p:selectOneMenu id="shipperOperatorIn" style="width:100px" required="true" value="#{guestUser.idn_user_group}" 
+					               		disabled="#{guestUserView.disabledField(guestUser)}" > 
+        								        <f:selectItems value="#{guestUserView.shipperOperatorIDs.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		    </p:selectOneMenu>	
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['guestUser_Telephone']}" style="width: 100px;" sortBy="#{guestUser.telephone}" filterMatchMode="contains" filterBy="#{guestUser.telephone}">
+					          <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{guestUser.telephone}" /></f:facet>
+					               <f:facet name="input">
+					               		<p:inputText value="#{guestUser.telephone}" required="false" style="width:100%"  maxlength="120"  
+					               			label="#{msg['guestUser_Telephone']}" disabled="#{guestUserView.disabledFieldNew(guestUser)}"
+						               		requiredMessage="#{msg['guestUser_Telephone']}: #{msg['empty_field']}" 
+						               		validatorMessage="#{msg['guestUser_Telephone']}: #{msg['lenght_field']} 120">
+					               			<f:validateLength maximum="30"/>
+					               		</p:inputText>
+					               	</f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       <p:column headerText="#{msg['guestUser_Address']}"  style="width: 100px;" sortBy="#{guestUser.address}" filterMatchMode="contains"  filterBy="#{guestUser.address}">
+					          <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{guestUser.address}" /></f:facet>
+					               <f:facet name="input">
+					               		<p:inputText value="#{guestUser.address}" required="false" style="width:100%"  maxlength="120"  
+					               			label="#{msg['guestUser_Address']}" disabled="#{guestUserView.disabledFieldNew(guestUser)}"
+					               			requiredMessage="#{msg['guestUser_Address']}: #{msg['empty_field']}" 
+					               			validatorMessage="#{msg['guestUser_Address']}: #{msg['lenght_field']} 120">
+					               			<f:validateLength maximum="120"/>
+					               		</p:inputText>	
+					               	</f:facet>
+					           </p:cellEditor>
+					       </p:column>
+	
+					       <p:column headerText="#{msg['guestUser_FAX']}"  style="width: 100px;" sortBy="#{guestUser.fax}" filterMatchMode="contains" filterBy="#{guestUser.fax}">
+					          <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{guestUser.fax}" /></f:facet>
+					               <f:facet name="input">
+					               		<p:inputText value="#{guestUser.fax}" required="false" style="width:100%"  maxlength="120"  
+					               			label="#{msg['guestUser_FAX']}" disabled="#{guestUserView.disabledFieldNew(guestUser)}"
+					               			requiredMessage="#{msg['guestUser_FAX']}: #{msg['empty_field']}" 
+					               			validatorMessage="#{msg['guestUser_FAX']}: #{msg['lenght_field']} 120">
+					               			<f:validateLength maximum="120"/>
+					               		</p:inputText>
+					               	</f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['guestUser_Email']}"  style="width: 100px;" sortBy="#{guestUser.email}" filterMatchMode="contains" filterBy="#{guestUser.email}">
+					          <p:cellEditor>
+					               <f:facet name="output"><h:outputText id="mail" value="#{guestUser.email}" />
+					               <p:tooltip id="toolTipMail" for="mail" value="#{guestUser.email}" trackMouse="true" />
+					               </f:facet>
+					               <f:facet name="input">
+					               		<p:inputText value="#{guestUser.email}" required="false"  style="width:100%"  maxlength="120"  
+					               			label="#{msg['guestUser_Email']}" disabled="#{guestUserView.disabledFieldNew(guestUser)}"
+					               			requiredMessage="#{msg['guestUser_Email']}: #{msg['empty_field']}" 
+					               			validatorMessage="#{msg['guestUser_Email']}: #{msg['lenght_field']} 120">
+					               			<f:validateLength maximum="120"/>
+					               		</p:inputText>
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['guestUser_Password']}"  style="width: 100px;" sortBy="#{guestUser.password}" >
+					          <p:cellEditor>
+					               <f:facet name="output"> <h:outputText   value="******************" />
+					               </f:facet>
+					               <f:facet name="input">
+					               		<p:password value="#{guestUser.password}"  style="width:100%"  maxlength="120"  
+					               			label="#{msg['guestUser_Password']}" disabled="false"
+					               			requiredMessage="#{msg['guestUser_Password']}: #{msg['empty_field']}" 
+					               			validatorMessage="#{msg['guestUser_Password']}: #{msg['guetUser_Invalid_Pass_Format']}">
+					               			<f:validateRegex pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[*@#$%^.+=:;,?~!].*$)(?=.*[0-9].*$).{8,}"/>
+					               		</p:password>
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['guestUser_Start_Date']}"  style="width: 100px;" sortBy="#{guestUser.startDate}" >
+					          <p:cellEditor>
+					               <f:facet name="output">
+					               			<h:outputText value="#{guestUser.startDate}" >
+					              				<f:convertDateTime pattern="dd/MM/yyyy" />
+					              		 </h:outputText>
+					               </f:facet>
+					               <f:facet name="input">
+					               		<p:calendar required="true" id="startDate"   
+					               			value="#{guestUser.startDate}" pattern="dd/MM/yyyy"
+					               			readonlyInput="true"   mindate="#{(guestUserView.sysdate).getTime()}"  
+					               			disabled="#{guestUserView.disabledField(guestUser)}" 
+											requiredMessage="#{msg['guestUser_Start_Date']}: #{msg['empty_field']}" validatorMessage="#{msg['guestUser_Start_Date']}: #{msg['empty_field']}">
+											<f:convertDateTime pattern="dd/MM/yyyy"/>
+										</p:calendar>
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['guestUser_End_Date']}"   style="width: 100px;" sortBy="#{guestUser.endDate}" >
+					          <p:cellEditor>
+					               <f:facet name="output">
+					               		<h:outputText value="#{guestUser.endDate}" >
+					              			<f:convertDateTime pattern="dd/MM/yyyy" />
+					              		 </h:outputText>
+					               </f:facet>
+					               <f:facet name="input">
+					            	    <p:calendar required="false" id="endDate"
+					            	    	 value="#{guestUser.endDate}" pattern="dd/MM/yyyy" 
+					            	    	 mindate="#{(guestUserView.sysdate).getTime()}"  
+					            	    	 disabled="#{guestUserView.disabledEndDate(guestUser)}"
+											 requiredMessage="#{msg['guestUser_End_Date']}: #{msg['empty_field']}" validatorMessage="#{msg['guestUser_End_Date']}: #{msg['empty_field']}">
+											<f:convertDateTime pattern="dd/MM/yyyy"/>
+										</p:calendar>
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					        <p:column headerText="#{msg['guestUser_Comments']}"   style="width: 100px;" sortBy="#{guestUser.comments}" >
+					          <p:cellEditor>
+					               <f:facet name="output"><h:outputText  id="comments" value="#{guestUser.comments}" />
+					               <p:tooltip id="tooltipcomments" for="comments" value="#{guestUser.comments}" trackMouse="true" />
+					               </f:facet>
+					               <f:facet name="input">
+					               		
+					               		<p:inputTextarea cols="22" rows="2" autoResize="false" value="#{guestUser.comments}" style="width:100%;white-space:initial !important" label="#{msg['guestUser_comments']}"
+					               			validatorMessage="#{msg['maintenance_engineering_comment']}: #{msg['lenght_field']} 2000">
+					               			<f:validateLength maximum="2000"/>
+					               		</p:inputTextarea>
+					               		
+					               		
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					        <p:rowExpansion >
+						   	<p:dataTable value="#{guestUser}" >    
+						  
+							
+								    	<p:column style="width: 10px;">
+											<h:outputText value="#{msg['guestUser_Roles']}"/>
+										</p:column>
+										 
+										<p:column style="width: 200px;">
+								 			
+			    							<p:pickList id="pickList" disabled="#{guestUserView.disabledFieldNew(guestUser)}" 
+			    								value="#{guestUser.rolesUsu}" var="roles" itemLabel="#{roles}" itemValue="#{roles}" />
+								     	</p:column>
+								
+						      	</p:dataTable>
+					      	</p:rowExpansion>
+					        
+					       <shiro:hasPermission name="#{changeSystemView.system}.DAM.USER.MOD">
+						       <p:column style="width:32px">
+						            <p:rowEditor rendered="#{guestUserView.renderItemEditor(guestUser)}"/>
+						       </p:column>
+					       </shiro:hasPermission>
+					   </p:dataTable>
+				</p:layoutUnit>
+			</p:layout>
+		</h:form>
+		
+		<shiro:hasPermission name="#{changeSystemView.system}.DAM.USER.ADD">
+		<p:dialog widgetVar="dlgNewGuestUser" resizable="false"  closable="true" modal="true" appendTo="@(body)" header="New GuestUser">
+		<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario
+		 <p:ajax event="close" update="formNewEntity"  process="@this" listener="#{guestUserView.cancel}" />	-->
+			<h:form id="formNewEntity">
+			<p:growl id="msgs" showDetail="true"  life="5000"/>
+				<p:panelGrid columns="4" style="width:100%">
+					<p:panelGrid>
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['guestUser_ID']}" />
+							</p:column>
+							<p:column>
+								<p:inputText required="true" id="id" value="#{guestUserView.newGuestUser.id}"  maxlength="20" 
+									requiredMessage="#{msg['guestUser_ID']}: #{msg['empty_field']}" validatorMessage="#{msg['guestUser_ID']}: #{msg['empty_field']}">
+								
+								</p:inputText>
+								<p:message for="id" />
+							</p:column>
+
+							<p:column>
+								<h:outputText value="#{msg['guestUser_Name']}" />
+							</p:column>
+							<p:column>
+								<p:inputText required="true" id="name" value="#{guestUserView.newGuestUser.name}"  maxlength="120" 
+									requiredMessage="#{msg['guestUser_Name']}: #{msg['empty_field']}" 
+									validatorMessage="#{msg['guestUser_Name']}: #{msg['empty_field']}">
+								</p:inputText>
+								<p:message for="name" />
+							</p:column>
+						</p:row>
+						
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['guestUser_shipperOperator']}" />
+							</p:column>
+							<p:column>
+								
+								<p:selectOneMenu  required="true"  id="shipperOperator" style="width:100px"   value="#{guestUserView.newGuestUser.idn_user_group}" >
+											  <f:selectItems value="#{guestUserView.shipperOperatorIDs.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>	
+								
+							</p:column>
+							<p:column>
+								<h:outputText  value="#{msg['guestUser_Address']}" />
+							</p:column>
+							<p:column>
+								<p:inputText required="false" id="address" value="#{guestUserView.newGuestUser.address}"  maxlength="120" 
+									requiredMessage="#{msg['guestUser_Address']}: #{msg['empty_field']}" 
+									validatorMessage="#{msg['guestUser_Address']}: #{msg['empty_field']}">
+								</p:inputText>
+								<p:message for="address" />
+							</p:column>
+						</p:row>
+						
+						<p:row>
+							
+							<p:column>
+								<h:outputText value="#{msg['guestUser_Email']}" />
+							</p:column>
+							<p:column>
+								<p:inputText required="false" id="email" value="#{guestUserView.newGuestUser.email}"  maxlength="120" 
+									requiredMessage="#{msg['guestUser_Email']}: #{msg['empty_field']}" 
+									validatorMessage="#{msg['guestUser_Email']}: #{msg['empty_field']}">
+								</p:inputText>
+								<p:message for="email" />
+							</p:column>
+							<p:column>
+								<h:outputText value="#{msg['guestUser_Password']}" />
+							</p:column>
+							<p:column>
+						
+								<p:password required="true" id="password" value="#{guestUserView.newGuestUser.password}"  maxlength="120" 
+									requiredMessage="#{msg['guestUser_Password']}: #{msg['empty_field']}"
+									validatorMessage="#{msg['guestUser_Password']}: #{msg['guetUser_Invalid_Pass_Format']}">
+									<!-- checks the password length - .{8,}
+										 makes sure there is at least 1 digit - (?=.*[0-9].*$)
+										and 1 special character (please define what special character means for you, add or remove accordingly) -
+										una mayuscula..
+											 (?=.*[-+()[\]~!@#$%^&*+}{":;'/?.><,\].*$)` 
+											 <f:validateRegex pattern="\A(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^+=])(?=\S+$).{8,}\z"/>-->
+											 
+									<f:validateRegex pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[*@#$%^.+=:;,?~!].*$)(?=.*[0-9].*$).{8,}"/>
+									
+								</p:password>
+								<p:message for="password" />
+							</p:column>
+							
+									
+						</p:row>
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['guestUser_Telephone']}" />
+							</p:column>
+							<p:column>
+								<p:inputText required="false" id="telephone" value="#{guestUserView.newGuestUser.telephone}"  maxlength="120" 
+									requiredMessage="#{msg['guestUser_Telephone']}: #{msg['empty_field']}" 
+									validatorMessage="#{msg['guestUser_Telephone']}: #{msg['empty_field']}">
+								</p:inputText>
+								<p:message for="telephone" />
+							</p:column>
+
+							<p:column>
+								<h:outputText value="#{msg['guestUser_FAX']}" />
+							</p:column>
+							<p:column>
+								<p:inputText  id="fax" value="#{guestUserView.newGuestUser.fax}"  maxlength="120" 
+									requiredMessage="#{msg['guestUser_FAX']}: #{msg['empty_field']}" 
+									validatorMessage="#{msg['guestUser_FAX']}: #{msg['empty_field']}">
+								</p:inputText>
+								<p:message for="fax" />
+							</p:column>
+						</p:row>
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['guestUser_Start_Date']}"/>
+							</p:column>
+							<p:column>
+								<p:calendar required="true" id="startDate" value="#{guestUserView.newGuestUser.startDate}" pattern="dd/MM/yyyy"
+								    readonlyInput="true"   mindate="#{(guestUserView.sysdate).getTime()}"  
+									requiredMessage="#{msg['guestUser_Start_Date']}: #{msg['empty_field']}" validatorMessage="#{msg['guestUser_Start_Date']}: #{msg['empty_field']}">
+								</p:calendar>
+								<p:message for="startDate" />
+							</p:column>									
+							
+							<p:column>
+								<h:outputText value="#{msg['guestUser_End_Date']}"/>
+							</p:column>
+							<p:column>
+								<p:calendar id="endDate" 
+									value="#{guestUserView.newGuestUser.endDate}" pattern="dd/MM/yyyy"
+								    mask="true"   mindate="#{(guestUserView.sysdate).getTime()}"  
+									validatorMessage="#{msg['guestUser_End_Date']}: #{msg['empty_field']}">
+								</p:calendar>
+								<p:message for="endDate" />
+							</p:column>
+							
+						</p:row>
+					    <p:row>
+					   		<p:column>
+								<h:outputText value="#{msg['guestUser_Roles']}"/>
+							</p:column>
+							<p:column>
+								<p:growl id="msg" showDetail="true" escape="false" />
+			    					<p:pickList id="pickList" value="#{guestUserView.newGuestUser.rolesUsu}" var="roles" itemLabel="#{roles}" itemValue="#{roles}" />
+					     	</p:column>
+					     	
+					     	<p:column>
+								<h:outputText value="#{msg['guestUser_Comments']}" />
+							</p:column>
+							<p:column>
+								<p:inputTextarea cols="40" rows="10" scrollHeight="" required="false" id="comments" value="#{guestUserView.newGuestUser.comments}" 
+									 maxlength="2000" autoResize="false" 
+									requiredMessage="#{msg['guestUser_Comments']}: #{msg['empty_field']}" 
+									validatorMessage="#{msg['guestUser_Comments']}: #{msg['empty_field']}">
+								</p:inputTextarea>
+								<p:message for="comments" />
+							</p:column>
+					     	
+					   </p:row>
+							
+					</p:panelGrid>
+				</p:panelGrid>
+				
+				<p:separator/>
+				<p:panelGrid>
+					<p:row>
+						<p:column>
+							<p:commandButton value="#{msg['save']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" validateClient="true"
+								action="#{guestUserView.save}" update=":#{p:component('guestUsers1')},:formNewEntity,#{p:component('id')}"
+								onstart="PF('cargando').show()"
+								oncomplete="PF('dlgNewGuestUser').hide(),PF('cargando').hide()" />
+			        		<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close"
+			        			update="formNewEntity" process="@this" actionListener="#{guestUserView.cancel}" 
+			        			oncomplete="PF('dlgNewGuestUser').hide()"/>
+						</p:column>					
+					</p:row>
+				</p:panelGrid>							
+			</h:form>			
+		</p:dialog>
+	</shiro:hasPermission>
+	</ui:define>
+
+
+</ui:composition>

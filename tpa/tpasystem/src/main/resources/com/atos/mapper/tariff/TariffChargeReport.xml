@@ -1,0 +1,1064 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+
+	<mapper namespace="com.atos.mapper.tariff.TariffChargeReportMapper">
+	
+    <resultMap type="com.atos.beans.tariff.TariffChargeDetailBean" id="TariffChargeDetail">
+    	<result property="detailGasDay" column="detailGasDay"/>
+		<result property="dailyBookedEntryCapacity" column="dailyBookedEntryCapacity"/>
+		<result property="dailyCapacityCharge" column="dailyCapacityCharge"/>
+    </resultMap>
+
+    <resultMap type="com.atos.beans.tariff.TariffChargeReportBean" id="TariffChargeReport">
+    
+              <id column="idn_tariff_code" property="idn_tariff_code"  />  
+        <result property="tariff_desc" column="tariff_desc"/> 
+		<result property="idn_tariff_code_detail" column="idn_tariff_code_detail"/>
+		<result property="detail_desc" column="detail_desc"/>
+		<result property="detail_code" column="detail_code"/>
+		
+		<result property="idn_unit" column="idn_unit"/>
+		<result property="unit_desc" column="unit_desc"/> 
+		
+		<result property="idn_tariff_charge_month" column="idn_tariff_charge_month"/>
+		<result property="idn_tariff_charge" column="idn_tariff_charge"/>
+		<result property="idn_contract" column="idn_contract"/>
+		
+		<result property="quantity" column="quantity"/>
+		<result property="fee" column="fee"/>
+		<result property="amount" column="amount"/>
+		
+		<result property="is_quantity_user_filled" column="is_quantity_user_filled"/>
+		<result property="is_fee_user_filled" column="is_fee_user_filled"/>
+		<result property="is_amount_user_filled" column="is_amount_user_filled"/>
+		<result property="charge_date" column="charge_date"/>
+		
+		<result property="contract_code" column="contract_code"/>
+		<result property="operation_desc" column="operation_desc"/>
+		
+		<result property="idn_system_point_type" column="idn_system_point_type"/>
+		<result property="type_code" column="type_code"/>
+		<result property="amount_compare" column="amount_compare"/>
+		<result property="reduction" column="reduction"/>
+		<result property="comments" column="comments"/>
+		<result property="amount_shipper" column="amount_shipper"/>
+		<result property="amount_operator" column="amount_operator"/>
+		<result property="comments_charge_month" column="comments_charge_month"/>
+		<result property="parameter_value_criteria" column="parameter_value_criteria"/>
+		<result property="parameter_value_mode" column="parameter_value_mode"/>
+	
+	</resultMap>
+     
+     
+    
+	<select id="selectTariffChargeReports" parameterType="com.atos.filters.tariff.TariffChargeReportFilter" resultMap="TariffChargeReport">
+	<!-- Details NO administrables por el usuario... -->
+	  WITH
+
+  w_tariff_charge AS
+    (SELECT cha.*, ug.user_group_id, ug.user_group_name
+       FROM tpa_ttariff_charge cha,
+            tpa_tuser_group ug
+      WHERE cha.idn_pipeline_system = #{idn_system}
+
+      <if test="idn_user_group != null">
+
+        AND cha.idn_user_group = #{idn_user_group}
+
+      </if>
+
+      <if test="shortDate != null">
+
+        AND cha.charge_date = #{shortDate}
+
+      </if>
+
+      <choose>
+
+        <when test="idn_tariff_charge != null">
+
+        AND cha.idn_tariff_charge =  #{idn_tariff_charge}
+
+        </when>
+
+        <when test="idn_tariff_charge == null">
+
+        AND cha.version_date = (SELECT MAX(chax.version_date)
+                                   FROM tpa_ttariff_charge chax
+                                  WHERE chax.idn_user_group = cha.idn_user_group
+                                    AND chax.idn_pipeline_system = cha.idn_pipeline_system
+                                    AND chax.charge_date = cha.charge_date
+                                    AND chax.is_invoice_sent = 'Y'
+                               )
+
+        </when>
+
+      </choose>
+		AND cha.idn_user_group = ug.idn_user_group
+    ),
+
+  w_parameter AS
+    (SELECT tc.idn_tariff_charge,
+            p.parameter_code,
+            cp.parameter_value
+       FROM w_tariff_charge tc,
+            tpa_tparameter           p,
+            tpa_ttariff_charge_param cp
+      WHERE p.idn_parameter = cp.idn_parameter
+        AND cp.idn_tariff_charge = tc.idn_tariff_charge
+        AND cp.version_date = (SELECT MAX(cpx.version_date)
+                                 FROM tpa_ttariff_charge_param cpx
+                                WHERE cp.idn_tariff_charge = cpx.idn_tariff_charge
+                                  AND cp.idn_parameter = cpx.idn_parameter)
+        AND p.parameter_code IN ('TARIFF.OVERUSE.CALCULATION.CRITERIA', 'TARIFF.OVERUSE.CALCULATION.MODE')
+    ),
+
+  w_code_detail_param_current AS
+    (SELECT tc.idn_tariff_charge, ptcd.*
+       FROM w_tariff_charge tc,
+            TABLE(pck_tariff_charge.fun_paramet_tariff_code_det(tc.idn_tariff_charge,  tc.idn_pipeline_system)) ptcd
+    ),
+  w_code_detail_param_compare AS
+    (SELECT tc.idn_tariff_charge, tc.idn_tariff_charge_compare, ptcdc.*
+       FROM w_tariff_charge tc,
+            TABLE(pck_tariff_charge.fun_paramet_tariff_code_det(tc.idn_tariff_charge_compare,  tc.idn_pipeline_system)) ptcdc
+      WHERE tc.idn_tariff_charge_compare IS NOT NULL
+    )
+
+  SELECT cha.tariff_charge_code,
+         cha.user_group_id,
+         cha.user_group_name,
+         co.idn_tariff_code idn_tariff_code,
+         co.tariff_desc tariff_desc,
+         co.tariff_code tariff_code,
+         de.idn_tariff_code_detail idn_tariff_code_detail,
+         de.detail_desc detail_desc,
+         de.detail_code detail_code,
+         de.idn_system_point_type idn_system_point_type,
+         un.idn_unit idn_unit,
+         decode(un.unit_desc, 'MMBTU/D', 'MMBTU', un.unit_desc) unit_desc,
+         mo.idn_tariff_charge_month idn_tariff_charge_month,
+         CASE
+           <!-- ((SELECT SUM(so.ENERGY) Bug Julio 2018-->         
+           WHEN co.tariff_code = 'OVERUSAGE.CHARGE' THEN
+             (SELECT SUM(so.billable_energy)
+                FROM tpa_ttariff_charge_source so
+               WHERE so.idn_tariff_charge = mo.idn_tariff_charge
+                 AND so.idn_tariff_source_detail = (SELECT sd.idn_tariff_source_detail
+                                                      FROM tpa_ttariff_source_detail sd,
+                                                           tpa_ttariff_code_det_calc dc,
+                                                           tpa_tfee_type ft,
+                                                           w_code_detail_param_current cdpc
+                                                     WHERE dc.idn_tariff_code_detail = de.idn_tariff_code_detail
+                                                       AND dc.idn_tariff_source_detail = sd.idn_tariff_source_detail
+                                                       AND dc.idn_fee_type = ft.idn_fee_type
+                                                       AND ft.idn_pipeline_system = #{idn_system}
+                                                       AND cdpc.idn_tariff_code_detail = dc.idn_tariff_code_detail
+                                                       AND cdpc.idn_tariff_charge = mo.idn_tariff_charge
+                                                       AND ROWNUM = 1)
+                 AND so.idn_contract = mo.idn_contract)
+         ELSE
+           mo.quantity
+         END quantity,
+         mo.fee fee,
+         mo.amount amount,
+         (SELECT nvl(mo2.amount_operator, mo2.amount)
+            FROM tpa_ttariff_charge_month mo2,
+                 w_code_detail_param_compare cdpc
+           WHERE mo2.idn_tariff_charge = cha.idn_tariff_charge_compare
+             AND mo2.idn_tariff_code_detail = mo.idn_tariff_code_detail
+             AND mo2.idn_tariff_code_detail = cdpc.idn_tariff_code_detail
+             AND NVL(mo2.idn_contract, -1) = NVL(mo.idn_contract, -1)
+             AND cdpc.idn_tariff_charge_compare = cha.idn_tariff_charge_compare) amount_compare,
+         cha.idn_user_group,
+         de.is_quantity_user_filled,
+         de.is_fee_user_filled,
+         de.is_amount_user_filled,
+         co.sort_value sort_value_co,
+         de.sort_value sort_value_de,
+         cha.charge_date charge_date,
+         cha.idn_tariff_charge idn_tariff_charge,
+         mo.idn_contract idn_contract,
+         con.contract_code contract_code,
+         op.operation_desc operation_desc,
+         pt.type_code type_code,
+         mo.reduction reduction,
+         cha.comments comments,
+         nvl(mo.amount_operator, mo.amount) amount_shipper,  -- item 79
+         mo.amount_operator amount_operator,                 -- item 79
+         mo.comments comments_charge_month,                  -- item 79
+         (SELECT pa.parameter_value
+            FROM w_parameter pa
+           WHERE pa.parameter_code = 'TARIFF.OVERUSE.CALCULATION.CRITERIA'
+             AND pa.idn_tariff_charge = cha.idn_tariff_charge) AS parameter_value_criteria,
+         (SELECT pa.parameter_value
+            FROM w_parameter pa
+           WHERE pa.parameter_code = 'TARIFF.OVERUSE.CALCULATION.MODE'
+             AND pa.idn_tariff_charge = cha.idn_tariff_charge) AS parameter_value_mode
+    FROM tpa_ttariff_code co,
+         tpa_ttariff_code_detail de,
+         tpa_tunit un,
+         tpa_ttariff_charge_month mo,
+         w_tariff_charge cha,
+         tpa_tcontract con,
+         tpa_voperation op,
+         tpa_tsystem_point_type pt,
+         w_code_detail_param_current cdc
+   WHERE cdc.idn_tariff_charge = cha.idn_tariff_charge
+     AND co.idn_tariff_code = de.idn_tariff_code
+     AND de.idn_unit = un.idn_unit(+)
+     AND mo.idn_tariff_code_detail = de.idn_tariff_code_detail
+     AND mo.idn_tariff_code_detail = cdc.idn_tariff_code_detail
+     AND cha.idn_tariff_charge = mo.idn_tariff_charge
+     AND de.is_quantity_user_filled = 'N'
+     AND de.is_fee_user_filled = 'N'
+     AND de.is_amount_user_filled = 'N'
+     AND de.idn_system_point_type = pt.idn_system_point_type(+)
+     AND con.idn_pipeline_system(+) = cha.idn_pipeline_system
+     AND con.idn_contract(+) = mo.idn_contract
+     AND op.idn_operation(+) = con.idn_operation
+  UNION ALL
+  <!-- Details administrables por el usuario... -->
+  SELECT cha.tariff_charge_code,
+         cha.user_group_id,
+         cha.user_group_name,
+         co.idn_tariff_code idn_tariff_code,
+         co.tariff_desc tariff_desc,
+         co.tariff_code tariff_code,
+         de.idn_tariff_code_detail idn_tariff_code_detail,
+         de.detail_desc detail_desc,
+         de.detail_code detail_code,
+         de.idn_system_point_type idn_system_point_type,
+         un.idn_unit idn_unit,
+         decode(un.unit_desc, 'MMBTU/D', 'MMBTU', un.unit_desc) unit_desc,
+         mo.idn_tariff_charge_month idn_tariff_charge_month,
+         mo.quantity quantity,
+        mo.fee fee,
+         mo.amount amount,
+         NULL amount_compare,
+         cha.idn_user_group,
+         de.is_quantity_user_filled,
+         de.is_fee_user_filled,
+         de.is_amount_user_filled,
+         co.sort_value sort_value_co,
+         de.sort_value sort_value_de,
+         cha.charge_date charge_date,
+         cha.idn_tariff_charge idn_tariff_charge,
+         mo.idn_contract idn_contract,
+         con.contract_code contract_code,
+         op.operation_desc operation_desc,
+         pt.type_code type_code,
+         mo.reduction reduction,
+         cha.comments comments,
+         nvl(mo.amount_operator, mo.amount) amount_shipper,  -- item 79
+         mo.amount_operator amount_operator,                 -- item 79
+         mo.comments comments_charge_month,                  -- item 79
+         (SELECT pa.parameter_value
+            FROM w_parameter pa
+           WHERE pa.parameter_code = 'TARIFF.OVERUSE.CALCULATION.CRITERIA'
+             AND pa.idn_tariff_charge = cha.idn_tariff_charge) AS parameter_value_criteria,
+         (SELECT pa.parameter_value
+            FROM w_parameter pa
+           WHERE pa.parameter_code = 'TARIFF.OVERUSE.CALCULATION.MODE'
+             AND pa.idn_tariff_charge = cha.idn_tariff_charge) AS parameter_value_mode
+    FROM tpa_ttariff_code co,
+         tpa_ttariff_code_detail de,
+         tpa_tunit un,
+         tpa_ttariff_charge_month mo,
+         w_tariff_charge cha,
+         tpa_tcontract con,
+         tpa_voperation op,
+         tpa_tsystem_point_type pt,
+         w_code_detail_param_current cdc
+   WHERE cdc.idn_tariff_charge = cha.idn_tariff_charge
+     AND co.idn_tariff_code= de.idn_tariff_code
+     <!-- CH721  quitar el bac-->
+     AND co.tariff_code != 'BAC.CHARGE'
+     AND de.idn_unit = un.idn_unit(+)
+     AND mo.idn_tariff_code_detail (+)= de.idn_tariff_code_detail
+     AND de.idn_tariff_code_detail = cdc.idn_tariff_code_detail
+     AND cha.idn_tariff_charge = mo.idn_tariff_charge(+)
+     AND (de.is_quantity_user_filled = 'Y' OR
+          de.is_fee_user_filled = 'Y' OR
+          de.is_amount_user_filled = 'Y' )
+     AND de.idn_system_point_type= pt.idn_system_point_type(+)
+     AND con.idn_contract(+) = mo.idn_contract
+     AND op.idn_operation(+) = con.idn_operation
+   ORDER BY tariff_charge_code, sort_value_co, sort_value_de
+</select>
+	
+    
+    <select id="getBacAcmount" resultType="java.math.BigDecimal">
+    
+    SELECT mo.amount amount
+        FROM tpa_ttariff_code co, tpa_ttariff_code_detail de, 
+             tpa_tunit un, tpa_ttariff_charge_month mo, 
+             tpa_ttariff_charge cha,
+             tpa_tcontract con,
+             tpa_voperation op,
+             tpa_tsystem_point_type pt
+        WHERE co.idn_tariff_code= de.idn_tariff_code 
+          AND co.tariff_code = 'BAC.CHARGE'
+          AND de.idn_unit = un.idn_unit(+) 
+          AND mo.idn_tariff_code_detail(+)= de.idn_tariff_code_detail 
+          AND cha.idn_tariff_charge=mo.idn_tariff_charge(+) 
+          AND (de.is_quantity_user_filled = 'Y' or de.is_fee_user_filled = 'Y' or de.is_amount_user_filled = 'Y')
+          AND de.idn_system_point_type= pt.idn_system_point_type (+)
+          AND cha.idn_pipeline_system = #{idn_system}
+          AND con.idn_pipeline_system (+)= cha.idn_pipeline_system
+          <if test="idn_user_group != null">
+          AND cha.idn_user_group = #{idn_user_group}
+        </if>
+          
+        <if test="shortDate != null">
+          AND cha.charge_date =  #{shortDate}
+        </if>
+         
+           <choose>
+            <when test="idn_tariff_charge != null">
+              AND cha.idn_tariff_charge =  #{idn_tariff_charge}
+            </when>
+            <when test="idn_tariff_charge == null">
+               AND cha.version_date = (SELECT max(cha2.version_date) 
+                             FROM tpa_ttariff_charge cha2 
+                             WHERE cha2.idn_user_group = cha.idn_user_group 
+                             AND cha2.charge_date = cha.charge_date
+                             AND cha2.idn_pipeline_system = cha.idn_pipeline_system)
+            </when>
+           </choose>
+    
+          AND con.idn_contract(+) = mo.idn_contract
+          AND op.idn_operation(+) = con.idn_operation
+    
+    </select>
+    
+    <select id="getShipperGroupID" resultType="java.lang.String">
+		SELECT user_group_id 
+		FROM tpa_tuser_group 
+		WHERE idn_user_group= #{idn_user_group}
+	</select>
+	
+    <select id="selectShippersCombo"  parameterType="com.atos.filters.tariff.TariffChargeReportFilter" resultType="com.atos.beans.ComboFilterNS">
+		<!-- Si el usuario que entra en el sistema es shipper el idn_user_group va inforamdo ya que solo debe salir él en eses caso -->
+		SELECT tuser.idn_user_group as key, tuser.user_group_id as value
+		FROM tpa_tuser_group tuser
+		WHERE tuser.idn_user_group_type = (SELECT idn_user_group_type 
+										   FROM tpa_tuser_group_type 
+										   WHERE type_code = 'SHIPPER')
+	    AND trunc(sysdate) between tuser.start_date AND nvl(tuser.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+		<if test="idn_user_group != null">
+			AND tuser.idn_user_group = #{idn_user_group}
+		</if>
+		order by UPPER(value)
+    </select>
+    
+   
+    <insert id="insertTariffChargeMonth"  keyProperty="idn_tariff_charge_month" keyColumn="idn_tariff_charge_month" parameterType="com.atos.beans.tariff.TariffChargeReportBean">
+		INSERT INTO tpa_ttariff_charge_month
+			(idn_tariff_charge_month,idn_tariff_charge,idn_tariff_code_detail,idn_contract,quantity,fee,amount,
+			aud_ins_user,aud_last_user)
+		VALUES
+			(tpa_stariff_charge_month.nextval,
+			 #{idn_tariff_charge},
+			 #{idn_tariff_code_detail}, 
+			 #{idn_contract},
+			 #{quantity},
+			 #{fee},
+			 #{amount},
+			 #{username},
+			 #{username}
+			 )
+		     
+	</insert>
+	
+	  <select id="selectTariffIdComboFiltro"  parameterType="com.atos.filters.tariff.TariffChargeReportFilter" resultType="com.atos.beans.ComboFilterNS">	
+		SELECT cha.idn_tariff_charge as key, cha.tariff_charge_code || '(' ||  to_char(cha.version_date, 'hh24:mi:ss') ||')' as value
+		FROM tpa_ttariff_charge cha 
+		WHERE cha.idn_user_group = #{idn_user_group} 
+		AND cha.charge_date = #{shortDate}
+		AND cha.idn_pipeline_system= #{idn_system}
+		<if test="isShipper==true">
+			AND cha.is_invoice_sent = 'Y'
+		</if>
+		order by value desc
+		
+    </select>
+	
+	<select id="selectTariffIdComboBac"  parameterType="com.atos.filters.tariff.TariffChargeReportFilter" resultType="com.atos.beans.ComboFilterNS">	
+		SELECT cha.idn_tariff_charge as key, cha.tariff_charge_code || '(' ||  to_char(cha.version_date, 'hh24:mi:ss') ||')' as value
+		FROM tpa_ttariff_charge cha 
+		WHERE cha.idn_user_group = #{idn_user_group} 
+		AND cha.charge_date = #{shortDate}
+		AND cha.idn_pipeline_system=#{idn_system}
+		AND  (SELECT max(cha2.version_date) 
+  			  FROM tpa_ttariff_charge cha2 
+		 	  WHERE cha2.idn_user_group = cha.idn_user_group AND cha2.charge_date = cha.charge_date
+		 	  AND cha2.idn_pipeline_system = cha.idn_pipeline_system) > cha.version_date 
+		order by value desc
+		
+    </select>
+    
+ 	<insert id="insertTariffCharge" useGeneratedKeys="true" keyProperty="idn_tariff_charge" keyColumn="idn_tariff_charge" parameterType="com.atos.beans.tariff.TariffChargeReportBean">
+		INSERT INTO tpa_ttariff_charge
+			(idn_tariff_charge,idn_user_group,charge_date, tariff_charge_code, idn_tariff_charge_compare, idn_pipeline_system,
+			aud_ins_user,aud_last_user)
+		VALUES
+			(tpa_stariff_charge.nextval,
+			 #{idn_user_group},
+			 #{charge_date},
+			 #{tariff_charge_code},
+			 decode(#{tariff_code}, 'BAC.CHARGE', NUll, #{idn_tariff_charge_compare}),
+			 #{idn_system},
+			 #{username},
+		     #{username}
+			 )
+	</insert>
+	
+	<!-- ojo hemos quitado el useGeneratedKeys="true" porque si no no funcionaba	 -->
+	 <insert id="insertSelectTariffChargeMonth" keyProperty="idn_tariff_charge_month" keyColumn="idn_tariff_charge_month" parameterType="com.atos.beans.tariff.TariffChargeReportBean">
+		INSERT INTO tpa_ttariff_charge_month
+		   (idn_tariff_charge_month, idn_tariff_charge, idn_tariff_code_detail, idn_contract, quantity, fee, amount,reduction,
+		   aud_ins_user,aud_last_user)
+		   SELECT tpa_stariff_charge_month.nextval,
+		          #{idn_nueva_cabecera},
+		          idn_tariff_code_detail,
+		          idn_contract,
+		          quantity,
+		          fee,
+		          amount,
+		          reduction,
+		          #{username},
+		     	  #{username}
+		     FROM tpa_ttariff_charge_month
+		    WHERE idn_tariff_charge = #{idn_tariff_charge}
+	</insert>
+
+ 	<insert id="insertSelectTariffChargeSource" keyProperty="idn_tariff_charge_source" keyColumn="idn_tariff_charge_source" parameterType="com.atos.beans.tariff.TariffChargeReportBean">
+		INSERT INTO tpa_ttariff_charge_source
+		   (idn_tariff_charge_source, idn_tariff_charge, gas_day,  idn_tariff_source_detail,  idn_contract, idn_system_point,energy, billable_energy,
+		   aud_ins_user,aud_last_user)
+		   SELECT tpa_stariff_charge_source.nextval,
+		          #{idn_nueva_cabecera},
+		          gas_day,
+		          idn_tariff_source_detail,
+		          idn_contract,
+		          idn_system_point,
+		          energy,
+		          billable_energy,
+		          #{username},
+		     	  #{username}
+		     FROM tpa_ttariff_charge_source
+		    WHERE idn_tariff_charge = #{idn_tariff_charge}
+	</insert>
+	
+	<select id="getIdnNuevaCabecera" resultType="java.math.BigDecimal">	
+		SELECT tc.idn_tariff_charge 
+		FROM tpa_ttariff_charge tc 
+		WHERE tc.idn_user_group = #{idn_user_group} 
+		   AND tc.charge_date = #{charge_date}
+		   AND tc.idn_pipeline_system = #{idn_system}
+		   AND tc.version_date = (SELECT MAX(tcx.version_date) 
+		                            FROM tpa_ttariff_charge tcx 
+		                           WHERE tcx.idn_user_group = tc.idn_user_group 
+		                             AND tcx.charge_date = tc.charge_date
+		                             AND tcx.idn_pipeline_system = tc.idn_pipeline_system)
+	</select>
+	
+	
+   <update id="updateTariffChargeMonth"  parameterType="com.atos.beans.tariff.TariffChargeReportBean">
+		UPDATE tpa_ttariff_charge_month tcm
+		   SET tcm.quantity = #{quantity},
+		       tcm.fee      = #{fee},
+		       tcm.amount   = #{amount},
+		       aud_last_user=#{username}
+		 WHERE tcm.idn_tariff_charge = #{idn_nueva_cabecera}
+		   AND tcm.idn_tariff_code_detail = #{idn_tariff_code_detail}
+	       AND nvl(tcm.idn_contract, -1) = nvl(#{idn_contract}, -1)
+	</update>
+	
+	<select id="getRepartosShipperDay" resultType="java.math.BigDecimal">
+	<!-- mes que tenga repartos del shipper seleccionado para todos los dias -->
+			
+		  SELECT COUNT(1) 
+		  FROM TPA_TALLOCATION_TYPE alloc_type, TPA_TALLOCATION_ORIGIN alloc_origin, TPA_TALLOCATION alloc, TPA_TALLOCATION_DATA alloc_data, TPA_TCONTRACT tcontract
+		  WHERE alloc_type.TYPE_CODE = 'COMMERCIAL'
+               AND alloc.idn_pipeline_system = #{idn_system}
+			   AND alloc.IDN_ALLOCATION_TYPE = alloc_type.IDN_ALLOCATION_TYPE
+			   AND alloc_origin.ORIGIN_CODE IN ('BALANCE', 'CLOSING_PROCESS')
+			   AND alloc.IDN_ALLOCATION_ORIGIN = alloc_origin.IDN_ALLOCATION_ORIGIN
+			   <if test="runTariffDate != null">
+			   <!-- 09/05/2017 un shipper puede no tener reparto para todos los dias del mes ..	   
+			     AND  alloc.GAS_DAY = LAST_DAY(#{runTariffDate})-->
+ 			     AND  alloc.GAS_DAY between trunc(#{runTariffDate},'MM') AND last_day(#{runTariffDate}) 
+			   </if>
+			   AND alloc.VERSION_DATE = (SELECT MAX(alloc2.VERSION_DATE)
+			                             FROM TPA_TALLOCATION alloc2
+			                             WHERE alloc2.GAS_DAY = alloc.GAS_DAY 
+                                             AND alloc2.IDN_ALLOCATION_TYPE = alloc.IDN_ALLOCATION_TYPE
+                                             AND alloc2.IDN_PIPELINE_SYSTEM = alloc.IDN_PIPELINE_SYSTEM)
+			   AND alloc_data.IDN_ALLOCATION = alloc.IDN_ALLOCATION
+			   AND tcontract.IDN_CONTRACT = alloc_data.IDN_CONTRACT
+			   AND tcontract.IDN_PIPELINE_SYSTEM = alloc.IDN_PIPELINE_SYSTEM
+			   <if test="idn_user_group != null">
+			      AND tcontract.IDN_USER_GROUP = #{idn_user_group}
+			   </if>
+
+	</select>
+
+	<select id="ejecRunTariff" statementType="CALLABLE" parameterType="com.atos.beans.tariff.TariffChargeReportBean">				                        
+		{call pck_tariff_charge.pro_tariff_charge(
+				#{idn_user_group,jdbcType=NUMERIC,mode=IN},
+				#{idn_system,jdbcType=NUMERIC,mode=IN},
+				#{runTariffDate,jdbcType=DATE,mode=IN},
+				#{user,jdbcType=VARCHAR,mode=IN},
+				#{language,jdbcType=VARCHAR,mode=IN},
+				#{error_code,jdbcType=NUMERIC,mode=OUT},
+				#{error_desc,jdbcType=VARCHAR,mode=OUT})}      			          
+
+	</select>
+	
+	<select id="ejecBacCalc" statementType="CALLABLE" parameterType="com.atos.beans.tariff.TariffChargeReportBean">				                        
+		{call pck_tariff_charge.pro_calc_BAC(
+				#{bac_idn_user_group,jdbcType=NUMERIC,mode=IN},
+				#{idn_system,jdbcType=NUMERIC,mode=IN},
+				#{bac_shortDate,jdbcType=DATE,mode=IN},
+				
+				#{bac_idn_tariff_charge_last,jdbcType=NUMERIC,mode=IN},
+				#{bac_idn_tariff_charge_comp,jdbcType=NUMERIC,mode=IN},
+				
+				#{user,jdbcType=VARCHAR,mode=IN},
+				#{language,jdbcType=VARCHAR,mode=IN},
+				#{tariff_charge_code_comp,jdbcType=VARCHAR,mode=OUT},
+				#{error_code,jdbcType=NUMERIC,mode=OUT},
+				#{error_desc,jdbcType=VARCHAR,mode=OUT})}   				
+	</select>
+	
+	<update id="updateNewVersion"  parameterType="com.atos.beans.tariff.TariffChargeReportBean">
+		UPDATE tpa_ttariff_charge_month m
+   		SET m.amount_operator = #{amount_operator},
+       	m.comments = #{comments_charge_month}
+		WHERE m.idn_tariff_charge = #{idn_tariff_charge}  
+	   AND m.idn_tariff_code_detail = #{idn_tariff_code_detail}
+	   <if test="idn_contract == null">
+	   		AND m.idn_contract IS NULL
+	   </if>
+	   <if test="idn_contract != null">
+	   		AND m.idn_contract = #{idn_contract}
+	   </if>
+		
+	</update>
+	
+	<select id="getNewVersion" statementType="CALLABLE" parameterType="com.atos.beans.tariff.TariffChargeReportBean">				                        
+		{call #{error_code,jdbcType=INTEGER,mode=OUT} :=
+		 pck_tariff_charge.fun_generate_new_version(
+				#{idn_tariff_charge,jdbcType=NUMERIC,mode=IN},
+				#{user,jdbcType=VARCHAR,mode=IN},
+				#{language,jdbcType=VARCHAR,mode=IN},
+				#{idn_tariff_charge_month,jdbcType=NUMERIC,mode=OUT},
+				#{error_desc,jdbcType=VARCHAR,mode=OUT})}   				
+	</select>
+	
+   <select id="getIdnLastTarifCharge"  parameterType="com.atos.beans.tariff.TariffChargeReportBean" resultType="java.math.BigDecimal" >
+		SELECT cha.idn_tariff_charge as idn_tariff_charge
+		FROM tpa_ttariff_charge cha 
+		WHERE cha.idn_user_group = #{idn_user_group} 
+			AND cha.charge_date = #{shortDate}
+			AND cha.idn_pipeline_system = #{idn_system} 
+		    AND cha.version_date = (SELECT MAX(cha2.version_date) 
+		    						FROM tpa_ttariff_charge cha2 
+		    						WHERE cha2.idn_user_group = cha.idn_user_group 
+		    						AND cha2.charge_date = cha.charge_date 
+		    						AND cha2.idn_pipeline_system = cha.idn_pipeline_system)
+   </select>
+
+   <select id="renderBacCal"  parameterType="com.atos.filters.tariff.TariffChargeReportFilter" resultType="java.math.BigDecimal" >
+	   SELECT COUNT(1)
+	   FROM tpa_ttariff_charge
+	   WHERE charge_date = #{shortDate}
+	   AND idn_user_group = #{idn_user_group}
+	   AND idn_pipeline_system= #{idn_system}
+	   
+   </select>
+   
+  <select id="getCodeCompareTarifCharge" parameterType="com.atos.filters.tariff.TariffChargeReportFilter" resultType="java.lang.String">
+	    SELECT  cha2.tariff_charge_code  as tariff_charge_code
+		FROM tpa_ttariff_charge cha, tpa_ttariff_charge cha2
+		WHERE cha.idn_user_group = #{idn_user_group} 
+		AND cha.charge_date = #{shortDate}
+		AND cha.idn_pipeline_system = #{idn_system}
+				 
+		<choose>
+		    <when test="idn_tariff_charge != null">
+		      AND cha.idn_tariff_charge =  #{idn_tariff_charge}
+		    </when>
+		    <when test="idn_tariff_charge == null">
+		      AND cha.version_date = (SELECT max(cha2.version_date) 
+		      						  FROM tpa_ttariff_charge cha2 
+		      						  WHERE cha2.idn_user_group = cha.idn_user_group 
+		      						  AND cha2.charge_date = cha.charge_date 
+		      						  AND cha2.idn_pipeline_system = cha.idn_pipeline_system)
+		    </when>
+	   </choose>
+	   AND cha2.idn_tariff_charge(+) = cha.idn_tariff_charge_compare
+	   AND cha2.idn_pipeline_system(+) = cha.idn_pipeline_system
+				 
+   </select>
+   
+   <select id="getIdFromTariffCharge" parameterType="java.lang.String" resultType="java.math.BigDecimal">
+	    SELECT  idn_tariff_charge 
+		FROM tpa_ttariff_charge cha
+		where tariff_charge_code=#{tariff_charge_code}
+</select>
+   
+    <select id="getComments" parameterType="com.atos.filters.tariff.TariffChargeReportFilter" resultType="java.lang.String">
+	    SELECT  cha.comments  as comments
+		FROM tpa_ttariff_charge cha, tpa_ttariff_charge cha2
+		WHERE cha.idn_user_group = #{idn_user_group} 
+		AND cha.charge_date = #{shortDate}
+		AND cha.idn_pipeline_system = #{idn_system}
+				 
+		<choose>
+		    <when test="idn_tariff_charge != null">
+		      AND cha.idn_tariff_charge =  #{idn_tariff_charge}
+		    </when>
+		    <when test="idn_tariff_charge == null">
+		      AND cha.version_date = (SELECT max(cha2.version_date) 
+		      						  FROM tpa_ttariff_charge cha2 
+		      						  WHERE cha2.idn_user_group = cha.idn_user_group 
+		      						  AND cha2.charge_date = cha.charge_date 
+		      						  AND cha2.idn_pipeline_system = cha.idn_pipeline_system)
+		    </when>
+		  </choose>
+		 AND cha2.idn_tariff_charge(+) = cha.idn_tariff_charge_compare
+	     AND cha2.idn_pipeline_system(+) = cha.idn_pipeline_system
+   </select>
+   
+    <select id="getOffSpec" parameterType="com.atos.filters.tariff.TariffChargeReportFilter" resultType="java.lang.String">
+		 SELECT 1 warning
+		FROM Tpa_Toffspec e, tpa_tsystem_point p, tpa_varea_tpa a, tpa_vzone_tpa z
+		WHERE E.IDN_USER_GROUP =  #{idn_user_group}
+		      AND not exists (SELECT 1 FROM tpa_toffspec_response er WHERE er.idn_offspec=e.idn_offspec )
+		      AND e.idn_offspec_status not in (
+		          SELECT s.idn_offspec_status FROM TPA_TOFFSPEC_STATUS s
+		          WHERE not exists (SELECT 1 FROM TPA_TOFFSPEC_STATUS_RULE sr WHERE sr.current_status=s.idn_offspec_status )
+		          )
+			      AND trunc(e.start_date) <![CDATA[ <= ]]> last_day(#{shortDate} ) 
+			      AND nvl(trunc(e.end_date), #{shortDate}) <![CDATA[>= ]]>#{shortDate}  
+                  AND p.idn_system_point = e.idn_system_point
+                  AND a.idn_area(+) = p.idn_area
+                  AND z.idn_zone(+) = a.idn_zone
+                  AND z.idn_pipeline_system = #{idn_system}
+					UNION 
+				  SELECT 1 warning
+					FROM Tpa_Toffspec e, tpa_tsystem_point p, tpa_varea_tpa a, tpa_vzone_tpa z
+					WHERE exists (SELECT 1 FROM tpa_toffspec_response er WHERE er.idn_offspec=e.idn_offspec AND er.idn_user_group= #{idn_user_group}) 
+					      AND e.idn_offspec_status not in (
+					          SELECT s.idn_offspec_status FROM TPA_TOFFSPEC_STATUS s
+					          WHERE not exists (SELECT 1 FROM TPA_TOFFSPEC_STATUS_RULE sr WHERE sr.current_status=s.idn_offspec_status )
+					          )
+					      AND trunc(e.start_date)<![CDATA[ <=  last_day(#{shortDate}) ]]>
+					      AND nvl(trunc(e.end_date), #{shortDate}) <![CDATA[ >=  #{shortDate}]]>
+                                   AND p.idn_system_point = e.idn_system_point
+                                   AND a.idn_area(+) = p.idn_area
+                                   AND z.idn_zone(+) = a.idn_zone
+                                   AND z.idn_pipeline_system = #{idn_system}
+
+					    
+	</select>
+   
+    <select id="getCodeLastTarifCharge" parameterType="com.atos.filters.tariff.TariffChargeReportFilter" resultType="java.lang.String">
+	 		    
+	 	SELECT cha.tariff_charge_code || '(' ||  to_char(cha.version_date, 'hh24:mi:ss') ||')' as  tariff_charge_code
+		FROM tpa_ttariff_charge cha
+		WHERE cha.idn_user_group = #{idn_user_group} 
+		AND cha.charge_date = #{shortDate} 
+		AND cha.idn_pipeline_system= #{idn_system}
+		AND cha.version_date = (SELECT max(cha2.version_date) FROM tpa_ttariff_charge cha2 WHERE cha2.idn_user_group = cha.idn_user_group AND cha2.charge_date = cha.charge_date AND cha2.idn_pipeline_system = cha.idn_pipeline_system)
+				 
+   </select>
+  
+   <!-- Pestaña: ‘Daily Capacity Charge’ 
+				      private BigDecimal dailyBookedEntryCapacity;
+	 				  private BigDecimal dailyCapacityCharge;
+	-->
+    <select id="selectDetailCapacityCharge" parameterType="com.atos.beans.tariff.TariffChargeReportBean" resultMap="TariffChargeDetail"> 
+    
+	    SELECT v_data.GAS_DAY AS detailGasDay,
+	           v_data.ENERGY  AS dailyBookedEntryCapacity,
+	           ROUND(v_data.ENERGY * v_data.FEE, 2) AS dailyCapacityCharge
+	    FROM (SELECT csource.GAS_DAY, SUM(csource.BILLABLE_ENERGY) ENERGY, cmonth.FEE
+	          FROM TPA_TTARIFF_CHARGE        tcharge,
+	               TPA_TTARIFF_CHARGE_SOURCE csource,
+	               TPA_TTARIFF_CHARGE_MONTH  cmonth,
+	               (SELECT DISTINCT dcalc.IDN_TARIFF_SOURCE_DETAIL, cdetail.IDN_TARIFF_CODE_DETAIL
+	                  FROM TPA_TTARIFF_CODE_DET_CALC dcalc, TPA_TTARIFF_CODE_DETAIL cdetail
+	                  WHERE cdetail.IDN_TARIFF_CODE = #{idn_tariff_code}
+	                  AND dcalc.IDN_TARIFF_CODE_DETAIL = cdetail.IDN_TARIFF_CODE_DETAIL) calc_detail
+	       WHERE tcharge.IDN_USER_GROUP =#{idn_user_group}
+	           AND tcharge.IDN_PIPELINE_SYSTEM = #{idn_system}
+	           AND tcharge.IDN_TARIFF_CHARGE =  #{idn_tariff_charge}
+	           AND csource.IDN_TARIFF_CHARGE = tcharge.IDN_TARIFF_CHARGE
+	           AND csource.IDN_CONTRACT = #{idn_contract}
+	           AND csource.IDN_TARIFF_SOURCE_DETAIL = calc_detail.IDN_TARIFF_SOURCE_DETAIL
+	           AND cmonth.IDN_TARIFF_CHARGE = csource.IDN_TARIFF_CHARGE
+	           AND cmonth.IDN_TARIFF_CODE_DETAIL = calc_detail.IDN_TARIFF_CODE_DETAIL
+	           AND cmonth.IDN_CONTRACT = csource.IDN_CONTRACT
+	         GROUP BY csource.GAS_DAY, cmonth.FEE) v_data
+	     ORDER BY v_data.GAS_DAY
+    </select>
+    
+    
+    <!--Pestaña: ‘Daily Commodity Charge’
+		private BigDecimal dailyAllocatedExitValue;
+    	private BigDecimal dailyCommodityCharge;  -->
+    	
+    <!-- CH715 AHORA existe el Exit y Entry 	
+    <select id="selectDetailComodityCharge" parameterType="com.atos.beans.tariff.TariffChargeReportBean" resultMap="TariffChargeDetail">
+	     SELECT v_data.GAS_DAY AS detailGasDay,
+		        v_data.ENERGY AS dailyAllocatedExitValue,
+		        ROUND(v_data.ENERGY * v_data.FEE, 2) AS dailyCommodityCharge
+		    FROM (SELECT csource.GAS_DAY, SUM(csource.BILLABLE_ENERGY) ENERGY, cmonth.FEE
+		          FROM TPA_TTARIFF_CHARGE        tcharge,
+		               TPA_TTARIFF_CHARGE_SOURCE csource,
+		               TPA_TTARIFF_CHARGE_MONTH  cmonth,
+	                      (SELECT DISTINCT dcalc.IDN_TARIFF_SOURCE_DETAIL, cdetail.IDN_TARIFF_CODE_DETAIL
+	                       FROM TPA_TTARIFF_CODE_DET_CALC dcalc, TPA_TTARIFF_CODE_DETAIL cdetail
+	                       WHERE cdetail.IDN_TARIFF_CODE = #{idn_tariff_code}
+	                       AND dcalc.IDN_TARIFF_CODE_DETAIL = cdetail.IDN_TARIFF_CODE_DETAIL) calc_detail               
+		          WHERE tcharge.IDN_USER_GROUP =#{idn_user_group}
+		           AND tcharge.IDN_PIPELINE_SYSTEM = #{idn_system}
+		           AND tcharge.IDN_TARIFF_CHARGE =  #{idn_tariff_charge}
+		           AND csource.IDN_TARIFF_CHARGE = tcharge.IDN_TARIFF_CHARGE
+		           AND csource.IDN_CONTRACT = #{idn_contract}
+		           AND csource.IDN_TARIFF_SOURCE_DETAIL = calc_detail.IDN_TARIFF_SOURCE_DETAIL
+		           AND cmonth.IDN_TARIFF_CHARGE = csource.IDN_TARIFF_CHARGE
+		           AND cmonth.IDN_TARIFF_CODE_DETAIL = calc_detail.IDN_TARIFF_CODE_DETAIL
+		           AND cmonth.IDN_CONTRACT = csource.IDN_CONTRACT
+		         GROUP BY csource.GAS_DAY, cmonth.FEE) v_data
+		   ORDER BY v_data.GAS_DAY
+      </select>
+      
+      -->
+       <select id="selectDetailComodityChargeExit" parameterType="com.atos.beans.tariff.TariffChargeReportBean" resultMap="TariffChargeDetail">
+	     SELECT v_data.GAS_DAY AS detailGasDay,
+		        v_data.ENERGY AS dailyAllocatedExitValue,
+		        ROUND(v_data.ENERGY * v_data.FEE, 2) AS dailyCommodityCharge
+		    FROM (SELECT csource.GAS_DAY, SUM(csource.BILLABLE_ENERGY) ENERGY, cmonth.FEE
+		          FROM TPA_TTARIFF_CHARGE        tcharge,
+		               TPA_TTARIFF_CHARGE_SOURCE csource,
+		               TPA_TTARIFF_CHARGE_MONTH  cmonth,
+	                      (SELECT DISTINCT dcalc.IDN_TARIFF_SOURCE_DETAIL, cdetail.IDN_TARIFF_CODE_DETAIL
+	                       FROM TPA_TTARIFF_CODE_DET_CALC dcalc, TPA_TTARIFF_CODE_DETAIL cdetail
+	                       WHERE cdetail.IDN_TARIFF_CODE = #{idn_tariff_code}
+	                       
+	                       AND cdetail.IDN_SYSTEM_POINT_TYPE = #{idn_system_point_type}
+	                       
+	                       AND dcalc.IDN_TARIFF_CODE_DETAIL = cdetail.IDN_TARIFF_CODE_DETAIL) calc_detail               
+		          WHERE tcharge.IDN_USER_GROUP =#{idn_user_group}
+		           AND tcharge.IDN_PIPELINE_SYSTEM = #{idn_system}
+		           AND tcharge.IDN_TARIFF_CHARGE =  #{idn_tariff_charge}
+		           AND csource.IDN_TARIFF_CHARGE = tcharge.IDN_TARIFF_CHARGE
+		           AND csource.IDN_CONTRACT = #{idn_contract}
+		           AND csource.IDN_TARIFF_SOURCE_DETAIL = calc_detail.IDN_TARIFF_SOURCE_DETAIL
+		           AND cmonth.IDN_TARIFF_CHARGE = csource.IDN_TARIFF_CHARGE
+		           AND cmonth.IDN_TARIFF_CODE_DETAIL = calc_detail.IDN_TARIFF_CODE_DETAIL
+		           AND cmonth.IDN_CONTRACT = csource.IDN_CONTRACT
+		         GROUP BY csource.GAS_DAY, cmonth.FEE) v_data
+		   ORDER BY v_data.GAS_DAY
+      </select>
+      
+      <select id="selectDetailComodityChargeEntry" parameterType="com.atos.beans.tariff.TariffChargeReportBean" resultMap="TariffChargeDetail">
+	     SELECT v_data.GAS_DAY AS detailGasDay,
+		        v_data.ENERGY AS dailyAllocatedEntryValue,
+		        ROUND(v_data.ENERGY * v_data.FEE, 2) AS dailyCommodityCharge
+		    FROM (SELECT csource.GAS_DAY, SUM(csource.BILLABLE_ENERGY) ENERGY, cmonth.FEE
+		          FROM TPA_TTARIFF_CHARGE        tcharge,
+		               TPA_TTARIFF_CHARGE_SOURCE csource,
+		               TPA_TTARIFF_CHARGE_MONTH  cmonth,
+	                      (SELECT DISTINCT dcalc.IDN_TARIFF_SOURCE_DETAIL, cdetail.IDN_TARIFF_CODE_DETAIL
+	                       FROM TPA_TTARIFF_CODE_DET_CALC dcalc, TPA_TTARIFF_CODE_DETAIL cdetail
+	                       WHERE cdetail.IDN_TARIFF_CODE = #{idn_tariff_code}
+	                       
+	                        AND cdetail.IDN_SYSTEM_POINT_TYPE = #{idn_system_point_type}
+	                       
+	                       AND dcalc.IDN_TARIFF_CODE_DETAIL = cdetail.IDN_TARIFF_CODE_DETAIL) calc_detail               
+		          WHERE tcharge.IDN_USER_GROUP =#{idn_user_group}
+		           AND tcharge.IDN_PIPELINE_SYSTEM = #{idn_system}
+		           AND tcharge.IDN_TARIFF_CHARGE =  #{idn_tariff_charge}
+		           AND csource.IDN_TARIFF_CHARGE = tcharge.IDN_TARIFF_CHARGE
+		           AND csource.IDN_CONTRACT = #{idn_contract}
+		           AND csource.IDN_TARIFF_SOURCE_DETAIL = calc_detail.IDN_TARIFF_SOURCE_DETAIL
+		           AND cmonth.IDN_TARIFF_CHARGE = csource.IDN_TARIFF_CHARGE
+		           AND cmonth.IDN_TARIFF_CODE_DETAIL = calc_detail.IDN_TARIFF_CODE_DETAIL
+		           AND cmonth.IDN_CONTRACT = csource.IDN_CONTRACT
+		         GROUP BY csource.GAS_DAY, cmonth.FEE) v_data
+		   ORDER BY v_data.GAS_DAY
+      </select>
+      
+    
+    <!--Pestaña: ‘Daily Entry Capacity Over Used Charge’
+    private BigDecimal dailyOriginalEntryCapacityOU //CH710 SAT FASE III
+	private BigDecimal dailyEntryCapacityOverUsed;
+	private BigDecimal dailyReducedEntryCapacityOverUsed; SAT CH522  en Java no hay que pintar esta columna
+	private BigDecimal dailyEntryCapacityOverUsedCharge;  -->
+				    
+    <select id="selectDetailOverUsageChargeEntry" parameterType="com.atos.beans.tariff.TariffChargeReportBean" resultMap="TariffChargeDetail">
+   		   SELECT v_data.GAS_DAY AS                   detailGasDay,
+   		  		  v_data.original_ENERGY AS           dailyOriginalEntryCapacityOU,
+		          v_data.ENERGY AS                    dailyEntryCapacityOU,
+		          v_data.ENERGY * v_data.REDUCTION AS dailyReducedEntryCapacityOU,
+		          ROUND(v_data.ENERGY * v_data.REDUCTION * v_data.FEE, 2) AS dailyEntryCapacityOUCharge
+		  	FROM (SELECT csource.GAS_DAY, SUM(csource.BILLABLE_ENERGY) ENERGY, SUM(csource.ENERGY) original_ENERGY, cmonth.REDUCTION/100 REDUCTION, cmonth.FEE
+		          FROM TPA_TTARIFF_CHARGE        tcharge,
+		               TPA_TTARIFF_CHARGE_SOURCE csource,
+		               TPA_TTARIFF_CHARGE_MONTH  cmonth,
+		               (SELECT DISTINCT dcalc.IDN_TARIFF_SOURCE_DETAIL, cdetail.IDN_TARIFF_CODE_DETAIL
+		                FROM TPA_TTARIFF_CODE_DET_CALC dcalc, TPA_TTARIFF_CODE_DETAIL cdetail
+		                WHERE cdetail.IDN_TARIFF_CODE = #{idn_tariff_code}
+		                AND cdetail.IDN_SYSTEM_POINT_TYPE = #{idn_system_point_type}
+		                AND dcalc.IDN_TARIFF_CODE_DETAIL = cdetail.IDN_TARIFF_CODE_DETAIL) calc_detail
+		         WHERE tcharge.IDN_USER_GROUP =#{idn_user_group}
+		           AND tcharge.IDN_PIPELINE_SYSTEM = #{idn_system}
+		           AND tcharge.IDN_TARIFF_CHARGE =  #{idn_tariff_charge}
+		           AND csource.IDN_TARIFF_CHARGE = tcharge.IDN_TARIFF_CHARGE
+		           AND csource.IDN_CONTRACT = #{idn_contract}
+		           AND csource.IDN_TARIFF_SOURCE_DETAIL = calc_detail.IDN_TARIFF_SOURCE_DETAIL
+		           AND cmonth.IDN_TARIFF_CHARGE = csource.IDN_TARIFF_CHARGE
+		           AND cmonth.IDN_TARIFF_CODE_DETAIL = calc_detail.IDN_TARIFF_CODE_DETAIL
+		           AND cmonth.IDN_CONTRACT = csource.IDN_CONTRACT
+		         GROUP BY csource.GAS_DAY, cmonth.REDUCTION, cmonth.FEE) v_data
+		 ORDER BY v_data.GAS_DAY
+   		
+
+   		
+    </select>
+    
+    <!-- Pestaña: ‘Daily Exit Capacity Over Used Charge’
+	private BigDecimal dailyOriginalExityCapacityOU //CH710 SAT FASE III
+    private BigDecimal dailyExitCapacityOU;
+    private BigDecimal dailyReducedExitCapacityOU => SAT CH522  en Java no hay que pintar esta columna
+   	private BigDecimal dailyExitCapacityOUCharge;
+      -->
+    
+    <select id="selectDetailOverUsageChargeExit" parameterType="com.atos.beans.tariff.TariffChargeReportBean" resultMap="TariffChargeDetail">
+   	   SELECT v_data.GAS_DAY AS 					detailGasDay,
+   	          v_data.original_ENERGY AS				dailyOriginalExitCapacityOU,
+       		  v_data.ENERGY AS 						dailyExitCapacityOU,
+       		  v_data.ENERGY * v_data.REDUCTION AS 	dailyReducedExitCapacityOU,
+       		  ROUND(v_data.ENERGY * v_data.REDUCTION * v_data.FEE, 2) AS dailyExitCapacityOUCharge
+       FROM (SELECT csource.GAS_DAY, SUM(csource.BILLABLE_ENERGY) ENERGY,  SUM(csource.ENERGY) original_ENERGY, cmonth.REDUCTION/100 REDUCTION, cmonth.FEE
+             FROM TPA_TTARIFF_CHARGE        tcharge,
+                  TPA_TTARIFF_CHARGE_SOURCE csource,
+                  TPA_TTARIFF_CHARGE_MONTH  cmonth,
+                  (SELECT DISTINCT dcalc.IDN_TARIFF_SOURCE_DETAIL, cdetail.IDN_TARIFF_CODE_DETAIL
+                   FROM TPA_TTARIFF_CODE_DET_CALC dcalc, TPA_TTARIFF_CODE_DETAIL cdetail
+                   WHERE cdetail.IDN_TARIFF_CODE = #{idn_tariff_code}
+                   AND cdetail.IDN_SYSTEM_POINT_TYPE = #{idn_system_point_type}
+                   AND dcalc.IDN_TARIFF_CODE_DETAIL = cdetail.IDN_TARIFF_CODE_DETAIL) calc_detail
+             WHERE tcharge.IDN_USER_GROUP =#{idn_user_group}
+             AND tcharge.IDN_PIPELINE_SYSTEM = #{idn_system}
+             AND tcharge.IDN_TARIFF_CHARGE =  #{idn_tariff_charge}
+             AND csource.IDN_TARIFF_CHARGE = tcharge.IDN_TARIFF_CHARGE
+             AND csource.IDN_CONTRACT = #{idn_contract}
+             AND csource.IDN_TARIFF_SOURCE_DETAIL = calc_detail.IDN_TARIFF_SOURCE_DETAIL
+             AND cmonth.IDN_TARIFF_CHARGE = csource.IDN_TARIFF_CHARGE
+             AND cmonth.IDN_TARIFF_CODE_DETAIL = calc_detail.IDN_TARIFF_CODE_DETAIL
+             AND cmonth.IDN_CONTRACT = csource.IDN_CONTRACT
+         GROUP BY csource.GAS_DAY, cmonth.REDUCTION, cmonth.FEE) v_data
+ 	ORDER BY v_data.GAS_DAY
+
+   		
+
+    </select>
+    
+    
+    <!--Pestaña: ‘Daily Imbalance Penalty Charge’
+	private BigDecimal dailyImbalance;
+    private BigDecimal dailyImbalanceCharge; 
+    
+   CH711 SAT FASE III  se añade dailyOriginalImbalance
+    
+   03/10/2018  SE AÑADE:
+   
+      ,csource.idn_contract,
+        csource.idn_system_point,
+        csource.idn_tariff_source_detail
+   -->
+    <select id="selectDetailImbalancePenalty" parameterType="com.atos.beans.tariff.TariffChargeReportBean" resultMap="TariffChargeDetail">
+   	  SELECT v_daily_energy.GAS_DAY AS detailGasDay,
+   	  		 v_daily_energy.original_ENERGY AS  dailyOriginalImbalance, 
+             v_daily_energy.ENERGY AS dailyImbalance,
+             ROUND(ABS(v_daily_energy.ENERGY) * CASE
+                 WHEN v_daily_energy.ENERGY >= 0 THEN
+	                 (SELECT cmonth.FEE
+	                  FROM TPA_TTARIFF_CHARGE_MONTH cmonth, TPA_TTARIFF_CODE_DETAIL code_detail
+	                  WHERE IDN_TARIFF_CHARGE = v_daily_energy.IDN_TARIFF_CHARGE
+	                        AND code_detail.DETAIL_CODE = 'IMBALANCE.PENALTY.POSITIVE'
+	                        AND cmonth.IDN_TARIFF_CODE_DETAIL = code_detail.IDN_TARIFF_CODE_DETAIL)
+                 ELSE
+                     (SELECT cmonth.FEE
+                      FROM TPA_TTARIFF_CHARGE_MONTH cmonth, TPA_TTARIFF_CODE_DETAIL code_detail
+                      WHERE IDN_TARIFF_CHARGE = v_daily_energy.IDN_TARIFF_CHARGE
+                           AND code_detail.DETAIL_CODE = 'IMBALANCE.PENALTY.NEGATIVE'
+                       	   AND cmonth.IDN_TARIFF_CODE_DETAIL = code_detail.IDN_TARIFF_CODE_DETAIL)
+                         END, 2) AS dailyImbalanceCharge
+     FROM
+     (SELECT v_data.GAS_DAY, SUM(v_data.ENERGY) ENERGY ,SUM(v_data.original_ENERGY) original_ENERGY, v_data.IDN_TARIFF_CHARGE
+       FROM (SELECT DISTINCT csource.GAS_DAY, csource.BILLABLE_ENERGY ENERGY, csource.ENERGY original_ENERGY, 
+       tcharge.IDN_TARIFF_CHARGE
+       ,csource.idn_contract,
+        csource.idn_system_point,
+        csource.idn_tariff_source_detail
+       
+                FROM TPA_TTARIFF_CHARGE tcharge,
+                     TPA_TTARIFF_CHARGE_SOURCE csource,
+                     TPA_TTARIFF_CODE_DETAIL cdetail,
+                     TPA_TTARIFF_CODE_DET_CALC dcalc
+               WHERE tcharge.IDN_USER_GROUP = #{idn_user_group}                                                                                      
+                 AND tcharge.IDN_PIPELINE_SYSTEM = #{idn_system}
+                 AND tcharge.IDN_TARIFF_CHARGE = #{idn_tariff_charge}
+                 AND csource.IDN_TARIFF_CHARGE = tcharge.IDN_TARIFF_CHARGE
+                 AND cdetail.idn_tariff_code = #{idn_tariff_code}
+                 AND dcalc.idn_tariff_code_detail = cdetail.idn_tariff_code_detail
+                 AND csource.idn_tariff_source_detail = dcalc.idn_tariff_source_detail) v_data
+      GROUP BY v_data.GAS_DAY, v_data.IDN_TARIFF_CHARGE) v_daily_energy
+     ORDER BY v_daily_energy.GAS_DAY
+   
+    </select>
+    
+    <select id="getInvoiceSent" parameterType="com.atos.filters.tariff.TariffChargeReportFilter" resultType="java.lang.String">
+	   	SELECT IS_INVOICE_sent
+	  	FROM TPA_TTARIFF_CHARGE cha
+	 	WHERE cha.idn_user_group = #{idn_user_group}
+	         AND cha.charge_date = #{shortDate}
+	         AND cha.idn_pipeline_system = #{idn_system}
+	       
+       <choose>
+            <when test="idn_tariff_charge != null">
+              AND cha.idn_tariff_charge = #{idn_tariff_charge}
+            </when>
+            <when test="idn_tariff_charge == null">
+              AND cha.version_date = (SELECT max(cha2.version_date) 
+               						  FROM tpa_ttariff_charge cha2 
+               						  WHERE cha2.idn_user_group = cha.idn_user_group 
+               						  AND cha2.charge_date = cha.charge_date 
+               						  AND cha2.idn_pipeline_system = cha.idn_pipeline_system)
+            </when>
+       </choose>
+
+   </select>
+   
+   
+   <update id="invoiceSentUpdate" parameterType="com.atos.filters.tariff.TariffChargeReportFilter" >
+		UPDATE TPA_TTARIFF_CHARGE cha
+   		SET IS_INVOICE_SENT = #{is_invoice_sent}, 
+            INVOICE_TIMESTAMP = DECODE(#{is_invoice_sent}, 'Y', SYSTIMESTAMP, NULL),
+            aud_last_user=#{username}
+ 		WHERE idn_user_group = #{idn_user_group}  
+	    AND cha.charge_date = #{shortDate}
+        AND cha.idn_pipeline_system = #{idn_system}		      
+
+		       <choose>
+		            <when test="idn_tariff_charge != null">
+		              AND cha.idn_tariff_charge = #{idn_tariff_charge}
+		            </when>
+		            <when test="idn_tariff_charge == null">
+		              AND cha.version_date = (SELECT max(cha2.version_date) 
+		             						  FROM tpa_ttariff_charge cha2 
+		              						  WHERE cha2.idn_user_group =  cha.idn_user_group
+		              						  AND cha2.charge_date =  cha.charge_date
+		              						  AND cha2.idn_pipeline_system = cha.idn_pipeline_system)
+		            </when>
+		       </choose>
+
+	</update>
+	
+	<update id="invoiceSentFalseUpdate" parameterType="com.atos.filters.tariff.TariffChargeReportFilter" >
+		UPDATE tpa_ttariff_charge
+		SET is_invoice_sent = 'N'
+		WHERE idn_user_group = #{idn_user_group}
+		AND charge_date = #{shortDate}
+		AND idn_pipeline_system = #{idn_system}
+		AND is_invoice_sent = 'Y'
+	</update>
+   
+   <update id="updateTariffCharge"  parameterType="com.atos.filters.tariff.TariffChargeReportFilter">
+		UPDATE tpa_ttariff_charge cha
+		   SET cha.comments = #{comments},
+		   aud_last_user=#{username}
+		WHERE idn_user_group = #{idn_user_group}  
+	    AND cha.charge_date = #{shortDate}
+        AND cha.idn_pipeline_system = #{idn_system}		      
+		      
+		       <choose>
+		            <when test="idn_tariff_charge != null">
+		              AND cha.idn_tariff_charge = #{idn_tariff_charge}
+		            </when>
+		            <when test="idn_tariff_charge == null">
+		              AND cha.version_date = (SELECT max(cha2.version_date) 
+								              FROM tpa_ttariff_charge cha2 
+								              WHERE cha2.idn_user_group =  cha.idn_user_group
+								              AND cha2.charge_date =  cha.charge_date
+								              AND cha2.idn_pipeline_system = cha.idn_pipeline_system)
+		            </when>
+		       </choose>
+		
+	</update>
+	
+	<select id="getCodeTarifCharge" parameterType="com.atos.filters.tariff.TariffChargeReportFilter" resultType="java.lang.String">
+	 		    
+	 		    SELECT cha.tariff_charge_code || '(' ||  to_char(cha.version_date, 'hh24:mi:ss') ||')' as  tariff_charge_code
+				FROM tpa_ttariff_charge cha
+				WHERE idn_user_group = #{idn_user_group}  
+		        AND cha.charge_date = #{shortDate}
+		        AND cha.idn_pipeline_system = #{idn_system}
+				 <choose>
+		            <when test="idn_tariff_charge != null">
+		              AND cha.idn_tariff_charge = #{idn_tariff_charge}
+		            </when>
+		            <when test="idn_tariff_charge == null">
+		              AND cha.version_date = (SELECT max(cha2.version_date) 
+								              FROM tpa_ttariff_charge cha2 
+								              WHERE cha2.idn_user_group =  cha.idn_user_group
+								              AND cha2.charge_date =  cha.charge_date
+								              AND cha2.idn_pipeline_system = cha.idn_pipeline_system)
+		            </when>
+		       </choose>
+				 
+   </select>
+   
+   <select id="selectTypeCriteria" resultType="com.atos.beans.ComboFilter"> 
+		select pc.validation_item as key, pc.validation_item as value 
+		from TPA_TPARAMETER_CONSTRAINT pc 
+		where pc.idn_parameter = (select p.idn_parameter from TPA_TPARAMETER p where p.PARAMETER_CODE = 'TARIFF.OVERUSE.CALCULATION.CRITERIA')
+		 AND pc.is_enabled ='Y'
+   </select>
+   
+   <select id="selectModeCriteria" resultType="com.atos.beans.ComboFilter"> 
+		 select pc.validation_item as key, pc.validation_item as value 
+	    from TPA_TPARAMETER_CONSTRAINT pc 
+	    where pc.idn_parameter = (select p.idn_parameter from tpa_tparameter p 
+		                          where p.parameter_code = 'TARIFF.OVERUSE.CALCULATION.MODE')
+	    AND pc.is_enabled ='Y'
+   </select>
+   
+   <select id="compare" parameterType="java.math.BigDecimal" resultMap="TariffChargeDetail">
+		select * from tpa_ttariff_charge where idn_tariff_charge = #{idn_tariff_charge} and idn_tariff_charge_compare is not null
+   </select>
+   
+    <select id="compare2" parameterType="java.math.BigDecimal" resultMap="TariffChargeDetail">
+		select * from tpa_ttariff_charge where idn_tariff_charge_compare = #{idn_tariff_charge_compare}
+   </select>
+  
+   <insert id="insertTypeSelected" parameterType="java.util.HashMap">
+	    insert into tpa_ttariff_charge_param (idn_tariff_charge_param, idn_tariff_charge, idn_parameter, version_date, parameter_value)
+	  values (tpa_stariff_charge_param.nextval, #{idn_tariff_charge}, (select p.idn_parameter from TPA_TPARAMETER p where p.PARAMETER_CODE = 'TARIFF.OVERUSE.CALCULATION.CRITERIA'), sysdate, #{parameter_value})  
+   </insert>
+   
+	<insert id="insertModeSelected" parameterType="java.util.HashMap">
+	    insert into tpa_ttariff_charge_param (idn_tariff_charge_param, idn_tariff_charge, idn_parameter, version_date, parameter_value)
+	  values (tpa_stariff_charge_param.nextval, #{idn_tariff_charge}, (select p.idn_parameter from TPA_TPARAMETER p where p.PARAMETER_CODE = 'TARIFF.OVERUSE.CALCULATION.MODE'), sysdate, #{parameter_value})  
+   </insert>
+   
+</mapper> 

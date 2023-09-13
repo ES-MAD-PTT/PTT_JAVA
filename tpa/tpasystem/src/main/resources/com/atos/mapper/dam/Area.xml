@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atos.mapper.dam.AreaMapper">
+
+
+	<resultMap type="com.atos.beans.dam.AreaBean" id="Area">
+		<id column="idn_area" property="idn_area" />
+		<result property="idn_pipeline_system" column="idn_pipeline_system" />
+		<result property="idn_zone" column="idn_zone" />
+
+		<result property="id" column="area_code" />
+		<result property="name" column="area_desc" />
+		<result property="system" column="pipeline_system_code" />
+		<result property="zone" column="zone_code" />
+		<result property="startDate" column="start_date" />
+		<result property="endDate" column="end_date" />
+		<result property="username" column="aud_ins_user" />
+		<result property="username" column="aud_last_user" />
+
+	</resultMap>
+
+	<select id="selectAreas" resultMap="Area">
+		SELECT  a.idn_area idn_area,
+		a.area_code area_code,
+		a.area_desc area_desc,
+		ps.IDN_PIPELINE_SYSTEM idn_pipeline_system,
+		ps.PIPELINE_SYSTEM_CODE pipeline_system_code,
+		ps.PIPELINE_SYSTEM_DESC pipeline_system_desc,
+		z.IDN_ZONE idn_zone,
+		z.ZONE_CODE zone_code,
+		z.zone_desc zone_desc,
+		a.START_DATE,
+		a.END_DATE
+		FROM tpa_varea_tpa a,
+		TPA_TPIPELINE_SYSTEM ps,
+		TPA_VZONE_TPA z
+		WHERE a.idn_zone = z.IDN_ZONE
+		AND z.IDN_PIPELINE_SYSTEM = ps.IDN_PIPELINE_SYSTEM
+
+		<if test="startDate != null">
+			AND nvl(a.end_date,to_date('9999/12/31','yyyy/mm/dd'))>=
+			#{startDate}
+		</if>
+		<if test="endDate != null">
+			AND #{endDate} >= a.start_date
+		</if>
+		<if test="idn_area != null and idn_area != ''">
+			<!-- and a.idn_area like #{id} -->
+			AND a.idn_area = #{idn_area}
+		</if>
+		<if test="name != null and name != ''">
+			AND a.area_desc like #{name}
+		</if>
+
+		<!-- offshore se quita la condicion y se pone fijo <if test="system != 
+			null and system != ''"> and ps.idn_pipeline_system = #{system} </if> -->
+
+		<!-- offshore -->
+		AND ps.idn_pipeline_system = #{idn_system}
+
+		<if test="zone != null and zone != ''">
+			AND a.idn_zone = #{zone}
+		</if>
+		order by UPPER (area_code)
+	</select>
+
+
+
+	<select id="selectIdsCombo" resultType="com.atos.beans.ComboFilterNS">
+		<!-- offshore select a.idn_area as key, a.area_code as value FROM tpa_varea_tpa 
+			a order by UPPER(a.area_code) -->
+
+		SELECT  a.idn_area as key, a.area_code as value
+		FROM tpa_varea_tpa a,
+		TPA_VZONE_TPA z
+		WHERE z.idn_zone= a.idn_zone
+		AND z.idn_pipeline_system = #{idn_system}
+		order by UPPER(a.area_code)
+
+	</select>
+
+
+	<select id="selectNames" resultType="java.lang.String">
+		SELECT  a.area_desc area_desc
+		FROM tpa_varea_tpa a
+		WHERE area_desc like #{query}
+	</select>
+
+
+	<select id="selectSystems" resultType="com.atos.beans.ComboFilterNS">
+		<!-- offshore el unico combo de la pantalla se carga con el system sel 
+			sistema -->
+		SELECT  ps.idn_pipeline_system as key, ps.pipeline_system_code as value
+		FROM tpa_tpipeline_system ps
+		WHERE ps.idn_pipeline_system =#{idn_system}
+		order by UPPER (ps.pipeline_system_code)
+	</select>
+
+	<!-- offshore los dos combos de zona ahora dependen del system del sistema 
+		<select id="selectZones" resultType="com.atos.beans.ComboFilterNS"> 
+		select	z.idn_zone as key, z.zone_code as value 
+		FROM TPA_VZONE_TPA z 
+		WHERE z.idn_pipeline_system= #{idn_pipeline_system} 
+		order by UPPER (z.zone_code) </select> 
+		<select id="selectZonesFiltro"	resultType="com.atos.beans.ComboFilterNS"> 
+		select z.idn_zone as key, z.zone_code as value 
+		FROM TPA_VZONE_TPA z order by UPPER (z.zone_code) 
+		</select> -->
+		
+	<!-- nuevo por offshore -->
+	<select id="selectZonesSystem" resultType="com.atos.beans.ComboFilterNS">
+		SELECT  z.idn_zone as key, z.zone_code as value
+		FROM TPA_VZONE_TPA z
+		WHERE z.idn_pipeline_system =#{idn_system}
+		order by UPPER(z.zone_code)
+	</select>
+
+	<select id="getAreaId" resultType="java.lang.String">
+		SELECT  a.area_code
+		FROM tpa_varea_tpa a
+		WHERE a.area_code = #{id}
+	</select>
+
+	<insert id="insertArea" useGeneratedKeys="true" keyProperty="idn_area"
+		keyColumn="idn_area" parameterType="com.atos.beans.dam.AreaBean">
+		INSERT INTO tpa_tarea
+		(idn_area,area_code,area_desc,idn_zone,start_date,end_date,
+		aud_ins_user,aud_last_user)
+		VALUES
+		(tpa_sarea.nextval,
+		#{id},
+		#{name},
+		#{idn_zone},
+		#{startDate},
+		#{endDate},
+		#{username},
+		#{username}
+		)
+	</insert>
+
+	<update id="updateArea" parameterType="com.atos.beans.dam.AreaBean">
+		UPDATE tpa_tarea set
+			area_desc=#{name},
+			idn_zone=#{idn_zone},
+			start_date=#{startDate},
+			end_date=#{endDate},
+			aud_last_user=#{username}
+		WHERE idn_area = #{idn_area}
+	</update>
+
+</mapper>

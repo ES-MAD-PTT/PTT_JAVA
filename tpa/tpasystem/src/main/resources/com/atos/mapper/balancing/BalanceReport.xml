@@ -1,0 +1,1602 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- Namespace -->
+<mapper namespace="com.atos.mapper.balancing.BalanceReportMapper">
+
+	<!-- Para hacer consultas, el shipper no tendria por que estar vigente. -->
+    <select id="selectShipperId" resultType="com.atos.beans.ComboFilterNS">
+		select tgr.idn_user_group as key, tgr.user_group_id as value
+		from tpa_tuser_group tgr
+		where tgr.idn_user_group_type = (select idn_user_group_type from tpa_tuser_group_type where type_code = 'SHIPPER')
+		order by upper(tgr.user_group_id) asc
+    </select>
+
+	<resultMap type="com.atos.beans.balancing.BalanceReportBean" id="BalanceReport">
+		<result property="gasDay" column="gas_day"/>
+        <result property="shipperCode" column="shipper_code"/>
+        <result property="shipperName" column="shipper_name"/>
+        <result property="contractId" column="idn_contract"/>
+        <result property="contractCode" column="contract_code"/>
+        <result property="isTotal" column="is_total"/>
+        <result property="isTotalAllShippers" column="is_totalG"/>
+        <result property="versionDate" column="version_date"/>
+        <result property="eTotalEntry" column="e_total_entry"/>
+        <result property="wTotalEntry" column="w_total_entry"/>
+        <result property="ewTotalEntry" column="ew_total_entry"/>
+        <result property="eTotalExit" column="e_total_exit"/>
+        <result property="wTotalExit" column="w_total_exit"/>
+        <result property="ewTotalExit" column="ew_total_exit"/>
+        <result property="eImbalanceZone" column="e_imbalance_zone"/>
+        <result property="wImbalanceZone" column="w_imbalance_zone"/>
+        <result property="ewImbalanceZone" column="ew_imbalance_zone"/>
+        <result property="totalImbalanceZone" column="total_imbalance_zone"/>
+        <result property="eInstructedFlow" column="e_instructed_flow"/>
+        <result property="wInstructedFlow" column="w_instructed_flow"/>
+        <result property="ewInstructedFlow" column="ew_instructed_flow"/>
+        <result property="eShrinkageQuantity" column="e_sv"/>
+        <result property="wShrinkageQuantity" column="w_sv"/>
+        <result property="ewShrinkageQuantity" column="ew_sv"/>
+        <result property="ePark" column="e_park"/>
+        <result property="wPark" column="w_park"/>
+        <result property="ewPark" column="ew_park"/>
+        <result property="eUnpark" column="e_unpark"/>
+        <result property="wUnpark" column="w_unpark"/>
+        <result property="ewUnpark" column="ew_unpark"/>
+        <result property="eSOTDPark" column="e_sotd_park"/>
+        <result property="wSOTDPark" column="w_sotd_park"/>
+        <result property="ewSOTDPark" column="ew_sotd_park"/>
+        <result property="eEOTDPark" column="e_eotd_park"/>
+        <result property="wEOTDPark" column="w_eotd_park"/>
+        <result property="ewEOTDPark" column="ew_eotd_park"/>
+        <result property="eMinInventory" column="e_min_inv"/>
+        <result property="wMinInventory" column="w_min_inv"/>
+        <result property="ewMinInventory" column="ew_min_inv"/>
+        <result property="eResBalancingGas" column="e_res_bal_gas"/>
+        <result property="wResBalancingGas" column="w_res_bal_gas"/>
+        <result property="ewResBalancingGas" column="ew_res_bal_gas"/>
+        <result property="totalAIP" column="aip"/>
+        <result property="totalAIN" column="ain"/>
+        <result property="imbalancePercentage" column="imbalance_percent"/>
+        <result property="eImbalanceStock" column="e_imbalance_stock"/>
+        <result property="wImbalanceStock" column="w_imbalance_stock"/>
+        <result property="ewImbalanceStock" column="ew_imbalance_stock"/>
+
+        <result property="eMonthAdjust" column="e_month_adjust"/>
+        <result property="wMonthAdjust" column="w_month_adjust"/>
+        <result property="ewMonthAdjust" column="ew_month_adjust"/>
+
+        <result property="eAccImbalanceMonth" column="e_acc_imbalance_month"/>
+        <result property="wAccImbalanceMonth" column="w_acc_imbalance_month"/>
+        <result property="ewAccImbalanceMonth" column="ew_acc_imbalance_month"/>
+        <result property="eAccImbalance" column="e_acc_imbalance"/>
+        <result property="wAccImbalance" column="w_acc_imbalance"/>
+        <result property="ewAccImbalance" column="ew_acc_imbalance"/>
+        <result property="eUsedCapacity" column="e_used_cap"/>
+        <result property="wUsedCapacity" column="w_used_cap"/>
+        <result property="ewUsedCapacity" column="ew_used_cap"/>
+        <result property="GSP" column="gsp"/>
+        <result property="BYPASS" column="bypass"/>
+        <result property="LNG" column="lng"/>
+        <result property="YDN" column="ydn"/>
+        <result property="YTG" column="ytg"/>
+        <result property="ZTK" column="ztk"/>
+        <result property="eFrom" column="east"/>
+        <result property="wFrom" column="west"/>
+        <result property="eBvw10" column="bvw10_east"/>
+        <result property="wBvw10" column="bvw10_west"/>
+        <result property="eEGAT" column="e_egat"/>
+        <result property="eIPP" column="e_ipp"/>
+        <result property="eSPP" column="e_spp"/>
+		<result property="eIND" column="e_ind"/>
+		<result property="eNGD" column="e_ngd"/>
+		<result property="eNGV" column="e_ngv"/>
+        <result property="wEGAT" column="w_egat"/>
+        <result property="wIPP" column="w_ipp"/>
+        <result property="wSPP" column="w_spp"/>
+		<result property="wIND" column="w_ind"/>
+		<result property="wNGD" column="w_ngd"/>
+		<result property="wNGV" column="w_ngv"/>
+		<result property="ewEGAT" column="ew_egat"/>
+        <result property="ewIPP" column="ew_ipp"/>
+        <result property="ewSPP" column="ew_spp"/>
+		<result property="ewIND" column="ew_ind"/>
+		<result property="ewNGD" column="ew_ngd"/>
+		<result property="ewNGV" column="ew_ngv"/>
+		<result property="eF2g" column="f2g_east"/>
+		<result property="wF2g" column="f2g_west"/>
+		<result property="e_east" column="e_east"/>
+		<result property="e_west" column="e_west"/>
+    </resultMap>
+
+    <select id="selectBalances" resultMap="BalanceReport">
+		<!-- DAYS -->
+		WITH 
+        days AS
+		 (SELECT ((trunc(#{fromDate}) - 1) + (LEVEL - 1)) AS gas_day
+		    FROM dual
+		  CONNECT BY LEVEL &lt;= (trunc(#{toDate}) - (trunc(#{fromDate}) - 1) + 1)),
+
+		<!-- SHIPPER CONTRACTS -->
+		shipper_contract AS
+		 (SELECT c.idn_contract AS idn,
+		         c.contract_code,
+		         c.idn_user_group
+		    FROM tpa_tcontract c,
+		         days          d
+		   WHERE d.gas_day BETWEEN c.start_date AND c.end_date
+		   	 AND c.idn_pipeline_system = #{systemId}
+		     AND EXISTS (SELECT 1 FROM tpa_tcontract_consolidate cc WHERE cc.idn_contract = c.idn_contract)
+			 <if test="shipperId != null and shipperId != ''">
+		     AND c.idn_user_group = #{shipperId}
+		     </if>
+		   GROUP BY c.idn_contract,
+		            c.contract_code,
+		            idn_user_group),
+
+		<!-- NON-AGGREGATABLE COLUMNS -->
+		non_agg_column AS
+		 (SELECT 'Imbalance_Percent' AS col_name
+		    FROM dual
+		  UNION
+		  SELECT 'EAST#Used_Cap' AS col_name
+		    FROM dual
+		  UNION
+		  SELECT 'WEST#Used_Cap' AS col_name
+		    FROM dual
+		  UNION
+		  SELECT 'EAST-WEST#Used_Cap' AS col_name
+		    FROM dual
+		  <!-- Esto puede haber que incluirlo aquí si el AIP y AIN debe mostrar sólo el global por sujeto y dia
+		  UNION
+		  SELECT 'AIP' AS col_name
+		    FROM dual
+		  UNION
+		  SELECT 'AIN' AS col_name
+		    FROM dual -->
+		 ),
+
+		<!-- FIRST DAY -->
+		first_day AS
+		 (SELECT MIN(gas_day) AS gas_day FROM days),
+
+		<!-- POINT CUSTOMER GROUP -->
+		point_customer_group AS
+		 (SELECT spr.nomination_point_idn,
+                 MAX(spr.max_start_date) AS start_date,
+                 spr.min_end_date AS end_date,
+                 MIN(spp.idn_customer_type) AS idn_customer_type
+            FROM tpa_vsystem_point_relation spr,
+                 days                       d,
+                 tpa_tsystem_point_param    spp
+           WHERE d.gas_day BETWEEN spr.max_start_date AND spr.min_end_date
+             AND spr.metered_point_idn = spp.idn_system_point
+             AND (spp.end_date is null OR spp.end_date > d.gas_day)
+          GROUP BY spr.nomination_point_idn,
+                   spr.min_end_date),
+
+		<!-- BALANCE (ALLOCATION 'HEADERS') -->
+		balance AS
+		 (SELECT a.idn_allocation,
+		         a.gas_day,
+		         a.version_date
+		    FROM tpa_tallocation a,
+		         days            d
+		   WHERE a.gas_day = d.gas_day
+		   	 AND a.idn_pipeline_system = #{systemId}
+		     AND a.idn_allocation_type =
+		         (SELECT t.idn_allocation_type FROM tpa_tallocation_type t WHERE t.type_code = 'COMMERCIAL')
+		     AND a.version_date = (SELECT MAX(ax.version_date)
+		                             FROM tpa_tallocation ax
+		                            WHERE ax.gas_day = a.gas_day
+		                              AND ax.idn_pipeline_system = a.idn_pipeline_system
+		                              AND ax.idn_allocation_type = a.idn_allocation_type
+		                              AND ax.idn_allocation_origin IN
+		                                  (SELECT o.idn_allocation_origin
+		                                     FROM tpa_tallocation_origin o
+		                                    WHERE o.origin_code IN ('BALANCE', 'CLOSING_PROCESS')))),
+
+		<!-- VERSION_DATE (MAX) -->
+		max_version_date AS
+		 (SELECT MAX(version_date) AS version_date FROM balance WHERE gas_day > (SELECT gas_day FROM first_day)),
+
+		<!-- ENTRY IDN -->
+		entry_idn AS
+		 (SELECT spt.idn_system_point_type AS idn FROM tpa_tsystem_point_type spt WHERE spt.type_code = 'ENTRY'),
+
+		<!-- EXIT IDN -->
+		exit_idn AS
+		 (SELECT spt.idn_system_point_type AS idn FROM tpa_tsystem_point_type spt WHERE spt.type_code = 'EXIT'),
+
+		<!-- ALL CONCEPTS USED IN BALANCE AND NEEDED FOR THE QUERY -->
+		all_concepts AS
+		 (SELECT nc.idn_nomination_concept AS idn,
+		         nc.concept_code           AS concept_code
+		    FROM tpa_tnomination_concept nc
+		   WHERE nc.concept_code IN ('SOTD_Park',
+		                             'EOTD_Park',
+		                             'Unpark',
+		                             'Instructed_Entry',
+		                             'Park',
+		                             'Instructed_Exit',
+		                             'Shrinkage_Volume',
+		                             <!--'Min_Inventory',  Item 33-->
+		                             'Min_Inventory_Change',
+		                             'Imbalance',
+		                             'Total_Entry',
+		                             'Total_Exit',
+                                     <!-- CR5 - Item 35
+		                             'East',
+		                             'West',
+                                     -->
+		                             'Balancing_gas',
+		                             'Imbalance_Stock',
+		                             'Accumulated_Imbalance',
+                                     'Allocation_month_adjust',
+                                     <!-- CR5 - Item 35 -->
+                                     'East_to_RA6',
+                                     'West_to_RA6',
+                                     'West_to_BVW10',
+                                     'East_to_BVW10',
+                                     'F2G_ALLOCATION',
+                                     'E_ALLOCATION'
+                                     <!-- Fin CR5 - Item 35 -->
+                                     )),
+
+		<!-- ENERGY CONCEPT -->
+		energy AS
+		 (SELECT nc.idn_nomination_concept AS idn FROM tpa_tnomination_concept nc WHERE nc.concept_code = 'ENERGY'),
+
+		<!-- CR5 - Item 35  / remove EAST CONCEPT and WEST CONCEPT
+		east AS
+		 (SELECT nc.idn_nomination_concept AS idn FROM tpa_tnomination_concept nc WHERE nc.concept_code = 'East'),
+
+		west AS
+		 (SELECT nc.idn_nomination_concept AS idn FROM tpa_tnomination_concept nc WHERE nc.concept_code = 'West'),
+        -->
+
+		<!-- INSTRUCTED FLOW REDUCED CONCEPT -->
+		instructed_flows AS
+		 (SELECT nc.idn_nomination_concept AS idn,
+		         decode(nc.concept_code, 'Instructed_Exit', -1, 1) AS multiplier
+		    FROM tpa_tnomination_concept nc
+		   WHERE nc.concept_code IN ('Instructed_Entry', 'Instructed_Exit')),
+
+        <!-- CR5 - Item 35 : BVW10 to East and West / RA6 to East and West -->
+        ra6_east AS
+         (SELECT idn_nomination_concept AS idn FROM tpa_tnomination_concept nc WHERE nc.concept_code = 'East_to_RA6'),
+
+        ra6_west AS
+         (SELECT idn_nomination_concept AS idn FROM tpa_tnomination_concept nc WHERE nc.concept_code = 'West_to_RA6'),
+         
+		bvw10_east AS
+		 (SELECT idn_nomination_concept AS idn FROM tpa_tnomination_concept nc WHERE nc.concept_code = 'East_to_BVW10'),
+
+		bvw10_west AS
+		 (SELECT idn_nomination_concept AS idn FROM tpa_tnomination_concept nc WHERE nc.concept_code = 'West_to_BVW10'),
+        <!-- Fin CR5 - Item 35 -->
+
+		<!-- IMBALANCE ZONE CONCEPT -->
+		imbalance_zone AS
+		 (SELECT nc.idn_nomination_concept AS idn,
+		         decode(nc.concept_code, 'Total_Exit', -1, 1) AS multiplier
+		    FROM tpa_tnomination_concept nc
+		   WHERE nc.concept_code IN ('Total_Entry', 'Total_Exit')),
+
+        <!-- Fin CR5 - Item 35 -->
+        
+		<!-- IMBALANCE CONCEPT -->
+		imbalance AS
+		 (SELECT nc.idn_nomination_concept AS idn FROM tpa_tnomination_concept nc WHERE nc.concept_code = 'Imbalance'),
+
+		<!-- BALANCING GAS CONCEPT -->
+		balancing_gas AS
+		 (SELECT nc.idn_nomination_concept AS idn FROM tpa_tnomination_concept nc WHERE nc.concept_code = 'Balancing_gas'),
+
+		<!-- ACCUMULATED IMBALANCE CONCEPT -->
+		acc_imbalance AS
+		 (SELECT nc.idn_nomination_concept AS idn FROM tpa_tnomination_concept nc WHERE nc.concept_code = 'Accumulated_Imbalance'),
+
+		<!-- ALLOCATION DATA POINTS -->
+		allocation_point AS
+		 (SELECT b.gas_day,
+		         ad.idn_contract,
+		         ad.idn_zone,
+		         ad.idn_nomination_point,
+		         nvl(ad.idn_system_point_type, -1) AS idn_system_point_type,
+		         ad.allocated_value,
+		         ad.contracted_value
+		    FROM tpa_tallocation_data ad,
+		         balance              b
+		   WHERE b.idn_allocation = ad.idn_allocation
+		     AND ad.idn_contract IN (SELECT idn FROM shipper_contract)
+		     AND ad.idn_nomination_concept = (SELECT idn FROM energy)
+		     AND ad.idn_nomination_point IS NOT NULL),
+
+		<!-- ALLOCATION_DATA ENTRY POINTS -->
+		allocation_entry_point AS
+		 (SELECT ap.gas_day,
+		         ap.idn_contract,
+		         ap.idn_zone,
+		         bg.idn_balance_group,
+		         ap.allocated_value,
+		         ap.contracted_value
+		    FROM allocation_point         ap,
+		         tpa_tbalance_group       bg,
+		         tpa_tbalance_group_point bgp
+		   WHERE ap.idn_system_point_type = (SELECT idn FROM entry_idn)
+		     AND ap.idn_nomination_point = bgp.idn_system_point
+		     AND bg.idn_balance_group = bgp.idn_balance_group),
+
+		<!-- ALLOCATION_DATA EXIT POINTS -->
+		allocation_exit_point AS
+		 (SELECT ap.gas_day,
+		         ap.idn_contract,
+		         ap.idn_zone,
+		         pcg.idn_customer_type,
+		         ap.allocated_value,
+		         ap.contracted_value
+		    FROM allocation_point     ap,
+		         point_customer_group pcg
+		   WHERE ap.idn_system_point_type = (SELECT idn FROM exit_idn)
+		     AND ap.idn_nomination_point = pcg.nomination_point_idn
+		     AND ap.gas_day BETWEEN pcg.start_date AND pcg.end_date),
+
+		<!-- ALLOCATION ZONE CONCEPTS -->
+		allocation_zone_concept AS
+		 (SELECT b.gas_day,
+		         ad.idn_contract,
+		         ad.idn_zone,
+		         ad.idn_nomination_concept,
+		         ad.idn_system_point_type,
+		         ad.allocated_value
+		    FROM tpa_tallocation_data ad,
+		         balance              b
+		   WHERE b.idn_allocation = ad.idn_allocation
+		     AND ad.idn_contract IN (SELECT idn FROM shipper_contract)
+		     AND ad.idn_nomination_concept IN (SELECT idn FROM all_concepts)),
+
+		<!-- PER CONTRACT IMBALANCE -->
+		contract_imbalance AS
+		 (SELECT azc.gas_day,
+		         azc.idn_contract,
+		         SUM(azc.allocated_value) AS allocated_value
+		    FROM allocation_zone_concept azc
+		   WHERE azc.idn_nomination_concept IN (SELECT idn FROM imbalance)
+		   GROUP BY azc.gas_day,
+		            azc.idn_contract),
+
+		<!-- ALL DATA NEEDED WITH IT'S AGGREGATION CODES -->
+		data_aggregation AS
+		 (
+		  <!-- OTHER CONCEPTS / BY ZONE (for transporter it means all concepts except East, West and 'aggregated' Instructed Flow and Imbalance that it's managed differently)
+		                           (Total_entry and total_exit are excluded now too - SAT change)
+		                           (Balancing Gas should be calculate based on entry/exit criteria) -->
+		  SELECT azc.gas_day,
+		          azc.idn_contract,
+		          (SELECT z.zone_code FROM tpa_tzone z WHERE z.idn_zone = azc.idn_zone) || '#' ||
+		          (SELECT nc.concept_code
+		             FROM tpa_tnomination_concept nc
+		            WHERE nc.idn_nomination_concept = azc.idn_nomination_concept) AS aggregation,
+		          azc.allocated_value
+		    FROM allocation_zone_concept azc
+		   WHERE azc.idn_nomination_concept NOT IN (SELECT idn
+		                                              FROM instructed_flows
+                                                    <!-- CR5 - Item 35
+		                                            UNION
+		                                            SELECT idn
+		                                              FROM east
+		                                            UNION
+		                                            SELECT idn
+		                                              FROM west
+                                                    -->
+		                                            UNION
+		                                            SELECT idn
+		                                              FROM imbalance
+		                                            UNION
+		                                            SELECT idn
+		                                              FROM imbalance_zone
+		                                            UNION
+		                                            SELECT idn
+		                                              FROM balancing_gas
+                                                    <!-- CR5 - Item 35 -->
+                                                    UNION
+                                                    SELECT idn
+                                                      FROM ra6_east
+                                                    UNION
+                                                    SELECT idn
+                                                      FROM ra6_west
+                                                    UNION
+                                                    SELECT idn
+                                                      FROM bvw10_east
+                                                    UNION
+                                                    SELECT idn
+                                                      FROM bvw10_west
+                                                    <!-- Fin CR5 - Item 35 -->
+                                                    )
+
+		  UNION ALL
+
+		  <!-- IMBALANCE ZONE - (ALL ZONES) -->
+		  SELECT azc.gas_day,
+		          azc.idn_contract,
+		          (SELECT z.zone_code FROM tpa_tzone z WHERE z.idn_zone = azc.idn_zone) || '#Imbalance_Zone' AS aggregation,
+		          i.multiplier * azc.allocated_value
+		    FROM allocation_zone_concept azc,
+                 imbalance_zone  i
+		   WHERE azc.idn_nomination_concept = i.idn
+
+		  UNION ALL
+
+		  <!-- IMBALANCE ZONE TOTAL - (TOTAL) -->
+		  SELECT azc.gas_day,
+		          azc.idn_contract,
+		          'TOTAL#Imbalance_Zone' AS aggregation,
+		          i.multiplier * azc.allocated_value
+		    FROM allocation_zone_concept azc,
+                 imbalance_zone  i
+		   WHERE azc.idn_nomination_concept = i.idn
+
+		  UNION ALL
+
+		  <!-- INSTRUCTED FLOW - (ALL ZONES) -->
+		  SELECT azc.gas_day,
+		          azc.idn_contract,
+		          (SELECT z.zone_code FROM tpa_tzone z WHERE z.idn_zone = azc.idn_zone) || '#Instructed_Flow' AS aggregation,
+		          i.multiplier * azc.allocated_value
+		    FROM allocation_zone_concept azc,
+		          instructed_flows        i
+		   WHERE azc.idn_nomination_concept = i.idn
+
+		  UNION ALL
+
+		  <!-- OTHER CONCEPTS / NOT SHOWN BY ZONE (EAST / WEST / BVW10 to EAST / BVW10 to WEST / RA6 to EAST / RA6 to WEST) -->
+          <!-- CR5 - Item 35 : includes BVW10 to EAST and to WEST and RA6 to EAST and to WEST / excludes EAST and WEST concepts -->
+		  SELECT azc.gas_day,
+		          azc.idn_contract,
+		          (SELECT nc.concept_code
+		             FROM tpa_tnomination_concept nc
+		            WHERE nc.idn_nomination_concept = azc.idn_nomination_concept) AS aggregation,
+		          azc.allocated_value
+		    FROM allocation_zone_concept azc
+		   WHERE azc.idn_nomination_concept IN (SELECT idn FROM ra6_east
+                                                UNION
+                                                SELECT idn FROM ra6_west
+                                                UNION
+                                                SELECT idn FROM bvw10_east
+                                                UNION
+                                                SELECT idn FROM bvw10_west)
+          <!-- Fin CR5 - Item 35 : includes BVW10 to EAST and to WEST and RA6 to EAST and to WEST / excludes EAST and WEST concepts -->
+
+		  UNION ALL
+
+		  <!-- BALANCING GAS (per zone)  (Entry is positive) -->
+		  SELECT azc.gas_day,
+		          azc.idn_contract,
+		          (SELECT z.zone_code FROM tpa_tzone z WHERE z.idn_zone = azc.idn_zone) || '#Balancing_gas' AS aggregation,
+		          azc.allocated_value
+		    FROM allocation_zone_concept azc
+		   WHERE azc.idn_nomination_concept = (SELECT idn FROM balancing_gas)
+		     AND azc.idn_system_point_type = (SELECT idn FROM entry_idn)
+
+		  UNION ALL
+
+		  <!-- BALANCING GAS (per zone)  (Exit is negative) -->
+		  SELECT azc.gas_day,
+		          azc.idn_contract,
+		          (SELECT z.zone_code FROM tpa_tzone z WHERE z.idn_zone = azc.idn_zone) || '#Balancing_gas' AS aggregation,
+		          -1 * azc.allocated_value AS allocated_value
+		    FROM allocation_zone_concept azc
+		   WHERE azc.idn_nomination_concept = (SELECT idn FROM balancing_gas)
+		     AND azc.idn_system_point_type = (SELECT idn FROM exit_idn)
+
+		  UNION ALL
+
+		  <!-- AIP (TOTAL) -->
+		  SELECT ci.gas_day,
+		          ci.idn_contract,
+		          'AIP' AS aggregation,
+		          SUM(ci.allocated_value) AS allocated_value
+		    FROM contract_imbalance ci
+		  HAVING SUM(ci.allocated_value) > 0
+		   GROUP BY ci.gas_day,
+		             ci.idn_contract
+
+		  UNION ALL
+
+		  <!-- AIN (TOTAL) -->
+		  SELECT ci.gas_day,
+		          ci.idn_contract,
+		          'AIN' AS aggregation,
+		          abs(SUM(ci.allocated_value)) AS allocated_value
+		    FROM contract_imbalance ci
+		  HAVING SUM(ci.allocated_value) &lt; 0
+		   GROUP BY ci.gas_day,
+		             ci.idn_contract
+
+		  UNION ALL
+
+		  <!-- % IMBALANCE !!!! -->
+		  SELECT aep.gas_day,
+		          aep.idn_contract,
+		          'Imbalance_Percent' AS aggregation,
+		          decode(nvl(SUM(aep.allocated_value), 0),
+		                 0,
+		                 to_number(NULL),
+		                 round(100 * (SELECT SUM(azc.allocated_value)
+		                                FROM allocation_zone_concept azc
+		                               WHERE azc.gas_day = aep.gas_day
+		                                 AND azc.idn_contract = aep.idn_contract
+		                                 AND azc.idn_nomination_concept = (SELECT idn FROM imbalance)) / SUM(aep.allocated_value),
+		                       2)) AS allocated_value
+		    FROM allocation_entry_point aep
+		   GROUP BY aep.gas_day,
+		             aep.idn_contract
+
+		  UNION ALL
+
+		  <!-- ACCUMULATED IMBALANCE IN MONTH -->
+		  SELECT azc.gas_day,
+		          azc.idn_contract,
+		          (SELECT z.zone_code FROM tpa_tzone z WHERE z.idn_zone = azc.idn_zone) || '#Acc_Imbalance_Month' AS aggregation,
+		          azc.allocated_value - nvl((SELECT fd.allocated_value
+		                                      FROM allocation_zone_concept fd
+		                                     WHERE fd.gas_day = (SELECT gas_day FROM first_day)
+		                                       AND fd.idn_contract = azc.idn_contract
+		                                       AND fd.idn_zone = azc.idn_zone
+		                                       AND fd.idn_nomination_concept IN (SELECT idn FROM acc_imbalance)),
+		                                    0) AS allocated_value
+		    FROM allocation_zone_concept azc
+		   WHERE azc.idn_nomination_concept IN (SELECT idn FROM acc_imbalance)
+
+		  UNION ALL
+
+		  <!-- USED CAP -->
+		  SELECT aep.gas_day,
+		          aep.idn_contract,
+		          (SELECT z.zone_code FROM tpa_tzone z WHERE z.idn_zone = aep.idn_zone) || '#Used_Cap' AS aggregation,
+		          decode(nvl(SUM(aep.contracted_value), 0),
+		                 0,
+		                 to_number(NULL),
+		                 round(100 * SUM(aep.allocated_value) / SUM(aep.contracted_value), 2)) AS allocated_value
+		    FROM allocation_entry_point aep
+		   GROUP BY aep.gas_day,
+		             aep.idn_contract,
+		             aep.idn_zone
+
+		  UNION ALL
+
+		  <!-- ENTRY POINTS (per group) -->
+		  SELECT aep.gas_day,
+		          aep.idn_contract,
+		          (SELECT bg.group_code FROM tpa_tbalance_group bg WHERE bg.idn_balance_group = aep.idn_balance_group) AS aggregation,
+		          allocated_value
+		    FROM allocation_entry_point aep
+
+		  UNION ALL
+
+		  <!-- TOTAL ENTRY POINTS (per zone) -->
+		  SELECT aep.gas_day,
+		          aep.idn_contract,
+		          (SELECT z.zone_code FROM tpa_tzone z WHERE z.idn_zone = aep.idn_zone) || '#Total_Entry_Points' AS aggregation,
+		          allocated_value
+		    FROM allocation_entry_point aep
+
+		  UNION ALL
+
+		  <!-- EXIT POINTS (per group) -->
+		  SELECT aep.gas_day,
+		          aep.idn_contract,
+		          (SELECT z.zone_code FROM tpa_tzone z WHERE z.idn_zone = aep.idn_zone) || '#' ||
+                 <!--   CH601 (SELECT ct.type_code FROM tpa_tcustomer_type ct WHERE ct.idn_customer_type = aep.idn_customer_type) AS aggregation, -->
+                 decode((SELECT ct.type_code FROM tpa_tcustomer_type ct WHERE ct.idn_customer_type = aep.idn_customer_type),
+                        'EGAT', 'EGAT',
+                        'IPP', 'IPP',
+                        'OTHERS') AS aggregation,
+		         allocated_value
+		    FROM allocation_exit_point aep
+
+		  UNION ALL
+
+		  <!-- TOTAL EXIT POINTS (per zone) -->
+		  SELECT aep.gas_day,
+		          aep.idn_contract,
+		          (SELECT z.zone_code FROM tpa_tzone z WHERE z.idn_zone = aep.idn_zone) || '#Total_Exit_Points' AS aggregation,
+		          allocated_value
+		    FROM allocation_exit_point aep
+         ),
+
+		<!-- ALL DATA NEEDED WITH IT'S AGGREGATION CODES AND ALMOST 'USER FRIENDLY' CODES -->
+		data_aggregation_friendly AS
+		 (SELECT da.gas_day,
+		         c.idn_user_group,
+		         c.contract_code,
+		         da.idn_contract,
+		         da.aggregation,
+		         da.allocated_value
+		    FROM data_aggregation da,
+		         shipper_contract c
+		   WHERE da.idn_contract = c.idn),
+
+        <!-- ALL DATA NEEDED, SUBTOTALS INCLUDED AND WITH REALLY 'USER FRIENDLY' CODES -->
+        all_data AS
+         (SELECT ms.gas_day,
+                 nvl(ug.user_group_id,'TOTAL') AS shipper_code,
+                 nvl(ug.user_group_name,'TOTAL') AS shipper_name,
+                 ms.contract_code,
+                 ms.idn_contract,
+                 ms.is_total,
+                 DECODE(ms.idn_user_group,NULL,'Y','N') AS is_totalG,
+                 ms.version_date,
+                 ms.aggregation,
+                 ms.allocated_value
+            FROM (SELECT gas_day,
+                         idn_user_group,
+                         contract_code,
+                         idn_contract,
+                         'N' AS is_total,
+                         (SELECT version_date FROM max_version_date) AS version_date,
+                         aggregation,
+                         allocated_value
+                    FROM data_aggregation_friendly
+
+                  UNION ALL
+
+                  <!-- Subtotals (aggregations) -->
+                  SELECT gas_day,
+                         idn_user_group,
+                         'TOTAL' AS contract_code,
+                         NULL AS idn_contract,
+                         'Y' AS is_total,
+                         (SELECT version_date FROM max_version_date) AS version_date,
+                         aggregation,
+                         SUM(allocated_value) AS allocated_value
+                    FROM data_aggregation_friendly
+                   WHERE aggregation NOT IN (SELECT col_name FROM non_agg_column)
+                   <!--Item 52 -->
+                   <!--GROUP BY gas_day,idn_user_group, aggregation -->
+                   GROUP BY
+                     GROUPING SETS((gas_day, idn_user_group, aggregation),
+                                   (gas_day, aggregation))
+                  <!--fin Item 52 -->
+
+                  UNION ALL
+
+                  <!-- AIP -->
+                  SELECT ci.gas_day,
+                         c.idn_user_group,
+                         'TOTAL' AS contract_code,
+                         NULL AS idn_contract,
+                         'Y' AS is_total,
+                         (SELECT version_date FROM max_version_date) AS version_date,
+                         'AIP' AS aggregation,
+                         SUM(ci.allocated_value) AS allocated_value
+                    FROM contract_imbalance ci,
+                         shipper_contract   c
+                   WHERE ci.idn_contract = c.idn
+                     AND 'AIP' IN (SELECT col_name FROM non_agg_column) HAVING SUM(ci.allocated_value) > 0
+                   <!--Item 52 -->
+                   <!--GROUP BY ci.gas_day, c.idn_user_group -->
+                   GROUP BY
+                     GROUPING SETS((ci.gas_day, c.idn_user_group),
+                                   (ci.gas_day))
+                  <!--fin Item 52 -->
+                  
+                  UNION ALL
+
+                  <!-- AIN -->
+                  SELECT ci.gas_day,
+                         c.idn_user_group,
+                         'TOTAL' AS contract_code,
+                         NULL AS idn_contract,
+                         'Y' AS is_total,
+                         (SELECT version_date FROM max_version_date) AS version_date,
+                         'AIN' AS aggregation,
+                         abs(SUM(ci.allocated_value)) AS allocated_value
+                    FROM contract_imbalance ci,
+                         shipper_contract   c
+                   WHERE ci.idn_contract = c.idn
+                     AND 'AIN' IN (SELECT col_name FROM non_agg_column) HAVING SUM(ci.allocated_value) &lt; 0
+                   <!--Item 52 -->
+                   <!--GROUP BY ci.gas_day, c.idn_user_group -->
+                   GROUP BY
+                     GROUPING SETS((ci.gas_day, c.idn_user_group),
+                                   (ci.gas_day))
+                  <!--fin Item 52 -->
+                  
+                  UNION ALL
+
+                  <!-- Subtotals (Imbalance_Percent) -->
+                  SELECT aep.gas_day,
+                         c.idn_user_group,
+                         'TOTAL' AS contract_code,
+                         NULL AS idn_contract,
+                         'Y' AS is_total,
+                         (SELECT version_date FROM max_version_date) AS version_date,
+                         'Imbalance_Percent' AS aggregation,
+                         decode(nvl(SUM(aep.allocated_value), 0),
+                                0,
+                                to_number(NULL),
+                                round(100 * (SELECT SUM(azc.allocated_value)
+                                               FROM allocation_zone_concept azc,
+                                                    shipper_contract        cx
+                                              WHERE azc.gas_day = aep.gas_day
+                                                AND azc.idn_nomination_concept = (SELECT idn FROM imbalance)
+                                                AND azc.idn_contract = cx.idn
+                                                AND cx.idn_user_group = c.idn_user_group) / SUM(aep.allocated_value),
+                                      2)) AS allocated_value
+                    FROM allocation_entry_point aep,
+                         shipper_contract       c
+                   WHERE aep.idn_contract = c.idn
+                   GROUP BY aep.gas_day,
+                            c.idn_user_group
+
+                 <!--Item 52 -->
+                  UNION ALL
+
+                  <!-- Subtotals (Imbalance_Percent / TOTAL per DAY) -->
+                  SELECT aep.gas_day,
+                         NULL AS idn_user_group,
+                         'TOTAL' AS contract_code,
+                         NULL AS idn_contract,
+                         'Y' AS is_total,
+                         (SELECT version_date FROM max_version_date) AS version_date,
+                         'Imbalance_Percent' AS aggregation,
+                         decode(nvl(SUM(aep.allocated_value), 0),
+                                0,
+                                to_number(NULL),
+                                round(100 * (SELECT SUM(azc.allocated_value)
+                                               FROM allocation_zone_concept azc
+                                               <!-- ,
+                                                    shipper_contract        cx  -->
+                                              WHERE azc.gas_day = aep.gas_day
+                                                AND azc.idn_nomination_concept = (SELECT idn FROM imbalance)
+                                               <!--  AND azc.idn_contract = cx.idn
+                                                AND cx.idn_user_group = c.idn_user_group  -->
+                                                ) / SUM(aep.allocated_value),
+                                      2)) AS allocated_value
+                    FROM allocation_entry_point aep
+                    <!-- ,
+                         shipper_contract       c
+                   WHERE aep.idn_contract = c.idn -->
+                   GROUP BY aep.gas_day
+
+                  <!--fin Item 52 -->
+
+                  UNION ALL
+
+                  <!-- Subtotals (Used_Cap) -->
+                  SELECT aep.gas_day,
+                         c.idn_user_group,
+                         'TOTAL' AS contract_code,
+                         NULL AS idn_contract,
+                         'Y' AS is_total,
+                         (SELECT version_date FROM max_version_date) AS version_date,
+                         (SELECT z.zone_code FROM tpa_tzone z WHERE z.idn_zone = aep.idn_zone) || '#Used_Cap' AS aggregation,
+                         decode(nvl(SUM(aep.contracted_value), 0),
+                                0,
+                                to_number(NULL),
+                                round(100 * SUM(aep.allocated_value) / SUM(aep.contracted_value), 2)) AS allocated_value
+                    FROM allocation_entry_point aep,
+                         shipper_contract       c
+                   WHERE aep.idn_contract = c.idn
+                   <!--Item 52 -->
+                   <!--GROUP BY aep.gas_day, aep.idn_zone,c.idn_user_group-->
+                   GROUP BY
+                     GROUPING SETS((aep.gas_day,aep.idn_zone,c.idn_user_group),
+                                   (aep.gas_day,aep.idn_zone))
+                   <!--fin Item 52 -->
+                 ) ms
+                 <!-- Item 80 -->
+                 <!-- tpa_tuser_group ug  WHERE ug.idn_user_group = ms.idn_user_group -->
+                LEFT JOIN tpa_tuser_group ug
+                ON ug.idn_user_group = ms.idn_user_group
+                WHERE 1=1
+               <!--Item 80 Si tienen marcado el check TOTAL mostrar solo los totales, me invento la variable    -->
+               <choose>
+                    <when test='strTotalRows != null and "Y".equals(strTotalRows)'>
+                     AND  is_total = 'Y'
+                    </when>
+               </choose>
+             <!--fin Item 80 check TOTAL -->
+             <!--Item 52 Si tienen marcado el check TOTAL general mostrar solo los totales generales, me invento la variable    -->
+               <choose>
+                    <when test='strTotalAllShippers != null and "Y".equals(strTotalAllShippers)'>
+                     AND DECODE(ms.idn_user_group,NULL,'Y','N') = 'Y'
+                    </when>
+               </choose>
+                 <!--fin Item 52 TOTAL general   -->
+		 )
+
+		<!-- MAIN SELECT -->
+		SELECT *
+		  FROM all_data
+		pivot (SUM(allocated_value) FOR aggregation IN('EAST#Total_Entry_Points' AS e_total_entry,
+		                                          'WEST#Total_Entry_Points' AS w_total_entry,
+		                                          'EAST-WEST#Total_Entry_Points' AS ew_total_entry,
+		                                          'EAST#Total_Exit_Points' AS e_total_exit,
+		                                          'WEST#Total_Exit_Points' AS w_total_exit,
+		                                          'EAST-WEST#Total_Exit_Points' AS ew_total_exit,
+		                                          'EAST#Imbalance_Zone' AS e_imbalance_zone,
+		                                          'WEST#Imbalance_Zone' AS w_imbalance_zone,
+		                                          'EAST-WEST#Imbalance_Zone' AS ew_imbalance_zone,
+		                                          'TOTAL#Imbalance_Zone' AS total_imbalance_zone,
+		                                          'EAST#Instructed_Flow' AS e_instructed_flow,
+		                                          'WEST#Instructed_Flow' AS w_instructed_flow,
+		                                          'EAST-WEST#Instructed_Flow' AS ew_instructed_flow,
+		                                          'EAST#Shrinkage_Volume' AS e_sv,
+		                                          'WEST#Shrinkage_Volume' AS w_sv,
+		                                          'EAST-WEST#Shrinkage_Volume' AS ew_sv,
+		                                          'EAST#Park' AS e_park,
+		                                          'WEST#Park' AS w_park,
+		                                          'EAST-WEST#Park' AS ew_park,
+		                                          'EAST#Unpark' AS e_unpark,
+		                                          'WEST#Unpark' AS w_unpark,
+		                                          'EAST-WEST#Unpark' AS ew_unpark,
+		                                          'EAST#SOTD_Park' AS e_sotd_park,
+		                                          'WEST#SOTD_Park' AS w_sotd_park,
+		                                          'EAST-WEST#SOTD_Park' AS ew_sotd_park,
+		                                          'EAST#EOTD_Park' AS e_eotd_park,
+		                                          'WEST#EOTD_Park' AS w_eotd_park,
+		                                          'EAST-WEST#EOTD_Park' AS ew_eotd_park,
+		                                          <!--'EAST#Min_Inventory' AS e_min_inv,
+		                                          'WEST#Min_Inventory' AS w_min_inv,
+		                                          'EAST-WEST#Min_Inventory' AS ew_min_inv,
+                                                   Item 33-->
+		                                          'EAST#Min_Inventory_Change' AS e_min_inv,
+		                                          'WEST#Min_Inventory_Change' AS w_min_inv,
+		                                          'EAST-WEST#Min_Inventory_Change' AS ew_min_inv,
+		                                          'EAST#Balancing_gas' AS e_res_bal_gas,
+		                                          'WEST#Balancing_gas' AS w_res_bal_gas,
+		                                          'EAST-WEST#Balancing_gas' AS ew_res_bal_gas,
+		                                          'AIP' AS aip,
+		                                          'AIN' AS ain,
+		                                          'Imbalance_Percent' AS imbalance_percent,
+		                                          'EAST#Imbalance_Stock' AS e_imbalance_stock,
+		                                          'WEST#Imbalance_Stock' AS w_imbalance_stock,
+		                                          'EAST-WEST#Imbalance_Stock' AS ew_imbalance_stock,
+                                                  'EAST#Allocation_month_adjust' as e_month_adjust,
+                                                  'WEST#Allocation_month_adjust' as w_month_adjust,
+                                                  'EAST-WEST#Allocation_month_adjust' as ew_month_adjust,
+		                                          'EAST#Acc_Imbalance_Month' AS e_acc_imbalance_month,
+		                                          'WEST#Acc_Imbalance_Month' AS w_acc_imbalance_month,
+		                                          'EAST-WEST#Acc_Imbalance_Month' AS ew_acc_imbalance_month,
+		                                          'EAST#Accumulated_Imbalance' AS e_acc_imbalance,
+		                                          'WEST#Accumulated_Imbalance' AS w_acc_imbalance,
+		                                          'EAST-WEST#Accumulated_Imbalance' AS ew_acc_imbalance,
+		                                          'EAST#Used_Cap' AS e_used_cap,
+		                                          'WEST#Used_Cap' AS w_used_cap,
+		                                          'EAST-WEST#Used_Cap' AS ew_used_cap,
+		                                          'GSP' AS gsp,
+		                                          'Bypass' AS bypass,
+		                                          'LNG' AS lng,
+		                                          'YDN' AS ydn,
+		                                          'YTG' AS ytg,
+		                                          'ZTK' AS ztk,
+                                                  <!-- CR5 - Item 35 -->
+                                                  <!--
+		                                          'East' AS east,
+		                                          'West' AS west,
+                                                  -->
+                                                  'East_to_RA6' as east,
+                                                  'West_to_RA6' as west,
+                                                  'East_to_BVW10' as bvw10_east,
+                                                  'West_to_BVW10' as bvw10_west,
+                                                  <!-- Fin CR5 - Item 35 -->
+		                                          'EAST#EGAT' AS e_egat,
+		                                          'EAST#IPP' AS e_ipp,
+		                                           <!--CH601
+		                                          'EAST#SPP' AS e_spp,
+		                                          'EAST#IND' AS e_ind,
+		                                          'EAST#NGD' AS e_ngd,
+		                                          'EAST#NGV' AS e_ngv,
+		                                          -->
+		                                          'EAST#OTHERS' AS e_others,
+		                                          'WEST#EGAT' AS w_egat,
+		                                          'WEST#IPP' AS w_ipp,
+		                                          <!--CH601
+		                                          'WEST#SPP' AS w_spp,
+		                                          'WEST#IND' AS w_ind,
+		                                          'WEST#NGD' AS w_ngd,
+		                                          'WEST#NGV' AS w_ngv,
+		                                            -->
+		                                          'WEST#OTHERS' AS w_others,
+		                                          'EAST-WEST#EGAT' AS ew_egat,
+		                                          'EAST-WEST#IPP' AS ew_ipp,
+		                                           <!--CH601
+		                                          'EAST-WEST#SPP' AS ew_spp,
+		                                          'EAST-WEST#IND' AS ew_ind,
+		                                          'EAST-WEST#NGD' AS ew_ngd,
+		                                          'EAST-WEST#NGV' AS ew_ngv
+		                                            -->
+		                                          'EAST-WEST#OTHERS' AS ew_others,
+                                                  <!-- CR5 - Item 35 -->
+                                                  'EAST#F2G_ALLOCATION' AS f2g_east,
+                                                  'WEST#F2G_ALLOCATION' AS f2g_west,
+                                                  'EAST#E_ALLOCATION' AS e_east,
+                                                  'WEST#E_ALLOCATION' AS e_west
+                                                  <!-- Fin CR5 - Item 35 -->
+                                                  ))
+		 WHERE gas_day > (SELECT gas_day FROM first_day)
+		 ORDER BY gas_day,
+                  shipper_code,
+                  is_total,
+		          decode(idn_contract, NULL, NULL, contract_code)
+    </select>
+
+	<resultMap type="com.atos.beans.balancing.BalanceReportOffshoreBean" id="BalanceReportOffshore">
+		<result property="gasDay" column="gas_day"/>
+        <result property="shipperCode" column="shipper_code"/>
+        <result property="shipperName" column="shipper_name"/>
+        <result property="contractId" column="idn_contract"/>
+        <result property="contractCode" column="contract_code"/>
+        <result property="isTotal" column="is_total"/>
+        <result property="versionDate" column="version_date"/>
+        <result property="totalEntry" column="total_entry"/>
+        <result property="totalExit" column="total_exit"/>
+        <result property="imbalanceZone" column="imbalance_zone"/>
+        <result property="instructedFlow" column="instructed_flow"/>
+        <result property="shrinkageQuantity" column="sv"/>
+        <result property="strippingQuantity" column="stv"/>
+        <result property="park" column="park"/>
+        <result property="unpark" column="unpark"/>
+        <result property="SOTDPark" column="sotd_park"/>
+        <result property="EOTDPark" column="eotd_park"/>
+        <result property="minInventory" column="min_inv"/>
+        <result property="resBalancingGas" column="res_bal_gas"/>
+        <result property="monthAdjAlloc" column="month_adjust"/>
+        <result property="totalAIP" column="aip"/>
+        <result property="totalAIN" column="ain"/>
+        <result property="imbalancePercentage" column="imbalance_percent"/>
+        <result property="imbalanceStock" column="imbalance_stock"/>
+        <result property="accImbalanceMonth" column="acc_imbalance_month"/>
+        <result property="accImbalance" column="acc_imbalance"/>
+        <result property="usedCapacity" column="used_cap"/>
+        <result property="erawan" column="erawan"/>
+        <result property="baanpot" column="baanpot"/>
+        <result property="satun" column="satun"/>
+        <result property="platong_ii" column="platong_ii"/>
+        <result property="platong" column="platong"/>
+        <result property="funan" column="funan"/>
+        <result property="n_pailin" column="n_pailin"/>
+        <result property="pailin" column="pailin"/>
+        <result property="bongkot" column="bongkot"/>
+        <result property="arthit" column="arthit"/>
+		<result property="gbs" column="gbs"/>
+		<result property="tantawan" column="tantawan"/>
+		<result property="benchamas" column="benchamas"/>
+        <result property="jda18_dp2" column="jda18_dp2"/>
+        <result property="jda_b_17" column="jda_b_17"/>
+        <result property="rayongGas" column="gas_rayong"/>
+		<result property="rayongLiquid" column="liquid_rayong"/>
+		<result property="khanomGas" column="gas_khanom"/>
+		<result property="khanomLiquid" column="liquid_khanom"/>
+    </resultMap>
+
+    <select id="selectBalancesOffshore" resultMap="BalanceReportOffshore">
+		<!-- DAYS -->
+		WITH days AS
+		 (SELECT ((trunc(#{fromDate}) - 1) + (LEVEL - 1)) AS gas_day
+		    FROM dual
+		  CONNECT BY LEVEL &lt;= (trunc(#{toDate}) - (trunc(#{fromDate}) - 1) + 1)),
+
+		<!-- SHIPPER CONTRACTS -->
+		shipper_contract AS
+		 (SELECT c.idn_contract AS idn,
+		         c.contract_code,
+		         c.idn_user_group
+		    FROM tpa_tcontract c,
+		         days          d
+		   WHERE d.gas_day BETWEEN c.start_date AND c.end_date
+		     AND c.idn_pipeline_system = #{systemId}
+		     AND EXISTS (SELECT 1 FROM tpa_tcontract_consolidate cc WHERE cc.idn_contract = c.idn_contract)
+			<if test="shipperId != null and shipperId != ''">
+		     AND c.idn_user_group = #{shipperId}
+		     </if>
+		   GROUP BY c.idn_contract,
+		            c.contract_code,
+		            idn_user_group),
+
+		<!-- NON-AGGREGATABLE COLUMNS -->
+		non_agg_column AS
+		 (SELECT 'Imbalance_Percent' AS col_name
+		    FROM dual
+		  UNION
+		  SELECT 'Used_Cap' AS col_name
+		    FROM dual
+		  <!-- Esto puede haber que incluirlo aquí si el AIP y AIN debe mostrar sólo el global por sujeto y dia
+		  UNION
+		  SELECT 'AIP' AS col_name
+		    FROM dual
+		  UNION
+		  SELECT 'AIN' AS col_name
+		    FROM dual -->
+		  ),
+
+		<!-- FIRST DAY -->
+		first_day AS
+		 (SELECT MIN(gas_day) AS gas_day FROM days),
+
+		<!-- BALANCE (ALLOCATION 'HEADERS') -->
+		balance AS
+		 (SELECT a.idn_allocation,
+		         a.gas_day,
+		         a.version_date
+		    FROM tpa_tallocation a,
+		         days            d
+		   WHERE a.gas_day = d.gas_day
+		     AND a.idn_pipeline_system = #{systemId}
+		     AND a.idn_allocation_type =
+		         (SELECT t.idn_allocation_type FROM tpa_tallocation_type t WHERE t.type_code = 'COMMERCIAL')
+		     AND a.version_date = (SELECT MAX(ax.version_date)
+		                             FROM tpa_tallocation ax
+		                            WHERE ax.gas_day = a.gas_day
+		                              AND ax.idn_pipeline_system = a.idn_pipeline_system
+		                              AND ax.idn_allocation_type = a.idn_allocation_type
+		                              AND ax.idn_allocation_origin IN
+		                                  (SELECT o.idn_allocation_origin
+		                                     FROM tpa_tallocation_origin o
+		                                    WHERE o.origin_code IN ('BALANCE', 'CLOSING_PROCESS')))),
+
+		<!-- VERSION_DATE (MAX) -->
+		max_version_date AS
+		 (SELECT MAX(version_date) AS version_date FROM balance WHERE gas_day > (SELECT gas_day FROM first_day)),
+
+		<!-- ENTRY IDN -->
+		entry_idn AS
+		 (SELECT spt.idn_system_point_type AS idn FROM tpa_tsystem_point_type spt WHERE spt.type_code = 'ENTRY'),
+
+		<!-- EXIT IDN -->
+		exit_idn AS
+		 (SELECT spt.idn_system_point_type AS idn FROM tpa_tsystem_point_type spt WHERE spt.type_code = 'EXIT'),
+
+		<!-- ALL CONCEPTS USED IN BALANCE AND NEEDED FOR THE QUERY -->
+		all_concepts AS
+		 (SELECT nc.idn_nomination_concept AS idn,
+		         nc.concept_code           AS concept_code
+		    FROM tpa_tnomination_concept nc
+		   WHERE nc.concept_code IN ('SOTD_Park',
+		                             'EOTD_Park',
+		                             'Unpark',
+		                             'Instructed_Entry',
+		                             'Park',
+		                             'Instructed_Exit',
+		                             'Shrinkage_Volume',
+		                             <!--'Min_Inventory', Item 33-->
+		                             'Min_Inventory_Change',
+		                             'Imbalance',
+		                             'Total_Entry',
+		                             'Total_Exit',
+		                             'Balancing_gas',
+		                             'Imbalance_Stock',
+		                             'Accumulated_Imbalance',
+		                             'STV_RY',
+		                             'STV_KN',
+                             		 'Allocation_month_adjust')),
+
+		<!-- ENERGY CONCEPT -->
+		energy AS
+		 (SELECT nc.idn_nomination_concept AS idn FROM tpa_tnomination_concept nc WHERE nc.concept_code = 'ENERGY'),
+
+		<!-- INSTRUCTED FLOW REDUCED CONCEPT -->
+		instructed_flows AS
+		 (SELECT nc.idn_nomination_concept AS idn,
+		         decode(nc.concept_code, 'Instructed_Exit', -1, 1) AS multiplier
+		    FROM tpa_tnomination_concept nc
+		   WHERE nc.concept_code IN ('Instructed_Entry', 'Instructed_Exit')),
+
+		<!-- IMBALANCE ZONE CONCEPT -->
+		imbalance_zone AS
+		 (SELECT nc.idn_nomination_concept AS idn,
+		         decode(nc.concept_code, 'Total_Exit', -1, 1) AS multiplier
+		    FROM tpa_tnomination_concept nc
+		   WHERE nc.concept_code IN ('Total_Entry', 'Total_Exit')),
+
+		<!-- IMBALANCE CONCEPT -->
+		imbalance AS
+		 (SELECT nc.idn_nomination_concept AS idn FROM tpa_tnomination_concept nc WHERE nc.concept_code = 'Imbalance'),
+
+		<!-- BALANCING GAS CONCEPT -->
+		balancing_gas AS
+		 (SELECT nc.idn_nomination_concept AS idn FROM tpa_tnomination_concept nc WHERE nc.concept_code = 'Balancing_gas'),
+
+		<!-- ACCUMULATED IMBALANCE CONCEPT -->
+		acc_imbalance AS
+		 (SELECT nc.idn_nomination_concept AS idn
+		    FROM tpa_tnomination_concept nc
+		   WHERE nc.concept_code = 'Accumulated_Imbalance'),
+
+		<!-- LIQUID RAYONG -->
+		liquid_ry AS
+		 (SELECT nc.idn_nomination_concept AS idn FROM tpa_tnomination_concept nc WHERE nc.concept_code = 'STV_RY'),
+
+		<!-- LIQUID KHANOM -->
+		liquid_kn AS
+		 (SELECT nc.idn_nomination_concept AS idn FROM tpa_tnomination_concept nc WHERE nc.concept_code = 'STV_KN'),
+
+		<!-- ALLOCATION DATA POINTS -->
+		allocation_point AS
+		 (SELECT b.gas_day,
+		         ad.idn_contract,
+		         sp.point_code,
+		         nvl(ad.idn_system_point_type, -1) AS idn_system_point_type,
+		         ad.allocated_value,
+		         ad.contracted_value
+		    FROM tpa_tallocation_data ad,
+		         balance              b,
+		         tpa_tsystem_point    sp
+		   WHERE b.idn_allocation = ad.idn_allocation
+		     AND ad.idn_contract IN (SELECT idn FROM shipper_contract)
+		     AND ad.idn_nomination_concept = (SELECT idn FROM energy)
+		     AND ad.idn_nomination_point IS NOT NULL
+		     AND ad.idn_nomination_point = sp.idn_system_point),
+
+		<!-- ALLOCATION_DATA ENTRY POINTS -->
+		allocation_entry_point AS
+		 (SELECT ap.gas_day,
+		         ap.idn_contract,
+		         ap.point_code,
+		         ap.allocated_value,
+		         ap.contracted_value
+		    FROM allocation_point ap
+		   WHERE ap.idn_system_point_type = (SELECT idn FROM entry_idn)),
+
+		<!-- ALLOCATION_DATA EXIT POINTS -->
+		allocation_exit_point AS
+		 (SELECT ap.gas_day,
+		         ap.idn_contract,
+		         ap.point_code,
+		         ap.allocated_value,
+		         ap.contracted_value
+		    FROM allocation_point ap
+		   WHERE ap.idn_system_point_type = (SELECT idn FROM exit_idn)),
+
+		<!-- ALLOCATION ZONE CONCEPTS -->
+		allocation_zone_concept AS
+		 (SELECT b.gas_day,
+		         ad.idn_contract,
+		         ad.idn_nomination_concept,
+		         ad.idn_system_point_type,
+		         ad.allocated_value
+		    FROM tpa_tallocation_data ad,
+		         balance              b
+		   WHERE b.idn_allocation = ad.idn_allocation
+		     AND ad.idn_contract IN (SELECT idn FROM shipper_contract)
+		     AND ad.idn_nomination_concept IN (SELECT idn FROM all_concepts)),
+
+		<!-- PER CONTRACT IMBALANCE -->
+		contract_imbalance AS
+		 (SELECT azc.gas_day,
+		         azc.idn_contract,
+		         SUM(azc.allocated_value) AS allocated_value
+		    FROM allocation_zone_concept azc
+		   WHERE azc.idn_nomination_concept IN (SELECT idn FROM imbalance)
+		   GROUP BY azc.gas_day,
+		            azc.idn_contract),
+
+		<!-- ALL DATA NEEDED WITH IT'S AGGREGATION CODES -->
+		data_aggregation AS
+		 (
+		  <!-- OTHER CONCEPTS (for transporter it means all concepts except 'aggregated' Instructed Flow and Imbalance that it's managed differently)
+		                 (Total_entry and total_exit are excluded now too - SAT change)
+		                 (Balancing Gas should be calculate based on entry/exit criteria) -->
+		  SELECT azc.gas_day,
+		          azc.idn_contract,
+		          (SELECT nc.concept_code
+		             FROM tpa_tnomination_concept nc
+		            WHERE nc.idn_nomination_concept = azc.idn_nomination_concept) AS aggregation,
+		          azc.allocated_value
+		    FROM allocation_zone_concept azc
+		   WHERE azc.idn_nomination_concept NOT IN (SELECT idn
+		                                              FROM instructed_flows
+		                                            UNION
+		                                            SELECT idn
+		                                              FROM imbalance
+		                                            UNION
+		                                            SELECT idn
+		                                              FROM imbalance_zone
+		                                            UNION
+		                                            SELECT idn
+		                                              FROM balancing_gas)
+
+		  UNION ALL
+
+		  <!-- IMBALANCE ZONE -->
+		  SELECT azc.gas_day,
+		          azc.idn_contract,
+		          'Imbalance_Zone' AS aggregation,
+		          i.multiplier * azc.allocated_value
+		    FROM allocation_zone_concept azc,
+		          imbalance_zone          i
+		   WHERE azc.idn_nomination_concept = i.idn
+
+		  UNION ALL
+
+		  <!-- INSTRUCTED FLOW -->
+		  SELECT azc.gas_day,
+		          azc.idn_contract,
+		          'Instructed_Flow' AS aggregation,
+		          i.multiplier * azc.allocated_value
+		    FROM allocation_zone_concept azc,
+		          instructed_flows        i
+		   WHERE azc.idn_nomination_concept = i.idn
+
+		  UNION ALL
+
+		  <!-- TOTAL LIQUID/STV -->
+		  SELECT azc.gas_day,
+		          azc.idn_contract,
+		          'STV' AS aggregation,
+		          azc.allocated_value
+		    FROM allocation_zone_concept azc
+		   WHERE azc.idn_nomination_concept IN (SELECT idn FROM liquid_ry UNION SELECT idn FROM liquid_kn)
+
+		  UNION ALL
+
+		  <!-- BALANCING GAS (Entry is positive) -->
+		  SELECT azc.gas_day,
+		          azc.idn_contract,
+		          'Balancing_gas' AS aggregation,
+		          azc.allocated_value
+		    FROM allocation_zone_concept azc
+		   WHERE azc.idn_nomination_concept = (SELECT idn FROM balancing_gas)
+		     AND azc.idn_system_point_type = (SELECT idn FROM entry_idn)
+
+		  UNION ALL
+
+		  <!-- BALANCING GAS (Exit is negative) -->
+		  SELECT azc.gas_day,
+		          azc.idn_contract,
+		          'Balancing_gas' AS aggregation,
+		          -1 * azc.allocated_value AS allocated_value
+		    FROM allocation_zone_concept azc
+		   WHERE azc.idn_nomination_concept = (SELECT idn FROM balancing_gas)
+		     AND azc.idn_system_point_type = (SELECT idn FROM exit_idn)
+
+		  UNION ALL
+
+		  <!-- AIP (TOTAL) -->
+		  SELECT ci.gas_day,
+		          ci.idn_contract,
+		          'AIP' AS aggregation,
+		          SUM(ci.allocated_value) AS allocated_value
+		    FROM contract_imbalance ci
+		  HAVING SUM(ci.allocated_value) > 0
+		   GROUP BY ci.gas_day,
+		             ci.idn_contract
+
+		  UNION ALL
+
+		  <!-- AIN (TOTAL) -->
+		  SELECT ci.gas_day,
+		          ci.idn_contract,
+		          'AIN' AS aggregation,
+		          abs(SUM(ci.allocated_value)) AS allocated_value
+		    FROM contract_imbalance ci
+		  HAVING SUM(ci.allocated_value) &lt; 0
+		   GROUP BY ci.gas_day,
+		             ci.idn_contract
+
+		  UNION ALL
+
+		  <!-- % IMBALANCE !!!! -->
+		  SELECT aep.gas_day,
+		          aep.idn_contract,
+		          'Imbalance_Percent' AS aggregation,
+		          decode(nvl(SUM(aep.allocated_value), 0),
+		                 0,
+		                 to_number(NULL),
+		                 round(100 * (SELECT SUM(azc.allocated_value)
+		                                FROM allocation_zone_concept azc
+		                               WHERE azc.gas_day = aep.gas_day
+		                                 AND azc.idn_contract = aep.idn_contract
+		                                 AND azc.idn_nomination_concept = (SELECT idn FROM imbalance)) / SUM(aep.allocated_value),
+		                       2)) AS allocated_value
+		    FROM allocation_entry_point aep
+		   GROUP BY aep.gas_day,
+		             aep.idn_contract
+
+		  UNION ALL
+
+		  <!-- ACCUMULATED IMBALANCE IN MONTH -->
+		  SELECT azc.gas_day,
+		          azc.idn_contract,
+		          'Acc_Imbalance_Month' AS aggregation,
+		          azc.allocated_value - nvl((SELECT fd.allocated_value
+		                                      FROM allocation_zone_concept fd
+		                                     WHERE fd.gas_day = (SELECT gas_day FROM first_day)
+		                                       AND fd.idn_contract = azc.idn_contract
+		                                       AND fd.idn_nomination_concept IN (SELECT idn FROM acc_imbalance)),
+		                                    0) AS allocated_value
+		    FROM allocation_zone_concept azc
+		   WHERE azc.idn_nomination_concept IN (SELECT idn FROM acc_imbalance)
+
+		  UNION ALL
+
+		  <!-- USED CAP -->
+		  SELECT aep.gas_day,
+		          aep.idn_contract,
+		          'Used_Cap' AS aggregation,
+		          decode(nvl(SUM(aep.contracted_value), 0),
+		                 0,
+		                 to_number(NULL),
+		                 round(100 * SUM(aep.allocated_value) / SUM(aep.contracted_value), 2)) AS allocated_value
+		    FROM allocation_entry_point aep
+		   GROUP BY aep.gas_day,
+		             aep.idn_contract
+
+		  UNION ALL
+
+		  <!-- ENTRY POINTS (per point) -->
+		  SELECT aep.gas_day,
+		          aep.idn_contract,
+		          point_code AS aggregation,
+		          allocated_value
+		    FROM allocation_entry_point aep
+
+		  UNION ALL
+
+		  <!-- TOTAL ENTRY POINTS -->
+		  SELECT aep.gas_day,
+		          aep.idn_contract,
+		          'Total_Entry_Points' AS aggregation,
+		          allocated_value
+		    FROM allocation_entry_point aep
+
+		  UNION ALL
+
+		  <!-- EXIT POINTS (per point) -->
+		  SELECT aep.gas_day,
+		          aep.idn_contract,
+		          aep.point_code AS aggregation,
+		          allocated_value
+		    FROM allocation_exit_point aep
+
+		  UNION ALL
+
+		  <!-- TOTAL EXIT POINTS -->
+		  SELECT aep.gas_day,
+		          aep.idn_contract,
+		          'Total_Exit_Points' AS aggregation,
+		          allocated_value
+		    FROM allocation_exit_point aep
+
+		  <!--
+		  UNION ALL
+
+		   TOTAL EXIT POINTS  (LIQUID INCLUSION)  uncomment if needed
+		  SELECT azc.gas_day,
+		          azc.idn_contract,
+		          'Total_Exit_Points' AS aggregation,
+		          azc.allocated_value
+		    FROM allocation_zone_concept azc
+		   WHERE azc.idn_nomination_concept IN (SELECT idn FROM liquid_ry UNION SELECT idn FROM liquid_kn)
+		    -->
+		  ),
+
+		<!-- ALL DATA NEEDED WITH IT'S AGGREGATION CODES AND ALMOST 'USER FRIENDLY' CODES -->
+		data_aggregation_friendly AS
+		 (SELECT da.gas_day,
+		         c.idn_user_group,
+		         c.contract_code,
+		         da.idn_contract,
+		         da.aggregation,
+		         da.allocated_value
+		    FROM data_aggregation da,
+		         shipper_contract c
+		   WHERE da.idn_contract = c.idn),
+
+        <!-- ALL DATA NEEDED, SUBTOTALS INCLUDED AND WITH REALLY 'USER FRIENDLY' CODES -->
+        all_data AS
+         (SELECT ms.gas_day,
+                 ug.user_group_id AS shipper_code,
+                 ug.user_group_name AS shipper_name,
+                 ms.contract_code,
+                 ms.idn_contract,
+                 ms.is_total,
+                 ms.version_date,
+                 ms.aggregation,
+                 ms.allocated_value
+            FROM (SELECT gas_day,
+		               idn_user_group,
+		               contract_code,
+		               idn_contract,
+		               'N' AS is_total,
+		               (SELECT version_date FROM max_version_date) AS version_date,
+		               aggregation,
+		               allocated_value
+		          FROM data_aggregation_friendly
+
+		        UNION ALL
+
+		        <!-- Subtotals (aggregations) -->
+		        SELECT gas_day,
+		               idn_user_group,
+		               'TOTAL' AS contract_code,
+		               NULL AS idn_contract,
+		               'Y' AS is_total,
+		               (SELECT version_date FROM max_version_date) AS version_date,
+		               aggregation,
+		               SUM(allocated_value) AS allocated_value
+		          FROM data_aggregation_friendly
+		         WHERE aggregation NOT IN (SELECT col_name FROM non_agg_column)
+		         GROUP BY gas_day,
+		                  idn_user_group,
+		                  aggregation
+
+		        UNION ALL
+
+		        <!-- AIP -->
+		        SELECT ci.gas_day,
+		               c.idn_user_group,
+		               'TOTAL' AS contract_code,
+		               NULL AS idn_contract,
+		               'Y' AS is_total,
+		               (SELECT version_date FROM max_version_date) AS version_date,
+		               'AIP' AS aggregation,
+		               SUM(ci.allocated_value) AS allocated_value
+		          FROM contract_imbalance ci,
+		               shipper_contract   c
+		         WHERE ci.idn_contract = c.idn
+		           AND 'AIP' IN (SELECT col_name FROM non_agg_column) HAVING SUM(ci.allocated_value) > 0
+		         GROUP BY ci.gas_day,
+		                  c.idn_user_group
+
+		        UNION ALL
+
+		        <!-- AIN -->
+		        SELECT ci.gas_day,
+		               c.idn_user_group,
+		               'TOTAL' AS contract_code,
+		               NULL AS idn_contract,
+		               'Y' AS is_total,
+		               (SELECT version_date FROM max_version_date) AS version_date,
+		               'AIN' AS aggregation,
+		               abs(SUM(ci.allocated_value)) AS allocated_value
+		          FROM contract_imbalance ci,
+		               shipper_contract   c
+		         WHERE ci.idn_contract = c.idn
+		           AND 'AIN' IN (SELECT col_name FROM non_agg_column) HAVING SUM(ci.allocated_value) &lt; 0
+		         GROUP BY ci.gas_day,
+		                  c.idn_user_group
+
+		        UNION ALL
+
+		        <!-- Subtotals (Imbalance_Percent) -->
+		        SELECT aep.gas_day,
+		               c.idn_user_group,
+		               'TOTAL' AS contract_code,
+		               NULL AS idn_contract,
+		               'Y' AS is_total,
+		               (SELECT version_date FROM max_version_date) AS version_date,
+		               'Imbalance_Percent' AS aggregation,
+		               decode(nvl(SUM(aep.allocated_value), 0),
+		                      0,
+		                      to_number(NULL),
+		                      round(100 * (SELECT SUM(azc.allocated_value)
+		                                     FROM allocation_zone_concept azc,
+		                                          shipper_contract        cx
+		                                    WHERE azc.gas_day = aep.gas_day
+		                                      AND azc.idn_nomination_concept = (SELECT idn FROM imbalance)
+		                                      AND azc.idn_contract = cx.idn
+		                                      AND cx.idn_user_group = c.idn_user_group) / SUM(aep.allocated_value),
+		                            2)) AS allocated_value
+		          FROM allocation_entry_point aep,
+		               shipper_contract       c
+		         WHERE aep.idn_contract = c.idn
+		         GROUP BY aep.gas_day,
+		                  c.idn_user_group
+
+		        UNION ALL
+
+		        <!-- Subtotals (Used_Cap) -->
+		        SELECT aep.gas_day,
+		               c.idn_user_group,
+		               'TOTAL' AS contract_code,
+		               NULL AS idn_contract,
+		               'Y' AS is_total,
+		               (SELECT version_date FROM max_version_date) AS version_date,
+		               'Used_Cap' AS aggregation,
+		               decode(nvl(SUM(aep.contracted_value), 0),
+		                      0,
+		                      to_number(NULL),
+		                      round(100 * SUM(aep.allocated_value) / SUM(aep.contracted_value), 2)) AS allocated_value
+		          FROM allocation_entry_point aep,
+		               shipper_contract       c
+		         WHERE aep.idn_contract = c.idn
+		         GROUP BY aep.gas_day,
+		                  c.idn_user_group
+                 ) ms,
+                 tpa_tuser_group ug
+           WHERE ms.idn_user_group = ug.idn_user_group
+         )
+
+		<!-- MAIN SELECT -->
+		SELECT *
+		  FROM all_data
+		pivot (SUM(allocated_value) FOR aggregation IN('Total_Entry_Points' AS total_entry,
+		                                          'Total_Exit_Points' AS total_exit,
+		                                          'Imbalance_Zone' AS imbalance_zone,
+		                                          'Instructed_Flow' AS instructed_flow,
+		                                          'Shrinkage_Volume' AS sv,
+		                                          'STV' AS stv,
+		                                          'Park' AS park,
+		                                          'Unpark' AS unpark,
+		                                          'SOTD_Park' AS sotd_park,
+		                                          'EOTD_Park' AS eotd_park,
+		                                          <!--'Min_Inventory' AS min_inv, Item 33-->
+		                                          'Min_Inventory_Change' AS min_inv,
+		                                          'Balancing_gas' AS res_bal_gas,
+		                                          'Allocation_month_adjust' AS month_adjust,
+		                                          'AIP' AS aip,
+		                                          'AIN' AS ain,
+		                                          'Imbalance_Percent' AS imbalance_percent,
+		                                          'Imbalance_Stock' AS imbalance_stock,
+		                                          'Acc_Imbalance_Month' AS acc_imbalance_month,
+		                                          'Accumulated_Imbalance' AS acc_imbalance,
+		                                          'Used_Cap' AS e_used_cap,
+		                                          'ERAWAN' AS erawan,
+		                                          'BAANPOT' AS baanpot,
+		                                          'SATUN' AS satun,
+		                                          'PLATONG GAS II' AS platong_ii,
+		                                          'PLATONG' AS platong,
+		                                          'FUNAN' AS funan,
+		                                          'NORTH PAILIN' AS n_pailin,
+		                                          'SOUTH PAILIN' AS pailin,
+		                                          'BONGKOT' AS bongkot,
+		                                          'ARTHIT' AS arthit,
+		                                          'GBS' AS gbs,
+		                                          'TANTAWAN' AS tantawan,
+		                                          'BENCHAMAS' AS benchamas,
+		                                          'JDA18 DP2' AS jda18_dp2,
+		                                          'JDA B 17' AS jda_b_17,
+		                                          'Gas RY' AS gas_rayong,
+		                                          'STV_RY' AS liquid_rayong,
+		                                          'Gas KN' AS gas_khanom,
+		                                          'STV_KN' AS liquid_khanom))
+		 WHERE gas_day > (SELECT gas_day FROM first_day)
+		 ORDER BY gas_day,
+                  shipper_code,
+                  is_total,
+		          decode(idn_contract, NULL, NULL, contract_code)
+    </select>
+
+	<resultMap type="com.atos.beans.ReportTemplateBean" id="ReportTemplate">
+		<id property="repTemplateId" column="idn_report_template" />
+		<result property="tempCode" column="template_code" />
+		<result property="tempDesc" column="template_desc" />
+		<result property="binaryData" column="binary_data" jdbcType="BLOB"/>
+		<result property="fileName" column="file_name" />
+		<result property="systemId" column="idn_pipeline_system" />
+	</resultMap>
+
+	<select id="selectReportTemplateFromCodeSystem" parameterType="com.atos.beans.ReportTemplateBean" resultMap="ReportTemplate">
+		select trep.idn_report_template,
+		       trep.template_code,
+		       trep.template_desc,
+		       trep.binary_data,
+		       trep.file_name
+		  from tpa_treport_template trep
+		 where trep.template_code = #{tempCode}
+		   and trep.idn_pipeline_system = #{systemId}
+		   and trunc(sysdate) between trep.start_date and
+		       nvl(trep.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+	</select>
+
+	<!-- Para insertar la plantilla excel en la BD. Solo se usa en Desarrollo.	-->
+	<!-- <insert id="insertReportTemplate" useGeneratedKeys="true" keyProperty="repTemplateId" keyColumn="idn_report_template" parameterType="com.atos.beans.ReportTemplateBean">
+		insert into tpa_treport_template (idn_report_template,
+		                                       template_code,
+		                                       template_desc,
+		                                       start_date,
+		                                       binary_data,
+		                                       file_name)
+		values (tpa_sreport_template.nextval,
+		       #{tempCode},
+		       #{tempDesc},
+		       trunc(sysdate),
+		       #{binaryData},
+		       #{fileName})
+	</insert> -->
+
+</mapper>

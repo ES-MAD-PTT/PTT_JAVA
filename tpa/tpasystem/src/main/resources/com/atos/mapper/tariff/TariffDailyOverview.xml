@@ -1,0 +1,398 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+
+	<mapper namespace="com.atos.mapper.tariff.TariffDailyOverviewMapper">
+	
+    <resultMap type="com.atos.beans.tariff.TariffDailyOverviewBean" id="TariffChargeDetail">
+    
+    	<result property="detailGasDay" column="detailGasDay"/>
+		<result property="dailyBookedEntryCapacity" column="dailyBookedEntryCapacity"/>
+		<result property="dailyCapacityCharge" column="dailyCapacityCharge"/>
+
+    </resultMap>
+
+     
+    <select id="selectTariffDailyOverviews" parameterType="com.atos.filters.tariff.TariffDailyOverviewFilter" resultMap="TariffChargeDetail">
+
+	</select>
+    
+    <select id="getShipperGroupID" resultType="java.lang.String">
+		SELECT user_group_id 
+		FROM tpa_tuser_group 
+		where idn_user_group= #{idn_user_group}
+	</select>
+	
+	<select id="getIdnTariffCharge" resultType="java.math.BigDecimal" parameterType="com.atos.filters.tariff.TariffDailyOverviewFilter">
+		SELECT cha.idn_tariff_charge
+  FROM tpa_ttariff_charge cha
+ WHERE cha.idn_user_group = #{idn_user_group}
+   AND cha.charge_date = #{shortDate}
+   AND cha.idn_pipeline_system = #{idn_system}
+   AND cha.version_date = (SELECT MAX(chax.version_date)
+                             FROM tpa_ttariff_charge chax
+                            WHERE chax.idn_user_group = #{idn_user_group}
+                              AND chax.charge_date = #{shortDate}
+                              AND chax.idn_pipeline_system = #{idn_system})
+							  
+	</select>
+    
+    <select id="selectShippersCombo"  parameterType="com.atos.filters.tariff.TariffDailyOverviewFilter" resultType="com.atos.beans.ComboFilterNS">
+		<!-- Si el usuario que entra en el sistema es shipper el idn_user_group va inforamdo ya que solo debe salir él en eses caso -->
+		SELECT tuser.idn_user_group as key, tuser.user_group_id as value
+		FROM tpa_tuser_group tuser
+		WHERE tuser.idn_user_group_type = (SELECT idn_user_group_type FROM tpa_tuser_group_type WHERE type_code = 'SHIPPER')
+	   	      and trunc(sysdate) between tuser.start_date and nvl(tuser.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+		<if test="idn_user_group != null">
+			and tuser.idn_user_group = #{idn_user_group}
+		</if>
+		
+		order by UPPER(value)
+    </select>
+    
+     
+	<select id="selectContracts" parameterType="com.atos.filters.tariff.TariffDailyOverviewFilter" resultType="com.atos.beans.ComboFilterNS">
+		  SELECT DISTINCT  tcontract.idn_contract AS KEY, tcontract.contract_code AS VALUE 
+		  FROM tpa_tcontract tcontract, 
+		  		tpa_ttariff_charge_source csource, 
+		  		tpa_ttariff_code_det_calc dcalc, 
+		  		tpa_ttariff_code_detail cdetail, 
+		  		tpa_ttariff_code tcode  
+		  WHERE tcontract.idn_contract = csource.idn_contract 
+			  
+			  AND dcalc.idn_tariff_source_detail = csource.idn_tariff_source_detail 
+			  AND cdetail.idn_tariff_code_detail = dcalc.idn_tariff_code_detail 
+			  AND tcode.idn_tariff_code = cdetail.idn_tariff_code 
+			  AND tcode.idn_tariff_code = #{idn_tariff_code}  
+			  and tcontract.idn_pipeline_system=  #{idn_system} 			  
+			  AND csource.idn_tariff_charge = #{idn_tariff_charge}
+              AND cdetail.idn_tariff_code_detail IN (SELECT DISTINCT idn_tariff_code_detail 
+			                                         FROM TABLE(pck_tariff_charge.fun_paramet_tariff_code_det(#{idn_tariff_charge},  #{idn_system})))
+              AND cdetail.idn_operation_term IS NOT NULL
+
+			  ORDER BY upper(tcontract.contract_code)
+
+	</select>
+	
+	
+	<select id="selectVariable" parameterType="com.atos.filters.tariff.TariffDailyOverviewFilter" resultType="com.atos.beans.ComboFilterNS">
+		SELECT c_data.KEY, c_data.VALUE 
+	  	FROM 
+	    (SELECT DISTINCT tcode.idn_tariff_code AS KEY, 'Daily ' || tcode.tariff_desc AS VALUE, tcode.sort_value 
+	       FROM tpa_ttariff_code tcode, tpa_ttariff_code_detail cdetail 
+	      WHERE cdetail.idn_tariff_code = tcode.idn_tariff_code 
+	        AND cdetail.is_quantity_user_filled = 'N' 
+	        AND cdetail.is_fee_user_filled = 'N' 
+	        AND cdetail.is_amount_user_filled = 'N' 
+			<!-- AND cdetail.idn_tariff_code_detail IN (SELECT DISTINCT	idn_tariff_code_detail 
+			                                       FROM TABLE(pck_tariff_charge.fun_paramet_tariff_code_det(#{idn_tariff_charge},  #{idn_system})))  -->
+			) c_data
+	 	ORDER BY c_data.sort_value
+	</select>
+	
+ 	<select id="selectSystemPointType" parameterType="com.atos.filters.tariff.TariffDailyOverviewFilter" resultType="com.atos.beans.ComboFilterNS">
+		
+	<!-- SELECT DISTINCT ptype.idn_system_point_type AS KEY, ptype.type_code AS VALUE
+ 	FROM tpa_ttariff_code_detail cdetail, tpa_tsystem_point_type ptype
+ 	WHERE cdetail.idn_tariff_code = #{idn_tariff_code}
+   			AND ptype.idn_system_point_type = cdetail.idn_system_point_type
+ 	ORDER BY ptype.type_code
+ 	 -->
+ 	 
+ 	SELECT DISTINCT ptype.idn_system_point_type AS KEY, ptype.type_code AS VALUE
+ 	FROM tpa_ttariff_code_detail cdetail, TPA_TTARIFF_CODE_DET_PIPE dpipe, tpa_tsystem_point_type ptype
+ 	WHERE cdetail.idn_tariff_code =#{idn_tariff_code}
+    and dpipe.idn_tariff_code_detail = cdetail.idn_tariff_code_detail
+    and dpipe.is_enabled = 'Y'
+    and dpipe.IDN_PIPELINE_SYSTEM = #{idn_system} 
+   	AND ptype.idn_system_point_type = cdetail.idn_system_point_type	
+	AND cdetail.idn_tariff_code_detail IN (SELECT DISTINCT	idn_tariff_code_detail 
+	                                       FROM TABLE(pck_tariff_charge.fun_paramet_tariff_code_det(#{idn_tariff_charge},  #{idn_system})))	
+ 	ORDER BY ptype.type_code
+	
+	</select>
+
+	
+	<select id="getCodeTarifCode" parameterType="com.atos.filters.tariff.TariffDailyOverviewFilter" resultType="java.lang.String">
+	 		    select tcode.tariff_code tariff_code
+    			FROM tpa_ttariff_code tcode
+   			    where tcode.idn_tariff_code= #{idn_tariff_code}
+				 
+   </select>
+   
+   <select id="getCodeTarifType" parameterType="com.atos.filters.tariff.TariffDailyOverviewFilter" resultType="java.lang.String">
+				SELECT ptype.type_code type_code
+				FROM tpa_tsystem_point_type ptype
+				WHERE idn_system_point_type =  #{idn_system_point_type}
+   </select>
+	
+	
+	
+   <!-- Pestaña: ‘Daily Capacity Charge’ 
+				      private BigDecimal dailyBookedEntryCapacity;
+	 				  private BigDecimal dailyCapacityCharge;
+	-->
+    <select id="selectDetailCapacityCharge" parameterType="com.atos.beans.tariff.TariffDailyOverviewBean" resultMap="TariffChargeDetail">
+    <!-- no hace falta filtrar por idn_pipeline_system puesto que ya se filtra por contrato y este ya es de un sistema u otro y es obligatorio --> 
+    
+      SELECT v_data.GAS_DAY AS detailGasDay,
+       v_data.ENERGY AS dailyBookedEntryCapacity,
+       ROUND(v_data.ENERGY * v_data.FEE, 2) AS dailyCapacityCharge
+  	  FROM (SELECT csource.GAS_DAY, SUM(csource.BILLABLE_ENERGY) ENERGY, cmonth.FEE
+          FROM TPA_TTARIFF_CHARGE_SOURCE csource,
+               TPA_TTARIFF_CHARGE_MONTH  cmonth,
+               (SELECT DISTINCT dcalc.IDN_TARIFF_SOURCE_DETAIL, cdetail.IDN_TARIFF_CODE_DETAIL
+                  FROM TPA_TTARIFF_CODE_DET_CALC dcalc, TPA_TTARIFF_CODE_DETAIL cdetail
+                 WHERE cdetail.IDN_TARIFF_CODE = #{idn_tariff_code}
+                   AND dcalc.IDN_TARIFF_CODE_DETAIL = cdetail.IDN_TARIFF_CODE_DETAIL) calc_detail              
+       WHERE   csource.IDN_TARIFF_CHARGE = #{idn_tariff_charge}
+	   
+	     <if test="idn_contract != null">
+			AND csource.idn_contract = #{idn_contract}
+		 </if>
+           
+           AND csource.IDN_TARIFF_SOURCE_DETAIL = calc_detail.IDN_TARIFF_SOURCE_DETAIL
+           AND cmonth.IDN_TARIFF_CHARGE = csource.IDN_TARIFF_CHARGE
+           AND cmonth.IDN_TARIFF_CODE_DETAIL = calc_detail.IDN_TARIFF_CODE_DETAIL
+           AND cmonth.IDN_CONTRACT = csource.IDN_CONTRACT
+         GROUP BY csource.GAS_DAY, cmonth.FEE) v_data
+ 	ORDER BY v_data.GAS_DAY
+    
+    </select>
+    
+       <!-- ch715 AHORA existe el Exit y Entry
+   <select id="selectDetailComodityCharge" parameterType="com.atos.beans.tariff.TariffDailyOverviewBean" resultMap="TariffChargeDetail">
+    
+     	    SELECT v_data.GAS_DAY AS detailGasDay,
+		       v_data.ENERGY AS dailyAllocatedExitValue,
+		       ROUND(v_data.ENERGY * v_data.FEE, 2) AS dailyCommodityCharge
+		  FROM (SELECT csource.GAS_DAY, SUM(csource.BILLABLE_ENERGY) ENERGY, cmonth.FEE
+		          FROM TPA_TTARIFF_CHARGE        tcharge,
+		               TPA_TTARIFF_CHARGE_SOURCE csource,
+		               TPA_TTARIFF_CHARGE_MONTH  cmonth,
+		               (SELECT DISTINCT dcalc.IDN_TARIFF_SOURCE_DETAIL, cdetail.IDN_TARIFF_CODE_DETAIL
+		                  FROM TPA_TTARIFF_CODE_DET_CALC dcalc, TPA_TTARIFF_CODE_DETAIL cdetail
+		                 WHERE cdetail.IDN_TARIFF_CODE = #{idn_tariff_code}
+		                   AND dcalc.IDN_TARIFF_CODE_DETAIL = cdetail.IDN_TARIFF_CODE_DETAIL) calc_detail               
+		       WHERE tcharge.IDN_USER_GROUP =#{idn_user_group}
+		           AND tcharge.charge_date =  #{shortDate}
+		           AND tcharge.idn_pipeline_system = #{idn_system} 
+		           AND tcharge.version_date = (select max(tcharge2.version_date) 
+		           								from tpa_ttariff_charge tcharge2 
+		           								where tcharge2.idn_user_group = tcharge.idn_user_group 
+		           								and tcharge2.charge_date = tcharge.charge_date 
+		           								and tcharge2.idn_pipeline_system = tcharge.idn_pipeline_system)
+		           AND csource.IDN_TARIFF_CHARGE = tcharge.IDN_TARIFF_CHARGE
+		           AND csource.IDN_CONTRACT = #{idn_contract}
+		           AND csource.IDN_TARIFF_SOURCE_DETAIL = calc_detail.IDN_TARIFF_SOURCE_DETAIL
+		           AND cmonth.IDN_TARIFF_CHARGE = csource.IDN_TARIFF_CHARGE
+		           AND cmonth.IDN_TARIFF_CODE_DETAIL = calc_detail.IDN_TARIFF_CODE_DETAIL
+		           AND cmonth.IDN_CONTRACT = csource.IDN_CONTRACT
+		         GROUP BY csource.GAS_DAY, cmonth.FEE) v_data
+		 ORDER BY v_data.GAS_DAY
+   
+    </select>
+    -->
+    
+    <!--Pestaña: ‘Daily Commodity Charge’
+		private BigDecimal dailyAllocatedExitValue;
+    	private BigDecimal dailyCommodityCharge;  -->
+    	
+    <select id="selectDetailComodityChargeExit" parameterType="com.atos.beans.tariff.TariffDailyOverviewBean" resultMap="TariffChargeDetail">
+    <!-- no hace falta filtrar por idn_pipeline_system puesto que ya se filtra por contrato y este ya es de un sistema u otro y es obligatorio --> 
+     	    SELECT v_data.GAS_DAY AS detailGasDay,
+		       v_data.ENERGY AS dailyAllocatedExitValue,
+		       ROUND(v_data.ENERGY * v_data.FEE, 2) AS dailyCommodityCharge
+		  FROM (SELECT csource.GAS_DAY, SUM(csource.BILLABLE_ENERGY) ENERGY, cmonth.FEE
+		          FROM TPA_TTARIFF_CHARGE_SOURCE csource,
+		               TPA_TTARIFF_CHARGE_MONTH  cmonth,
+		               (SELECT DISTINCT dcalc.IDN_TARIFF_SOURCE_DETAIL, cdetail.IDN_TARIFF_CODE_DETAIL
+		                  FROM TPA_TTARIFF_CODE_DET_CALC dcalc, TPA_TTARIFF_CODE_DETAIL cdetail
+		                 WHERE cdetail.IDN_TARIFF_CODE = #{idn_tariff_code}
+		                 
+		                   AND cdetail.IDN_SYSTEM_POINT_TYPE = #{idn_system_point_type}
+		                 
+		                   AND dcalc.IDN_TARIFF_CODE_DETAIL = cdetail.IDN_TARIFF_CODE_DETAIL) calc_detail               
+		       WHERE   csource.IDN_TARIFF_CHARGE = #{idn_tariff_charge}
+			   
+                 <if test="idn_contract != null">
+					AND csource.idn_contract = #{idn_contract}
+			     </if>
+				 
+			       AND csource.IDN_TARIFF_SOURCE_DETAIL = calc_detail.IDN_TARIFF_SOURCE_DETAIL
+		           AND cmonth.IDN_TARIFF_CHARGE = csource.IDN_TARIFF_CHARGE
+		           AND cmonth.IDN_TARIFF_CODE_DETAIL = calc_detail.IDN_TARIFF_CODE_DETAIL
+		           AND cmonth.IDN_CONTRACT = csource.IDN_CONTRACT
+		         GROUP BY csource.GAS_DAY, cmonth.FEE) v_data
+		 ORDER BY v_data.GAS_DAY
+   
+    </select>
+    
+    <!--Pestaña: ‘Daily Commodity Charge’
+		private BigDecimal dailyAllocatedEntryValue;
+    	private BigDecimal dailyCommodityCharge;  -->
+    	
+     <select id="selectDetailComodityChargeEntry" parameterType="com.atos.beans.tariff.TariffDailyOverviewBean" resultMap="TariffChargeDetail">
+    <!-- no hace falta filtrar por idn_pipeline_system puesto que ya se filtra por contrato y este ya es de un sistema u otro y es obligatorio --> 
+     	    SELECT v_data.GAS_DAY AS detailGasDay,
+		       v_data.ENERGY AS dailyAllocatedEntryValue,
+		       ROUND(v_data.ENERGY * v_data.FEE, 2) AS dailyCommodityCharge
+		  FROM (SELECT csource.GAS_DAY, SUM(csource.BILLABLE_ENERGY) ENERGY, cmonth.FEE
+		          FROM TPA_TTARIFF_CHARGE_SOURCE csource,
+		               TPA_TTARIFF_CHARGE_MONTH  cmonth,
+		               (SELECT DISTINCT dcalc.IDN_TARIFF_SOURCE_DETAIL, cdetail.IDN_TARIFF_CODE_DETAIL
+		                  FROM TPA_TTARIFF_CODE_DET_CALC dcalc, TPA_TTARIFF_CODE_DETAIL cdetail
+		                 WHERE cdetail.IDN_TARIFF_CODE = #{idn_tariff_code}
+		                 
+		                   AND cdetail.IDN_SYSTEM_POINT_TYPE = #{idn_system_point_type}
+		                 
+		                   AND dcalc.IDN_TARIFF_CODE_DETAIL = cdetail.IDN_TARIFF_CODE_DETAIL) calc_detail               
+		       WHERE   csource.IDN_TARIFF_CHARGE = #{idn_tariff_charge}
+			   
+			     <if test="idn_contract != null">
+					AND csource.idn_contract = #{idn_contract}
+			     </if>
+				 
+		           AND csource.IDN_TARIFF_SOURCE_DETAIL = calc_detail.IDN_TARIFF_SOURCE_DETAIL
+		           AND cmonth.IDN_TARIFF_CHARGE = csource.IDN_TARIFF_CHARGE
+		           AND cmonth.IDN_TARIFF_CODE_DETAIL = calc_detail.IDN_TARIFF_CODE_DETAIL
+		           AND cmonth.IDN_CONTRACT = csource.IDN_CONTRACT
+		         GROUP BY csource.GAS_DAY, cmonth.FEE) v_data
+		 ORDER BY v_data.GAS_DAY
+   
+    </select>
+    
+    
+
+    
+    
+    
+    <!--Pestaña: ‘Daily Entry Capacity Over Used Charge’
+	private BigDecimal dailyEntryCapacityOverUsed;
+	private BigDecimal dailyOriginalEntryCapacityOU; //CH710 SAT FASE III
+	private BigDecimal dailyReducedEntryCapacityOverUsed; SAT CH522  en Java no hay que pintar esta columna
+	private BigDecimal dailyEntryCapacityOverUsedCharge;  -->
+				    
+    <select id="selectDetailOverUsageChargeEntry" parameterType="com.atos.beans.tariff.TariffDailyOverviewBean" resultMap="TariffChargeDetail">
+                
+   		  SELECT v_data.GAS_DAY AS                	detailGasDay,
+		       v_data.ENERGY AS                    	dailyEntryCapacityOU,
+		       v_data.original_ENERGY AS			dailyOriginalEntryCapacityOU,
+		       v_data.ENERGY * v_data.REDUCTION AS	dailyReducedEntryCapacityOU,
+		       ROUND(v_data.ENERGY * v_data.REDUCTION * v_data.FEE, 2) AS dailyEntryCapacityOUCharge
+		  FROM (SELECT csource.GAS_DAY, SUM(csource.BILLABLE_ENERGY) ENERGY, SUM(csource.ENERGY) original_ENERGY, cmonth.REDUCTION/100 REDUCTION, cmonth.FEE
+		          FROM TPA_TTARIFF_CHARGE        tcharge,
+		               TPA_TTARIFF_CHARGE_SOURCE csource,
+		               TPA_TTARIFF_CHARGE_MONTH  cmonth,
+		               (SELECT DISTINCT dcalc.IDN_TARIFF_SOURCE_DETAIL, cdetail.IDN_TARIFF_CODE_DETAIL
+		                  FROM TPA_TTARIFF_CODE_DET_CALC dcalc, TPA_TTARIFF_CODE_DETAIL cdetail
+		                 WHERE cdetail.IDN_TARIFF_CODE = #{idn_tariff_code}
+		                   AND cdetail.IDN_SYSTEM_POINT_TYPE = #{idn_system_point_type}
+		                   AND dcalc.IDN_TARIFF_CODE_DETAIL = cdetail.IDN_TARIFF_CODE_DETAIL
+						   AND cdetail.idn_tariff_code_detail IN (SELECT DISTINCT idn_tariff_code_detail 
+						                                          FROM TABLE(pck_tariff_charge.fun_paramet_tariff_code_det(#{idn_tariff_charge},  #{idn_system})))) calc_detail
+		         WHERE csource.IDN_TARIFF_CHARGE = #{idn_tariff_charge}
+				AND tcharge.idn_tariff_charge = csource.idn_tariff_charge
+				 <if test="idn_contract != null">
+					AND csource.idn_contract = #{idn_contract}
+			     </if>
+			
+		           AND csource.IDN_TARIFF_SOURCE_DETAIL = calc_detail.IDN_TARIFF_SOURCE_DETAIL
+		           AND cmonth.IDN_TARIFF_CHARGE = csource.IDN_TARIFF_CHARGE
+		           AND cmonth.IDN_TARIFF_CODE_DETAIL = calc_detail.IDN_TARIFF_CODE_DETAIL
+		           AND cmonth.IDN_CONTRACT = csource.IDN_CONTRACT
+		         GROUP BY csource.GAS_DAY, cmonth.REDUCTION, cmonth.FEE) v_data
+		 ORDER BY v_data.GAS_DAY
+    </select>
+    
+    <!-- Pestaña: ‘Daily Exit Capacity Over Used Charge’
+	
+    private BigDecimal dailyExitCapacityOU;
+    private BigDecimal dailyOriginalExitCapacityOU; //CH710 SAT FASE III
+    private BigDecimal dailyReducedExitCapacityOU=> SAT CH522  en Java no hay que pintar esta columna
+   	private BigDecimal dailyExitCapacityOUCharge;
+      -->
+    
+    <select id="selectDetailOverUsageChargeExit" parameterType="com.atos.beans.tariff.TariffDailyOverviewBean" resultMap="TariffChargeDetail">
+     SELECT v_data.GAS_DAY AS detailGasDay,
+	       v_data.ENERGY AS dailyExitCapacityOU,
+	       v_data.original_ENERGY AS			dailyOriginalExitCapacityOU,
+	       v_data.ENERGY * v_data.REDUCTION AS dailyReducedExitCapacityOU,
+	       ROUND(v_data.ENERGY * v_data.REDUCTION * v_data.FEE, 2) AS dailyExitCapacityOUCharge
+	  FROM (SELECT csource.GAS_DAY, SUM(csource.BILLABLE_ENERGY) ENERGY, SUM(csource.ENERGY) original_ENERGY, cmonth.REDUCTION/100 REDUCTION, cmonth.FEE
+	          FROM TPA_TTARIFF_CHARGE_SOURCE csource,
+	               TPA_TTARIFF_CHARGE_MONTH  cmonth,
+	               (SELECT DISTINCT dcalc.IDN_TARIFF_SOURCE_DETAIL, cdetail.IDN_TARIFF_CODE_DETAIL
+	                  FROM TPA_TTARIFF_CODE_DET_CALC dcalc, TPA_TTARIFF_CODE_DETAIL cdetail
+	                 WHERE cdetail.IDN_TARIFF_CODE = #{idn_tariff_code}
+	                   AND cdetail.IDN_SYSTEM_POINT_TYPE = #{idn_system_point_type}
+	                   AND dcalc.IDN_TARIFF_CODE_DETAIL = cdetail.IDN_TARIFF_CODE_DETAIL
+					   AND cdetail.idn_tariff_code_detail IN (SELECT DISTINCT idn_tariff_code_detail 
+					                                          FROM TABLE(pck_tariff_charge.fun_paramet_tariff_code_det(#{idn_tariff_charge},  #{idn_system})))) calc_detail
+	         WHERE csource.IDN_TARIFF_CHARGE = #{idn_tariff_charge}
+			 AND tcharge.idn_tariff_charge = csource.idn_tariff_charge
+			 <if test="idn_contract != null">
+					AND csource.idn_contract = #{idn_contract}
+			</if>
+			
+	           AND csource.IDN_TARIFF_SOURCE_DETAIL = calc_detail.IDN_TARIFF_SOURCE_DETAIL
+	           AND cmonth.IDN_TARIFF_CHARGE = csource.IDN_TARIFF_CHARGE
+	           AND cmonth.IDN_TARIFF_CODE_DETAIL = calc_detail.IDN_TARIFF_CODE_DETAIL
+	           AND cmonth.IDN_CONTRACT = csource.IDN_CONTRACT
+	         GROUP BY csource.GAS_DAY, cmonth.REDUCTION, cmonth.FEE) v_data
+	 ORDER BY v_data.GAS_DAY      
+    </select>
+    
+    
+    <!--Pestaña: ‘Daily Imbalance Penalty Charge’
+    private BigDecimal dailyImbalance;
+    private BigDecimal dailyImbalanceCharge;  
+     CH711 SAT FASE III  se añade dailyOriginalImbalance
+     
+     03/10/2018  SE AÑADE:
+   
+      ,csource.idn_contract,
+        csource.idn_system_point,
+        csource.idn_tariff_source_detail
+    -->
+    
+    
+    <select id="selectDetailImbalancePenalty" parameterType="com.atos.beans.tariff.TariffDailyOverviewBean" resultMap="TariffChargeDetail">
+    SELECT v_daily_energy.GAS_DAY AS detailGasDay,
+     	   v_daily_energy.original_ENERGY AS  dailyOriginalImbalance, 
+           v_daily_energy.ENERGY AS dailyImbalance,
+           ROUND(ABS(v_daily_energy.ENERGY) * CASE
+                    WHEN v_daily_energy.ENERGY >= 0 THEN
+                    (SELECT cmonth.FEE
+                     FROM TPA_TTARIFF_CHARGE_MONTH cmonth, TPA_TTARIFF_CODE_DETAIL code_detail
+                     WHERE IDN_TARIFF_CHARGE = v_daily_energy.IDN_TARIFF_CHARGE
+                     AND code_detail.DETAIL_CODE = 'IMBALANCE.PENALTY.POSITIVE'
+                     AND cmonth.IDN_TARIFF_CODE_DETAIL = code_detail.IDN_TARIFF_CODE_DETAIL)
+                  ELSE
+                    (SELECT cmonth.FEE
+                     FROM TPA_TTARIFF_CHARGE_MONTH cmonth, TPA_TTARIFF_CODE_DETAIL code_detail
+                     WHERE IDN_TARIFF_CHARGE = v_daily_energy.IDN_TARIFF_CHARGE
+                     AND code_detail.DETAIL_CODE = 'IMBALANCE.PENALTY.NEGATIVE'
+                     AND cmonth.IDN_TARIFF_CODE_DETAIL = code_detail.IDN_TARIFF_CODE_DETAIL)
+                 END, 2) AS dailyImbalanceCharge
+         FROM
+         (SELECT v_data.GAS_DAY, SUM(v_data.ENERGY) ENERGY, SUM(v_data.original_ENERGY) original_ENERGY, v_data.IDN_TARIFF_CHARGE
+            FROM (SELECT DISTINCT csource.GAS_DAY, csource.BILLABLE_ENERGY ENERGY, csource.ENERGY original_ENERGY,
+             csource.IDN_TARIFF_CHARGE
+             
+             ,csource.idn_contract,
+        	  csource.idn_system_point,
+        	  csource.idn_tariff_source_detail
+        	  
+                    FROM TPA_TTARIFF_CHARGE_SOURCE csource,
+                         TPA_TTARIFF_CODE_DETAIL cdetail,
+                         TPA_TTARIFF_CODE_DET_CALC dcalc 
+                   WHERE csource.IDN_TARIFF_CHARGE = #{idn_tariff_charge}
+                     AND cdetail.IDN_TARIFF_CODE = #{idn_tariff_code}
+                     AND dcalc.idn_tariff_code_detail = cdetail.idn_tariff_code_detail
+                     AND csource.IDN_TARIFF_SOURCE_DETAIL = dcalc.IDN_TARIFF_SOURCE_DETAIL) v_data
+         GROUP BY v_data.GAS_DAY, v_data.IDN_TARIFF_CHARGE) v_daily_energy
+    ORDER BY v_daily_energy.GAS_DAY
+    	
+    </select>   
+</mapper> 

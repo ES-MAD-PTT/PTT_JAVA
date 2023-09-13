@@ -1,0 +1,30 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:f="http://java.sun.com/jsf/core"
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+		</p:breadCrumb> 
+	</ui:define>
+	<ui:define name="content">
+		<script>
+			$.cookie("idMenu", null);
+			
+		</script>
+		<h:form style="width:98%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="5000"/>	
+		
+		<p:panel style="width:100%;height:100%;overflow:hidden; text-align:center;">
+			<!-- <p:graphicImage value="/resources/images/TPA4.jpg" style="width:720px;height:540px" />-->  
+			  <p:graphicImage  value="#{homeView.imageFromDB}" style="width:720px;height:540px" cache="false"/> 
+		</p:panel>
+		</h:form>
+	</ui:define>
+
+
+</ui:composition>

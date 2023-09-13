@@ -1,0 +1,553 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_dam']}" url="#" />
+			<p:menuitem value="#{msg['menu_buss_partners']}" url="#" />
+			<p:menuitem value="#{msg['menu_shippers']}" url="/pages/dam/shippers.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="5000"/>
+			
+            <p:layout widgetVar="shipperLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">	
+					
+				<p:panelGrid columns="2" style="width:100%">
+					
+						<p:panelGrid id="filters">
+							<p:row>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['shipper_id']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['shipper_Name']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['shipper_Start_Date']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['shipper_End_Date']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<p:selectOneMenu widgetVar="id_w" id="id" style="width:100px" value="#{shipperView.filters.id}" >
+										<f:selectItem itemLabel=" " itemValue="" />
+        								<f:selectItems value="#{shipperView.ids.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+									
+					           		</p:selectOneMenu>							
+								</p:column>
+								
+								<p:column>
+									<p:autoComplete id="companyName" size="10"  maxlength="120" value="#{shipperView.filters.companyName}" completeMethod="#{shipperView.companyNameList}" />									
+								</p:column>
+								<p:column>
+									<p:calendar id="fecInicio" size="10" pattern="dd/MM/yyyy" mask="true" value="#{shipperView.filters.startDate}"
+										showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="fecInicio"></p:ajax>
+										<p:ajax event="change" update="fecInicio"></p:ajax>
+									</p:calendar>
+								</p:column>
+								<p:column>
+									<p:calendar id="fecFin" size="10" pattern="dd/MM/yyyy" mask="true" value="#{shipperView.filters.endDate}"
+										showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="fecFin"></p:ajax>
+										<p:ajax event="change" update="fecFin"></p:ajax>
+									</p:calendar>
+								</p:column>
+							
+								
+							</p:row>
+						</p:panelGrid>
+						<p:panelGrid columns="2" style="float:right;top:0px">
+							<shiro:hasPermission name="#{changeSystemView.system}.DAM.SHIPPER.QUERY">
+								<p:commandButton value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{shipperView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,:#{p:component('shippers1')}"/>
+							</shiro:hasPermission>
+									
+							<p:commandButton  onclick="PF('shipperLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+							
+							<shiro:hasPermission name="#{changeSystemView.system}.DAM.SHIPPER.QUERY">
+								 <p:commandButton value="#{msg['clear']}"
+									actionListener="#{shipperView.onClear}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" 
+									process="@this" 
+									update="form"/> 
+							</shiro:hasPermission>
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center"
+					resizable="false" closable="false" collapsible="false">
+
+					<p:dataTable widgetVar="w_shipper1"  id="shippers1" var="shipper" value="#{shipperView.items}" reflow="true" editable="true" 
+						style="width:2000px;margin-bottom:20px;border-collapse:collapse"
+					    paginator="true" rows="15"
+					    scrollable="true"  scrollHeight="100%"				    
+					    rowsPerPageTemplate="5,10,15,20,25, #{shipperView.itemsSize}" >
+
+							<f:facet name="header">
+								<p:outputPanel style="height:25px">
+									<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+	        						<p:columnToggler datasource="shippers1" trigger="toggler" style="width:200px"/>
+	        						<shiro:hasPermission name="#{changeSystemView.system}.DAM.SHIPPER.ADD">
+	        						<p:commandButton id="new" type="button" value="#{msg['new']}" icon="ui-icon fa fa-save" style="float:right;"
+	        							onclick="PF('dlgNewShipper').show();"
+	        						/>
+	        						</shiro:hasPermission>
+								</p:outputPanel>        										          
+					        </f:facet>
+					     <shiro:hasPermission name="#{changeSystemView.system}.DAM.SHIPPER.MOD">   
+					 		<p:ajax event="rowEditInit"   listener="#{shipperView.onRowEditInit}" update=":form:msgs" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','hidden')});"/>
+							<p:ajax event="rowEdit"       listener="#{shipperView.onRowEdit}" update=":form:msgs" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>   
+							<p:ajax event="rowEditCancel" listener="#{shipperView.onRowCancel}" update=":form:msgs" onstart="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>
+					 	</shiro:hasPermission>
+					 
+					       <p:column headerText="#{msg['shipper_id']}" style="width: 130px;" sortBy="#{shipper.id}" filterMatchMode="contains" filterBy="#{shipper.id}">
+					       		<h:outputText value="#{shipper.id}" />
+					       </p:column>
+					 
+					       <p:column headerText="#{msg['shipper_Name']}" style="width: 150px;" sortBy="#{shipper.companyName}" filterMatchMode="contains" filterBy="#{shipper.companyName}">
+					           <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{shipper.companyName}" /></f:facet>
+					               <f:facet name="input">
+					               			<p:inputText value="#{shipper.companyName}" required="true" disabled="#{shipperView.disabledField(shipper)}" maxlength="120"
+					               			 style="width:100%" label="#{msg['shipper_Name']}"
+					               				requiredMessage="#{msg['shipper_Name']}: #{msg['empty_field']}" validatorMessage="#{msg['shipper_Company_Name']}: #{msg['lenght_field']} 120">
+					               				<f:validateLength maximum="120"/>
+					               				<f:validateRequired/>
+					               			</p:inputText>	
+					               	</f:facet>
+					           </p:cellEditor>
+					       </p:column>
+			 					       			
+							<p:column headerText="#{msg['shipper_Group_ID']}" style="width: 50px; text-align: center;" >
+  					       		<p:commandButton icon="ui-icon fa fa-columns" style="margin-left: auto; margin-right: auto"
+  					       			onclick="PF('contractPointsDlg').show()" update=":contractPointsFormId"> 
+									<f:setPropertyActionListener value="#{shipper}" target="#{shipperView.selected}" />
+								</p:commandButton>							
+					       	</p:column>
+							
+					       <p:column headerText="#{msg['shipper_Address']}" style="width: 150px;" sortBy="#{shipper.address}" filterMatchMode="contains"  filterBy="#{shipper.address}">
+					          <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{shipper.address}" /></f:facet>
+					               <f:facet name="input">
+					               		<p:inputText value="#{shipper.address}" style="width:100%" maxlength="120" 
+					               			label="#{msg['shipper_Address']}" disabled="#{shipperView.disabledField(shipper)}"
+					               			validatorMessage="#{msg['shipper_Address']}: #{msg['lenght_field']} 120">
+					               			<f:validateLength maximum="120"/>
+					               		</p:inputText>	
+					               	</f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['shipper_Credit_Rating']}" style="width: 150px;" sortBy="#{shipper.creditRating}" filterMatchMode="contains" filterBy="#{shipper.creditRating}">
+					          <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{shipper.creditRating}" /></f:facet>
+					               <f:facet name="input">
+					               		<p:inputText value="#{shipper.creditRating}" style="width:100%" maxlength="120" 
+					               			label="#{msg['shipper_Credit_Rating']}" disabled="#{shipperView.disabledField(shipper)}"
+					               			validatorMessage="#{msg['shipper_Credit_Rating']}: #{msg['lenght_field']} 120">
+					               			<f:validateLength maximum="120"/>
+					               		</p:inputText>	
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['shipper_ERC_License_ID']}" style="width: 150px;" sortBy="#{shipper.eRCLicenseID}" filterMatchMode="contains" filterBy="#{shipper.eRCLicenseID}">
+					          <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{shipper.eRCLicenseID}" /></f:facet>
+					               <f:facet name="input">
+					               		<p:inputText value="#{shipper.eRCLicenseID}" style="width:100%" maxlength="120" 
+					               			label="#{msg['shipper_ERC_License_ID']}" disabled="#{shipperView.disabledField(shipper)}"
+					               			validatorMessage="#{msg['shipper_ERC_License_ID']}: #{msg['lenght_field']} 120">
+					               			<f:validateLength maximum="120"/>
+					               		</p:inputText>
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					 	   <p:column headerText="#{msg['shipper_Telephone']}" style="width: 100px" sortBy="#{shipper.telephone}" filterMatchMode="contains" filterBy="#{shipper.telephone}">
+					          <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{shipper.telephone}" /></f:facet>
+					               <f:facet name="input">
+					               		<p:inputText value="#{shipper.telephone}" style="width:100%" maxlength="120" 
+					               		label="#{msg['shipper_Telephone']}" disabled="#{shipperView.disabledField(shipper)}"
+						               		validatorMessage="#{msg['shipper_Telephone']}: #{msg['lenght_field']} 120"> 
+					               			<f:validateLength maximum="120"/>
+					               		</p:inputText>
+					               	</f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       <p:column headerText="#{msg['shipper_FAX']}" style="width: 100px;" sortBy="#{shipper.fax}" filterMatchMode="contains" filterBy="#{shipper.fax}">
+					          <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{shipper.fax}" /></f:facet>
+					               <f:facet name="input">
+					               		<p:inputText value="#{shipper.fax}" style="width:100%" maxlength="120" 
+					               			label="#{msg['shipper_FAX']}" disabled="#{shipperView.disabledField(shipper)}"
+					               			validatorMessage="#{msg['shipper_FAX']}: #{msg['lenght_field']} 120">
+					               			<f:validateLength maximum="120"/>
+					               		</p:inputText>
+					               	</f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['shipper_SAP_ID']}" style="width: 100px;" sortBy="#{shipper.sapId}" filterMatchMode="contains" filterBy="#{shipper.sapId}">
+					          <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{shipper.sapId}" /></f:facet>
+					               <f:facet name="input">
+					               		<p:inputText value="#{shipper.sapId}" style="width:100%" maxlength="120" 
+					               		label="#{msg['shipper_SAP_ID']}" disabled="#{shipperView.disabledField(shipper)}"
+					               			validatorMessage="#{msg['shipper_SAP_ID']}: #{msg['lenght_field']} 120">
+					               			<f:validateLength maximum="120"/>
+					               		</p:inputText>
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       <p:column headerText="#{msg['shipper_Bank_Account']}" style="width: 120px;" sortBy="#{shipper.bankAccount}" filterMatchMode="contains" filterBy="#{shipper.bankAccount}">
+					          <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{shipper.bankAccount}" /></f:facet>
+					               <f:facet name="input">
+					               		<p:inputText value="#{shipper.bankAccount}" style="width:100%" maxlength="120" 
+					               			label="#{msg['shipper_Bank_Account']}" disabled="#{shipperView.disabledField(shipper)}"
+					               			validatorMessage="#{msg['shipper_Bank_Account']}: #{msg['lenght_field']} 120">
+					               			<f:validateLength maximum="120"/>
+					               		</p:inputText>
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       <p:column headerText="#{msg['shipper_Start_Date']}" style="width: 90px;" sortBy="#{shipper.startDate}" >
+					          <p:cellEditor>
+					               <f:facet name="output">
+					               			<h:outputText value="#{shipper.startDate}" >
+					              				<f:convertDateTime pattern="dd/MM/yyyy" />
+					              		 </h:outputText>
+					               </f:facet>
+					               <f:facet name="input"> 
+					               		<p:calendar required="true" id="startDate" value="#{shipper.startDate}" pattern="dd/MM/yyyy"
+					               			readonlyInput="true"   mindate="#{(shipperView.sysdate).getTime()}" 
+					               			disabled="#{shipperView.disabledField(shipper)}"
+											requiredMessage="#{msg['shipper_Start_Date']}: #{msg['empty_field']}" validatorMessage="#{msg['shipper_Start_Date']}: #{msg['empty_field']}">
+											<f:convertDateTime pattern="dd/MM/yyyy"/>
+										</p:calendar>
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['shipper_End_Date']}"  style="width: 90px;" sortBy="#{shipper.endDate}" >
+					          <p:cellEditor>
+					               <f:facet name="output">
+					               		<h:outputText value="#{shipper.endDate}" >
+					              			<f:convertDateTime pattern="dd/MM/yyyy" />
+					              		 </h:outputText>
+					               </f:facet>
+					               <f:facet name="input">
+					            	    <p:calendar id="endDate" value="#{shipper.endDate}" pattern="dd/MM/yyyy"
+					            	    	mindate="#{(shipperView.sysdate).getTime()}" 
+					            	    	disabled="#{shipperView.disabledEndDate(shipper)}"
+											validatorMessage="#{msg['shipper_End_Date']}: #{msg['empty_field']}">
+											<f:convertDateTime pattern="dd/MM/yyyy"/>
+										</p:calendar>
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					      <shiro:hasPermission name="#{changeSystemView.system}.DAM.SHIPPER.MOD">
+					       <p:column   style="width:32px">
+					            <p:rowEditor rendered="#{shipperView.renderItemEditor(shipper)}"/>
+					       </p:column>
+					       </shiro:hasPermission>
+					   </p:dataTable>
+				</p:layoutUnit>
+
+			</p:layout>
+		</h:form>
+	<shiro:hasPermission name="#{changeSystemView.system}.DAM.SHIPPER.ADD">
+		<p:dialog widgetVar="dlgNewShipper" resizable="false"  closable="true" modal="true" appendTo="@(body)" header="New Shipper">
+		<!-- Este ajax es para que cuando cierre por el  aspa limpie el formulario
+		 <p:ajax event="close" update="formNewEntity"  process="@this" listener="#{shipperView.cancel}" />	-->
+			<h:form id="formNewEntity">
+			<p:growl id="msgs" showDetail="true"  life="5000"/>
+				<p:panelGrid columns="4" style="width:100%">
+					<p:panelGrid>
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['shipper_id']}" />
+							</p:column>
+							<p:column>
+								<p:inputText required="true" id="id" value="#{shipperView.newShipper.id}" maxlength="20"
+									requiredMessage="#{msg['shipper_id']}: #{msg['empty_field']}" validatorMessage="#{msg['shipper_id']}: #{msg['lenght_field']} 20">
+									<f:validateLength maximum="20"/>
+								</p:inputText>
+								<p:message for="id" />
+							</p:column>
+
+							<p:column>
+								<h:outputText value="#{msg['shipper_Name']}" />
+							</p:column>
+							<p:column>
+								<p:inputText required="true" id="companyName" value="#{shipperView.newShipper.companyName}" maxlength="120" 
+									requiredMessage="#{msg['shipper_Name']}: #{msg['empty_field']}" 
+									validatorMessage="#{msg['shipper_Name']}: #{msg['lenght_field']} 120">
+									<f:validateLength maximum="120"/>
+								</p:inputText>
+								<p:message for="companyName" />
+							</p:column>
+						</p:row>
+						<p:row>
+							<p:column>
+								<h:outputText  value="#{msg['shipper_Group_ID']}" />
+							</p:column>
+							<p:column style="float:left">
+							  	<p:commandButton icon="ui-icon fa fa-columns" style="margin-left: auto; margin-right: auto"
+  					       			onclick="PF('newContractPointsDlg').show()" update=":newContractPointsFormId" /> 
+							</p:column>
+							
+							<p:column>
+								<h:outputText  value="#{msg['shipper_Address']}" />
+							</p:column>
+							<p:column>
+								<p:inputText id="address" value="#{shipperView.newShipper.address}" maxlength="120"  
+									validatorMessage="#{msg['shipper_Address']}: #{msg['lenght_field']} 120">
+									<f:validateLength maximum="120"/>
+								</p:inputText>
+								<p:message for="address" />
+							</p:column>
+						</p:row>
+						
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['shipper_Credit_Rating']}" />
+							</p:column>
+							<p:column>
+								<p:inputText id="creditRating" value="#{shipperView.newShipper.creditRating}" maxlength="120" 
+									validatorMessage="#{msg['shipper_Credit_Rating']}: #{msg['lenght_field']} 50">
+									<f:validateLength maximum="50"/>
+								</p:inputText>
+								<p:message for="creditRating" />
+							</p:column>
+							
+							<p:column>
+								<h:outputText value="#{msg['shipper_ERC_License_ID']}" />
+							</p:column>
+							<p:column>
+								<p:inputText id="eRCLicenseID" value="#{shipperView.newShipper.eRCLicenseID}"  maxlength="120" 
+									validatorMessage="#{msg['shipper_ERC_License_ID']}: #{msg['lenght_field']} 120">
+									<f:validateLength maximum="120"/>
+								</p:inputText>
+								<p:message for="eRCLicenseID" />
+							</p:column>
+						</p:row>
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['shipper_Telephone']}" />
+							</p:column>
+							<p:column>
+								<p:inputText id="telephone" value="#{shipperView.newShipper.telephone}" maxlength="120" 
+									validatorMessage="#{msg['shipper_Telephone']}: #{msg['lenght_field']} 120">
+									<f:validateLength maximum="120"/>
+								</p:inputText>
+								<p:message for="telephone" />
+							</p:column>
+
+							<p:column>
+								<h:outputText value="#{msg['shipper_FAX']}" />
+							</p:column>
+							<p:column>
+								<p:inputText id="fax" value="#{shipperView.newShipper.fax}" maxlength="120"  
+									validatorMessage="#{msg['shipper_FAX']}: #{msg['lenght_field']} 120">
+									<f:validateLength maximum="50"/>
+								</p:inputText>
+								<p:message for="fax" />
+							</p:column>
+						</p:row>
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['shipper_SAP_ID']}" />
+							</p:column>
+							<p:column>
+								<p:inputText id="sapId" value="#{shipperView.newShipper.sapId}" maxlength="120" 
+									validatorMessage="#{msg['shipper_SAP_ID']}: #{msg['lenght_field']} 120">
+									<f:validateLength maximum="120"/>
+								</p:inputText>
+								<p:message for="sapId" />
+							</p:column>
+
+							<p:column>
+								<h:outputText value="#{msg['shipper_Bank_Account']}" />
+							</p:column>
+							<p:column>
+								<p:inputText id="bankAccount" value="#{shipperView.newShipper.bankAccount}" maxlength="120"  
+									validatorMessage="#{msg['shipper_Bank_Account']}: #{msg['lenght_field']} 120">
+									<f:validateLength maximum="120"/>
+								</p:inputText>
+								<p:message for="bankAccount" />
+							</p:column>
+						</p:row>
+						
+						<p:row>
+						<p:column>
+								<h:outputText value="#{msg['shipper_Start_Date']}"/>
+							</p:column>
+							<p:column>
+								<p:calendar required="true" id="startDate" 
+									value="#{shipperView.newShipper.startDate}" pattern="dd/MM/yyyy"
+									readonlyInput="true"  mindate="#{(shipperView.sysdate).getTime()}" 
+									requiredMessage="#{msg['shipper_Start_Date']}: #{msg['empty_field']}" validatorMessage="#{msg['shipper_Start_Date']}: #{msg['lenght_field']}">
+								</p:calendar>
+								<p:message for="startDate" />
+							</p:column>
+							<p:column>
+								<h:outputText value="#{msg['shipper_End_Date']}"/>
+							</p:column>
+							<p:column>
+								<p:calendar id="endDate" 
+									value="#{shipperView.newShipper.endDate}" pattern="dd/MM/yyyy" 
+									 mask="true" mindate="#{(shipperView.sysdate).getTime()}" 
+									validatorMessage="#{msg['shipper_End_Date']}: #{msg['lenght_field']}">
+								</p:calendar>
+								<p:message for="endDate" />
+							</p:column>
+						</p:row>
+					</p:panelGrid>
+				</p:panelGrid>
+				
+				<p:separator/>
+				<p:panelGrid>
+					<p:row>
+						<p:column>
+							<p:commandButton value="#{msg['save']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" validateClient="true"
+								action="#{shipperView.save}" update=":#{p:component('shippers1')},:form:id,:formNewEntity,#{p:component('id')}"
+								onstart="PF('cargando').show()"
+								oncomplete="PF('dlgNewShipper').hide(),PF('cargando').hide()" />
+			        		<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close" 
+			        			update="formNewEntity" process="@this" actionListener="#{shipperView.cancel}"
+			        			oncomplete="PF('dlgNewShipper').hide()"/>
+						</p:column>					
+					</p:row>
+				</p:panelGrid>							
+			</h:form>			
+		</p:dialog>
+	</shiro:hasPermission>
+	
+	<shiro:hasPermission name="#{changeSystemView.system}.DAM.SHIPPER.QUERY">			
+		<p:dialog header="#{msg['shipper_Contract_List']}" widgetVar="contractPointsDlg" modal="true" appendTo="@(body)" height="350" width="520"
+			onShow="reloadSelectedFilterAreaIdsOnShow();">
+			<h:form id="contractPointsFormId" style="width:100%;height:98%;border-collapse:collapse">
+				<p:panelGrid id="contractPointsPanelGridId" columns="1" style="width:100%"
+					styleClass="showcase-text-align-center">
+					<p:row>
+						<p:column>
+							<p:selectCheckboxMenu id="areas" widgetVar="areasWidget" autoWidth="false" style="width:80px" 
+								   	onHide="reloadPointsOnhide();"
+								   	value="#{shipperView.selectedFilterAreaIds}" label="#{msg['shipper_Areas']}">
+    							<f:selectItems value="#{shipperView.areasCombo}" var="entry" 
+    										itemValue="#{entry.key}" itemLabel="#{entry.value}" />							
+			           		</p:selectCheckboxMenu>						
+						</p:column>
+						<!-- remoteCommand para que actualice la pickList cuando se haga el onHide del combo de areas). -->
+						<p:remoteCommand  name="reloadPointsOnhide" 
+							update="contractPointsPicklist" process="@this contractPointsFormId:areas"
+							action="#{shipperView.refreshDualList(shipperView.selected)}" />
+							
+			       		<!-- remoteCommand para que el combo de areas comience con todas las areas seleccionadas. -->
+						<p:remoteCommand  name="reloadSelectedFilterAreaIdsOnShow" 
+								action="#{shipperView.reloadSelectedFilterAreaIds()}" 
+								update=":contractPointsFormId:areas" process="@this :contractPointsFormId:areas"/>
+					</p:row>
+ 	  				<p:row>
+		  				<p:column style="width:100%; margin: 0 auto;"> 
+		   				 	<p:pickList id="contractPointsPicklist" value="#{shipperView.selected.dLContractPoints}" 			
+				   				var="point" itemLabel="#{point.value}" itemValue="#{point}"
+				   				disabled = "#{not shipperView.selected.editing}" converter="com.atos.utils.jsf.ComboFilterNSConverter"
+				   				showSourceFilter="true" showTargetFilter="true" filterMatchMode="contains">
+				   				<f:facet name="sourceCaption">#{msg['shipper_Available_Points']}</f:facet>
+			        			<f:facet name="targetCaption">#{msg['shipper_Group_ID']}</f:facet>
+			        			<p:column>
+						            <h:outputText value="#{point.value}" />
+						        </p:column>
+			   				</p:pickList>
+ 		   				</p:column>
+		   			</p:row>
+	   				<p:row>
+		   				<p:column>
+			  				<p:commandButton value="#{msg['close']}" style="float:right"
+			 					onclick="PF('contractPointsDlg').hide()" />
+ 						</p:column>
+					</p:row>
+				</p:panelGrid>
+			</h:form> 
+		</p:dialog>	
+	</shiro:hasPermission>
+	
+	<shiro:hasPermission name="#{changeSystemView.system}.DAM.SHIPPER.ADD">			
+		<p:dialog header="#{msg['shipper_Contract_List']}" widgetVar="newContractPointsDlg" modal="true" appendTo="@(body)" height="350" width="520"
+			onShow="reloadNewFilterAreaIdsOnShow();">
+			<h:form id="newContractPointsFormId" style="width:100%;height:98%;border-collapse:collapse">
+				<p:panelGrid id="newContractPointsPanelGridId" columns="1" style="width:100%"
+					styleClass="showcase-text-align-center">
+					<p:row>
+						<p:column>
+							<p:selectCheckboxMenu id="newAreas" widgetVar="newAreasWidget" autoWidth="false" style="width:80px" 
+								   	onHide="reloadNewPointsOnhide();"
+								   	value="#{shipperView.newShipperFilterAreaIds}" label="#{msg['shipper_Areas']}">
+    							<f:selectItems value="#{shipperView.areasCombo}" var="entry" 
+    										itemValue="#{entry.key}" itemLabel="#{entry.value}" />							
+			           		</p:selectCheckboxMenu>						
+						</p:column>
+						<!-- remoteCommand para que actualice la pickList cuando se haga el onHide del combo de areas). -->
+						<p:remoteCommand  name="reloadNewPointsOnhide" update="newContractPointsPicklist" process="@this newContractPointsFormId:newAreas"
+							action="#{shipperView.refreshNewDualList(shipperView.newShipper)}" />
+							
+						<!-- remoteCommand para que el combo de areas comience con todas las areas seleccionadas. -->
+						<p:remoteCommand  name="reloadNewFilterAreaIdsOnShow" 
+								action="#{shipperView.reloadNewFilterAreaIds()}" 
+								update=":newContractPointsFormId:newAreas" process="@this :newContractPointsFormId:newAreas"/>
+					</p:row>
+ 	  				<p:row>
+		  				<p:column style="width:100%; margin: 0 auto;"> 
+		   				 	<p:pickList id="newContractPointsPicklist" value="#{shipperView.newShipper.dLContractPoints}" 			
+				   				var="point" itemLabel="#{point.value}" itemValue="#{point}"
+				   				disabled = "false" converter="com.atos.utils.jsf.ComboFilterNSConverter"
+				   				showSourceFilter="true" showTargetFilter="true" filterMatchMode="contains">
+				   				<f:facet name="sourceCaption">#{msg['shipper_Available_Points']}</f:facet>
+			        			<f:facet name="targetCaption">#{msg['shipper_Group_ID']}</f:facet>
+			        			<p:column>
+						            <h:outputText value="#{point.value}" />
+						        </p:column>
+			   				</p:pickList>
+ 		   				</p:column>
+		   			</p:row>
+	   				<p:row>
+		   				<p:column>
+			  				<p:commandButton value="#{msg['close']}" style="float:right"
+			 					onclick="PF('newContractPointsDlg').hide()" />
+ 						</p:column>
+					</p:row>
+				</p:panelGrid>
+			</h:form> 
+		</p:dialog>	
+	</shiro:hasPermission>
+	</ui:define>
+
+
+</ui:composition>

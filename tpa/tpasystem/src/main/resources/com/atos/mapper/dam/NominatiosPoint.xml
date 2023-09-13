@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+
+<mapper namespace="com.atos.mapper.dam.NominationPointMapper">
+
+    <resultMap type="com.atos.beans.dam.NominationPointBean" id="NominationPoint">
+        <id column="idn_system_point" property="idn_system_point"  /> 
+        <result property="idn_system_point_type" column="idn_system_point_type"/>
+        <result property="idn_system_point_group" column="idn_system_point_group"/>
+        <result property="idn_pipeline_system" column="idn_pipeline_system"/>
+       	<result property="idn_zone" column="idn_zone"/>
+		<result property="idn_area" column="idn_area"/>
+		
+	    <result property="id" column="point_code"/>   
+        	<result property="name" column="point_desc"/>
+	        <result property="pointType" column="type_desc"/>
+	        <result property="systemCode" column="pipeline_system_code"/>
+	        <result property="zone" column="zone_code"/>
+        	<result property="area" column="area_code"/>
+        <result property="latitude" column="latitude"/>
+        <result property="longitude" column="longitude"/>      
+	        <result property="nominalCapacity" column="nominal_capacity"/>
+	        <result property="minPressure" column="min_pressure"/>
+	        <result property="maxPressure" column="max_pressure"/>
+  		<result property="startDate" column="start_date"/>   
+        <result property="endDate" column="end_date"/>  
+	  
+    </resultMap>
+     
+    <select id="selectNominationPoints" resultMap="NominationPoint">
+    
+		  SELECT p.group_code, 
+		        p.idn_system_point_group, 
+		        p.point_code point_code, 
+		        p.point_desc point_desc, 
+		        p.type_desc type_desc, 
+		        ps.pipeline_system_code pipeline_system_code, 
+		        z.zone_code zone_code, 
+		        a.area_code area_code, 
+		        p.latitude latitude, 
+		        p.longitude longitude, 
+		        (SELECT SUM(nvl(aux.nominal_capacity, 0)) 
+		           FROM tpa_tsystem_point_param aux 
+		          WHERE aux.idn_nomination_point = p.idn_system_point) nominal_capacity, 
+		        pp.min_pressure min_pressure, 
+		        pp.max_pressure max_pressure, 
+		        pp.start_date, 
+		        pp.end_date, 
+		        p.idn_system_point idn_system_point, 
+		        p.idn_system_point_type idn_system_point_type, 
+		        p.idn_system_point_group idn_system_point_group, 
+		        ps.idn_pipeline_system idn_pipeline_system, 
+		        z.idn_zone idn_zone, 
+		        a.idn_area idn_area, 
+		        pp.idn_system_point_param idn_system_point_param 
+		  FROM tpa_vsystem_point       p, 
+		       tpa_tsystem_point_param pp, 
+		       tpa_varea_tpa            a, 
+		       TPA_VZONE_TPA            z, 
+		       tpa_tpipeline_system    ps, 
+		       tpa_tsubarea            sub 
+		 WHERE pp.idn_system_point(+) = p.idn_system_point 
+		   AND p.group_code = 'NOMINATION' 
+		   AND sub.idn_subarea(+) = pp.idn_subarea 
+		   AND a.idn_area = p.idn_area 
+		   AND a.idn_zone = z.idn_zone 
+		   AND z.idn_pipeline_system = ps.idn_pipeline_system
+      	   AND nvl(pp.end_date, pp.start_date) >= pp.start_date
+		   AND pp.version_date = (SELECT max(ppx.version_date) 
+		                             FROM tpa_tsystem_point_param ppx 
+		                            WHERE pp.idn_system_point = ppx.idn_system_point 
+		                              AND pp.start_date = ppx.start_date)
+		                              
+		  <if test="startDate != null">
+		  AND nvl(p.end_date,to_date('9999/12/31','yyyy/mm/dd'))>=  #{startDate}
+          AND nvl(pp.end_date, nvl((SELECT MIN(ppy.start_date) - 1
+                                    FROM tpa_tsystem_point_param ppy
+                                   WHERE ppy.idn_system_point = pp.idn_system_point
+                                      AND ppy.start_date > pp.start_date
+                                     AND nvl(ppy.end_date, ppy.start_date) >= ppy.start_date
+                                     AND ppy.version_date = (SELECT max(ppz.version_date) 
+                                                               FROM tpa_tsystem_point_param ppz
+                                                              WHERE ppz.idn_system_point = ppy.idn_system_point 
+                                                                AND ppz.start_date = ppy.start_date)), to_date('9999/12/31','yyyy/mm/dd')))>=  #{startDate}
+		  </if>
+		  <if test="endDate != null">
+			  AND #{endDate} >= p.start_date
+			  AND #{endDate} >= nvl(pp.start_date, to_date('1900/01/01/', 'YYYY/MM/DD')) 
+		  </if>
+		  <if test="id != null and id != ''">
+		  	<!--  AND p.point_code = #{id}-->
+		  	AND p.idn_system_point = #{id}
+		  </if>
+		  <if test="pointType != null and pointType != ''">
+		  	AND p.idn_system_point_type = #{pointType}
+		  </if>
+		  <!-- offshore
+		  <if test="systemCode != null and systemCode != ''">
+		  	and ps.idn_pipeline_system = #{systemCode}
+		  </if>
+		   -->
+		   AND ps.idn_pipeline_system = #{idn_system}
+		   
+		  <if test="zone != null and zone != ''">
+		  	AND z.idn_zone = #{zone}
+		  </if>
+		  <if test="area != null and area != ''">
+		  	AND a.idn_area = #{area}
+		  </if>
+		  	ORDER BY UPPER (p.point_code)
+	</select>
+ <!--  
+    <select id="selectIds" resultType="java.lang.String">
+		SELECT p.POINT_CODE point_code
+		FROM tpa_tsystem_point p, tpa_tsystem_point_group pg
+		WHERE p.idn_system_point_group = pg.idn_system_point_group
+        AND pg.group_code= 'NOMINATION'
+        AND p.POINT_CODE like #{query}
+    </select>
+  -->  
+ 
+     <select id="selectIdsComboSystem" resultType="com.atos.beans.ComboFilterNS">
+		  SELECT sp.idn_system_point AS key, 
+             sp.point_code       AS value 
+	 	 FROM tpa_vsystem_point sp, 
+	       tpa_varea_tpa     a, 
+	       tpa_vzone_tpa     z 
+		 WHERE sp.group_code = 'NOMINATION' 
+	   		AND a.idn_area = sp.idn_area 
+	   		AND a.idn_zone = z.idn_zone 
+	   		AND z.idn_pipeline_system = #{idn_system} 
+		 ORDER BY sp.point_code
+    </select>
+  
+    
+     <select id="selectPointTypes" resultType="com.atos.beans.ComboFilterNS">
+		SELECT pt.idn_system_point_type as key, pt.type_desc as value
+		FROM tpa_vsystem_point_type_dam pt
+		ORDER BY  UPPER (pt.type_code)
+    </select>
+    
+    <select id="selectSystem" resultType="com.atos.beans.ComboFilterNS">
+		<!-- offshore el unico combo de la pantalla se carga con el system sel sistema -->
+		SELECT ps.idn_pipeline_system as key, ps.pipeline_system_code as value
+		FROM tpa_tpipeline_system  ps
+		WHERE ps.idn_pipeline_system = #{idn_system}
+		ORDER BY   UPPER (ps.pipeline_system_code)
+		
+    </select>
+ 
+    <select id="selectZonesSystem" resultType="com.atos.beans.ComboFilterNS">	
+		SELECT z.idn_zone as key, z.zone_code as value
+	    FROM TPA_VZONE_TPA z
+	    WHERE z.idn_pipeline_system =#{idn_system}
+	    ORDER BY UPPER(z.zone_code)
+    </select>
+    
+
+    <select id="selectAreas" resultType="com.atos.beans.ComboFilterNS">
+		SELECT a.idn_area as key, a.area_code as value
+		FROM tpa_varea_tpa  a   
+		WHERE a.idn_zone= #{idn_zone}
+		ORDER BY  upper(a.area_code)
+    </select>
+    
+  
+    <select id="selectAreasSystem" resultType="com.atos.beans.ComboFilterNS">
+	 	SELECT a.idn_area as key,  a.area_code as value
+		FROM TPA_VZONE_TPA z, 
+			  tpa_varea_tpa a
+	    WHERE z.idn_zone= a.idn_zone
+	      AND z.idn_pipeline_system = #{idn_system}
+		ORDER BY UPPER(a.area_code)			
+    </select>
+    
+    <select id="selectCustomerTypes" resultType="com.atos.beans.ComboFilterNS">
+		SELECT ct.idn_customer_type as key, ct.type_desc as value
+		FROM tpa_tcustomer_type ct
+		ORDER BY ct.type_desc
+    </select>
+ 
+	<insert id="insertNominationPoint" useGeneratedKeys="true" keyProperty="idn_system_point" keyColumn="idn_system_point" parameterType="com.atos.beans.dam.NominationPointBean">
+		INSERT INTO tpa_tsystem_point
+			(idn_system_point,IDN_SYSTEM_POINT_GROUP,point_code,point_desc, idn_system_point_type, latitude, longitude,
+			 idn_area,start_date, end_date,
+			 aud_ins_user,aud_last_user)
+		VALUES
+			(tpa_ssystem_point.nextval,
+			 (SELECT pg.idn_system_point_group  FROM tpa_tsystem_point_group pg WHERE pg.group_code='NOMINATION'),
+			 #{id},
+			 #{name}, 
+			 #{idn_system_point_type},
+			 #{latitude},
+			 #{longitude},
+			 #{idn_area},
+			 #{startDate},
+		     #{endDate},
+		     #{username},
+			 #{username})
+	</insert>
+	
+	 <insert id="insertNominationPointParam" useGeneratedKeys="true" keyProperty="idn_system_point_param" keyColumn="idn_system_point_param" parameterType="com.atos.beans.dam.NominationPointBean">
+		INSERT INTO tpa_tsystem_point_param
+		      (idn_system_point_param, idn_system_point, min_pressure,max_pressure, 
+		      start_date, end_date,
+		      aud_ins_user,aud_last_user)
+		   VALUES
+		      (tpa_ssystem_point_param.nextval,
+		       #{idn_system_point},		            
+		       #{minPressure},
+		       #{maxPressure},
+		       #{startDate},
+		       #{endDate},
+		       #{username},
+			   #{username})		  
+	</insert>
+	
+	<!--  20/05/2021 AGA se elimina la insercion del contract point ya que se crea una pantalla especifica para ello
+	<insert id="insertContractPoint" useGeneratedKeys="true" keyProperty="idn_system_point" keyColumn="idn_system_point" parameterType="com.atos.beans.dam.NominationPointBean">
+		INSERT INTO tpa_tsystem_point
+			(idn_system_point,IDN_SYSTEM_POINT_GROUP,point_code,point_desc, idn_system_point_type, latitude, longitude, idn_area,
+			start_date, end_date,
+			aud_ins_user,aud_last_user)
+		VALUES
+			(tpa_ssystem_point.nextval,
+			 (SELECT pg.idn_system_point_group  FROM tpa_tsystem_point_group pg WHERE pg.group_code='CONTRACT'),
+			 #{id},
+			 #{name}, 
+			 #{idn_system_point_type},
+			 #{latitude},
+			 #{longitude},
+			 #{idn_area},
+			 #{startDate},
+		     #{endDate},
+		     #{username},
+			 #{username})
+	</insert> -->
+
+	<update id="updateNominationPoint" parameterType="com.atos.beans.dam.NominationPointBean">
+		UPDATE tpa_tsystem_point set
+			point_desc = #{name},
+			idn_system_point_type=#{idn_system_point_type},
+			latitude=#{latitude},
+			longitude=#{longitude},
+			idn_area=#{idn_area},
+			aud_last_user=#{username}
+		WHERE idn_system_point = #{idn_system_point}
+	</update>
+	 
+	<update id="updateNominationPointParam" parameterType="com.atos.beans.dam.NominationPointBean">
+		UPDATE tpa_tsystem_point_param set
+			max_pressure=#{maxPressure},
+			min_pressure=#{minPressure},
+			start_date=#{startDate},
+		    end_date=#{endDate},
+		    aud_last_user=#{username}
+  		 WHERE idn_system_point = #{idn_system_point}
+		       AND idn_system_point_param = #{idn_system_point_param} 
+	</update>
+	
+	
+	<select id="getNominationPointCode" resultType="java.lang.String">
+	    SELECT p.POINT_CODE point_code 
+		FROM tpa_tsystem_point p, tpa_tsystem_point_group pg
+		WHERE p.idn_system_point_group = pg.idn_system_point_group
+	        	AND pg.group_code= 'NOMINATION'
+		  		AND  p.point_code = #{id}	    
+	</select>
+ 
+  <select id="selectAreaNominationPoint" resultType="com.atos.beans.ComboFilterNS">
+		SELECT sp.idn_area as key,a.area_code as value
+	    FROM tpa_tsystem_point sp, 
+	    	 tpa_tsystem_point_group spg,
+	    	 tpa_varea_tpa a
+		WHERE sp.idn_system_point_group = spg.idn_system_point_group
+		      AND  a.idn_area = sp.IDN_AREA
+		      AND spg.group_code = 'NOMINATION'
+		      AND sp.idn_system_point=#{idn_system_point}
+		      ORDER BY sp.point_code
+	</select>
+	
+  
+    <select id="selectSubAreaNominationPoint" resultType="com.atos.beans.ComboFilterNS">
+    	SELECT sa.idn_subarea as key,sa.subarea_code as value
+	    FROM tpa_tsystem_point sp,
+	    	 tpa_tsystem_point_group spg,
+	    	 tpa_varea_tpa a, 
+	    	 tpa_tsubarea sa
+	    WHERE sp.idn_system_point_group = spg.idn_system_point_group
+              AND sa.idn_area = a.idn_area 
+		      AND  a.idn_area = sp.IDN_AREA
+		      AND spg.group_code = 'NOMINATION'
+		      AND sp.idn_system_point=#{idn_system_point}
+		  ORDER BY sp.point_code
+	</select>
+	
+	<update id="deleteNominationPointParam" parameterType="com.atos.beans.dam.NominationPointBean">
+		UPDATE tpa_tsystem_point_param set
+			end_date = #{endDate},
+			aud_last_user=#{username}
+		WHERE idn_system_point = #{idn_system_point}
+		      AND idn_system_point_param = #{idn_system_point_param} 
+	</update>
+	
+	<select id="getNominationPointParamStarDate" resultType="java.util.Date">
+		SELECT  pp.start_date 
+	    FROM tpa_tsystem_point_param pp
+		WHERE idn_system_point = #{idn_system_point}
+		      AND idn_system_point_param = #{idn_system_point_param} 
+	</select>
+	
+</mapper>

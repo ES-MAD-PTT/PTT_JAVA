@@ -1,0 +1,308 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_booking']}" url="#" />
+			<p:menuitem value="#{msg['menu_contract_query']}" url="/pages/booking/menu_contract_query.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+				
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="10000"/>
+			
+            <p:layout widgetVar="ContractQueryLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">	
+					
+				<p:panelGrid columns="2" style="width:100%">
+					
+						<p:panelGrid>
+							<p:row>
+								
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['cq_man_shipper_id']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['cq_man_contract_type']}" />
+								</p:column>
+								
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['cq_startDate']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['cq_endDate']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+							
+								<p:column>
+									<p:selectOneMenu id="shipperId" style="width:120px" value="#{ContractQueryView.filters.shipperId}" 
+										rendered="#{!ContractQueryView.isShipper()}">
+										   		<f:selectItem itemLabel="#{ContractQueryView.filters.shipperCode}" itemValue="#{ContractQueryView.filters.shipperId}" />
+        										<f:selectItems value="#{ContractQueryView.shipperIds.entrySet()}" var="entry" 
+        											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>
+									<h:outputText value="#{ContractQueryView.user.user_group_id}" style="float:left" rendered="#{ContractQueryView.isShipper()}"/>	
+								</p:column>
+
+								<p:column>
+									<p:selectCheckboxMenu id="contractType" autoWidth="false" style="width:180px" 
+										value="#{ContractQueryView.filters.contractTypeId}" label="#{msg['cr_man_contract_type']}" >
+      									<f:selectItems value="#{ContractQueryView.contractTypes.entrySet()}" var="entry" 
+      										itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectCheckboxMenu>								
+								</p:column>
+
+								
+								
+								<p:column>
+									<p:calendar id="fecInicio" size="6" pattern="dd/MM/yyyy" mask="true" value="#{ContractQueryView.filters.startDate}"
+										showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="fecInicio"></p:ajax>
+										<p:ajax event="change" update="fecInicio"></p:ajax>
+									</p:calendar>
+								</p:column>
+								<p:column>
+									<p:calendar id="fecFin" size="6" pattern="dd/MM/yyyy" mask="true" value="#{ContractQueryView.filters.endDate}"
+										showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="fecFin"></p:ajax>
+										<p:ajax event="change" update="fecFin"></p:ajax>
+									</p:calendar>
+								</p:column>
+							
+								
+							</p:row>
+						</p:panelGrid>
+						<p:panelGrid columns="2" style="float:right;top:0px">
+							<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CONTRACT_QUERY.QUERY">									
+								<p:commandButton value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{ContractQueryView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,:#{p:component('capRequests1')}"/>
+							</shiro:hasPermission>
+									
+							<p:commandButton  onclick="PF('ContractQueryLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" 
+									value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+
+							<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CONTRACT_QUERY.QUERY">
+								 <p:commandButton value="#{msg['clear']}"
+									actionListener="#{ContractQueryView.onClear}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" 
+									process="@this"
+									update="msgs,@form"/>
+							</shiro:hasPermission>
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center" resizable="false" closable="false" collapsible="false" style="border: 0;">
+
+					<p:dataTable widgetVar="w_capRequests1"  id="capRequests1" var="item" value="#{ContractQueryView.items}"
+						selectionMode="single" selection="#{ContractQueryView.selected}" rowKey="#{item.id}" 
+						reflow="true" style="margin-bottom:20px;border-collapse:collapse"
+						scrollable="true" scrollHeight="100%"
+					    paginator="true" rows="15" rowsPerPageTemplate="5,10,15,20,25, #{ContractQueryView.itemsSize}" >
+						<f:facet name="header"> 
+								<p:outputPanel style="height:25px">
+									<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+									<p:columnToggler datasource="capRequests1" trigger="toggler" style="width:200px"/>
+								</p:outputPanel>        										          
+	 				        </f:facet>
+					       <p:column headerText="#{msg['cr_man_capacity_request_code']}" style="width: 130px;" sortBy="#{item.id}">
+					       <ui:remove>
+					       		<h:outputText value="#{item.requestCode}" style="float:right" />
+							</ui:remove>
+					       	<p:commandLink  actionListener="#{ContractQueryView.linkAction}" ajax="true">
+					       		<h:outputText value="#{item.requestCode}" style="float:right" />
+					       		<f:attribute name="request_code" value="#{item.requestCode}"/>
+					       		<f:attribute name="contract_type" value="#{item.contractTypeCode}"/>
+					       		<f:attribute name="shipper_name" value="#{item.shipperCode}"/>
+					       		</p:commandLink>
+					       </p:column>
+
+					       <p:column headerText="#{msg['cr_man_submitted_timestamp']}" style="width: 75px;" sortBy="#{item.submittedTimestamp}">
+			               		<h:outputText value="#{item.submittedTimestamp}" >
+			              				<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+			              		</h:outputText>
+					       </p:column>
+
+					       <p:column headerText="#{msg['cr_man_shipper_id']}" style="width: 100px;" sortBy="#{item.shipperCode}">
+					       		<h:outputText value="#{item.shipperCode}" />
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['cr_man_shipper_name']}" style="width: 100px;" sortBy="#{item.shipperName}">
+					       		<h:outputText value="#{item.shipperName}" />
+					       </p:column>
+
+					       <p:column headerText="#{msg['cr_man_contract_type']}" style="width: 100px;" sortBy="#{item.contractTypeCode}">
+					       		<h:outputText value="#{item.contractTypeCode}" />
+					       </p:column>
+
+					       <p:column headerText="#{msg['cr_man_contract_id']}" style="width: 140px;" sortBy="#{item.contractCode}">
+					       		<h:outputText value="#{item.contractCode}" />
+					       </p:column>
+
+					       <p:column headerText="#{msg['cr_man_contract_startdate']}" style="width: 70px;" sortBy="#{item.contractStartDate}">
+			               		<h:outputText value="#{item.contractStartDate}" >
+			              				<f:convertDateTime pattern="dd/MM/yyyy" />
+			              		</h:outputText>
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['cr_man_contract_enddate']}" style="width: 70px;" sortBy="#{item.contractEndDate}">
+			               		<h:outputText value="#{item.contractEndDate}" >
+			              				<f:convertDateTime pattern="dd/MM/yyyy" />
+			              		</h:outputText>
+					       </p:column>
+
+							<p:column headerText="#{msg['cr_man_xlsFile']}" style="width: 150px;" sortBy="#{item.xlsFileName}">
+							    <p:commandButton ajax="false" actionListener="#{ContractQueryView.getFile(item)}" 
+							    	oncomplete="PrimeFaces.monitorDownload(start, stop);" icon="ui-icon fa fa-save" title="#{item.xlsFileName}" >
+									<f:setPropertyActionListener value="#{item}" target="#{ContractQueryView.selected}" />
+							        <p:fileDownload value="#{ContractQueryView.selected.xlsFile}"/>
+							    </p:commandButton>
+								<h:outputText value="#{item.xlsFileName}" title="#{item.xlsFileName}" />
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['cr_man_submission_comments']}" style="width: 80px;" sortBy="#{item.submissionComments}">
+  					       		<p:commandButton value="#{msg['cr_man_details']}" onclick="PF('submissionCommentsDlg').show()" update=":subCommentsFormId" 
+  					       			rendered="#{not empty item.submissionComments}">
+									<f:setPropertyActionListener value="#{item}" target="#{ContractQueryView.selected}" />
+								</p:commandButton>							
+					       </p:column>
+					       <p:column headerText="#{msg['cr_man_additional_docs']}" style="width: 70px; text-align: center;">
+  					       		<p:commandButton icon="ui-icon-document" action="#{ContractQueryView.selectAdditionalDocs(item)}" update=":additionalDocsFormId"
+									onstart="PF('cargando').show()"	oncomplete="PF('cargando').hide(),PF('additionalDocsDlg').show()" >
+									<f:setPropertyActionListener value="#{item}" target="#{ContractQueryView.selected}" />
+								</p:commandButton>
+					       </p:column>
+
+
+					       <p:column headerText="#{msg['cr_man_management_comments']}" style="width: 80px;" sortBy="#{item.managementComments}">
+  					       		<p:commandButton value="#{msg['cr_man_details']}" onclick="PF('managementCommentsDlg').show()" update=":manCommentsFormId" 
+  					       			rendered="#{not empty item.managementComments}">
+									<f:setPropertyActionListener value="#{item}" target="#{ContractQueryView.selected}" />
+								</p:commandButton>							
+					       </p:column>
+					       
+							<!-- Se hace render cuando la Capacity Request tiene contrato, es decir, cuando ha pasado por Accept. Podria luego estar REJECTED. -->
+					       <p:column headerText="#{msg['cr_man_shadow_time']}" style="width: 100px;" sortBy="#{item.shadowTime}">
+					       		<h:outputText value="#{item.shadowTime}" style="float:right" rendered="#{not empty item.contractId}" >
+			               			<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3" />
+			               		</h:outputText>
+					       </p:column>
+
+							<!-- Se hace render cuando la Capacity Request tiene contrato, es decir, cuando ha pasado por Accept. Podria luego estar REJECTED. -->
+					       <p:column headerText="#{msg['cr_man_shadow_period']}" style="width: 100px;" sortBy="#{item.shadowPeriod}">
+					       		<h:outputText value="#{item.shadowPeriod}" style="float:right" rendered="#{not empty item.contractId}" >
+			               			<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3" />
+			               		</h:outputText>
+					       </p:column>
+
+					       <p:column headerText="#{msg['cr_man_acept_timestamp']}" style="width: 100px;" sortBy="#{item.acceptanceTimestamp}">
+			               		<h:outputText value="#{item.acceptanceTimestamp}" >
+			              				<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+			              		</h:outputText>
+					       </p:column>
+					   </p:dataTable>
+				</p:layoutUnit>
+			</p:layout>
+		</h:form> 
+		<p:dialog header="#{msg['cr_man_submission_comments']}" widgetVar="submissionCommentsDlg" modal="true" appendTo="@(body)" height="200" width="800">
+			<h:form id="subCommentsFormId" style="width:100%;height:98%;border-collapse:collapse">
+  				<h:inputTextarea value="#{ContractQueryView.selected.submissionComments}" readonly="true" rows="12" cols="105" style="border-color: white"/>
+			</h:form> 
+		</p:dialog>				
+
+		<p:dialog header="#{msg['cr_man_additional_docs']}" widgetVar="additionalDocsDlg" modal="true" appendTo="@(body)" height="300" width="900" >
+			<h:form id="additionalDocsFormId" style="width:100%;height:98%;border-collapse:collapse">
+				<p:dataTable widgetVar="w_additionalDocsTable1"  id="additionalDocs1" 
+					value="#{ContractQueryView.selected.additionalDocs}" var="contractDoc" 
+					reflow="true" style="margin-bottom:20px;border-collapse:collapse"
+					scrollable="true" scrollHeight="100%" >
+
+					<f:facet name="header">
+ 						<p:outputPanel style="height:30px">						
+							<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+							<p:columnToggler datasource="additionalDocs1" trigger="toggler" style="width:200px"/>  										          	 				   
+ 							<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CONTRACT_QUERY.MOD">
+								<!-- Este boton solo se muestra cuando la CapRequest est en estado SUBMITTED o ACCEPTED. La Capacity Request a evaluar sera la guardada en selected. -->
+								
+								<!--
+   					       		<p:commandButton value="#{msg['cr_man_add_doc']}" icon="ui-icon-plus" style="float:right;"
+									actionListener="#{ContractQueryView.createNewDocFile}" update=":form:msgs,#{p:component('addDocFormId')}"
+									onstart="PF('cargando').show()"	oncomplete="PF('cargando').hide();PF('addDocDlg').show()"
+									rendered="#{ContractQueryView.selected.status=='SUBMITTED' or ContractQueryView.selected.status=='ACCEPTED' or ContractQueryView.selected.status=='COMPLETED'}" />
+									-->
+									<!-- No es necesario pasar parametro a la ventana de añadir, porque ya se relleno selected previamente. -->	    									
+ 							</shiro:hasPermission>
+ 						</p:outputPanel>       										          
+			        </f:facet>
+
+
+			       	<p:column headerText="#{msg['cr_man_file_name']}" style="width: 60px;" sortBy="#{contractDoc.fileName}">
+ 					    <p:commandButton ajax="false" actionListener="#{ContractQueryView.getDocFile(contractDoc)}" 
+					    	oncomplete="PrimeFaces.monitorDownload(start, stop);" icon="ui-icon fa fa-save" title="#{contractDoc.fileName}" >
+					        <p:fileDownload value="#{contractDoc.scFile}"/>
+					    </p:commandButton>
+					    <p:spacer width="10"/>
+						<h:outputText value="#{contractDoc.fileName}" title="#{contractDoc.fileName}" />
+			       	</p:column>
+
+			       	<p:column headerText="#{msg['cr_man_submitted_timestamp']}" style="width: 55px; text-align: center;" sortBy="#{contractDoc.submissionDate}" >
+	               		<h:outputText value="#{contractDoc.submissionDate}" >
+	              				<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+	              		</h:outputText>
+			       	</p:column>
+					       
+			       	<p:column headerText="#{msg['cr_man_doc_type']}" style="width: 40px; text-align: center;" sortBy="#{contractDoc.docTypeCode}">
+ 						<h:outputText value="#{ContractQueryView.getDocTypeExternalCode(contractDoc.contractAttachTypeId)}" title="#{ContractQueryView.getDocTypeExternalCode(contractDoc.contractAttachTypeId)}" />				
+			       	</p:column>
+
+			       	<p:column headerText="#{msg['cr_man_comments_remarks']}" style="width: 100px; text-align: center;" >
+ 						<h:outputText value="#{contractDoc.comments}" title="#{contractDoc.comments}" style="float:left" />				
+			       	</p:column>
+				</p:dataTable>
+			</h:form>
+		</p:dialog>	
+
+
+		<p:dialog header="#{msg['cr_man_rejected_points']}" widgetVar="rejectPointsDlg" modal="true" appendTo="@(body)" height="200">
+			<h:form id="rejPointsFormId" style="width:100%;height:98%;border-collapse:collapse">
+				<p:dataGrid value="#{ContractQueryView.selected.rejectedPointCodes}" var="pointCode"  columns="1">
+				    <h:outputText value="#{pointCode}"/>
+      			</p:dataGrid>
+			</h:form> 
+		</p:dialog>	
+		
+		<p:dialog header="#{msg['cr_man_management_comments']}" widgetVar="managementCommentsDlg" modal="true" appendTo="@(body)" height="200" width="800">
+			<h:form id="manCommentsFormId" style="width:100%;height:98%;border-collapse:collapse">
+ 				<h:inputTextarea value="#{ContractQueryView.selected.managementComments}" readonly="true" rows="12" cols="105" style="border-color: white"/>
+			</h:form> 
+		</p:dialog>				
+	</ui:define>
+	
+	<script type="text/javascript">
+	function start() {
+	    PF('cargando').show();
+	}
+	 
+	function stop() {
+	    PF('cargando').hide();
+	}
+	</script>
+</ui:composition>

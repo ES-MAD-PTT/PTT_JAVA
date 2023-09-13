@@ -1,0 +1,447 @@
+<ui:composition
+	xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+<p:dataTable id="mix_table" var="mix" value="#{dayNom.mix_tab}" editable="true" style="width:#{dayNom.widthEastWest1};margin-bottom:20px;border-collapse:collapse"
+paginator="true" rows="15" rowsPerPageTemplate="5,10,15,20,25">
+<f:facet name="header">
+	<p:commandButton type="button" style="float: right" value="#{msg['day_nom_show_hide']}">
+		<p:ajax event="click" listener="#{dayNom.daysDetailEastWest1}" update=":#{p:component('mix_table')}" 
+		onstart="PF('cargando').show()" onerror="PF('cargando').hide()" oncomplete="PF('cargando').hide()"/>
+	</p:commandButton>
+	 						<p:outputPanel style="height:30px">
+							<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+      						<p:columnToggler datasource="mix_table" trigger="toggler" style="width:200px"/>
+							</p:outputPanel>
+							</f:facet>
+	<!-- Se permite editar con cualquiera de los dos permisos, Management o Modification -->
+<shiro:hasPermission name="#{changeSystemView.system}.NOMINATIONS.DAILY.MANAGEMENT.MAN">
+	<p:ajax event="rowEdit" listener="#{dayNom.onRowEdit}" update=":form:msgs,:#{p:component('mix_quality_table')}" />
+	<p:ajax event="rowEditCancel" listener="#{dayNom.onRowCancel}" update=":form:msgs" />
+</shiro:hasPermission>
+<shiro:hasPermission name="#{changeSystemView.system}.NOMINATIONS.DAILY.MANAGEMENT.MOD">
+	<p:ajax event="rowEdit" listener="#{dayNom.onRowEdit}" update=":form:msgs,:#{p:component('mix_quality_table')}" />
+	<p:ajax event="rowEditCancel" listener="#{dayNom.onRowCancel}" update=":form:msgs" />
+</shiro:hasPermission>
+
+	<p:column style="width:150px" headerText="#{msg['nom_supply_demand']}">
+	<h:outputText value="#{mix.supply_demand}" />
+	</p:column>
+	<p:column style="width:100px" headerText="#{msg['nom_area_desc']}">
+	<h:outputText value="#{mix.area}" />
+	</p:column>
+	<p:column style="width:100px" headerText="#{msg['nom_area_code']}">
+	<h:outputText value="#{mix.area_code}" />
+	</p:column>
+	<p:column style="width:100px" headerText="#{msg['nom_subarea']}">
+	<h:outputText value="#{mix.subarea}" />
+	</p:column>
+	<p:column style="width:250px" headerText="#{msg['nom_point_id']}">
+	<h:outputText value="#{mix.point_id}" styleClass="#{dayNom.pointRed(mix) ? 'overnomValue' : 'nonOvernomValue'}"/>
+	</p:column>
+	<p:column style="width:100px" headerText="#{msg['nom_type']}">
+	<h:outputText value="#{mix.cust_type}" />
+	</p:column>
+	<p:column style="width:100px" headerText="#{msg['nom_unit']}">
+	<h:outputText value="#{mix.unit}" />
+	</p:column>
+	<p:column style="width:100px" headerText="#{msg['nom_entry_exit']}">
+	<h:outputText value="#{mix.entry_exit}" />
+	</p:column>
+	<p:column style="width:100px" headerText="#{msg['nom_wi']}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" styleClass="#{mix.is_warned_wi eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{mix.wi}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column style="width:100px" headerText="#{msg['nom_wi']}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" styleClass="#{mix.is_warned_wi eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{mix.wi}" >
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{mix.wi}" style="width:100%;text-align: right" 
+									styleClass="#{mix.is_warned_wi eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_wi']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	<p:column style="width:100px" headerText="#{msg['nom_hv']}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" styleClass="#{mix.is_warned_hv eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{mix.hv}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column style="width:100px" headerText="#{msg['nom_hv']}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" styleClass="#{mix.is_warned_hv eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{mix.hv}" >
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{mix.hv}" style="width:100%;text-align: right" 
+									styleClass="#{mix.is_warned_hv eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_hv']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	<p:column style="width:100px" headerText="#{msg['nom_sg']}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" styleClass="#{mix.is_warned_sg eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{mix.sg}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column style="width:100px" headerText="#{msg['nom_sg']}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" styleClass="#{mix.is_warned_sg eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{mix.sg}" >
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{mix.sg}" style="width:100%;text-align: right" 
+									styleClass="#{mix.is_warned_sg eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_sg']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_01']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" value="#{mix.hour_01}" styleClass="#{mix.is_warned_h01 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_01']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" value="#{mix.hour_01}" styleClass="#{mix.is_warned_h01 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{mix.hour_01}" style="width:100%;text-align: right" styleClass="#{mix.is_warned_h01 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_hour_01']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_02']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" value="#{mix.hour_02}" styleClass="#{mix.is_warned_h02 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_02']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" value="#{mix.hour_02}" styleClass="#{mix.is_warned_h02 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{mix.hour_02}" style="width:100%;text-align: right" styleClass="#{mix.is_warned_h02 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_hour_02']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_03']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" value="#{mix.hour_03}" styleClass="#{mix.is_warned_h03 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_03']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" value="#{mix.hour_03}" styleClass="#{mix.is_warned_h03 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{mix.hour_03}" style="width:100%;text-align: right" styleClass="#{mix.is_warned_h03 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_hour_03']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_04']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" value="#{mix.hour_04}" styleClass="#{mix.is_warned_h04 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_04']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" value="#{mix.hour_04}" styleClass="#{mix.is_warned_h04 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{mix.hour_04}" style="width:100%;text-align: right" styleClass="#{mix.is_warned_h04 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_hour_04']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_05']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" value="#{mix.hour_05}" styleClass="#{mix.is_warned_h05 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_05']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" value="#{mix.hour_05}" styleClass="#{mix.is_warned_h05 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{mix.hour_05}" style="width:100%;text-align: right" styleClass="#{mix.is_warned_h05 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_hour_05']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_06']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" value="#{mix.hour_06}" styleClass="#{mix.is_warned_h06 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_06']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" value="#{mix.hour_06}" styleClass="#{mix.is_warned_h06 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{mix.hour_06}" style="width:100%;text-align: right" styleClass="#{mix.is_warned_h06 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_hour_06']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_07']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" value="#{mix.hour_07}" styleClass="#{mix.is_warned_h07 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_07']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" value="#{mix.hour_07}" styleClass="#{mix.is_warned_h07 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{mix.hour_07}" style="width:100%;text-align: right" styleClass="#{mix.is_warned_h07 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_hour_07']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_08']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" value="#{mix.hour_08}" styleClass="#{mix.is_warned_h08 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_08']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" value="#{mix.hour_08}" styleClass="#{mix.is_warned_h08 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{mix.hour_08}" style="width:100%;text-align: right" styleClass="#{mix.is_warned_h08 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_hour_08']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_09']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" value="#{mix.hour_09}" styleClass="#{mix.is_warned_h09 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_09']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" value="#{mix.hour_09}" styleClass="#{mix.is_warned_h09 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{mix.hour_09}" style="width:100%;text-align: right" styleClass="#{mix.is_warned_h09 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_hour_09']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_10']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" value="#{mix.hour_10}" styleClass="#{mix.is_warned_h10 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_10']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" value="#{mix.hour_10}" styleClass="#{mix.is_warned_h10 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{mix.hour_10}" style="width:100%;text-align: right" styleClass="#{mix.is_warned_h10 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_hour_10']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_11']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" value="#{mix.hour_11}" styleClass="#{mix.is_warned_h11 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_11']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" value="#{mix.hour_11}" styleClass="#{mix.is_warned_h11 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{mix.hour_11}" style="width:100%;text-align: right" styleClass="#{mix.is_warned_h11 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_hour_11']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_12']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" value="#{mix.hour_12}" styleClass="#{mix.is_warned_h12 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_12']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" value="#{mix.hour_12}" styleClass="#{mix.is_warned_h12 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{mix.hour_12}" style="width:100%;text-align: right" styleClass="#{mix.is_warned_h12 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_hour_12']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_13']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" value="#{mix.hour_13}" styleClass="#{mix.is_warned_h13 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_13']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" value="#{mix.hour_13}" styleClass="#{mix.is_warned_h13 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{mix.hour_13}" style="width:100%;text-align: right" styleClass="#{mix.is_warned_h13 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_hour_13']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_14']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" value="#{mix.hour_14}" styleClass="#{mix.is_warned_h14 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_14']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" value="#{mix.hour_14}" styleClass="#{mix.is_warned_h14 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{mix.hour_14}" style="width:100%;text-align: right" styleClass="#{mix.is_warned_h14 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_hour_14']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_15']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" value="#{mix.hour_15}" styleClass="#{mix.is_warned_h15 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_15']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" value="#{mix.hour_15}" styleClass="#{mix.is_warned_h15 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{mix.hour_15}" style="width:100%;text-align: right" styleClass="#{mix.is_warned_h15 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_hour_15']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_16']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" value="#{mix.hour_16}" styleClass="#{mix.is_warned_h16 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_16']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" value="#{mix.hour_16}" styleClass="#{mix.is_warned_h16 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{mix.hour_16}" style="width:100%;text-align: right" styleClass="#{mix.is_warned_h16 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_hour_16']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_17']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" value="#{mix.hour_17}" styleClass="#{mix.is_warned_h17 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_17']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" value="#{mix.hour_17}" styleClass="#{mix.is_warned_h17 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{mix.hour_17}" style="width:100%;text-align: right" styleClass="#{mix.is_warned_h17 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_hour_17']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_18']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" value="#{mix.hour_18}" styleClass="#{mix.is_warned_h18 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_18']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" value="#{mix.hour_18}" styleClass="#{mix.is_warned_h18 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{mix.hour_18}" style="width:100%;text-align: right" styleClass="#{mix.is_warned_h18 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_hour_18']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_19']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" value="#{mix.hour_19}" styleClass="#{mix.is_warned_h19 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_19']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" value="#{mix.hour_19}" styleClass="#{mix.is_warned_h19 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{mix.hour_19}" style="width:100%;text-align: right" styleClass="#{mix.is_warned_h19 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_hour_19']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_20']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" value="#{mix.hour_20}" styleClass="#{mix.is_warned_h20 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_20']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" value="#{mix.hour_20}" styleClass="#{mix.is_warned_h20 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{mix.hour_20}" style="width:100%;text-align: right" styleClass="#{mix.is_warned_h20 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_hour_20']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_21']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" value="#{mix.hour_21}" styleClass="#{mix.is_warned_h21 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_21']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" value="#{mix.hour_21}" styleClass="#{mix.is_warned_h21 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{mix.hour_21}" style="width:100%;text-align: right" styleClass="#{mix.is_warned_h21 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_hour_21']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_22']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" value="#{mix.hour_22}" styleClass="#{mix.is_warned_h22 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_22']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" value="#{mix.hour_22}" styleClass="#{mix.is_warned_h22 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{mix.hour_22}" style="width:100%;text-align: right" styleClass="#{mix.is_warned_h22 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_hour_22']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_23']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" value="#{mix.hour_23}" styleClass="#{mix.is_warned_h23 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_23']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" value="#{mix.hour_23}" styleClass="#{mix.is_warned_h23 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{mix.hour_23}" style="width:100%;text-align: right" styleClass="#{mix.is_warned_h23 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_hour_23']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_24']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{!isFutureDate or !hasManagOrModifPermission}">
+	<h:outputText style="float:right" value="#{mix.hour_24}" styleClass="#{mix.is_warned_h24 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_24']}" visible="#{dayNom.showHideDaysEastWest1}" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:cellEditor>
+		<f:facet name="output"><h:outputText style="float:right" value="#{mix.hour_24}" styleClass="#{mix.is_warned_h24 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+								<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+							</h:outputText>
+		</f:facet>
+		<f:facet name="input"><p:inputText value="#{mix.hour_24}" style="width:100%;text-align: right" styleClass="#{mix.is_warned_h24 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" label="#{msg['nom_hour_24']}"/></f:facet>
+		</p:cellEditor>
+	</p:column>
+	<p:column style="width:120px" headerText="#{msg['nom_total']}">
+	<h:outputText style="float:right" styleClass="#{mix.is_warned eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{mix.total}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+
+	<!-- Se permite editar con cualquiera de los dos permisos, Management o Modification -->
+	<p:column style="width:32px" rendered="#{isFutureDate and hasManagOrModifPermission}">
+		<p:rowEditor />
+	</p:column>
+
+</p:dataTable>
+</ui:composition>

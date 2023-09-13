@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atos.mapper.dam.NominationConceptMapper">
+
+<resultMap id="NominationConcept" type="com.atos.beans.dam.NominationConceptBean">
+
+<result column="concept_code" property="id"/>
+
+<result column="type_desc" property="name"/>
+
+</resultMap>
+
+<select id="selectNominationConcept" resultMap="NominationConcept">SELECT a.concept_code,b.type_desc 
+FROM tpa_tnomination_concept a,tpa_tnom_concept_type b,tpa_tnom_concept_system c 
+WHERE a.idn_nom_concept_type = b.idn_nom_concept_type 
+AND b.type_code NOT IN ('COMMERCIAL', 'ALLOCATION_ONLY') 
+AND a.is_enabled = 'Y'
+AND c.idn_pipeline_system = #{idn_system}
+AND a.idn_nomination_concept = c.idn_nomination_concept 
+<if test="nomConcept != null and nomConcept != ''">
+	and a.idn_nomination_concept = #{nomConcept}
+</if>
+<if test="nomConceptType != null and nomConceptType != ''">
+	and a.idn_nom_concept_type = #{nomConceptType}
+</if>
+</select> 
+
+ <select id="selectNominationConceptCombo" parameterType="java.math.BigDecimal" resultType="com.atos.beans.ComboFilterNS">
+		select n.idn_nomination_concept as key, n.concept_code as value 
+		from tpa_tnomination_concept n, tpa_tnom_concept_system c  
+		where n.idn_nom_concept_type not in (select t.idn_nom_concept_type from tpa_tnom_concept_type t where t.type_code in ('COMMERCIAL', 'ALLOCATION_ONLY'))
+        and c.idn_nomination_concept = n.idn_nomination_concept
+        and n.is_enabled = 'Y'
+		and c.idn_pipeline_system = #{idn_system}
+		order by 2
+    </select>
+    
+    <select id="selectNominationConceptTypeCombo" parameterType="java.math.BigDecimal" resultType="com.atos.beans.ComboFilterNS">
+		select n.idn_nom_concept_type as key, n.type_desc as value
+        from tpa_tnom_concept_type n
+        where n.type_code not in ('COMMERCIAL', 'ALLOCATION_ONLY')
+        order by 2
+    </select>
+    
+
+</mapper>

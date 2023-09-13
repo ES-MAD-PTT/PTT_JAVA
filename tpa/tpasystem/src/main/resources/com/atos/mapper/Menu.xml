@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atos.mapper.MenuMapper">
+
+<select id="getPages" resultType="com.atos.beans.MenuBean" parameterType="java.util.TreeMap">
+	select per.system system,
+         me.idn_page idn_page,
+         me.idn_menu idn_menu,
+         p.i18n_label i18n,
+         p.url url,
+         me.position
+    from tpa_tpage p, tpa_tmenu_element me,
+    (SELECT distinct  pa.idn_page,
+         s.pipeline_system_code system
+    FROM tpa_tpermission         pe,
+         tpa_tprofile            r,
+         tpa_tprofile_permission pr,
+         tpa_tprofile_pipeline   pp,
+         tpa_tpipeline_system    s,
+         tpa_tpermission_page    ppa,
+         tpa_tpage               pa
+   WHERE pe.idn_permission = pr.idn_permission
+     and pr.idn_profile = r.IDN_PROFILE
+     and r.idn_profile = pp.idn_profile
+     and s.idn_pipeline_system = pp.idn_pipeline_system
+     and pe.is_enabled = 'Y'
+     and r.is_enabled = 'Y'
+     and pr.is_enabled = 'Y'
+     and pa.is_enabled = 'Y'
+     and trunc(sysdate) between pe.start_date and nvl(pe.end_date,trunc(sysdate))
+     and trunc(sysdate) between r.start_date and nvl(r.end_date,trunc(sysdate))
+     and trunc(sysdate) between pr.start_date and nvl(pr.end_date,trunc(sysdate))
+     and trunc(sysdate) between pp.start_date and nvl(pp.end_date,trunc(sysdate))
+     and trunc(sysdate) between ppa.start_date and nvl(ppa.end_date,trunc(sysdate))
+     and pe.permission_code like '%QUERY%'
+     and s.pipeline_system_code = #{system}
+     and ppa.idn_permission = pe.idn_permission
+     and pa.idn_page = ppa.idn_page
+     and r.profile_code in
+         (SELECT r.profile_code
+            FROM tpa_tuser p, tpa_tprofile r, tpa_tuser_profile pr
+           WHERE pr.idn_user = p.idn_user
+             and r.IDN_PROFILE = pr.IDN_PROFILE
+             and r.is_enabled = 'Y'
+             and p.is_enabled = 'Y'
+             and trunc(sysdate) between p.start_date and nvl(p.end_date,trunc(sysdate))
+             and trunc(sysdate) between r.start_date and nvl(r.end_date,trunc(sysdate))
+             and trunc(sysdate) between pr.start_date and nvl(pr.end_date,trunc(sysdate))
+             and p.user_id = #{user})
+  ) per
+   where me.idn_page = p.idn_page
+         and per.idn_page = p.idn_page
+       order by position
+</select>
+
+<select id="getMenus" resultType="com.atos.beans.MenuBean">
+select '' system ,
+       me.idn_page idn_page,
+       me.idn_menu idn_menu ,
+       m.i18n_label i18n,
+       '' url,
+       me.position
+  from tpa_tmenu m,tpa_tmenu_element me
+ where m.idn_menu = me.idn_menu
+       and me.idn_page is null
+       and trunc(sysdate) between start_date and nvl(end_date,trunc(sysdate))
+</select>
+
+</mapper>

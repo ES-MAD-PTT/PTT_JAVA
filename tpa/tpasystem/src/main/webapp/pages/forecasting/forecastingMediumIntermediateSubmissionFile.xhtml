@@ -1,0 +1,51 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_forecast']}" url="#" />
+			<p:menuitem value="#{msg['menu_medium_term']}" url="#" />
+			<p:menuitem value="#{msg['menu_forecast_inter_file']}" url="/pages/forecasting/forecastingMediumIntermediateSubmissionFile.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+		<h:form enctype="multipart/form-data" id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="5000"/>
+			
+				<p:panelGrid columns="2" style="width:100%">
+					
+					<shiro:hasPermission name="#{changeSystemView.system}.FORECASTING.MEDIUM.SUB_INTERMEDIATE.ADD">
+						<p:panelGrid id="filters">
+							<p:row>
+								<p:column>
+									<p:fileUpload id="upload" style="width:100%" fileUploadListener="#{forecastingMediumIntermediateSubmissionFileView.handleFileUpload}" mode="advanced" dragDropSupport="true"
+	           							fileLimit="1" ajax="true" update="msgs,upload" sizeLimit="5000000" allowTypes="/(\.|\/)(xlsx|xlsm|xls)$/" 
+	           							onstart="PF('cargando').show()"
+	           							oncomplete="PF('cargando').hide()"/>
+								</p:column>
+							</p:row>
+						</p:panelGrid>
+					</shiro:hasPermission>
+					<shiro:hasPermission name="#{changeSystemView.system}.FORECASTING.MEDIUM.SUB_INTERMEDIATE.QUERY">
+						<p:panelGrid columns="1" style="float:right;top:0px">
+								<p:commandButton ajax="false" value="#{msg['download_template']}"
+							    	oncomplete="PrimeFaces.monitorDownload(start, stop);" icon="ui-icon fa fa-download">
+							        <p:fileDownload value="#{forecastingMediumIntermediateSubmissionFileView.template}"/>
+								</p:commandButton>						
+						</p:panelGrid>
+					</shiro:hasPermission>
+				</p:panelGrid>
+
+		</h:form>
+	</ui:define>
+
+
+</ui:composition>

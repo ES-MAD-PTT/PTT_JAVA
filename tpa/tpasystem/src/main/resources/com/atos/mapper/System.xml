@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atos.mapper.SystemMapper">
+
+<select id="getSystems" resultType="java.util.TreeMap">
+	select idn_pipeline_system as idn, pipeline_system_code as code from TPA_TPIPELINE_SYSTEM
+</select>
+
+<select id="getOnshoreSystem" resultType="java.math.BigDecimal">
+	select idn_pipeline_system from TPA_TPIPELINE_SYSTEM where pipeline_system_code = 'ONSHORE'
+</select>
+
+<!-- Si la consulta devuelve 0 es que no tiene rol para Onshore, y si devuelve distinto de 0, es que SI tiene rol Onshore. -->
+<select id="userHasOnshoreProfile" resultType="java.lang.Integer">
+	SELECT COUNT(*)
+	  FROM tpa_tuser             u,
+	       tpa_tuser_profile     p,
+	       tpa_tprofile_pipeline pp
+	 WHERE u.user_id = #{userName}
+	   AND u.idn_user = p.idn_user
+	   AND p.idn_profile = pp.idn_profile
+	   AND pp.idn_pipeline_system =
+	       (SELECT idn_pipeline_system FROM tpa_tpipeline_system WHERE pipeline_system_code = 'ONSHORE')
+	   AND trunc(SYSDATE) BETWEEN p.start_date AND nvl(p.end_date, to_date('9999-12-31', 'YYYY-MM-DD'))
+	   AND trunc(SYSDATE) BETWEEN pp.start_date AND nvl(pp.end_date, to_date('9999-12-31', 'YYYY-MM-DD'))
+</select>
+
+<select id="getIdnUserGroupOperator" resultType="java.math.BigDecimal">
+select tg.idn_user_group from tpa_tuser_group tg where tg.idn_user_group_type in
+(select tgt.idn_user_group_type from tpa_tuser_group_type tgt where tgt.type_code = 'OPERATOR')
+</select>
+
+</mapper>

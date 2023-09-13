@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atos.mapper.NotificationMapper">
+
+	<select id="getNotifications" parameterType="java.lang.String" resultType="com.atos.beans.NotificationBean">
+	SELECT n.idn_notification,
+	       n.origin,
+	       n.information,
+	       n.start_date,
+	       nu.idn_notification_user
+	  FROM tpa_tnotification      n,
+	       tpa_tnotification_user nu,
+	       tpa_tuser              u
+	 WHERE n.is_enabled = 'Y'
+	   AND n.idn_notification = nu.idn_notification
+	   AND nu.is_acknowledge = 'N'
+	   AND nu.idn_user = u.idn_user
+	   AND u.user_id = #{user_id}
+	 ORDER BY n.start_date DESC
+	
+	</select>
+
+
+	<select id="getCreateNotification" statementType="CALLABLE" parameterType="com.atos.beans.NotificationBean">
+		{call #{integer_exit,jdbcType=INTEGER,mode=OUT} :=
+			pck_notification.create_notification(
+				#{type_code,jdbcType=VARCHAR,mode=IN},
+				#{systemId,jdbcType=NUMERIC,mode=IN},
+				#{origin,jdbcType=VARCHAR,mode=IN},
+				#{information,jdbcType=VARCHAR,mode=IN},
+				#{idn_user_group,jdbcType=NUMERIC,mode=IN},
+				#{user_id,jdbcType=DATE,mode=IN},
+				#{language,jdbcType=DATE,mode=IN},
+				#{error_desc,jdbcType=VARCHAR,mode=OUT})}
+	</select>
+
+	<update id="updateNotification" parameterType="com.atos.beans.NotificationBean">
+		UPDATE tpa_tnotification_user set
+			is_acknowledge = 'Y'
+		where idn_notification_user = #{idn_notification_user}
+	</update>
+
+<select id="getNotificationsOrigin" parameterType="com.atos.beans.NotificationOriginBean" resultType="com.atos.beans.NotificationBean">
+	SELECT n.idn_notification,
+	       n.origin,
+	       n.information,
+	       n.start_date,
+	       nu.idn_notification_user
+	  FROM tpa_tnotification      n,
+	       tpa_tnotification_user nu,
+	       tpa_tuser              u
+	 WHERE n.is_enabled = 'Y'
+	   AND n.idn_notification = nu.idn_notification
+	   AND nu.is_acknowledge = 'N'
+	   AND nu.idn_user = u.idn_user
+	   AND u.user_id = #{user_id}
+	   AND n.origin = #{origin}
+	 ORDER BY n.start_date DESC
+	
+	</select>
+
+
+</mapper>

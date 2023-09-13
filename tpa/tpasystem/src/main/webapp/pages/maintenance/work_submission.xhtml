@@ -1,0 +1,482 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_maintenance']}" url="#" />
+			<p:menuitem value="#{msg['menu_maintenance_work_submission']}" url="/pages/maintenance/work_submission.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="5000"/>
+			
+            <p:layout widgetVar="workSubmissionLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">	
+					
+				<p:panelGrid columns="2" style="width:100%">
+					
+						<p:panelGrid id="filters">
+							<p:row>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['maintenance_code']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['maintenance_subject']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['maintenance_area']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['maintenance_subarea']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['from']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['to']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column >
+								<p:inputText id="maintenance_code" style="width:120px;text-transform: uppercase" value="#{workSubmissionView.filters.idn_maintenance}" size="40" />
+								<ui:remove>
+									<p:selectOneMenu widgetVar="maintenance_code" onchange="" id="maintenance_code" style="width:120px" value="#{workSubmissionView.filters.idn_maintenance}" >
+										<f:selectItem itemLabel="" itemValue="" />
+        								<f:selectItems value="#{workSubmissionView.maintenanceCode.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>							
+					           		</ui:remove>
+								</p:column>
+								
+								<p:column>
+									<p:inputText id="maintenance_subject" style="width:120px;text-transform: uppercase" value="#{workSubmissionView.filters.maintenance_subject}" size="40" />
+								</p:column>
+								
+								
+								<p:column>
+									<p:selectOneMenu widgetVar="area_code" onchange="" id="area_code" style="width:100px" value="#{workSubmissionView.filters.idn_area}" >
+										<f:selectItem itemLabel="" itemValue="" />
+        								<f:selectItems value="#{workSubmissionView.area.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+										<p:ajax update="subarea_code"/>
+					           		</p:selectOneMenu>							
+								</p:column>
+								<p:column>
+									<p:selectOneMenu widgetVar="subarea_code" onchange="" id="subarea_code" style="width:100px" value="#{workSubmissionView.filters.idn_subarea}" >
+										<f:selectItem itemLabel="" itemValue="" />
+        								<f:selectItems value="#{workSubmissionView.subAreas.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>							
+								</p:column>
+								<p:column>
+									<p:calendar id="fecInicio" size="11" pattern="dd/MM/yyyy HH:mm" value="#{workSubmissionView.filters.start_date}"
+										mask="true" showButtonPanel="true" showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="fecEnd"></p:ajax>
+										<p:ajax event="change" update="fecEnd"></p:ajax>
+									</p:calendar>
+								</p:column>
+								<p:column>
+									<p:calendar id="fecEnd" size="11" pattern="dd/MM/yyyy HH:mm" value="#{workSubmissionView.filters.end_date}"
+										mask="true" showButtonPanel="true" showOn="button" navigator="true" mindate="#{workSubmissionView.filters.start_date}">
+									</p:calendar>
+								</p:column>
+								
+							</p:row>
+						</p:panelGrid>
+						<p:panelGrid columns="2" style="float:right;top:0px">
+							<shiro:hasPermission name="#{changeSystemView.system}.MAINTENANCE.MAINTENANCE_WORK.QUERY">
+								<p:commandButton id="searchBtn" value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{workSubmissionView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,:#{p:component('work_table')}"/>
+							</shiro:hasPermission>
+							
+							<p:commandButton  onclick="PF('workSubmissionLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+							
+							<shiro:hasPermission name="#{changeSystemView.system}.MAINTENANCE.MAINTENANCE_WORK.QUERY">									
+								<p:commandButton value="#{msg['clear']}"
+									actionListener="#{workSubmissionView.onClear}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,@form,maintenance_code"/>
+							</shiro:hasPermission>
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center"
+					resizable="false" closable="false" collapsible="false">
+
+					<p:dataTable widgetVar="w_work"  id="work_table" var="maintenance"  value="#{workSubmissionView.items}" reflow="true" editable="true"
+						style=" margin-bottom:20px;border-collapse:collapse"
+						rowSelectMode="checkbox"
+						selection="#{workSubmissionView.selecteds}" rowKey="#{maintenance.idn_maintenance}"
+					    paginator="true" rows="15" rowsPerPageTemplate="5,10,15,20,25, #{workSubmissionView.itemsSize}" >
+
+						<shiro:hasPermission name="#{changeSystemView.system}.MAINTENANCE.MAINTENANCE_WORK.QUERY">
+						
+							<f:facet name="header">
+								<p:outputPanel style="height:25px">
+									<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+	        						<p:columnToggler datasource="work_table" trigger="toggler" style="width:200px"/>
+	        						
+	        						<shiro:hasPermission name="#{changeSystemView.system}.MAINTENANCE.MAINTENANCE_WORK.MOD">
+		        						<p:commandButton id="delete" value="Delete" icon="ui-icon fa fa-remove" style="float:right;"
+		        							actionListener="#{workSubmissionView.delete}" update=":form:msgs,:#{p:component('work_table')}"
+		        							onstart="PF('cargando').show()"
+											oncomplete="PF('cargando').hide()"/>
+									</shiro:hasPermission>
+										
+	        						<shiro:hasPermission name="#{changeSystemView.system}.MAINTENANCE.MAINTENANCE_WORK.ADD">
+		        						<p:commandButton id="new" type="button" value="New" icon="ui-icon fa fa-file-o" style="float:right;"
+		        							onclick="PF('dlgNewWork').show();"/>
+	        						</shiro:hasPermission>
+								</p:outputPanel>        										          
+					        </f:facet>
+					        
+					        <shiro:hasPermission name="#{changeSystemView.system}.MAINTENANCE.MAINTENANCE_WORK.MOD">
+						 		<p:ajax event="rowEditInit"  oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','hidden')});" />
+								<p:ajax event="rowEdit"    listener="#{workSubmissionView.onRowEdit}" update=":form:msgs" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>   
+								<p:ajax event="rowEditCancel" listener="#{workSubmissionView.onRowCancel}" update=":form:msgs" onstart="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>
+					 		</shiro:hasPermission>
+					 		
+					 		<p:column headerText="Select" selectionMode="multiple" style="width:36px;text-align:center"/>
+					 		
+					  		<p:column headerText="Expand" style="width:40px">
+            					<p:rowToggler />
+            					
+        					</p:column>
+					       <p:column style="width:120px" headerText="#{msg['maintenance_code']}">
+					       		<h:outputText value="#{maintenance.maintenance_code}" />
+					       </p:column>
+
+  						    <p:column style="width:120px" headerText="#{msg['maintenance_subject']}">
+					       		<h:outputText value="#{maintenance.maintenance_subject}" />
+					       </p:column>
+					       
+					       <p:column style="width:60px" headerText="#{msg['maintenance_status']}">
+					       		<h:outputText value="#{maintenance.status}" />
+					       </p:column>
+					 
+					       <p:column style="width:30px" headerText="#{msg['maintenance_area']}">
+					           <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{maintenance.area}" /></f:facet>
+					               <f:facet name="input">
+										<p:selectOneMenu required="true" value="#{maintenance.idn_area}" style="width:80%"
+											requiredMessage="The mandatory field #{msg['maintenance_area']} must be informed">
+        									<f:selectItems value="#{workSubmissionView.area.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+        									<p:ajax update="maintenance_subarea"  />					                    
+        								</p:selectOneMenu>					               
+					               	</f:facet>
+					           </p:cellEditor>
+					       </p:column>
+
+					       <p:column headerText="#{msg['maintenance_subarea']}">
+					           <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{maintenance.subarea}" /></f:facet>
+					               <f:facet name="input">
+										<p:selectOneMenu required="true" id="maintenance_subarea" value="#{maintenance.idn_subarea}" style="width:80%"
+											requiredMessage="The mandatory field #{msg['maintenance_subarea']} must be informed">
+        									<f:selectItems value="#{workSubmissionView.getSubAreas(maintenance.idn_area).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />					                    
+        								</p:selectOneMenu>					               
+					               	</f:facet>
+					           </p:cellEditor>
+					       </p:column>
+
+					       <p:column headerText="#{msg['from']}" style="width: 90px;" >
+					          <p:cellEditor>
+					               <f:facet name="output">
+					               			<h:outputText value="#{maintenance.start_date}" >
+					              				<f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+					              		 </h:outputText>
+					               </f:facet>
+					               <f:facet name="input"> 
+					               		<p:calendar required="true" id="startDate" value="#{maintenance.start_date}" pattern="dd/MM/yyyy HH:mm"
+					               			readonlyInput="true" showButtonPanel="true">
+											<f:convertDateTime pattern="dd/MM/yyyy HH:mm"/>
+										</p:calendar>
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+
+					       <p:column headerText="#{msg['to']}" style="width: 90px;" >
+					          <p:cellEditor>
+					               <f:facet name="output">
+					               			<h:outputText value="#{maintenance.end_date}" >
+					              				<f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+					              		 </h:outputText>
+					               </f:facet>
+					               <f:facet name="input"> 
+					               		<p:calendar id="endDate" value="#{maintenance.end_date}" pattern="dd/MM/yyyy HH:mm"
+					               			readonlyInput="true" showButtonPanel="true">
+											<f:convertDateTime pattern="dd/MM/yyyy HH:mm"/>
+										</p:calendar>
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['maintenance_daily']}">
+					       		<p:selectBooleanCheckbox disabled="true" value="#{maintenance.is_daily}" />
+					       </p:column>
+					       <p:column style="width:90px" headerText="#{msg['maintenance_engineering_comment']}">
+					          <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{maintenance.engineering_comments}" /></f:facet>
+					               <f:facet name="input">
+					               		<p:inputTextarea rows="3" cols="22" autoResize="true" value="#{maintenance.engineering_comments}" style="width:100%;white-space:initial !important" label="#{msg['maintenance_engineering_comment']}"
+					               			validatorMessage="#{msg['maintenance_engineering_comment']}: #{msg['lenght_field']} 1000">
+					               			<f:validateLength maximum="1000"/>
+					               		</p:inputTextarea>	
+					               	</f:facet>
+					           </p:cellEditor>
+					       </p:column>
+
+					       <p:column style="width:200px" headerText="#{msg['maintenance_file']}" >
+ 								<p:cellEditor>
+					               <f:facet name="output"> 
+					               		<p:commandButton  type="submit" validateClient="true" icon="ui-icon fa fa-save" ajax="true"
+					               			actionListener="#{workSubmissionView.setSelected(maintenance)}" process="@this"
+					               			onclick="PF('dlgDownload').show();"/>
+										<h:outputText value="#{maintenance.file_name}" />
+									</f:facet>
+ 					               <f:facet name="input">
+					               		<p:fileUpload id="uploadTable" fileUploadListener="#{workSubmissionView.handleFileUpload}" mode="advanced" dragDropSupport="true"
+           									fileLimit="1" auto="true" sizeLimit="1000000" allowTypes="/(\.|\/)(doc|docx|xls|xlsx|pdf)$/" 
+           									onstart="PF('cargando').show()"
+	           								oncomplete="PF('cargando').hide()"/>
+					               	</f:facet> 
+					           </p:cellEditor>					       
+					       
+					       </p:column>
+
+					       
+					       
+					       <p:rowExpansion>
+
+
+							<p:dataTable widgetVar="w_work_detail" id="work_detail_table"
+								var="operator" value="#{maintenance.operator_data}"
+								reflow="true" 
+								style="margin-bottom:20px;border-collapse:collapse"
+								paginator="true" rows="5" rowsPerPageTemplate="5,10,15,20,25">
+
+								<f:facet name="header">
+									<p:outputPanel style="height:75px">
+										<p:outputLabel style="float:left" value="#{msg['maintenance_operator_data']}" />
+										
+										<p:inputTextarea style="float:right" cols="85" rows="3"  value="#{maintenance.operator_comments}" 
+											label="#{msg['maintenance_operator_comment']}" readonly="true" 
+											validatorMessage="#{msg['maintenance_operator_comment']}: #{msg['lenght_field']} 1000">
+											<f:validateLength maximum="1000" />
+										</p:inputTextarea>
+										<p:spacer width="1" height="22" style="float:right;position: relative; bottom: 0px;background-color: #A8A8A8; margin-left: 10px;margin-right: 10px" />
+										<p:outputLabel style="float:right" value="#{msg['maintenance_operator_comment']}   " />
+									
+									</p:outputPanel>
+								</f:facet>
+								<f:facet name="header">
+								<p:outputPanel style="height:25px">
+									<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+	        						<p:columnToggler datasource="work_detail_table" trigger="toggler" style="width:200px"/>
+	   
+	  							</p:outputPanel></f:facet>
+
+								<p:column headerText="#{msg['maintenance_area']}">
+									<h:outputText value="#{operator.area}" />
+								</p:column>
+
+								<p:column headerText="#{msg['maintenance_subarea']}">
+									<h:outputText value="#{operator.subarea}" />
+								</p:column>
+								<p:column headerText="#{msg['maintenance_capacity_affected']}">
+									<h:outputText style="float:right" value="#{operator.capacity_affected}" >
+										<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3" />
+									</h:outputText>
+								</p:column>
+
+							</p:dataTable>
+
+						</p:rowExpansion>
+					       
+					       <shiro:hasPermission name="#{changeSystemView.system}.MAINTENANCE.MAINTENANCE_WORK.MOD">
+						       <p:column style="width:30px">
+						            <!--  <p:rowEditor rendered="#{workSubmissionView.renderSubmitted(maintenance)}" /> -->
+						             <p:rowEditor rendered="#{maintenance.status eq 'SUBMITTED'}" />
+						       </p:column>
+					       </shiro:hasPermission>
+					       
+						</shiro:hasPermission>
+					</p:dataTable>
+				</p:layoutUnit>
+
+
+			</p:layout>
+		</h:form>
+
+		<p:dialog widgetVar="dlgNewWork" resizable="false"  closable="true" modal="true" appendTo="@(body)" position="100,30" header="New Maintenance">
+			<h:form id="formNewEntity">
+			<p:growl id="msgs" showDetail="true"  life="5000"/>
+				<p:panelGrid columns="4" style="width:100%">
+					<p:panelGrid>
+									
+						<p:row>
+						     <p:column>
+								<h:outputText value="#{msg['maintenance_subject']}" />
+							</p:column>
+							 
+							 <p:column colspan="3">
+								<p:inputText required="true" id="maintenance_subject" value="#{workSubmissionView.newMaintenance.maintenance_subject}" maxlength="120" 
+										requiredMessage="#{msg['maintenance_subject']}: #{msg['empty_field']}" 
+										validatorMessage="#{msg['maintenance_subject']}: #{msg['lenght_field']} 120"
+										size="100">
+										<f:validateLength maximum="120"/>
+									</p:inputText>
+									<p:message for="maintenance_subject" />
+							</p:column>
+						</p:row>
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['maintenance_area']}" />
+							</p:column>
+					       <p:column >
+								<p:selectOneMenu required="true" value="#{workSubmissionView.newMaintenance.idn_area}" style="width:80%"
+									requiredMessage="The mandatory field #{msg['maintenance_area']} must be informed">
+										<f:selectItem itemLabel="" itemValue="" />
+      									<f:selectItems value="#{workSubmissionView.area.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+      									<p:ajax update="new_subarea"  />					                    
+      								</p:selectOneMenu>					               
+					       </p:column>
+
+							<p:column>
+								<h:outputText value="#{msg['maintenance_subarea']}" />
+							</p:column>
+					       <p:column>
+								<p:selectOneMenu required="true" id="new_subarea" value="#{workSubmissionView.newMaintenance.idn_subarea}" style="width:80%"
+									requiredMessage="The mandatory field #{msg['maintenance_subarea']} must be informed">
+      									<f:selectItems value="#{workSubmissionView.getSubAreas(workSubmissionView.newMaintenance.idn_area).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />					                    
+      								</p:selectOneMenu>					               
+					       </p:column>
+						</p:row>
+						
+						
+					
+						
+						
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['from']}" />
+							</p:column>
+					       <p:column>
+			               		<p:calendar required="true" id="new_startDate" value="#{workSubmissionView.newMaintenance.start_date}" pattern="dd/MM/yyyy HH:mm"
+			               			readonlyInput="true" showButtonPanel="true">
+									<f:convertDateTime pattern="dd/MM/yyyy HH:mm"/>
+								</p:calendar>
+					       </p:column>
+
+							<p:column>
+								<h:outputText value="#{msg['to']}" />
+							</p:column>
+							<p:column>
+								<p:calendar id="new_endDate" value="#{workSubmissionView.newMaintenance.end_date}" pattern="dd/MM/yyyy HH:mm"
+					             			readonlyInput="true" showButtonPanel="true">
+									<f:convertDateTime pattern="dd/MM/yyyy HH:mm"/>
+								</p:calendar>
+							</p:column>
+
+						</p:row>
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['maintenance_daily']}" />
+							</p:column>
+							<p:column>
+								<p:selectBooleanCheckbox value="#{workSubmissionView.newMaintenance.is_daily}" />
+							</p:column>
+							<p:column>
+							</p:column>
+							<p:column>
+							</p:column>
+						</p:row>
+						<p:row>
+					       <p:column>
+								<h:outputText value="#{msg['maintenance_engineering_comment']}" />
+							</p:column>
+					       
+					       <p:column colspan="3">
+			               		<p:inputTextarea cols="50" value="#{workSubmissionView.newMaintenance.engineering_comments}" style="width:100%" label="#{msg['maintenance_engineering_comment']}"
+			               			validatorMessage="#{msg['maintenance_engineering_comment']}: #{msg['lenght_field']} 1000">
+			               			<f:validateLength maximum="1000"/>
+			               		</p:inputTextarea>	
+					       </p:column>
+						</p:row>
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['attach_file']}" />
+							</p:column>
+							<p:column colspan="3">
+								<p:fileUpload id="upload" style="width:100%" fileUploadListener="#{workSubmissionView.handleFileUpload}" mode="advanced" dragDropSupport="true"
+           							fileLimit="1" auto="true" update="msgs,upload" sizeLimit="1000000" allowTypes="/(\.|\/)(doc|docx|xls|xlsx|pdf)$/" 
+           							onstart="PF('cargando').show()"
+	           						oncomplete="PF('cargando').hide()"/>
+							</p:column>
+						</p:row>
+						<p:row>
+							<p:column colspan="4">
+								<p:commandButton value="Show Map" ajax="true" onclick="PF('panelmap').show();" style="float:left"/>
+								<p:panel widgetVar="panelmap" header="Map" style="width:700px;height:500px;overflow:hidden;
+									text-align:center;float:right" visible="false" closable="true">
+									<p:graphicImage value="/resources/images/map_maintenance.png" style="width:100%;height:90%;" rendered="#{changeSystemView.isOnshore()}"/>
+									<p:graphicImage value="/resources/images/map_maintenance_offshore.PNG" style="width:75%;height:90%;" rendered="#{changeSystemView.isOffshore()}"/>
+								</p:panel>
+							</p:column>
+						</p:row>
+					</p:panelGrid>
+				</p:panelGrid>
+				
+				<p:separator/>
+				<p:panelGrid>
+					<p:row>
+						<p:column>
+							<p:commandButton value="#{msg['save']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" validateClient="true"
+								action="#{workSubmissionView.save}" update=":#{p:component('work_table')},:formNewEntity"
+								onstart="PF('cargando').show()"
+								oncomplete="PF('dlgNewWork').hide(),PF('cargando').hide()" />
+			        		<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close" 
+			        			update="formNewEntity" process="@this" actionListener="#{workSubmissionView.cancel}"
+			        			oncomplete="PF('dlgNewWork').hide()"/>
+						</p:column>					
+					</p:row>
+				</p:panelGrid>							
+			
+			</h:form>
+		</p:dialog>
+		
+		<p:dialog widgetVar="dlgDownload" resizable="false" closeOnEscape="true" closable="true" modal="true" appendTo="@(body)" header="Download file">
+			<h:form>
+			<p:growl id="msgs" showDetail="true"  life="5000"/>
+				<p:panelGrid columns="4" style="width:100%">
+					<p:panelGrid>
+						<p:row>
+							<p:column>
+								<p:commandButton ajax="false" onclick="PF('dlgDownload').hide();" value="Click to download"
+							    	oncomplete="PrimeFaces.monitorDownload(start, stop);" icon="ui-icon fa fa-save">
+							    	<p:fileDownload value="#{workSubmissionView.maintenanceFile}" />
+								</p:commandButton>
+							</p:column>
+						</p:row>
+					</p:panelGrid>
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+		
+	</ui:define>
+
+</ui:composition>

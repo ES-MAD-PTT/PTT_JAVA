@@ -1,0 +1,218 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<!-- Namespace 
+	 -->
+<mapper namespace="com.atos.mapper.dam.GuestUserMapper">
+
+    <resultMap type="com.atos.beans.dam.GuestUserBean" id="GuestUser">
+        <id column="idn_user" property="idn_user"  />
+		<result property="idn_user_group" column="idn_user_group"/>
+		<result property="idn_profile" column="idn_profile"/>
+        <result property="id" column="user_id"/>   
+        <result property="name" column="user_name"/>   
+        <result property="shipperOperator" column="user_group_id"/>  
+        <result property="telephone" column="phone"/>   
+        <result property="address" column="address"/>   
+        <result property="fax" column="fax"/>   
+        <result property="email" column="email"/>   
+        <result property="password" column="authentication_item"/>   
+        <result property="startDate" column="start_date"/>   
+        <result property="endDate" column="end_date"/>
+        <result property="salt" column="salt"/>
+        <result property="comments" column="comments"/>   
+        
+        <association property="roles" select="selectRoles" column="profile_code"/>
+         
+    </resultMap>
+     
+    <select id="selectGuestUsers" resultMap="GuestUser">
+		select  u.idn_user as idn_user, 
+				u.idn_user_group as idn_user_group, 
+			    ug.user_group_id as user_group_id,
+				u.user_id as user_id,
+				u.user_name as user_name,
+				ug.user_group_id as user_group_id,
+				u.phone as phone, 
+				u.address as address, 
+				u.fax as fax,
+				u.email as email, 
+				u.authentication_item as authentication_item,
+				u.end_date as end_date, 
+				u.start_date as start_date,
+				u.comments
+		from TPA_TUSER u, tpa_tuser_group ug
+		where u.idn_user_group=ug.idn_user_group
+		
+		<if test="startDate != null">
+			and nvl(u.end_date,to_date('9999/12/31','yyyy/mm/dd'))>=  #{startDate}
+		</if>
+		<if test="endDate != null">
+			and #{endDate} >= u.start_date 
+		</if>
+		
+		<if test="idn_user != null and idn_user != ''">
+			and u.idn_user = #{idn_user}
+		</if>
+		<if test="name != null and name != ''">
+			and u.user_name = #{name}
+		</if> 
+		<if test="shipperOperator != null and shipperOperator != ''">
+			and ug.idn_user_group= #{shipperOperator}
+		</if> 
+    	order by UPPER (u.user_id)
+    </select>
+    
+    <select id="selectRoles" resultType="java.lang.String">
+		select p.profile_code as profile_code
+		from tpa_tprofile p
+    </select>
+    
+     <select id="selectRolesUser" resultType="java.lang.String">
+		select p.profile_code as profile_code
+		from tpa_tuser_profile up, tpa_tprofile p
+		where up.IDN_PROFILE= p.idn_profile
+		and  idn_user =#{id}	
+	</select>
+	
+	 <select id="selectNoRolesUser" resultType="java.lang.String">
+		select p2.profile_code as profile_code
+		from (select p.idn_profile
+				from tpa_tprofile p
+				minus
+				select up.idn_profile--p.profile_code
+				from tpa_tuser_profile up
+				where up.IDN_USER =#{id}) p1, tpa_tprofile p2
+		where p1.idn_profile = p2.idn_profile
+	</select>
+	
+
+     <select id="selectGuestUserId" resultType="com.atos.beans.ComboFilterNS">
+		 SELECT u.idn_user as key, u.user_id as value
+ 		 FROM tpa_tuser u
+ 		 ORDER BY UPPER (u.user_id)
+    </select> 
+    
+    <select id="getGuestUserId" resultType="java.lang.String">
+		select u.user_id
+		from tpa_tuser u
+		where u.user_id = #{id}	
+	</select>
+	
+	
+	<select id="selectIds" resultType="java.lang.String">
+		select u.user_id
+		from tpa_tuser u
+		where u.user_id like #{query}
+		order by   u.user_id
+    </select>
+    
+	 <select id="getProfileId" resultType="BigDecimal">
+		select p.idn_profile
+		from tpa_tprofile p
+		where p.profile_code = #{profile_code}	
+	</select>
+	
+     <select id="selectName" resultType="java.lang.String">
+		select u.user_name as user_name
+		from tpa_tuser u
+		where u.user_name like #{query}
+		order by UPPER(u.user_name)
+    </select>
+    
+     <select id="selectShipperOperatorIDs" resultType="com.atos.beans.ComboFilterNS">
+	 	SELECT ug.idn_user_group as key, ug.user_group_id as value
+  		FROM tpa_tuser_group ug, 
+       		tpa_tuser_group_type ugt 
+		 WHERE ug.idn_user_group_type = ugt.idn_user_group_type AND ugt.type_code IN ('SHIPPER', 'OPERATOR')
+		 order by UPPER (ug.user_group_id)
+		 
+    </select>
+
+   
+ 
+	<update id="updateGuestUser" parameterType="com.atos.beans.dam.GuestUserBean">
+		UPDATE tpa_tuser set
+			user_name = #{name},
+			idn_user_group = #{idn_user_group},
+			phone = #{telephone},
+			fax = #{fax},
+			address = #{address},
+			email= #{email},
+			start_date = #{startDate},
+		    end_date = #{endDate},
+		    comments=#{comments},
+		    aud_last_user=#{username}
+		where idn_user = #{idn_user}
+	</update>
+
+	<update id="updateGuestUserConPass" parameterType="com.atos.beans.dam.GuestUserBean">
+		UPDATE tpa_tuser set
+			user_name = #{name},
+			idn_user_group = #{idn_user_group},
+			phone = #{telephone},
+			fax = #{fax},
+			address = #{address},
+			email= #{email},
+			authentication_item= #{password},
+			salt= #{salt},
+			start_date = #{startDate},
+		    end_date = #{endDate},
+		    comments=#{comments},
+		    aud_last_user=#{username}
+		where idn_user = #{idn_user}
+	</update>
+
+	<!--NO se usa 
+	<update id="updateUserProfile" parameterType="com.atos.beans.dam.GuestUserBean">
+		UPDATE tpa_tuser_profile set
+			idn_profile = #{idn_profile},
+			start_date = #{startDate},
+		    end_date = #{endDate},
+		    aud_last_user=#{username}
+		where idn_user_profile = #{idn_user_profile}  
+	</update> -->
+	
+	<update id="deleteUserProfile" parameterType="com.atos.beans.dam.GuestUserBean">
+		DELETE FROM tpa_tuser_profile 
+		WHERE  idn_user = #{idn_user}
+	</update>
+	
+	
+	<insert id="insertGuestUser" useGeneratedKeys="true" keyProperty="idn_user" keyColumn="idn_user" parameterType="com.atos.beans.dam.GuestUserBean">
+		INSERT INTO tpa_tuser
+			(idn_user,idn_user_group, user_id,AUTHENTICATION_ITEM,salt, user_name,phone,
+			fax,address,email,start_date,end_date, comments,
+			aud_ins_user,aud_last_user)
+		VALUES
+			(tpa_suser.nextval,
+			 #{idn_user_group},
+			 #{id},
+			 #{password},
+			 #{salt},
+			 #{name},
+			 #{telephone},
+			 #{fax},
+			 #{address},
+			 #{email},
+			 #{startDate},
+		     #{endDate},
+		     #{comments},
+		     #{username},
+			 #{username})
+	</insert>
+	
+	
+	<insert id="insertUserProfile" useGeneratedKeys="true" keyProperty="idn_user_profile" keyColumn="idn_user_profile" parameterType="com.atos.beans.dam.GuestUserBean">
+		INSERT INTO tpa_tuser_profile
+			(idn_user_profile,idn_user, idn_profile, start_date,
+			aud_ins_user,aud_last_user)
+		VALUES
+			(tpa_suser_profile.nextval,
+			 #{idn_user},
+			 #{idn_profile},
+			 #{startDate},
+			 #{username},
+		     #{username})		     
+	</insert>
+	
+</mapper>

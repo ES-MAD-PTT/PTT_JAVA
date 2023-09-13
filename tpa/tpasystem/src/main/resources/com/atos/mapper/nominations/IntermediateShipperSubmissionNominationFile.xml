@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atos.mapper.nominations.IntermediateShipperSubmissionNominationFileMapper">
+
+     <select id="selectTemplateFile" parameterType="com.atos.beans.nominations.OperationTemplateBean" resultType="com.atos.beans.nominations.OperationTemplateBean">
+		select idn_operation_template,
+		       idn_operation_category,
+		       idn_operation_term,
+		       file_type,
+		       start_date,
+		       end_date,
+		       binary_data,
+		       file_name,
+		       idn_xml_map
+       		  from tpa_toperation_template ot
+		 where ot.idn_operation_category = #{idn_operation_category}
+		   and ot.idn_operation_term = #{idn_operation_term}
+		   and ot.file_type = #{file_type}
+		   and ot.idn_pipeline_system=#{systemId}
+		   and sysdate between start_date and nvl(end_date,sysdate)
+	</select>
+	
+     <select id="selectTemplateInfo" parameterType="com.atos.beans.nominations.OperationTemplateBean" resultType="com.atos.beans.nominations.OperationTemplateBean">
+		select idn_operation_template,
+		       idn_operation_category,
+		       idn_operation_term,
+		       file_type,
+		       start_date,
+		       end_date,
+		       file_name,
+		       idn_xml_map
+       		  from tpa_toperation_template ot
+		 where ot.idn_operation_category = #{idn_operation_category}
+		   and ot.idn_operation_term = #{idn_operation_term}
+		   and ot.file_type = #{file_type}
+		   and ot.idn_pipeline_system=#{systemId}
+		   and sysdate between start_date and nvl(end_date,sysdate)
+	</select>
+	
+	<select id="getInfoMailSubNomBean" parameterType="java.math.BigDecimal" resultType="com.atos.beans.nominations.IntermediateNomFileMailBean">
+		SELECT u.user_group_id, c.contract_code, n.start_date 
+		FROM tpa_tnomination n, tpa_tuser_group u, tpa_tcontract c
+		where n.idn_contract = c.idn_contract and n.idn_user_group = u.idn_user_group
+		and idn_nomination = #{idn_nomination}
+	</select>
+	
+	<select id="getProcesssIntermediate" statementType="CALLABLE" parameterType="com.atos.beans.nominations.ProcessIntermediateBean">
+		{call #{integer_exit,jdbcType=INTEGER,mode=OUT} :=
+			pck_nomination_submission.process_intermediate_xml(
+				#{term_code,jdbcType=VARCHAR,mode=IN},
+				#{idn_operation_file,jdbcType=NUMERIC,mode=IN},
+				#{systemId,jdbcType=NUMERIC,mode=IN},
+				#{shipper_comments,jdbcType=VARCHAR,mode=IN},
+				#{user_id,jdbcType=VARCHAR,mode=IN},
+				#{language,jdbcType=VARCHAR,mode=IN},
+				#{idn_nomination,jdbcType=NUMERIC,mode=OUT},
+				#{warnings,jdbcType=CLOB,mode=OUT},
+				#{error_desc,jdbcType=VARCHAR,mode=OUT})}
+	</select>
+
+	<select id="selectStartDayOfWeek" resultType="java.lang.String">
+		SELECT oi.start_weekday 
+			  FROM tpa_toperation_category oc, 
+			       tpa_toperation_term     ot, 
+			       tpa_toperation          o, 
+			       tpa_toperation_interval oi 
+			 WHERE oc.category_code = 'NOMINATION' 
+			   AND ot.term_code = 'WEEKLY' 
+			   AND o.idn_operation_category = oc.idn_operation_category 
+			   AND o.idn_operation_term = ot.idn_operation_term 
+			   AND oi.idn_operation = o.idn_operation 
+			   AND SYSDATE BETWEEN oi.start_date AND nvl(oi.end_date, to_date('9999-12-31', 'YYYY-MM-DD'))
+	</select>
+	
+    <resultMap type="com.atos.beans.nominations.NominationDeadlineBean" id="NominationDeadline">
+         <result property="sHour" 		column="hour_limit"/>   
+        <result property="daysBefore" 	column="days_before"/>   
+    </resultMap>
+     
+    <select id="selectNominationDeadlines" resultMap="NominationDeadline">
+        SELECT od.hour_limit hour_limit,
+             od.days_before days_before
+        FROM tpa_voperation          o,
+             tpa_toperation_deadline od,
+             tpa_tdeadline_limit     dl,
+             tpa_tdeadline_type      dt
+       WHERE o.idn_operation = od.idn_operation
+         AND o.category_code = 'NOMINATION'
+		<if test="termCode != null and termCode != ''">
+			AND o.term_code = #{termCode}
+		</if>
+         AND od.idn_deadline_type = dt.idn_deadline_type
+         AND od.idn_deadline_limit = dl.idn_deadline_limit
+         AND dl.limit_code = 'MAX'
+		<if test="deadlineTypeCode != null and deadlineTypeCode != ''">
+			AND dt.deadline_type = #{deadlineTypeCode}
+		</if>
+         AND od.version_date = (  SELECT MAX(odx.version_date)
+                                 FROM tpa_toperation_deadline odx
+                                 WHERE odx.idn_operation = od.idn_operation
+                                    AND odx.idn_deadline_type = od.idn_deadline_type
+                                    AND odx.idn_deadline_limit = od.idn_deadline_limit
+                                    AND odx.start_date = od.start_date)
+         AND od.is_enabled = 'Y'
+         AND od.start_date = (SELECT MAX(ody.start_date) 
+                                 FROM tpa_toperation_deadline ody 
+                                WHERE od.idn_operation = ody.idn_operation 
+                                  AND od.idn_deadline_type = ody.idn_deadline_type 
+                                  AND od.idn_deadline_limit = ody.idn_deadline_limit 
+                                  AND TRUNC(SYSDATE) BETWEEN ody.start_date AND NVL(ody.end_date, to_date('31-12-9999', 'dd-mm-yyyy')))
+       ORDER BY UPPER (o.TERM_CODE), dt.execution_order, od.start_date DESC
+    </select>
+</mapper>

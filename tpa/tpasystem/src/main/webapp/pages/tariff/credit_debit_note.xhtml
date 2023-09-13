@@ -1,0 +1,578 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:atos="http://java.sun.com/jsf/composite/atos"
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home"
+				style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_tariff']}" url="#" />
+			<p:menuitem value="#{msg['menu_credit_debit_note']}"
+				url="/pages/tariff/credit_debit_note.xhtml" />
+
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+		<h:form id="form"
+			style="width:100%;height:98%;border-collapse:collapse"
+			fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="5000" />
+
+			<p:layout widgetVar="creditDebitNoteLayout"
+				style="width:100%;height:100%" showEffect="clip" hideEffect="clip">
+
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">
+
+					<p:panelGrid columns="2" style="width:100%">
+						<p:panelGrid>
+							<p:row>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['creditDebitNote_Shipper']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['creditDebitNote_Month_Year']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['creditDebitNote_CNDN']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['creditDebitNote_Type_Note']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<p:selectOneMenu id="shipper"  style="width:100px" value="#{creditDebitNoteView.filters.idn_user_group}" 
+									rendered="#{!creditDebitNoteView.isShipper}">
+										<f:selectItem itemValue="" itemLabel=""> </f:selectItem>
+        								<f:selectItems value="#{creditDebitNoteView.shippers.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />        													           	
+					           			<p:ajax event="change" update="cndnid"></p:ajax>
+					           		</p:selectOneMenu>	
+					           		<h:outputText value="#{creditDebitNoteView.shipperName(creditDebitNoteView.filters.idn_user_group)}" style="float:left" rendered="#{creditDebitNoteView.isShipper()}"/>				           		
+								</p:column>
+								<p:column>
+									 <p:calendar id="shortDate"  size="10" pattern="MMMM/yyyy"  value="#{creditDebitNoteView.filters.monthYear}"
+												showOn="button" navigator="true"  locale="en_EN" >
+											<p:ajax event="dateSelect" update="cndnid"></p:ajax>
+											<p:ajax event="change" update="cndnid"></p:ajax>
+									</p:calendar>  									
+										<!-- <atos:calendarMonthYear calId="shortDate" calValue="#{creditDebitNoteView.filters.monthYear}"/>  -->									
+								</p:column>			
+								<p:column>
+									<p:selectOneMenu id="cndnid" style="width:100px"   value="#{creditDebitNoteView.filters.CNDNId}" >
+										<f:selectItem itemValue="" itemLabel=""> </f:selectItem>
+        								<f:selectItems value="#{creditDebitNoteView.cndnIds.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />        								
+					           		</p:selectOneMenu>											
+								</p:column>	
+								<p:column>
+									<p:selectOneMenu id="type"  style="width:100px"  value="#{creditDebitNoteView.filters.type}" >
+										<f:selectItem itemValue="" itemLabel=""> </f:selectItem>
+        								<f:selectItems value="#{creditDebitNoteView.types.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />        								
+					           		</p:selectOneMenu>					           		
+								</p:column>				
+							</p:row>
+						</p:panelGrid>
+						<p:panelGrid columns="2" style="float:right;top:0px">
+							<shiro:hasPermission
+								name="#{changeSystemView.system}.TARIFF.NOTE.OPERATOR.QUERY">
+								<p:commandButton value="#{msg['search']}"
+									icon="ui-icon fa fa-search"
+									actionListener="#{creditDebitNoteView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()"
+									update="msgs,:#{p:component('creditDebitNote1')}" />
+							</shiro:hasPermission>
+
+							<p:commandButton
+								onclick="PF('creditDebitNoteLayout').toggle('north')"
+								id="header_collapse" icon="fa fa-minus"
+								value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+
+							<shiro:hasPermission
+								name="#{changeSystemView.system}.TARIFF.NOTE.OPERATOR.QUERY">
+								<p:commandButton value="#{msg['clear']}"
+									actionListener="#{creditDebitNoteView.onClear}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" process="@this"
+									update="form" />
+							</shiro:hasPermission>
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center"
+					resizable="false" closable="false" collapsible="false">
+
+					<p:dataTable widgetVar="w_creditDebitNote1" id="creditDebitNote1"
+						var="creditDebitNote" value="#{creditDebitNoteView.items}"
+						editable="true" scrollable="true" scrollHeight="100%" 
+						style=" margin-bottom:20px;border-collapse:collapse" rowExpandMode="single"
+						paginator="true" rows="25" 
+						rowsPerPageTemplate="5,10,15,20,25, #{creditDebitNoteView.itemsSize}"
+						>
+						<!-- short by se usa para el campo sumary -->
+
+						<f:facet name="header">
+							<p:outputPanel style="height:25px">								
+								<shiro:hasPermission
+									name="#{changeSystemView.system}.TARIFF.NOTE.OPERATOR.ADD">
+									<p:commandButton id="new" type="button" value="New" rendered="#{!creditDebitNoteView.changesPending}" 
+										icon="ui-icon fa fa-save" style="float:right;"
+										onclick="PF('dlgNewNote').show();" />
+								</shiro:hasPermission>
+								 <shiro:hasPermission
+									name="#{changeSystemView.system}.TARIFF.NOTE.OPERATOR.QUERY">
+									<h:commandLink style="float:right">
+										<p:graphicImage name="/images/excel.png" width="24" />
+										<p:dataExporter type="xlsx" target="creditDebitNote1"
+											fileName="creditDebitNoteFile"
+											postProcessor="#{creditDebitNoteView.postProcessXLS}" />
+									<p:spacer width="10" height="10" />
+									</h:commandLink>
+								</shiro:hasPermission>
+							</p:outputPanel>
+						</f:facet>
+						<shiro:hasPermission
+							name="#{changeSystemView.system}.TARIFF.NOTE.OPERATOR.MOD">
+							<p:ajax event="rowEditInit"
+								oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','hidden')});" />
+							<p:ajax event="rowEdit"
+								listener="#{creditDebitNoteView.onRowEdit}" update=":form:msgs"
+								oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});" />
+							<p:ajax event="rowEditCancel"
+								listener="#{creditDebitNoteView.onRowCancel}"
+								update=":form:msgs"
+								onstart="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});" />
+						</shiro:hasPermission>
+						<p:column style="width:16px">
+							<p:rowToggler />
+						</p:column>
+						<p:column headerText="#{msg['creditDebitNote_Shipper']}"
+							style="width: 55px; text-align: center;" sortBy="#{creditDebitNote.shipper}"
+							filterMatchMode="contains"
+							filterBy="#{creditDebitNote.shipper}">
+							<h:outputText value="#{creditDebitNote.shipper}"/>								
+						</p:column>						
+						
+						<p:column headerText="#{msg['creditDebitNote_Month_Year']}"
+							style="width: 55px; text-align: center;" sortBy="#{creditDebitNote.monthYear}"
+							filterMatchMode="contains"
+							filterBy="#{creditDebitNote.mothYear}">
+							<h:outputText value="#{creditDebitNote.monthYear}">
+								<f:convertDateTime pattern="MMMM/yyyy" />
+							</h:outputText>								
+						</p:column>
+						
+						<p:column headerText="#{msg['creditDebitNote_CNDN']}"
+							style="width: 55px; text-align: center;" sortBy="#{creditDebitNote.cndnId}"
+							filterMatchMode="contains"
+							filterBy="#{creditDebitNote.cndnId}">
+							<h:outputText value="#{creditDebitNote.cndnId}"/>								
+						</p:column>		
+						
+						<p:column headerText="#{msg['creditDebitNote_Type_Note']}"
+							style="width: 55px; text-align: center;" sortBy="#{creditDebitNote.type}"
+							filterMatchMode="contains"
+							filterBy="#{creditDebitNote.type}">
+							<h:outputText value="#{creditDebitNote.type}"/>								
+						</p:column>	
+						
+						<p:column headerText="#{msg['creditDebitNote_Comments']}"
+							style="width: 55px; text-align: center;" sortBy="#{creditDebitNote.comments}"
+							filterMatchMode="contains"
+							filterBy="#{creditDebitNote.comments}">
+							<p:cellEditor>
+								<f:facet name="output">
+									<h:outputText value="#{creditDebitNote.comments}"/>
+								</f:facet>
+								<f:facet name="input">
+									<h:inputText value="#{creditDebitNote.comments}"/>									
+								</f:facet>
+							</p:cellEditor>									
+						</p:column>
+						
+						<p:column headerText="#{msg['creditDebitNote_Sent']}"
+							style="width: 55px; text-align: center;" sortBy="#{creditDebitNote.sent}"
+							filterMatchMode="contains"
+							filterBy="#{creditDebitNote.sent}">
+							<p:cellEditor>
+								<f:facet name="output">
+									<h:outputText value="#{creditDebitNote.sent}"/>
+								</f:facet>
+								<f:facet name="input">
+									<p:selectBooleanCheckbox value="#{creditDebitNote.sent}"> 
+      									<p:ajax event="change" global="false" />
+									</p:selectBooleanCheckbox>
+								</f:facet>
+							</p:cellEditor>								
+						</p:column>
+						<shiro:hasPermission name="#{changeSystemView.system}.TARIFF.NOTE.OPERATOR.MOD">
+					       <p:column style="width:32px">
+					            <p:rowEditor rendered="#{creditDebitNoteView.renderItemEditor(creditDebitNote)}"/>
+					       </p:column>
+					    </shiro:hasPermission>   
+						<p:rowExpansion>
+
+					<p:dataTable widgetVar="w_detail"  id="detail" var="det" value="#{creditDebitNote.details}"
+						  style="margin-bottom:20px;border-collapse:collapse" editable="true" sortBy="#{det.noteId}"
+					    >
+					    	<shiro:hasPermission
+							name="#{changeSystemView.system}.TARIFF.NOTE.OPERATOR.MOD">
+							<p:ajax event="rowEditInit"
+								oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','hidden')});" />
+							<p:ajax event="rowEdit"
+								listener="#{creditDebitNoteView.onRowEditDetail}" update=":form:msgs"
+								oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});" />
+							<p:ajax event="rowEditCancel"
+								listener="#{creditDebitNoteView.onRowCancelDetail}"
+								update=":form:msgs"
+								onstart="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});" />
+						</shiro:hasPermission>
+					       <p:column headerText="#{msg['creditDebitNote_Charges']}" style="width: 70px;"  >
+			               		<h:outputText value="#{det.chargeDesc}" />			              							              		
+					       </p:column>
+					       <p:column headerText="#{msg['creditDebitNote_Charge_Detail']}" style="width: 70px;"  >
+			               		<h:outputText value="#{det.chargeDetailDesc}" />			              							              		
+					       </p:column>
+					       <p:column headerText="#{msg['creditDebitNote_Original_Period']}" style="width: 70px;"  >
+			               		<h:outputText value="#{det.originalPeriod}">
+			               			<f:convertDateTime pattern="MMMM/yyyy" />
+								</h:outputText>			              							              		
+					       </p:column>
+					       <p:column headerText="#{msg['creditDebitNote_Contract_Num']}" style="width: 70px;"  >
+			               		<h:outputText value="#{det.contractNum}" />			              							              		
+					       </p:column>
+					       <p:column headerText="#{msg['creditDebitNote_Contract_Type']}" style="width: 70px;"  >
+			               		<h:outputText value="#{det.contractType}" />			              							              		
+					       </p:column>
+					       <p:column headerText="#{msg['creditDebitNote_Quantity']}" style="width: 70px;"  >
+			               		<p:cellEditor>
+								<f:facet name="output">
+									<h:outputText value="#{det.quantity}">
+										<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+									</h:outputText>
+								</f:facet>
+								<f:facet name="input">
+									<h:inputText value="#{det.quantity}"/>									
+								</f:facet>
+							</p:cellEditor>				              							              		
+					       </p:column>
+					       <p:column headerText="#{msg['creditDebitNote_Unit']}" style="width: 70px;"  >
+			               		<h:outputText value="#{det.unit}" />			              							              		
+					       </p:column>
+					       <p:column headerText="#{msg['creditDebitNote_Fee']}" style="width: 70px;"  >
+			               		<p:cellEditor>
+									<f:facet name="output">
+										<h:outputText value="#{det.fee}">
+											<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+										</h:outputText>
+									</f:facet>
+									<f:facet name="input">
+										<h:inputText value="#{det.fee}"/>									
+									</f:facet>
+								</p:cellEditor>				              							              		
+					       </p:column>		              							              		
+					       <p:column headerText="#{msg['creditDebitNote_Amount']}" style="width: 70px;"  >
+			               		<p:cellEditor>
+									<f:facet name="output">
+										<h:outputText value="#{det.amount}">
+											<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+										</h:outputText>
+									</f:facet>
+									<f:facet name="input">
+										<h:inputText value="#{det.amount}"/>									
+									</f:facet>
+								</p:cellEditor>			              							              		
+					       </p:column>
+					       <p:column headerText="#{msg['creditDebitNote_Remark']}" style="width: 70px;"  >
+			               		<p:cellEditor>
+									<f:facet name="output">
+										<h:outputText value="#{det.remark}"/>
+									</f:facet>
+									<f:facet name="input">
+										<h:inputText value="#{det.remark}"/>									
+									</f:facet>
+								</p:cellEditor>					              							              		
+					       </p:column>					       				   
+					       <shiro:hasPermission name="#{changeSystemView.system}.TARIFF.NOTE.OPERATOR.MOD">
+					       <p:column style="width:32px">
+					            <p:rowEditor rendered="#{creditDebitNoteView.renderItemEditor(creditDebitNote)}"/>
+					       </p:column>
+					       
+					    </shiro:hasPermission>
+					    <p:summaryRow id="summary" >
+ 						
+				            	<p:column colspan="8" style="text-align:right;">
+					                <h:outputText value="TOTAL :" />
+					            </p:column>					            
+					            <p:column style="text-align:right;">
+					                <h:outputText value="#{creditDebitNoteView.getTotalAmount(creditDebitNote)}">
+					                    <f:convertNumber  pattern="#,##0.00" />
+					                </h:outputText>
+					            </p:column>
+					     
+					     </p:summaryRow>	  
+					</p:dataTable>
+					 <div class="p-grid p-mt-3">
+            <div class="p-col-12">
+            	<p:commandButton value="Add new row" process="@this" update=":form:msgs,:#{p:component('creditDebitNote1')}" rendered="#{creditDebitNoteView.renderItemEditor(creditDebitNote)}"
+                                 onclick="PF('dlgNewDetailNote').show();" actionListener="#{creditDebitNoteView.setSelectedParent(creditDebitNote)}"/>
+                <p:commandButton value="Save block" process="@this" update=":form:msgs, :#{p:component('creditDebitNote1')}" rendered="#{creditDebitNoteView.changesPending}" 
+                              	 actionListener="#{creditDebitNoteView.saveBlock}" />  
+            </div>  
+        </div> 
+					</p:rowExpansion>					
+					</p:dataTable>
+
+				</p:layoutUnit>
+
+			</p:layout>
+		</h:form>
+
+		<shiro:hasPermission
+			name="#{changeSystemView.system}.TARIFF.NOTE.OPERATOR.ADD">
+			<p:dialog widgetVar="dlgNewNote" resizable="false" closable="true"
+				modal="true" appendTo="@(body)" header="New Event">
+				<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario
+		 <p:ajax event="close" update="formNewEntity"  process="@this" listener="#{nominationDeadlineView.cancel}" />	-->
+				<h:form id="formNewNote">
+					<p:growl id="msgs" showDetail="true" life="5000" />
+					<p:panelGrid columns="4" style="width:100%">
+						<p:panelGrid>
+							<p:row>
+								<p:column>
+									<h:outputText value="#{msg['creditDebitNote_Shipper']}" />
+								</p:column>
+								<p:column>
+									<p:selectOneMenu id="newShipper" required="true" requiredMessage="The mandatory field #{msg['creditDebitNote_Shipper']} must be informed" style="width:100px"   value="#{creditDebitNoteView.newNote.shipperId}" >
+										<f:selectItem itemValue="" itemLabel=""> </f:selectItem>
+        								<f:selectItems value="#{creditDebitNoteView.shippers.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />        								
+					           		</p:selectOneMenu>
+								</p:column>
+								<p:column>
+									<h:outputText value="#{msg['creditDebitNote_Month_Year']}" />
+								</p:column>
+								<p:column>
+									<p:calendar id="newShortDate" required="true" requiredMessage="The mandatory field #{msg['creditDebitNote_Month_Year']} must be informed" size="10" pattern="MMMM/yyyy"  value="#{creditDebitNoteView.newNote.monthYear}"
+												showOn="button" navigator="true"  locale="en_EN" >		
+									</p:calendar> 								    
+										<!-- <atos:calendarMonthYear calId="newShortDate" calValue="#{creditDebitNoteView.newNote.monthYear}"/> -->									
+								</p:column>	
+								<p:column>
+									<h:outputText value="#{msg['creditDebitNote_CNDN']}" />
+								</p:column>		
+								<p:column>
+									<h:inputText id="newCndn" required="true" requiredMessage="The mandatory field #{msg['creditDebitNote_CNDN']} must be informed" value="#{creditDebitNoteView.newNote.cndnId}" maxlength="30"/>
+								</p:column>	
+							</p:row>
+							<p:row>
+								<p:column>
+									<h:outputText value="#{msg['creditDebitNote_Type_Note']}" />
+								</p:column>
+								<p:column>
+									<p:selectOneMenu id="newType"  style="width:100px" required="true" requiredMessage="The mandatory field #{msg['creditDebitNote_Type_Note']} must be informed" value="#{creditDebitNoteView.newNote.typeId}" >
+										<f:selectItem itemValue="" itemLabel=""> </f:selectItem>
+        								<f:selectItems value="#{creditDebitNoteView.types.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />        								
+					           		</p:selectOneMenu>					           		
+								</p:column>	
+								<p:column>
+									<h:outputText value="#{msg['creditDebitNote_Comments']}" />
+								</p:column>
+								<p:column>
+									<p:inputTextarea id="inputTxtComments" rows="2" cols="61" value="#{creditDebitNoteView.newNote.comments}" 
+	 									autoResize="false" maxlength="120">
+							</p:inputTextarea>								
+								</p:column>
+								<p:column>
+									<h:outputText value="#{msg['creditDebitNote_Sent']}" />
+								</p:column>								
+								<p:column>
+									<p:selectBooleanCheckbox value="#{creditDebitNoteView.newNote.checked}"> 
+      									<p:ajax event="change" global="false" />
+									</p:selectBooleanCheckbox>								
+								</p:column>	
+							</p:row>
+
+						</p:panelGrid>
+					</p:panelGrid>
+
+					<p:separator />
+					<p:panelGrid>
+						<p:row>
+							<p:column>
+								<p:commandButton value="#{msg['save']}"
+									styleClass="ui-confirmdialog-yes" icon="ui-icon-check"
+									validateClient="true" action="#{creditDebitNoteView.save}"
+									update=":#{p:component('creditDebitNote1')},:formNewNote"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('dlgNewNote').hide(),PF('cargando').hide()" />
+								<p:commandButton value="#{msg['cancel']}"
+									styleClass="ui-confirmdialog-no" icon="ui-icon-close"
+									update="formNewNote" process="@this"
+									actionListener="#{creditDebitNoteView.cancel}"
+									oncomplete="PF('dlgNewNote').hide()" />
+							</p:column>
+						</p:row>
+					</p:panelGrid>
+				</h:form>
+			</p:dialog>
+		</shiro:hasPermission>
+		
+		<shiro:hasPermission
+			name="#{changeSystemView.system}.TARIFF.NOTE.OPERATOR.ADD">
+			<p:dialog widgetVar="dlgNewDetailNote" resizable="false" closable="true" appendToBody="true"
+				modal="true" appendTo="@(body)" header="New Detail Note">
+				<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario
+		 <p:ajax event="close" update="formNewEntity"  process="@this" listener="#{nominationDeadlineView.cancel}" />	-->
+				<h:form id="formNewDetailNote">
+					<p:growl id="msgs" showDetail="true" life="5000" />
+					<p:panelGrid columns="4" style="width:100%">
+						<p:panelGrid>
+							<p:row>
+								<p:column>
+									<h:outputText value="#{msg['creditDebitNote_Charges']}" />
+								</p:column>
+								<p:column>
+									<p:selectOneMenu id="newDetCharge" required="true" requiredMessage="The mandatory field #{msg['creditDebitNote_Charges']} must be informed" style="width:100px" value="#{creditDebitNoteView.newDetailNote.charge}" valueChangeListener="#{creditDebitNoteView.selectDetailsChange}">
+										<f:selectItem itemValue="" itemLabel=""> </f:selectItem>
+        								<f:selectItems value="#{creditDebitNoteView.charges.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />        								
+					           			<p:ajax onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()" update="newDetChargeDetail"/>
+					           		</p:selectOneMenu>
+								</p:column>
+								<p:column>
+									<h:outputText value="#{msg['creditDebitNote_Charge_Detail']}" />
+								</p:column>
+								<p:column>
+									<p:selectOneMenu id="newDetChargeDetail" required="true" requiredMessage="The mandatory field #{msg['creditDebitNote_Charge_Detail']} must be informed" style="width:100px" value="#{creditDebitNoteView.newDetailNote.chargeDetail}" valueChangeListener="#{creditDebitNoteView.onSelectContractChangeDetails}">
+										<f:selectItem itemValue="" itemLabel=""> </f:selectItem>
+        								<f:selectItems value="#{creditDebitNoteView.chargeDetails.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+        								<p:ajax event="change" update="newDetOriginalPeriod,newDetContractNum"></p:ajax>        													           			
+					           		</p:selectOneMenu>
+								</p:column>
+								<p:column>
+									<h:outputText value="#{msg['creditDebitNote_Original_Period']}" />
+								</p:column>
+								<p:column>
+									
+									<p:calendar id="newDetOriginalPeriod" required="true" requiredMessage="The mandatory field #{msg['creditDebitNote_Original_Period']} must be informed" size="10" pattern="MMMM/yyyy" value="#{creditDebitNoteView.newDetailNote.originalPeriod}"
+												showOn="button" navigator="true"  locale="en_EN" maxdate="#{creditDebitNote.monthYear}">												
+												<p:ajax event="dateSelect" listener="#{creditDebitNoteView.onSelectContractChange}" update="newDetContractNum"></p:ajax>		
+									</p:calendar> 
+									
+										<!-- <atos:calendarMonthYear calId="newDetOriginalPeriod" calValue="#{creditDebitNoteView.newDetailNote.originalPeriod}">
+											<p:ajax event="dateSelect" listener="#{creditDebitNoteView.onSelectContractChange}" update="newDetContractNum"></p:ajax>
+										</atos:calendarMonthYear> -->
+								</p:column>	
+							</p:row>
+							<p:row>
+								<p:column>
+									<h:outputText value="#{msg['creditDebitNote_Contract_Num']}" />
+								</p:column>		
+								<p:column>									
+									<p:selectOneMenu id="newDetContractNum"  style="width:100px"   value="#{creditDebitNoteView.newDetailNote.contractNumId}" disabled="#{creditDebitNoteView.disabledContract()}">
+        								<f:selectItem itemValue="" itemLabel=""> </f:selectItem>
+        								<f:selectItems value="#{creditDebitNoteView.contracts.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />        								
+					           		</p:selectOneMenu>
+								</p:column>								
+								<p:column>
+									<h:outputText value="#{msg['creditDebitNote_Quantity']}" />
+								</p:column>		
+								<p:column>
+									<h:inputText id="newDetQuantity" value="#{creditDebitNoteView.newDetailNote.quantity}" maxlength="30" required="true" requiredMessage="The mandatory field #{msg['creditDebitNote_Quantity']} must be informed"/>
+								</p:column>
+								<p:column>
+									<h:outputText value="#{msg['creditDebitNote_Unit']}" />
+								</p:column>		
+								<p:column>
+									<h:inputText id="newDetUnit" value="#{creditDebitNoteView.newDetailNote.unit}" maxlength="30" required="true" requiredMessage="The mandatory field #{msg['creditDebitNote_Unit']} must be informed"/>
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<h:outputText value="#{msg['creditDebitNote_Fee']}" />
+								</p:column>		
+								<p:column>
+									<h:inputText id="newDetFee" value="#{creditDebitNoteView.newDetailNote.fee}" maxlength="30" required="true" requiredMessage="The mandatory field #{msg['creditDebitNote_Fee']} must be informed"/>
+								</p:column>
+								<p:column>
+									<h:outputText value="#{msg['creditDebitNote_Amount']}" />
+								</p:column>		
+								<p:column>
+									<h:inputText id="newDetAmount" value="#{creditDebitNoteView.newDetailNote.amount}" maxlength="30" required="true" requiredMessage="The mandatory field #{msg['creditDebitNote_Amount']} must be informed"/>
+								</p:column>
+								<p:column>
+									<h:outputText value="#{msg['creditDebitNote_Remark']}" />
+								</p:column>		
+								<p:column>
+									<h:inputText id="newDetRemark" value="#{creditDebitNoteView.newDetailNote.remark}" maxlength="30"/>
+								</p:column>
+							</p:row>							
+
+						</p:panelGrid>
+					</p:panelGrid>
+
+					<p:separator />
+					<p:panelGrid>
+						<p:row>
+							<p:column>
+								<p:commandButton value="#{msg['save']}"
+									styleClass="ui-confirmdialog-yes" icon="ui-icon-check"
+									validateClient="true" action="#{creditDebitNoteView.saveDetail}"
+									update=":#{p:component('creditDebitNote1')},:formNewDetailNote"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('dlgNewDetailNote').hide(),PF('cargando').hide()" />
+								<p:commandButton value="#{msg['cancel']}"
+									styleClass="ui-confirmdialog-no" icon="ui-icon-close"
+									update="formNewDetailNote" process="@this"
+									actionListener="#{creditDebitNoteView.cancel}"
+									oncomplete="PF('dlgNewDetailNote').hide()" />
+							</p:column>
+						</p:row>
+					</p:panelGrid>
+				</h:form>
+			</p:dialog>
+		</shiro:hasPermission>
+		
+		<shiro:hasPermission name="#{changeSystemView.system}.TARIFF.NOTE.OPERATOR.MOD">
+ 		<p:dialog header="#{msg['tariff_note_confirmation_dialog_header']}" widgetVar="w_confirmVersionDlg" id="confirmVersionDlg" 
+			modal="true" appendTo="@(body)" minHeight="250" >
+			<h:form id="confirmVersionFormId" style="width:100%;height:98%;border-collapse:collapse">
+				<p:panelGrid id="confirmVersionPanelGridId" columns="2">
+
+					<p:row>
+						<p:column  style="font-weight: bold;">
+							<h:outputText value="#{msg['tariff_note_version_confirm']}" />
+						</p:column>
+					</p:row>
+
+ 					<p:row>
+						<p:column  style="font-weight: bold;">
+				       		<p:commandButton value="#{msg['yes']}"
+				       			actionListener="#{creditDebitNoteView.createVersion}" 
+				       			update="#{p:component('creditDebitNote1')},#{p:component('msgs')}"
+								onstart="PF('grabando').show()" 
+								oncomplete="PF('grabando').hide();PF('w_confirmVersionDlg').hide()" />						
+						</p:column>
+						<p:column  style="font-weight: bold;">
+				       		<p:commandButton value="#{msg['no']}"
+				       			actionListener="#{creditDebitNoteView.onSearch}" 
+				       			update="#{p:component('creditDebitNote1')},#{p:component('msgs')}"
+				       			oncomplete="PF('w_confirmVersionDlg').hide()"/>
+						</p:column>
+					</p:row>
+				</p:panelGrid>
+			</h:form> 	    
+		</p:dialog>
+ 	</shiro:hasPermission>
+		
+	</ui:define>
+
+</ui:composition>

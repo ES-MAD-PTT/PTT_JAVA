@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<!-- Namespace -->
+<mapper namespace="com.atos.mapper.utils.Xlsx2XmlMapper">
+
+	<!-- En esta query no extraemos el fichero template porque no se va a usar en el conversor.  -->
+	<resultMap type="com.atos.beans.OpTemplateBean" id="OperationTemplate">
+		<result property="opTemplateId" column="idn_operation_template" />
+		<result property="opCategoryId" column="idn_operation_category" />
+		<result property="opTermId" column="idn_operation_term" />
+		<result property="fileType" column="file_type" />
+		<result property="fileName" column="file_name" />
+		<result property="xmlMapId" column="idn_xml_map" />
+		<result property="systemId" column="idn_pipeline_system" />
+	</resultMap>
+	
+	<select id="getOpTemplateByCatTermFiletypeSystem" parameterType="com.atos.beans.OpTemplateBean" resultMap="OperationTemplate">
+		select idn_operation_template,
+			idn_operation_category,
+			idn_operation_term,
+			file_type,
+			file_name,
+			idn_xml_map,
+			idn_pipeline_system
+		from tpa_toperation_template
+		where idn_operation_category=(select tcat.idn_operation_category
+										from tpa_toperation_category tcat
+										where tcat.category_code=#{opCategoryCode})
+			and idn_operation_term=(select tterm.idn_operation_term
+									from tpa_toperation_term tterm
+									where tterm.term_code=#{opTermCode})
+			and file_type=#{fileType}
+			and idn_pipeline_system=#{systemId}
+			and trunc(sysdate) between start_date and nvl(end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+	</select>
+	
+	<select id="getWsTemplateFiletypeSystem" parameterType="java.lang.String" resultType="com.atos.beans.WsTemplateBean">
+		select idn_webservice_template,
+       	filename,
+       	idn_xml_map as xmlMapId
+		from tpa_twebservice_template
+		where webservice = #{ws} <!-- 'ACUM.INVENTORY'  -->
+		and trunc(sysdate) between start_date and nvl(end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+	</select>
+	
+	<resultMap type="com.atos.beans.XMLMapBean" id="XMLMap">
+		<result property="xmlMapId" column="idn_xml_map" />
+		<result property="mapDesc" column="map_desc" />
+		<result property="rootTag" column="root_tag" />
+	</resultMap>
+	
+	<select id="getXMLMapByXMLMapId" parameterType="com.atos.beans.XMLMapBean" resultMap="XMLMap">		
+		select idn_xml_map,
+		        map_desc,
+		        root_tag
+		from tpa_txml_map
+		where idn_xml_map=#{xmlMapId}
+	</select>
+	
+	<resultMap type="com.atos.beans.XMLMapSheetBean" id="XMLMapSheet">
+		<result property="xmlMapSheetId" column="idn_xml_map_sheet" />
+		<result property="xmlMapId" column="idn_xml_map" />
+		<result property="sheetNumber" column="sheet_order" />
+		<result property="sheetName" column="sheet_name" />
+		<result property="sheetTag" column="sheet_tag" />
+	</resultMap>
+	
+	<select id="getXMLMapSheetByXMLMapId" parameterType="com.atos.beans.XMLMapSheetBean" resultMap="XMLMapSheet">
+		select idn_xml_map_sheet,
+		        idn_xml_map,
+		        sheet_order,
+		        sheet_name,
+		        sheet_tag 
+		from tpa_txml_map_sheet
+		where idn_xml_map=#{xmlMapId} 
+		order by sheet_order
+	</select>
+	
+	<resultMap type="com.atos.beans.XMLMapBlockBean" id="XMLMapBlock">
+		<result property="xmlMapBlockId" column="idn_xml_map_block" />
+		<result property="xmlMapSheetId" column="idn_xml_map_sheet" />
+		<result property="blockOrder" column="block_order" />
+		<result property="blockTag" column="block_tag" />
+		<result property="startLimit" column="start_limit" />
+		<result property="endLimit" column="end_limit" />
+	</resultMap>
+	
+	<select id="getXMLMapBlockByXMLMapSheetId" parameterType="com.atos.beans.XMLMapBlockBean" resultMap="XMLMapBlock">
+		select idn_xml_map_block,
+	        idn_xml_map_sheet,
+	        block_order,
+	        block_tag,
+	        start_limit,
+	        end_limit 
+		from tpa_txml_map_block
+		where idn_xml_map_sheet=#{xmlMapSheetId}
+	</select>
+	
+	<resultMap type="com.atos.beans.XMLMapItemBean" id="XMLMapItem">
+		<result property="xmlMapItemId" column="idn_xml_map_item" />
+		<result property="xmlMapBlockId" column="idn_xml_map_block" />
+		<result property="columnId" column="column_id" />
+		<result property="groupTag" column="group_tag" />
+		<result property="groupTagCount" column="group_tag_count" />
+		<result property="itemTag" column="item_tag" />
+		<result property="itemOrder" column="item_order" />
+		<result property="headerTag" column="header_tag" />
+		<result property="labelTag" column="label_tag" />
+		<result property="labelValue" column="label_value" />
+	</resultMap>
+	
+	<select id="getXMLMapItemByXMLMapBlockId" parameterType="com.atos.beans.XMLMapItemBean" resultMap="XMLMapItem">	
+		select idn_xml_map_item,
+		       idn_xml_map_block,
+		       column_id,
+		       group_tag,
+				(select count(t2.group_tag) 
+				          from tpa_txml_map_item t2 
+				         where t2.idn_xml_map_block = t.idn_xml_map_block 
+				           and t2.group_tag = t.group_tag 
+				           and t.group_tag is not null 
+				         group by t.group_tag) as group_tag_count,
+		       item_tag,
+		       item_order,
+		       header_tag,
+		       label_tag,
+		       label_value
+		from tpa_txml_map_item t
+		where idn_xml_map_block=#{xmlMapBlockId}
+	</select>
+</mapper>

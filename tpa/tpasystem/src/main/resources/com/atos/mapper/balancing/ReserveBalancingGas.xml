@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- Namespace -->
+<mapper namespace="com.atos.mapper.balancing.ReserveBalancingGasMapper">
+
+	<resultMap type="com.atos.beans.ReserveBalancingGasDto" id="ReserveBalancingGasDto">
+		<id column="IDN_RESBAL_FORECAST_FILE" property="idnResbalForecastFile" />
+		<id column="IDN_USER_GROUP" property="idnUserGroup" />
+		<id column="USER_GROUP_ID" property="userGroupId" />
+		<id column="IDN_RESBAL_CONTRACT" property="idnResbalContract" />
+		<id column="CONTRACT_CODE" property="contractCode" />
+		<id column="MONTH_YEAR" property="monthYear" />
+		<id column="FILE_NAME" property="fileName" />
+	</resultMap>
+
+    <resultMap type="com.atos.beans.ReserveBalancingGasDto" id="ResBalGastFile">
+		<result property="binaryData" column="contract_document" jdbcType="BLOB" />
+	</resultMap>
+	
+	
+	<select id="getFile" parameterType="java.math.BigDecimal" resultMap="ResBalGastFile">
+		select binary_data as binaryData
+		  from tpa_tresbal_forecast_file 
+		 where idn_resbal_forecast_file=#{value}
+	</select>
+
+	<select id="search" parameterType="com.atos.filters.balancing.ReserveBalancigGasFilter"
+		resultMap="ReserveBalancingGasDto">
+		SELECT rff.idn_resbal_forecast_file,
+		ug.idn_user_group,
+		ug.user_group_id,
+		rbc.idn_resbal_contract,
+		rbc.contract_code,
+		rff.gas_month  month_year,
+		rff.file_name -- ??
+		FROM tpa_tresbal_forecast_file rff,
+		tpa_tresbal_contract rbc,
+		tpa_tuser_group ug
+		WHERE rff.idn_resbal_contract = rbc.idn_resbal_contract
+		AND rff.version_date = (SELECT MAX(rffx.version_date)
+		FROM tpa_tresbal_forecast_file rffx
+		WHERE rffx.idn_resbal_contract = rff.idn_resbal_contract
+		AND rffx.gas_month = rff.gas_month)
+		AND rbc.idn_user_group = ug.idn_user_group
+                               AND rbc.idn_pipeline_system = #{idnSystem}
+		AND rff.gas_month BETWEEN #{fromDate} AND #{toDate} 
+		<if test="shipperId !=null">
+			AND ug.idn_user_group = #{shipperId}
+		</if>
+		<if test="reserveBalId != null">
+			AND rbc.idn_resbal_contract = #{reserveBalId}
+		</if>
+		ORDER BY ug.user_group_id,
+		rbc.contract_code,
+		rff.gas_month
+
+
+	</select>
+	
+	
+
+
+	<select id="selectShipperId" resultType="com.atos.beans.ComboFilterNS"
+		parameterType="BigDecimal">
+		WITH logged_user AS
+		(SELECT ug.idn_user_group,
+		ug.user_group_id,
+		ugt.type_code
+		FROM tpa_tuser u,
+		tpa_tuser_group ug,
+		tpa_tuser_group_type ugt
+		WHERE u.idn_user = #{value}
+		AND u.idn_user_group = ug.idn_user_group
+		AND ug.idn_user_group_type = ugt.idn_user_group_type)
+		SELECT idn_user_group as key,
+		user_group_id as value
+		FROM (SELECT lu.idn_user_group,
+		lu.user_group_id
+		FROM logged_user lu
+		WHERE lu.type_code = 'SHIPPER'
+		UNION
+		SELECT ug.idn_user_group,
+		ug.user_group_id
+		FROM tpa_tuser_group ug,
+		tpa_tuser_group_type ugt
+		WHERE ug.idn_user_group_type = ugt.idn_user_group_type
+		AND ugt.type_code = 'SHIPPER'
+		AND EXISTS (SELECT 1 FROM logged_user lu WHERE lu.type_code !=
+		'SHIPPER'))
+		ORDER BY upper(user_group_id)
+	</select>
+
+	<select id="selectReserveBalId" resultType="com.atos.beans.ComboFilterNS"
+		parameterType="HashMap">
+		SELECT rc.idn_resbal_contract as key,
+		rc.contract_code as value
+		FROM tpa_tresbal_contract rc
+		WHERE rc.idn_user_group = #{idnUserGroup}
+        AND rc.idn_pipeline_system = #{idnSystem}
+		ORDER BY rc.contract_code
+
+	</select>
+	<select id="checkValidDateForContract" parameterType="com.atos.beans.balancing.ReserveBalancingGasBean"
+			resultType="Integer">
+			<![CDATA[
+			SELECT COUNT(*) AS num_details
+  FROM tpa_tresbal_contract_det rbcd
+ WHERE rbcd.idn_resbal_contract = #{contractId} 
+   AND rbcd.start_date <=  last_day(#{selDate})
+   AND rbcd.end_date >= trunc(#{selDate}, 'MM')
+   ]]>
+			</select>
+	<insert id="save" parameterType="com.atos.beans.balancing.ReserveBalancingGasBean">
+		INSERT INTO tpa_tresbal_forecast_file
+   (idn_resbal_forecast_file, idn_resbal_contract, gas_month, file_name, binary_data,
+	                                        aud_ins_user,
+	                                        aud_last_user)
+VALUES
+   (tpa_sresbal_forecast_file.nextval,
+    #{contractId}, 
+    #{selDate},
+    #{fileName},
+    #{binaryData},
+	      #{username},
+	      #{username})
+	</insert>
+	
+	
+  <select id="selectTemplate" parameterType="com.atos.beans.dam.UserGuideBean" resultType="com.atos.beans.dam.UserGuideBean">
+		SELECT  ty.type_desc type_desc, 
+				doc.document_name document_name, doc.binary_data binary_data, 
+				doc.version_comment version_comment, doc.version_date version_date,
+				ty.idn_document_type idn_document_type, doc.idn_document idn_document
+		FROM TPA_TDOCUMENT doc, TPA_TDOCUMENT_TYPE ty
+		WHERE doc.idn_document_type = ty.idn_document_type
+		  AND type_code = 'RESERVE.BALANCING.GAS.FORESCAST.TEMPLATE'
+		
+	</select>
+	
+</mapper>

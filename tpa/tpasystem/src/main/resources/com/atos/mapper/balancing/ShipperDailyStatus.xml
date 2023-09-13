@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<!-- 
+    pivot (SUM(allocated_value) FOR aggregation IN('EAST#EOTD_Park' AS e_eotd_park,
+		                                          'WEST#EOTD_Park' AS w_eotd_park,
+		                                          'EAST-WEST#EOTD_Park' AS ew_eotd_park,
+		                                          
+		                                          'EAST#EOTD_Min_Inventory' AS e_eotd_min_inv,
+		                                          'WEST#EOTD_Min_Inventory' AS w_eotd_min_inv,
+		                                          'EAST-WEST#EOTD_Min_Inventory' AS ew_eotd_min_inv,
+		                                           
+		                                          'EAST#EOTD_Balancing_gas' AS e_eotd_bal_gas,
+		                                          'WEST#EOTD_Balancing_gas' AS w_eotd_bal_gas,
+		                                          'EAST-WEST#EOTD_Balancing_gas' AS ew_eotd_bal_gas,
+		                                         
+		                                          'EAST#Imbalance_Stock' AS e_imbalance_stock,
+		                                          'WEST#Imbalance_Stock' AS w_imbalance_stock,
+		                                          'EAST-WEST#Imbalance_Stock' AS ew_imbalance_stock,
+		                                          
+		                                          'EAST#Accumulated_Imbalance_Stock' AS e_acc_imbalance_stock,
+		                                          'WEST#Accumulated_Imbalance_Stock' AS w_acc_imbalance_stock,
+		                                          'EAST-WEST#Accumulated_Imbalance_Stock' AS ew_acc_imbalance_stock))
+		                                          
+-->
+<mapper namespace="com.atos.mapper.balancing.ShipperDailyStatusMapper">
+    
+	<!-- Para hacer consultas, el shipper no tendria por que estar vigente. -->
+    <select id="selectShipperId" resultType="com.atos.beans.ComboFilterNS">
+		select tgr.idn_user_group as key, tgr.user_group_id as value
+		from tpa_tuser_group tgr
+		where tgr.idn_user_group_type = (select idn_user_group_type from tpa_tuser_group_type where type_code = 'SHIPPER')
+		order by upper(tgr.user_group_id) asc
+    </select>
+	
+	<resultMap type="com.atos.beans.balancing.ShipperDailyStatusBean" id="ShipperDailyStatus">
+        <!-- <id property="allocationDataId" column="idn_allocation_data" /> -->
+		<result property="gasDay" column="gas_day"/>
+        <result property="shipperCode" column="shipper_code"/>
+        <result property="contractId" column="idn_contract"/>
+        <result property="contractCode" column="contract_code"/>
+        <result property="isTotal" column="is_total"/>
+
+        <result property="eEotdPark" column="e_eotd_park"/> 
+        <result property="wEotdPark" column="w_eotd_park"/>
+        <result property="ewEotdPark" column="ew_eotd_park"/>  
+        
+       
+ 		<result property="eEotdMinInv" column="e_eotd_min_inv"/>   
+        <result property="wEotdMinInv" column="w_eotd_min_inv"/>
+        <result property="ewEotdMinInv" column="ew_eotd_min_inv"/>
+        
+          
+        <result property="eEotdBalGas" column="e_eotd_bal_gas"/>   
+        <result property="wEotdBalGas" column="w_eotd_bal_gas"/>
+        <result property="ewEotdBalGas" column="ew_eotd_bal_gas"/>
+        
+          
+        
+        <result property="eImbalanceStock" column="e_imbalance_stock"/>
+        <result property="wImbalanceStock" column="w_imbalance_stock"/>
+        <result property="ewImbalanceStock" column="ew_imbalance_stock"/>
+        
+        <result property="eAccImbalanceStock" column="e_acc_imbalance_stock"/>
+        <result property="wAccImbalanceStock" column="w_acc_imbalance_stock"/>
+        <result property="ewAccImbalanceStock" column="ew_acc_imbalance_stock"/>
+        
+	</resultMap>
+
+    <select id="selectShipperDailyStatus" resultMap="ShipperDailyStatus">
+		WITH shipper_contract AS
+		 (SELECT c.idn_contract AS idn,
+		         c.contract_code,
+		         c.idn_user_group
+		    FROM tpa_tcontract c
+		  <!--    WHERE to_date( '#{fromDate}', 'dd/mm/yyyy') #{gas_day} 
+		         BETWEEN c.start_date AND c.end_date-->
+	       WHERE #{fromDate} BETWEEN c.start_date AND c.end_date
+			 AND c.idn_pipeline_system = #{systemId}
+		     AND EXISTS (SELECT 1 FROM tpa_tcontract_consolidate cc WHERE cc.idn_contract = c.idn_contract)
+			<if test="shipperId != null and shipperId != ''">
+		   		  AND c.idn_user_group = #{shipperId}
+		     </if>
+		     GROUP BY c.idn_contract,
+		            c.contract_code,
+		            idn_user_group),
+		
+		<!-- BALANCE (ALLOCATION 'HEADERS')-->
+		balance AS
+		 (SELECT a.idn_allocation,
+		         a.gas_day,
+		         a.version_date
+		    FROM tpa_tallocation a
+		  <!-- WHERE a.gas_day = to_date( '#{fromDate}', 'dd/mm/yyyy')    #{gas_day} -->
+		    WHERE a.gas_day = #{fromDate}   <!-- #{gas_day} -->
+			 AND a.idn_pipeline_system = #{systemId}
+		     AND a.idn_allocation_type =
+		         (SELECT t.idn_allocation_type FROM tpa_tallocation_type t WHERE t.type_code = 'COMMERCIAL')
+		     AND a.version_date = (SELECT MAX(ax.version_date)
+		                             FROM tpa_tallocation ax
+		                            WHERE ax.gas_day = a.gas_day
+									  AND ax.idn_pipeline_system = a.idn_pipeline_system
+		                              AND ax.idn_allocation_type = a.idn_allocation_type
+		                              AND ax.idn_allocation_origin IN
+		                                  (SELECT o.idn_allocation_origin
+		                                     FROM tpa_tallocation_origin o
+		                                    WHERE o.origin_code IN ('BALANCE', 'CLOSING_PROCESS')))),
+		
+		<!-- VERSION_DATE (MAX)
+		max_version_date AS
+		 (SELECT MAX(version_date) AS version_date FROM balance), -->
+		
+		<!-- ALLOCATION ZONE CONCEPTS -->
+		allocation_zone_concept AS
+		 (SELECT b.gas_day,
+		         (SELECT ug.user_group_id FROM tpa_tuser_group ug WHERE ug.idn_user_group = c.idn_user_group) AS shipper_code,
+		         c.contract_code,
+		         ad.idn_contract,
+		         (SELECT z.zone_code FROM tpa_tzone z WHERE z.idn_zone = ad.idn_zone) || '#' || nc.concept_code AS aggregation,
+		         ad.allocated_value
+		    FROM tpa_tallocation_data    ad,
+		         balance                 b,
+		         tpa_tnomination_concept nc,
+		         shipper_contract        c
+		   WHERE b.idn_allocation = ad.idn_allocation
+		     AND ad.idn_contract = c.idn
+		     AND ad.idn_nomination_concept = nc.idn_nomination_concept
+       <!--  AND nc.concept_code IN ('EOTD_Park', 'EOTD_Min_Inventory', 'Imbalance_Stock', 'Accumulated_Imbalance_Stock')) -->
+		     AND nc.concept_code IN ('EOTD_Park', 'EOTD_Min_Inventory', 'Imbalance', 'Accumulated_Imbalance', 'EOTD_Balancing_gas'))
+		     
+		<!-- 
+		 MAIN SELECT
+		  -->
+		SELECT *
+		  FROM (SELECT gas_day,
+		               shipper_code,
+		               contract_code,
+		               idn_contract,
+		               'N' AS is_total,
+		              <!--(SELECT version_date FROM max_version_date) AS version_date, -->
+		               aggregation,
+		               allocated_value
+		          FROM allocation_zone_concept
+		
+		        UNION ALL
+		
+		       <!-- Subtotals (aggregations) -->
+		        SELECT gas_day,
+		               shipper_code,
+		               'TOTAL' AS contract_code,
+		               NULL AS idn_contract,
+		               'Y' AS is_total,
+		              <!--(SELECT version_date FROM max_version_date) AS version_date,  -->
+		               aggregation,
+		               SUM(allocated_value)
+		          FROM allocation_zone_concept
+		         GROUP BY gas_day,
+		                  shipper_code,
+		                  aggregation)
+		pivot (SUM(allocated_value) FOR aggregation IN('EAST#EOTD_Park' AS e_eotd_park,
+		                                          'WEST#EOTD_Park' AS w_eotd_park,
+		                                          'EAST-WEST#EOTD_Park' AS ew_eotd_park,
+		                                          
+		                                          'EAST#EOTD_Min_Inventory' AS e_eotd_min_inv,
+		                                          'WEST#EOTD_Min_Inventory' AS w_eotd_min_inv,
+		                                          'EAST-WEST#EOTD_Min_Inventory' AS ew_eotd_min_inv,
+		                                           
+		                                          'EAST#EOTD_Balancing_gas' AS e_eotd_bal_gas,
+		                                          'WEST#EOTD_Balancing_gas' AS w_eotd_bal_gas,
+		                                          'EAST-WEST#EOTD_Balancing_gas' AS ew_eotd_bal_gas,
+		                                         
+		                                          'EAST#Imbalance' AS e_imbalance_stock,
+		                                          'WEST#Imbalance' AS w_imbalance_stock,
+		                                          'EAST-WEST#Imbalance' AS ew_imbalance_stock,
+		                                          
+		                                          'EAST#Accumulated_Imbalance' AS e_acc_imbalance_stock,
+		                                          'WEST#Accumulated_Imbalance' AS w_acc_imbalance_stock,
+		                                          'EAST-WEST#Accumulated_Imbalance' AS ew_acc_imbalance_stock))
+		 ORDER BY 1,
+		          2,
+		          decode(idn_contract, NULL, NULL, contract_code)
+    </select>
+
+	<resultMap type="com.atos.beans.balancing.ShipperDailyStatusOffshoreBean" id="ShipperDailyStatusOffshore">
+        <!-- <id property="allocationDataId" column="idn_allocation_data" /> -->
+		<result property="gasDay" column="gas_day"/>
+        <result property="shipperCode" column="shipper_code"/>
+        <result property="contractId" column="idn_contract"/>
+        <result property="contractCode" column="contract_code"/>
+        <result property="isTotal" column="is_total"/>
+        <result property="eotdPark" column="eotd_park"/>  
+ 		<result property="eotdMinInv" column="eotd_min_inv"/>   
+        <result property="eotdBalGas" column="eotd_bal_gas"/>
+        <result property="imbalanceStock" column="imbalance_stock"/>
+        <result property="accImbalanceStock" column="acc_imbalance_stock"/>
+	</resultMap>
+	
+    <select id="selectShipperDailyStatusOffshore" resultMap="ShipperDailyStatusOffshore">
+		WITH shipper_contract AS
+		 (SELECT c.idn_contract AS idn,
+		         c.contract_code,
+		         c.idn_user_group
+		    FROM tpa_tcontract c
+		  <!--    WHERE to_date( '#{fromDate}', 'dd/mm/yyyy') #{gas_day} 
+		         BETWEEN c.start_date AND c.end_date-->
+	       WHERE #{fromDate} BETWEEN c.start_date AND c.end_date
+           AND c.idn_pipeline_system = #{systemId}
+		     AND EXISTS (SELECT 1 FROM tpa_tcontract_consolidate cc WHERE cc.idn_contract = c.idn_contract)
+			<if test="shipperId != null and shipperId != ''">
+		   		  AND c.idn_user_group = #{shipperId}
+		     </if>
+		     GROUP BY c.idn_contract,
+		            c.contract_code,
+		            idn_user_group),
+		
+		<!-- BALANCE (ALLOCATION 'HEADERS')-->
+		balance AS
+		 (SELECT a.idn_allocation,
+		         a.gas_day,
+		         a.version_date
+		    FROM tpa_tallocation a
+		  <!-- WHERE a.gas_day = to_date( '#{fromDate}', 'dd/mm/yyyy')    #{gas_day} -->
+		    WHERE a.gas_day = #{fromDate}   <!-- #{gas_day} -->
+		     AND a.idn_pipeline_system = #{systemId}
+		     AND a.idn_allocation_type =
+		         (SELECT t.idn_allocation_type FROM tpa_tallocation_type t WHERE t.type_code = 'COMMERCIAL')
+		     AND a.version_date = (SELECT MAX(ax.version_date)
+		                             FROM tpa_tallocation ax
+		                            WHERE ax.gas_day = a.gas_day
+                                    AND ax.idn_pipeline_system = a.idn_pipeline_system
+		                              AND ax.idn_allocation_type = a.idn_allocation_type
+		                              AND ax.idn_allocation_origin IN
+		                                  (SELECT o.idn_allocation_origin
+		                                     FROM tpa_tallocation_origin o
+		                                    WHERE o.origin_code IN ('BALANCE', 'CLOSING_PROCESS')))),
+		
+		<!-- VERSION_DATE (MAX)
+		max_version_date AS
+		 (SELECT MAX(version_date) AS version_date FROM balance), -->
+		
+		<!-- ALLOCATION ZONE CONCEPTS -->
+		allocation_zone_concept AS
+		 (SELECT b.gas_day,
+		         (SELECT ug.user_group_id FROM tpa_tuser_group ug WHERE ug.idn_user_group = c.idn_user_group) AS shipper_code,
+		         c.contract_code,
+		         ad.idn_contract,
+		         nc.concept_code AS aggregation,
+		         ad.allocated_value
+		    FROM tpa_tallocation_data    ad,
+		         balance                 b,
+		         tpa_tnomination_concept nc,
+		         shipper_contract        c
+		   WHERE b.idn_allocation = ad.idn_allocation
+		     AND ad.idn_contract = c.idn
+		     AND ad.idn_nomination_concept = nc.idn_nomination_concept
+       <!--  AND nc.concept_code IN ('EOTD_Park', 'EOTD_Min_Inventory', 'Imbalance_Stock', 'Accumulated_Imbalance_Stock')) -->
+		     AND nc.concept_code IN ('EOTD_Park', 'EOTD_Min_Inventory', 'Imbalance', 'Accumulated_Imbalance', 'EOTD_Balancing_gas'))
+		     
+		<!-- 
+		 MAIN SELECT
+		  -->
+		SELECT *
+		  FROM (SELECT gas_day,
+		               shipper_code,
+		               contract_code,
+		               idn_contract,
+		               'N' AS is_total,
+		              <!--(SELECT version_date FROM max_version_date) AS version_date, -->
+		               aggregation,
+		               allocated_value
+		          FROM allocation_zone_concept
+		
+		        UNION ALL
+		
+		       <!-- Subtotals (aggregations) -->
+		        SELECT gas_day,
+		               shipper_code,
+		               'TOTAL' AS contract_code,
+		               NULL AS idn_contract,
+		               'Y' AS is_total,
+		              <!--(SELECT version_date FROM max_version_date) AS version_date,  -->
+		               aggregation,
+		               SUM(allocated_value)
+		          FROM allocation_zone_concept
+		         GROUP BY gas_day,
+		                  shipper_code,
+		                  aggregation)
+		pivot (SUM(allocated_value) FOR aggregation IN('EOTD_Park' AS eotd_park,
+		                                          'EOTD_Min_Inventory' AS eotd_min_inv,
+		                                          'EOTD_Balancing_gas' AS eotd_bal_gas,
+		                                          'Imbalance' AS imbalance_stock,
+		                                          'Accumulated_Imbalance' AS acc_imbalance_stock))
+		 ORDER BY 1,
+		          2,
+		          decode(idn_contract, NULL, NULL, contract_code)
+    </select>
+
+</mapper>

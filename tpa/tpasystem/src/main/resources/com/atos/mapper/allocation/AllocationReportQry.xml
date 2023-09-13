@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<!-- Namespace -->
+<mapper namespace="com.atos.mapper.allocation.AllocationReportQryMapper">
+
+<resultMap type="com.atos.beans.allocation.AllocationReportDto" id="AllocationReportDto">
+<id column="IDN_ALLOCATION" property="idnAllocation"/>
+<id column="IDN_CONTRACT" property="idnContract"/>
+<id column="IDN_CONTRACT_POINT" property="idnContractPoint"/>
+<id column="GAS_DAY" property="gasDay"/>
+<id column="SHIPPER_CODE" property="shipperCode"/>
+<id column="SHIPPER_NAME" property="shipperName"/>
+<id column="CONTRACT_CODE" property="contractCode"/>
+<id column="POINT_CODE" property="pointCode"/>
+<id column="POINT_TYPE_CODE" property="pointTypeCode"/>
+<id column="CONTRACTED_VALUE" property="contractedValue"/>
+<id column="NOMINATED_VALUE" property="nominatedValue"/>
+<id column="ALLOCATED_VALUE" property="allocatedValue"/>
+<id column="BALANCING_GAS" property="balancingGas"/>
+<id column="OVERUSAGE" property="overusage"/>
+
+</resultMap>
+
+<resultMap type="com.atos.beans.allocation.AllocationReportDetailDto" id="AllocationReportDetailDto">
+<id column="IDN_ALLOCATION" property="idnAllocation"/>
+<id column="IDN_CONTRACT" property="idnContract"/>
+<id column="IDN_CONTRACT_POINT" property="idnContractPoint"/>
+<id column="GAS_DAY" property="gasDay"/>
+<id column="SHIPPER_CODE" property="shipperCode"/>
+<id column="SHIPPER_NAME" property="shipperName"/>
+<id column="CONTRACT_CODE" property="contractCode"/>
+<id column="POINT_CODE" property="pointCode"/>
+<id column="POINT_TYPE_CODE" property="pointTypeCode"/>
+<id column="CONTRACTED_VALUE" property="contractedValue"/>
+<id column="NOMINATED_VALUE" property="nominatedValue"/>
+<id column="ALLOCATED_VALUE" property="allocatedValue"/>
+<id column="BALANCING_GAS" property="balancingGas"/>
+<id column="NOMINATION_POINT" property="nominationPoint"/>
+
+</resultMap>
+
+	<select id="searchDetail" resultMap="AllocationReportDetailDto" parameterType="com.atos.filters.allocation.AllocRepQryFilter">
+	WITH allocation AS
+ (SELECT a.gas_day,
+         a.idn_allocation
+    FROM tpa_tallocation a
+   WHERE a.gas_day BETWEEN #{dateFrom}
+                       AND #{dateTo}  
+                       AND a.idn_pipeline_system = #{systemId}
+     AND a.idn_allocation_type =
+         (SELECT t.idn_allocation_type FROM tpa_tallocation_type t WHERE t.type_code = 'COMMERCIAL')
+     AND a.version_date = (SELECT MAX(ax.version_date)
+                             FROM tpa_tallocation ax
+                            WHERE ax.gas_day = a.gas_day
+                            AND ax.idn_pipeline_system = a.idn_pipeline_system
+                              AND ax.idn_allocation_type = a.idn_allocation_type
+                              AND ax.idn_allocation_origin IN
+                                  (SELECT o.idn_allocation_origin
+                                     FROM tpa_tallocation_origin o
+                                    WHERE o.origin_code IN ('BALANCE', 'CLOSING_PROCESS')))),
+
+allocation_data AS
+ (SELECT a.idn_allocation,
+         ad.idn_contract,
+         ad.idn_contract_point,
+         ad.idn_nomination_point,
+         --
+         a.gas_day,
+         ad.idn_system_point_type,
+         --
+         decode(nc.concept_code, 'ENERGY', ad.contracted_value) AS contracted_value,
+         decode(nc.concept_code, 'ENERGY', ad.nominated_value) AS nominated_value,
+         decode(nc.concept_code, 'ENERGY', ad.allocated_value) AS allocated_value,
+         decode(nc.concept_code, 'Balancing_gas', ad.allocated_value) AS balancing_gas
+    FROM allocation              a,
+         tpa_tallocation_data    ad,
+         tpa_tnomination_concept nc
+   WHERE a.idn_allocation = ad.idn_allocation
+     AND ad.idn_nomination_concept = nc.idn_nomination_concept
+     AND nc.concept_code IN ('ENERGY', 'Balancing_gas')
+  <if test="nomPointId != null">
+  AND ad.idn_contract_point = #{nomPointId}  
+  </if>
+  )
+
+SELECT ad.idn_allocation,
+       ad.idn_contract,
+       ad.idn_contract_point,
+       ad.gas_day,
+       ug.user_group_id AS shipper_code,
+       ug.user_group_name AS shipper_name,
+       c.contract_code,
+       spc.point_code AS POINT_CODE,
+       spn.point_code AS nomination_point,
+       (SELECT x.type_code FROM tpa_tsystem_point_type x WHERE x.idn_system_point_type = spc.idn_system_point_type) point_type_code,
+        #{factorFromDefaultUnit} * 
+       SUM(ad.contracted_value) AS contracted_value,
+        #{factorFromDefaultUnit} * 
+       SUM(ad.nominated_value) AS nominated_value,
+        #{factorFromDefaultUnit} * 
+       SUM(ad.allocated_value) AS allocated_value,
+       #{factorFromDefaultUnit} * 
+       SUM(ad.balancing_gas) AS balancing_gas
+  FROM allocation_data   ad,
+       tpa_tcontract     c,
+       tpa_tsystem_point spc,
+       tpa_tsystem_point spn,
+       tpa_tuser_group   ug
+ WHERE ad.idn_contract = c.idn_contract
+   AND ad.idn_contract_point = spc.idn_system_point
+   AND spn.idn_system_point = ad.idn_nomination_point
+   AND c.idn_pipeline_system = #{systemId}
+   AND c.idn_user_group = ug.idn_user_group
+<if test="shipperId != null">
+ AND c.idn_user_group = #{shipperId} 
+ </if>
+ <if test="contractId != null">
+ AND c.idn_contract = #{contractId}  
+ </if>
+ GROUP BY ad.idn_allocation,
+          ad.idn_contract,
+          ad.idn_contract_point,
+          ad.gas_day,
+          ug.user_group_id,
+          ug.user_group_name,
+          c.contract_code,
+          spc.point_code,
+          spn.point_code,
+          spc.idn_system_point_type
+ ORDER BY ad.gas_day,
+          upper(ug.user_group_id) ASC,
+          upper(ug.user_group_name) ASC,
+          upper(c.contract_code) ASC,
+          upper(spc.point_code) ASC,
+          upper(spn.point_code) ASC
+		
+	</select>
+	<select id="search" resultMap="AllocationReportDto" parameterType="com.atos.filters.allocation.AllocRepQryFilter">
+	WITH allocation AS
+ (SELECT a.gas_day,
+         a.idn_allocation
+    FROM tpa_tallocation a
+   WHERE a.gas_day BETWEEN #{dateFrom} 
+                       AND #{dateTo}  
+                       AND a.idn_pipeline_system = #{systemId}
+     AND a.idn_allocation_type =
+         (SELECT t.idn_allocation_type FROM tpa_tallocation_type t WHERE t.type_code = 'COMMERCIAL')
+     AND a.version_date = (SELECT MAX(ax.version_date)
+                             FROM tpa_tallocation ax
+                            WHERE ax.gas_day = a.gas_day
+                              AND ax.idn_allocation_type = a.idn_allocation_type
+                              AND ax.idn_pipeline_system = a.idn_pipeline_system
+                              AND ax.idn_allocation_origin IN
+                                  (SELECT o.idn_allocation_origin
+                                     FROM tpa_tallocation_origin o
+                                    WHERE o.origin_code IN ('BALANCE', 'CLOSING_PROCESS')))),
+
+allocation_data AS
+ (SELECT a.idn_allocation,
+         ad.idn_contract,
+         ad.idn_contract_point,
+         --
+         a.gas_day,
+         ad.idn_system_point_type,
+         --
+         decode(nc.concept_code, 'ENERGY', ad.contracted_value) AS contracted_value,
+         decode(nc.concept_code, 'ENERGY', ad.nominated_value) AS nominated_value,
+         decode(nc.concept_code, 'ENERGY', ad.allocated_value) AS allocated_value,
+         decode(nc.concept_code, 'Balancing_gas', ad.allocated_value) AS balancing_gas
+    FROM allocation              a,
+         tpa_tallocation_data    ad,
+         tpa_tnomination_concept nc
+   WHERE a.idn_allocation = ad.idn_allocation
+     AND ad.idn_nomination_concept = nc.idn_nomination_concept
+     AND nc.concept_code IN ('ENERGY', 'Balancing_gas')
+  <if test="nomPointId != null">
+  AND ad.idn_contract_point = #{nomPointId}  
+  </if>
+  )
+
+SELECT ad.idn_allocation,
+       ad.idn_contract,
+       ad.idn_contract_point,
+       ad.gas_day,
+       ug.user_group_id AS shipper_code,
+       ug.user_group_name AS shipper_name,
+       c.contract_code,
+       sp.point_code,
+       (SELECT x.type_code FROM tpa_tsystem_point_type x WHERE x.idn_system_point_type = sp.idn_system_point_type) point_type_code,
+        #{factorFromDefaultUnit} * 
+       SUM(ad.contracted_value) AS contracted_value,
+        #{factorFromDefaultUnit} * 
+       SUM(ad.nominated_value) AS nominated_value,
+        #{factorFromDefaultUnit} * 
+       SUM(ad.allocated_value) AS allocated_value,
+        #{factorFromDefaultUnit} * 
+       SUM(ad.balancing_gas) AS balancing_gas,
+        #{factorFromDefaultUnit} * 
+       greatest(SUM(nvl(ad.allocated_value, 0)) - SUM(nvl(ad.contracted_value, 0)) - SUM(nvl(ad.balancing_gas, 0)), 0) AS overusage
+  FROM allocation_data   ad,
+       tpa_tcontract     c,
+       tpa_tsystem_point sp,
+       tpa_tuser_group   ug
+ WHERE ad.idn_contract = c.idn_contract
+   AND ad.idn_contract_point = sp.idn_system_point
+   AND c.idn_pipeline_system = #{systemId}
+   AND c.idn_user_group = ug.idn_user_group
+ <if test="shipperId != null">
+ AND c.idn_user_group = #{shipperId} 
+ </if>
+ <if test="contractId != null">
+ AND c.idn_contract = #{contractId}  
+ </if>
+ GROUP BY ad.idn_allocation,
+          ad.idn_contract,
+          ad.idn_contract_point,
+          ad.gas_day,
+          ug.user_group_id,
+          ug.user_group_name,
+          c.contract_code,
+          sp.point_code,
+          sp.idn_system_point_type
+ ORDER BY ad.gas_day,
+          upper(ug.user_group_id) ASC,
+          upper(ug.user_group_name) ASC,
+          upper(c.contract_code) ASC,
+          upper(sp.point_code) ASC
+	</select>
+
+
+    <select id="selectShipperId" resultType="com.atos.beans.ComboFilterNS">
+		select tgr.idn_user_group as key, tgr.user_group_id as value
+		from tpa_tuser_group tgr
+		where tgr.idn_user_group_type = (select idn_user_group_type from tpa_tuser_group_type where type_code = 'SHIPPER')
+		order by upper(tgr.user_group_id) asc
+    </select>
+
+    <select id="selectContractId" parameterType="com.atos.filters.allocation.AllocRepQryFilter" resultType="com.atos.beans.ComboFilterNS">
+	 select tcon.idn_contract as key, tcon.contract_code as value   
+
+                  from tpa_tcontract tcon 
+
+             where EXISTS (SELECT 1 
+
+                     FROM tpa_tcontract_consolidate tconso 
+
+                    WHERE tconso.idn_contract = tcon.idn_contract)
+                    	        
+                    	        and tcon.idn_pipeline_system = #{systemId}
+
+                                <if test="dateTo != null"> 
+
+                                and #{dateTo} >= tcon.start_date 
+                                
+                                </if> 
+                                
+                                 <if test="dateFrom != null"> 
+                                
+                                and tcon.end_date >= #{dateFrom} 
+
+                                </if> 
+
+                        <if test="shipperId != null"> 
+
+                        and tcon.idn_user_group =  #{shipperId} 
+
+                        </if> 
+
+             order by upper(tcon.contract_code) asc
+
+
+	</select>
+
+    <select id="selectPointId" resultType="com.atos.beans.ComboFilterNS">
+SELECT tsp.idn_system_point AS key,
+       tsp.point_code       AS VALUE
+  FROM tpa_tsystem_point tsp,
+       tpa_tarea         a,
+       tpa_tzone         z
+ WHERE tsp.idn_system_point_group =
+       (SELECT tsg.idn_system_point_group FROM tpa_tsystem_point_group tsg WHERE tsg.group_code = 'CONTRACT')
+   AND tsp.idn_area = a.idn_area
+   AND a.idn_zone = z.idn_zone
+   AND z.idn_pipeline_system = #{idnSystem}
+ ORDER BY upper(tsp.point_code) ASC
+</select>
+
+    </mapper>

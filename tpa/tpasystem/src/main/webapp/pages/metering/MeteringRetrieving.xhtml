@@ -1,0 +1,244 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_metering']}" url="#" />
+			<p:menuitem value="#{msg['menu_metering_retrieving']} " url="/pages/metering/MeteringRetrieving.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+				
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="10000" />
+			
+            <p:layout widgetVar="MetRetrievingLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false" collapsible="true" id="page_filters">	
+					
+				<p:panelGrid columns="2" style="width:100%">
+					<p:panelGrid>
+							<p:row>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['meteringRetrieving_Generated_From']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['meteringRetrieving_Generated_To']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['meteringRetrieving_Metering_Input_Code']}" />
+								</p:column>
+								
+							</p:row>
+							<p:row>
+								<p:column>
+									<p:calendar id="gasDayFrom" size="15" pattern="dd/MM/yyyy HH:mm:ss" mask="true" value="#{meteringRetrievingView.filters.generatedDayFrom}"
+										showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="gasDayFrom,meteringInput"></p:ajax>
+										<p:ajax event="change" update="gasDayFrom,meteringInput"></p:ajax>
+									</p:calendar>
+								</p:column>
+								<p:column>
+									<p:calendar id="gasDayTo" size="15" pattern="dd/MM/yyyy HH:mm:ss" mask="true" value="#{meteringRetrievingView.filters.generatedDayTo}"
+										showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="gasDayTo,meteringInput"></p:ajax>
+										<p:ajax event="change" update="gasDayTo,meteringInput"></p:ajax>
+										
+									</p:calendar>
+								</p:column>	
+								 <p:column>
+									<p:selectOneMenu id="meteringInput" style="width:120px" value="#{meteringRetrievingView.filters.idnMeteringInput}" >
+								   		<f:selectItem itemValue=" " itemLabel=" "> </f:selectItem>
+      									<f:selectItems value="#{meteringRetrievingView.meteringInputCodes.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>
+					           	</p:column>
+							</p:row>
+						</p:panelGrid>
+						<p:panelGrid columns="3" style="float:right;top:0px">
+ 							<shiro:hasPermission name="#{changeSystemView.system}.METERING.LOG.QUERY">
+								<p:commandButton value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{meteringRetrievingView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,@form"/>
+							</shiro:hasPermission>
+							<p:commandButton  onclick="PF('MetRetrievingLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" 
+								value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+        					<br/>
+ 							<shiro:hasPermission name="#{changeSystemView.system}.METERING.LOG.QUERY">																	
+								 <p:commandButton value="#{msg['clear']}"
+									actionListener="#{meteringRetrievingView.onClear}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" 
+									process="@this"
+									update="msgs,@form"/>
+							</shiro:hasPermission>
+							
+						
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center" resizable="false" closable="false" collapsible="false" style="border: 4;">
+				
+	
+			<p:panel id="horizontal" header="Header data."  toggleable="true" toggleOrientation="horizontal" style="border:1px solid black !important">	
+				<p:panelGrid >
+				 <!-- <f:facet name="header" > --> 
+						<p:row>
+								<p:column  style="font-weight: bold;border: 4;">
+									<h:outputText value="#{msg['meteringRetrieving_Metering_Input_Code']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['meteringRetrieving_Last_Modif_Date']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['meteringRetrieving_Status']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['meteringRetrieving_XML_File']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['meteringRetrieving_ws_Response']}" />
+								</p:column>
+						</p:row>
+						
+						<p:row>
+								<p:column>
+									<h:outputText value="#{meteringRetrievingView.cabecera.inputCode}" />
+								</p:column>
+								<p:column>
+									<h:outputText value="#{meteringRetrievingView.cabecera.lastModifDate}" >
+						            	<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+						            </h:outputText>
+								</p:column>
+								<p:column>
+									<h:outputText value="#{meteringRetrievingView.cabecera.status}"/>
+								</p:column>
+								<p:column rowspan="2" styleClass="button_header_container">
+									<p:commandButton  icon="ui-icon fa fa-save" onclick="PrimeFaces.monitorDownload(start, stop);" disabled="#{meteringRetrievingView.renderFileXml()}">
+										<p:fileDownload value="#{meteringRetrievingView.obtenerfileXml()}"/>
+									</p:commandButton>
+								</p:column>
+								<p:column>
+									<h:outputText value="#{empty meteringRetrievingView.cabecera.wsErrorDesc? '': msg['met_man_ws_error'].concat(' ').concat(meteringRetrievingView.cabecera.wsErrorDesc)}"/>
+								</p:column>
+						</p:row>
+			
+				</p:panelGrid>
+			 </p:panel>			
+				<p:tabView>
+				
+						
+						<p:tab title="#{msg['meteringRetrieving_Error']} ">
+								<p:dataTable widgetVar="w_meteringRetrieving1"  id="meteringRetrieving1" var="meteringRetrieving" value="#{meteringRetrievingView.items}"
+									reflow="true" style="margin-bottom:20px;border-collapse:collapse"
+									scrollable="true" scrollHeight="100%"
+								    paginator="true" rows="15" rowsPerPageTemplate="5,10,15,20,25, #{meteringRetrievingView.itemsSize}">
+									<f:facet name="header"> 
+										<p:outputPanel style="height:25px">
+											<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+	        								<p:columnToggler datasource="meteringRetrieving1" trigger="toggler" style="width:200px"/>
+										</p:outputPanel>
+									</f:facet>
+			 						<shiro:hasPermission name="#{changeSystemView.system}.METERING.LOG.QUERY"> 
+								       <p:column headerText="#{msg['meteringRetrieving_Gas_Day']}"  style="width: 20px;" sortBy="#{meteringRetrieving.errorGasDay}" >
+						               		 <h:outputText value="#{meteringRetrieving.errorGasDay}" >
+					              			     <f:convertDateTime pattern="dd/MM/yyyy" />
+					              		    </h:outputText>
+								       </p:column>
+									
+										
+								       <p:column headerText="#{msg['meteringRetrieving_Metering_Point_ID']}" style="width: 50px;" sortBy="#{meteringRetrieving.errorMeteringPointID}">
+								       		<h:outputText value="#{meteringRetrieving.errorMeteringPointID}" />
+								       </p:column>
+			
+								       <p:column headerText="#{msg['meteringRetrieving_Energy']}" style="width: 50px;" sortBy="#{meteringRetrieving.errorEnergy}">
+								       		<h:outputText value="#{meteringRetrieving.errorEnergy}"/>
+								       </p:column>
+			
+								       <p:column headerText="#{msg['meteringRetrieving_Time_Stamp']}" style="width: 90px;" sortBy="#{meteringRetrieving.errorTimeStamp}">
+								       		<h:outputText value="#{meteringRetrieving.errorTimeStamp}" />
+								       </p:column>
+			
+								       <p:column headerText="#{msg['meteringRetrieving_Error_Description']}" style="width: 370px;"  sortBy="#{meteringRetrieving.errorDescription}">
+								       		<h:outputText value="#{meteringRetrieving.errorDescription}"/>
+								       </p:column>
+									</shiro:hasPermission>
+								</p:dataTable>
+						</p:tab>
+						
+						<p:tab title="#{msg['meteringRetrieving_Warning']} ">
+						<p:dataTable widgetVar="w_meteringRetrieving2"  id="meteringRetrieving2" var="meteringRetrieving" value="#{meteringRetrievingView.itemsWarning}"
+									reflow="true" style="margin-bottom:20px;border-collapse:collapse"
+									scrollable="true" scrollHeight="100%"
+								    paginator="true" rows="15" rowsPerPageTemplate="5,10,15,20,25, #{meteringRetrievingView.itemsWarningSize}">
+									<f:facet name="header"> 
+										<p:outputPanel style="height:25px">
+											<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+	        								<p:columnToggler datasource="meteringRetrieving2" trigger="toggler" style="width:200px"/>
+										</p:outputPanel>
+									</f:facet>
+			 						<shiro:hasPermission name="#{changeSystemView.system}.METERING.LOG.QUERY">
+			 						
+								       <p:column headerText="#{msg['meteringRetrieving_Gas_Day']}" style="width: 20px;" sortBy="#{meteringRetrieving.warningGasDay}" >
+						               		<h:outputText value="#{meteringRetrieving.warningGasDay}" >
+						              			<f:convertDateTime pattern="dd/MM/yyyy" />
+						            		 </h:outputText>
+						               		
+								       </p:column>
+			
+								       <p:column headerText="#{msg['meteringRetrieving_Metering_Point_ID']}" style="width: 50px;" sortBy="#{meteringRetrieving.warningMeteringPointID}">
+								       		<h:outputText value="#{meteringRetrieving.warningMeteringPointID}" />
+								       </p:column>
+			
+								       <p:column headerText="#{msg['meteringRetrieving_Energy']}" style="width: 50px;" sortBy="#{meteringRetrieving.warningEnergy}">
+								       		<h:outputText value="#{meteringRetrieving.warningEnergy}"/>
+								       </p:column>
+			
+								       <p:column headerText="#{msg['meteringRetrieving_Time_Stamp']}" style="width: 90px;" sortBy="#{meteringRetrieving.warningTimeStamp}">
+								       		<h:outputText value="#{meteringRetrieving.warningTimeStamp}" >
+						              			<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+						            		 </h:outputText>
+								       </p:column>
+			
+								       <p:column headerText="#{msg['meteringRetrieving_Warning']}"  style="width: 370px;" sortBy="#{meteringRetrieving.warning}">
+								       		<h:outputText value="#{meteringRetrieving.warning}"/>
+								       </p:column>
+									</shiro:hasPermission>
+			
+								</p:dataTable>
+							</p:tab>
+					</p:tabView>
+
+			
+				</p:layoutUnit>
+			</p:layout>
+		</h:form>
+		 
+
+		
+
+</ui:define>
+		<script type="text/javascript">
+			function start() {
+			PF('statusDialog').show();
+			}
+			
+			function stop() {
+			PF('statusDialog').hide();
+			}
+		</script>	
+
+	
+</ui:composition>
+

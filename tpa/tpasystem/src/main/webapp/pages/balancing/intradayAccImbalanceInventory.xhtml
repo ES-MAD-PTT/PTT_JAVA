@@ -1,0 +1,307 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_balancing']}" url="#" />
+			<p:menuitem value="#{msg['menu_intraday_acc_imbalance_Inventory']}" url="/pages/balancing/intradayAccImbalanceInventory.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+				
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="10000" />
+			
+            <p:layout widgetVar="intradayAccImbInvLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">	
+					
+					<p:panelGrid columns="2" style="width:100%">
+					
+						<p:panelGrid>
+							<p:row>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['intradayAccImbInv_gasDay']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['intradayAccImbInv_last_version']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['intradayAccImbInv_timestamp']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<p:calendar id="gasDay" size="6" pattern="dd/MM/yyyy" mask="true" value="#{intradayAccImbInvView.filters.gasDay}"
+										showOn="button" readonlyInput="true" navigator="true" maxdate="#{(intradayAccImbInvView.sysdate).getTime()}">
+										<p:ajax event="dateSelect" update="timestampId"></p:ajax>
+										<p:ajax event="change" update="timestampId"></p:ajax>
+									</p:calendar>
+								</p:column>
+								<p:column style="text-align:center">
+									<p:selectBooleanCheckbox id="lastVersionCheckbox" value="#{intradayAccImbInvView.filters.lastVersion}" >
+ 										<p:ajax event="change" listener="#{intradayAccImbInvView.updateTimestamp}" update=":#{p:component('timestampId')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								
+								<p:column>
+									<p:selectOneMenu id="timestampId" style="width:70px" value="#{intradayAccImbInvView.filters.timestampVar}" 
+										disabled="#{intradayAccImbInvView.filters.lastVersion}" >
+ 								   		<f:selectItem itemLabel="" itemValue="" />
+      									<f:selectItems value="#{intradayAccImbInvView.timestampIds.entrySet()}" var="entry" 
+      											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>
+								</p:column>
+							</p:row>
+						</p:panelGrid>
+
+						<p:panelGrid columns="2" style="float:right;top:0px">
+							<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.INTRADAY.IMBALANCEINVENTOR_SHIPPER.QUERY">		 							
+								<p:commandButton value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{intradayAccImbInvView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,:#{p:component('intradayAccImbInv1')}"/>
+							</shiro:hasPermission>  
+
+							<p:commandButton  onclick="PF('intradayAccImbInvLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" 
+								value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+
+							<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.INTRADAY.IMBALANCEINVENTOR_SHIPPER.QUERY">	
+								 <p:commandButton value="#{msg['clear']}"
+									actionListener="#{intradayAccImbInvView.onClear}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" 
+									process="@this"
+									update="msgs,@form"/>
+							</shiro:hasPermission>
+														
+							<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.INTRADAY.IMBALANCEINVENTORY_UPLOAD.FILE">
+								<p:commandButton id="fileExecuteButton" type="button" value="#{msg['met_man_load_file']}" icon="ui-icon fa fa-file-excel-o" style="float:left;"
+        							onclick="PF('dlgFileExecute').show();"/>
+								<p:commandButton value="#{msg['met_man_call_ws_inventory']}" icon="ui-icon fa fa-gears" 
+									actionListener="#{intradayAccImbInvView.callWS}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,:#{p:component('intradayAccImbInv1')}"/> 
+							</shiro:hasPermission>
+
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+				<p:layoutUnit id="table_center_layout" position="center" resizable="false" closable="false" collapsible="false" style="border: 0;">
+
+				<!-- COMIENZO -->
+
+<p:dataTable widgetVar="w_intradayAccImbInv1"  id="intradayAccImbInv1" var="intradayAccImbInv" value="#{intradayAccImbInvView.items}"
+	reflow="true" style="margin-bottom:20px;border-collapse:collapse"				
+	scrollable="true" scrollHeight="100%" scrollWidth="100%"
+	resizableColumns="true" tableStyle="width:auto"
+	paginator="true" rows="15" rowsPerPageTemplate="5,10,15,20,25, #{intradayAccImbInvView.itemsSize}">
+
+	<f:facet name="header"> 
+		<p:outputPanel style="height:25px">
+			<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.INTRADAY.IMBALANCEINVENTOR_SHIPPER.QUERY">
+       			<h:commandLink style="float:right">
+				       <p:graphicImage name="/images/excel.png" width="24"/>
+				       <p:dataExporter type="xlsx" target="intradayAccImbInv1" fileName="intradayAccImbInvFile" 
+				       preProcessor="#{intradayAccImbInvView.preProcessXLS}" postProcessor="#{intradayAccImbInvView.postProcessXLS}"/>
+				</h:commandLink>  
+			</shiro:hasPermission>
+		</p:outputPanel>        										          
+	</f:facet>
+	
+	<p:columnGroup type="header" >
+		<p:row>
+			<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.INTRADAY.IMBALANCEINVENTOR_SHIPPER.QUERY">
+				<p:column rowspan="2" headerText="&lt;br&gt;&lt;br&gt;#{msg['intradayAccImbInv_timestamp']}&lt;br&gt;&lt;br&gt;&lt;br&gt;"	
+					style="min-width: 125px;max-width: 125px;font-size:16px;"/>
+			</shiro:hasPermission>
+			<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.INTRADAY.ACCIMBALANCEINVENTORY.QUERY">
+				<p:column colspan="2" headerText="#{msg['intradayAccImbInv_acc_total_inventory']}" style="font-size:15px;"/>
+				<p:column colspan="2" headerText="#{msg['intradayAccImbInv_acc_base_inventory']} " 
+					style="font-size:15px;"/>
+				<p:column colspan="2" headerText="#{msg['intradayAccImbInv_acc_imbalance_inventory_for_operator']}  " 
+					style="font-size:15px;"/>
+				<p:column colspan="2" headerText="#{msg['intradayAccImbInv_acc_imbalance_acc_from_other_shippers']}" style="font-size:15px;"/>
+				<p:column colspan="2" headerText="#{msg['intradayAccImbInv_acc_imbalance_others']}" style="font-size:15px;"/>
+			</shiro:hasPermission>
+			<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.INTRADAY.IMBALANCEINVENTOR_SHIPPER.QUERY">
+				<p:column colspan="2" headerText="#{msg['intradayAccImbInv_acc_imbalance_acc_for_PTT_Shipper']}" style="font-size:15px;"/>
+			</shiro:hasPermission>
+			<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.INTRADAY.ACCIMBALANCEINVENTORY.QUERY">
+				<p:column colspan="2" headerText="#{msg['intradayAccImbInv_acc_imbalance_zoneMode']}" style="font-size:15px;"/>
+			</shiro:hasPermission>
+		</p:row>
+		<p:row> 
+			<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.INTRADAY.ACCIMBALANCEINVENTORY.QUERY">
+				<p:column  headerText="#{msg['intradayAccImbInv_east']}" style="min-width: 120px;max-width: 120px;"/>
+				<p:column  headerText="#{msg['intradayAccImbInv_west']}" style="min-width: 120px;max-width: 120px;"/>
+				<p:column  headerText="#{msg['intradayAccImbInv_east']}" style="min-width: 120px;max-width: 120px;"/>	
+				<p:column  headerText="#{msg['intradayAccImbInv_west']}" style="min-width: 120px;max-width: 120px;"/>
+				<p:column  headerText="#{msg['intradayAccImbInv_east']}" style="min-width: 120px;max-width: 120px;"/>
+				<p:column  headerText="#{msg['intradayAccImbInv_west']}" style="min-width: 120px;max-width: 120px;"/>
+				<p:column  headerText="#{msg['intradayAccImbInv_east']}" style="min-width: 120px;max-width: 120px;"/>
+				<p:column  headerText="#{msg['intradayAccImbInv_west']}" style="min-width: 120px;max-width: 120px;"/>
+				<p:column  headerText="#{msg['intradayAccImbInv_east']}" style="min-width: 120px;max-width: 120px;"/>		
+				<p:column  headerText="#{msg['intradayAccImbInv_west']}" style="min-width: 120px;max-width: 120px;"/>
+			</shiro:hasPermission>
+			<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.INTRADAY.IMBALANCEINVENTOR_SHIPPER.QUERY">
+				<p:column  headerText="#{msg['intradayAccImbInv_east']}" style="min-width: 120px;max-width: 120px;"/>
+				<p:column  headerText="#{msg['intradayAccImbInv_west']}" style="min-width: 120px;max-width: 120px;"/>
+			</shiro:hasPermission>
+			<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.INTRADAY.ACCIMBALANCEINVENTORY.QUERY">
+				<p:column  headerText="#{msg['intradayAccImbInv_east']}" style="min-width: 120px;max-width: 120px;"/>
+				<p:column  headerText="#{msg['intradayAccImbInv_west']}" style="min-width: 120px;max-width: 120px;"/>
+			</shiro:hasPermission>
+		</p:row>
+								
+	</p:columnGroup>
+	
+ 	<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.INTRADAY.IMBALANCEINVENTOR_SHIPPER.QUERY">
+ 	
+    	<p:column>
+       		<h:outputText value="#{intradayAccImbInv.versionDate}" >
+       			<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+			</h:outputText>
+       </p:column>
+       
+    </shiro:hasPermission>
+    <shiro:hasPermission name="#{changeSystemView.system}.BALANCING.INTRADAY.ACCIMBALANCEINVENTORY.QUERY">
+		<p:column style="min-width: 120px;max-width: 120px;">
+			<h:outputText style="float:right" value="#{intradayAccImbInv.e_total_inventory_val}">
+				<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+			</h:outputText>
+		</p:column>
+		
+		<p:column style="min-width: 120px;max-width: 120px;">
+			<h:outputText style="float:right" value="#{intradayAccImbInv.w_total_inventory_val}">
+				<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+			</h:outputText>
+		</p:column>
+			
+		<p:column style="min-width: 120px;max-width: 120px;">
+			<h:outputText style="float:right" value="#{intradayAccImbInv.e_base_inventory_val}">
+				<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+			</h:outputText>
+		</p:column>
+		
+		<p:column style="min-width: 120px;max-width: 120px;">
+			<h:outputText style="float:right" value="#{intradayAccImbInv.w_base_inventory_val}">
+				<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+			</h:outputText>
+		</p:column>
+		
+		<p:column style="min-width: 120px;max-width: 120px;">
+			<h:outputText value="#{intradayAccImbInv.e_inventory_operator_val}" style="display: block;background-color:#{intradayAccImbInv.e_inventory_operator_colour eq null or intradayAccImbInv.e_inventory_operator_colour eq 'NO_WARN'? '' : intradayAccImbInv.e_inventory_operator_colour}">
+				<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+			</h:outputText>
+		</p:column>
+		
+		<p:column style="min-width: 120px;max-width: 120px;">
+			<h:outputText value="#{intradayAccImbInv.w_inventory_operator_val}" style="display: block;background-color:#{intradayAccImbInv.w_inventory_operator_colour eq null or intradayAccImbInv.w_inventory_operator_colour eq 'NO_WARN'? '' : intradayAccImbInv.w_inventory_operator_colour}">
+				<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+			</h:outputText>
+		</p:column>
+
+		<p:column style="min-width: 120px;max-width: 120px;">
+			<h:outputText style="float:right" value="#{intradayAccImbInv.e_other_shippers_val}">
+				<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+			</h:outputText>
+		</p:column>
+		
+		<p:column style="min-width: 120px;max-width: 120px;">
+			<h:outputText style="float:right" value="#{intradayAccImbInv.w_other_shippers_val}">
+				<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+			</h:outputText>
+		</p:column>
+		
+		<p:column style="min-width: 120px;max-width: 120px;">
+			<h:outputText style="float:right" value="#{intradayAccImbInv.e_others_val}">
+				<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+			</h:outputText>
+		</p:column>
+
+		<p:column style="min-width: 120px;max-width: 120px;">
+			<h:outputText style="float:right" value="#{intradayAccImbInv.w_others_val}">
+				<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+			</h:outputText>
+		</p:column>
+		
+		</shiro:hasPermission>
+	
+		<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.INTRADAY.IMBALANCEINVENTOR_SHIPPER.QUERY">
+		
+		<p:column style="min-width: 120px;max-width: 120px;">
+			<h:outputText style="float:right" value="#{intradayAccImbInv.e_pttshipper_val}">
+				<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+			</h:outputText>
+		</p:column>
+		
+		<p:column style="min-width: 120px;max-width: 120px;">
+			<h:outputText style="float:right" value="#{intradayAccImbInv.w_pttshipper_val}">
+				<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+			</h:outputText>
+		</p:column>
+		
+	</shiro:hasPermission>
+	
+	<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.INTRADAY.ACCIMBALANCEINVENTORY.QUERY">
+		<p:column style="min-width: 120px;max-width: 120px;">
+			<h:outputText style="float:right" value="#{intradayAccImbInv.e_zoneMode_val}" />
+		</p:column>
+		
+		<p:column style="min-width: 120px;max-width: 120px;">
+			<h:outputText style="float:right" value="#{intradayAccImbInv.w_zoneMode_val}" />
+		</p:column>
+	</shiro:hasPermission>
+</p:dataTable>
+			
+				<!-- FIN -->
+
+				</p:layoutUnit>
+			</p:layout>
+		</h:form> 
+		
+		<p:dialog header="#{msg['intradayAccImbInv_uploadFile_file_execution_dialog_header']}" widgetVar="dlgFileExecute" modal="true" appendTo="@(body)" minHeight="150">
+		<h:form id="fileExecuteFormId" style="width:100%;height:98%;border-collapse:collapse">
+
+			<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.INTRADAY.ACCIMBALANCEINVENTORY.QUERY">
+				<p:growl id="msgs" showDetail="true" life="10000" globalOnly="true" />
+				<p:panelGrid id="fileExecutePanelGridId">
+					<p:row><p:column/></p:row>						
+					<p:row>
+						<p:column>
+				      		<!-- No se limita el tipo de fichero ni el tamaño. -->
+							<p:fileUpload id="fileUpload" style="width:100%" fileUploadListener="#{intradayAccImbInvView.handleFileUpload}" 
+								mode="advanced" dragDropSupport="true" fileLimit="1" sizeLimit="1000000" allowTypes="/(\.|\/)(xlsx|xls)$/" 
+								ajax="true" update=":form:msgs,fileUpload" onstart="PF('cargando').show()" oncomplete="PF('cargando').hide();PF('dlgFileExecute').hide()"
+		     					label="#{msg['intradayAccImbInv_choose_file']}"/>
+						</p:column>
+					</p:row>
+					<!-- <p:row>
+						<p:column>
+						    <p:commandLink value="#{msg['cr_bb_download_template']}" ajax="false" actionListener="#{intradayAccImbInvView.selectTemplateFile()}" 
+						    	oncomplete="PrimeFaces.monitorDownload(start, stop);" >
+						        <p:fileDownload value="#{intradayAccImbInvView.templateFile}"/>
+						    </p:commandLink>
+						</p:column>
+					</p:row>  -->
+				</p:panelGrid>
+			</shiro:hasPermission>
+		</h:form> 	    
+	</p:dialog> 
+		
+	</ui:define>
+</ui:composition>

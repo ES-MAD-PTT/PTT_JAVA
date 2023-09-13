@@ -1,0 +1,365 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home"
+				style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_nominations']}" url="#" />
+			<p:menuitem
+				value="#{msg['menu_Nominations_Intraday_nomination_summary']}"
+				url="/pages/nomination/Intraday_nomination_summary.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+
+		<h:form id="form"
+			style="width:100%;height:98%;border-collapse:collapse"
+			fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="10000" />
+
+			<p:layout widgetVar="nomIntradaySummaryLayout"
+				style="width:100%;height:100%" showEffect="clip" hideEffect="clip">
+
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">
+
+					<p:panelGrid columns="2" style="width:100%">
+
+						<p:panelGrid>
+							<p:row>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['intraday_summary_gas_day_from']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['intraday_summary_gas_day_to']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['intraday_summary_shipper_code']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['intraday_summary_contract_code']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['intraday_summary_system_point']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['intraday_summary_check_intraday']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<p:calendar id="gasDayFrom" size="6" pattern="dd/MM/yyyy"
+										mask="true"
+										value="#{intradayNomSummaryView.filters.gasDayFrom}"
+										showOn="button" navigator="true"
+										maxdate="#{(intradayNomSummaryView.sysdate).getTime()}">
+										<p:ajax event="dateSelect" update="contractId"></p:ajax>
+										<p:ajax event="change" update="contractId"></p:ajax>
+									</p:calendar>
+								</p:column>
+
+								<p:column>
+									<p:calendar id="gasDayTo" size="6" pattern="dd/MM/yyyy"
+										mask="true" value="#{intradayNomSummaryView.filters.gasDayTo}"
+										showOn="button" navigator="true"
+										maxdate="#{(intradayNomSummaryView.sysdate).getTime()}">
+										<p:ajax event="dateSelect" update="contractId"></p:ajax>
+										<p:ajax event="change" update="contractId"></p:ajax>
+									</p:calendar>
+								</p:column>
+
+								<p:column>
+									<p:selectOneMenu id="shipperId" style="width:100px"
+										value="#{intradayNomSummaryView.filters.shipperId}"
+										disabled="#{intradayNomSummaryView.isShipper()}">
+										<f:selectItem itemLabel="" itemValue="" />
+										<f:selectItems
+											value="#{intradayNomSummaryView.shipperIds.entrySet()}"
+											var="entry" itemValue="#{entry.key}"
+											itemLabel="#{entry.value}" />
+										<p:ajax event="change" update="contractId" />
+									</p:selectOneMenu>
+								</p:column>
+								<p:column>
+									<p:selectOneMenu id="contractId" autoWidth="false"
+										style="width:100px"
+										value="#{intradayNomSummaryView.filters.contractId}">
+										<f:selectItem itemLabel="" itemValue="" />
+										<f:selectItems
+											value="#{intradayNomSummaryView.contractIds.entrySet()}"
+											var="entry" itemValue="#{entry.key}"
+											itemLabel="#{entry.value}" />
+										<p:ajax event="change" update="systemPoint" />
+									</p:selectOneMenu>
+								</p:column>
+								<p:column>
+									<p:selectOneMenu id="systemPoint" autoWidth="false"
+										style="width:100px"
+										value="#{intradayNomSummaryView.filters.systemPoint}">
+										<f:selectItem itemLabel="" itemValue="" />
+										<f:selectItems
+											value="#{intradayNomSummaryView.systemPointsIds.entrySet()}"
+											var="entry" itemValue="#{entry.key}"
+											itemLabel="#{entry.value}" />
+									</p:selectOneMenu>
+								</p:column>
+								<p:column style="text-align:center">
+									<p:selectBooleanCheckbox id="checkIntraday"
+										value="#{intradayNomSummaryView.filters.checkIntraday}">
+										<p:ajax update="checkIntraday"
+											listener="#{intradayNomSummaryView.updateCheck()}" />
+									</p:selectBooleanCheckbox>
+								</p:column>
+							</p:row>
+						</p:panelGrid>
+
+						<p:panelGrid columns="2" style="float:right;top:0px">
+							<shiro:hasPermission
+								name="#{changeSystemView.system}.NOMINATION.INTRADAY.NOMINATION.SUMMARY.QUERY">
+								<p:commandButton value="#{msg['search']}"
+									icon="ui-icon fa fa-search" onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" update="msgs,@form"
+									actionListener="#{intradayNomSummaryView.onSearch}" />
+							</shiro:hasPermission>
+
+							<p:commandButton
+								onclick="PF('nomIntradaySummaryLayout').toggle('north')"
+								id="header_collapse" icon="fa fa-minus"
+								value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+
+							<shiro:hasPermission
+								name="#{changeSystemView.system}.NOMINATION.INTRADAY.NOMINATION.SUMMARY.QUERY">
+								<p:commandButton value="#{msg['clear']}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" process="@this"
+									update="msgs,@form"
+									actionListener="#{intradayNomSummaryView.onClear}" />
+							</shiro:hasPermission>
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center"
+					resizable="false" closable="false" collapsible="false"
+					style="border: 0;">
+					<p:dataTable widgetVar="w_intradayNomSum1" id="intradayNomSum1"
+						var="intradayNomSum" value="#{intradayNomSummaryView.items}"
+						reflow="true" style="margin-bottom:20px;border-collapse:collapse"
+						scrollable="true" scrollHeight="100%" paginator="true" rows="15"
+						rowsPerPageTemplate="5,10,15,20,25, #{intradayNomSummaryView.itemsSize}">
+
+						<f:facet name="header">
+							<p:outputPanel style="height:25px">
+								<p:commandButton id="toggler" type="button" value="Columns"
+									style="float:right" icon="ui-icon-calculator" />
+								<p:columnToggler datasource="intradayNomSum1" trigger="toggler"
+									style="width:200px" />
+								<h:commandLink style="float:right">
+									<p:graphicImage name="/images/excel.png" width="24" />
+									<p:dataExporter type="xlsx" target="intradayNomSum1"
+										fileName="intradayNomSumReport"
+										postProcessor="#{intradayNomSummaryView.postProcessXLS}" />
+									<p:spacer width="10" height="10" />
+								</h:commandLink>
+							</p:outputPanel>
+						</f:facet>
+
+						<shiro:hasPermission
+							name="#{changeSystemView.system}.NOMINATION.INTRADAY.NOMINATION.SUMMARY.QUERY">
+							<p:column headerText="#{msg['intraday_summary_gas_day']}"
+								style="width: 100px;" sortBy="#{intradayNomSum.gasDay}">
+								<h:outputText value="#{intradayNomSum.gasDay}">
+									<f:convertDateTime pattern="dd/MM/yyyy" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['intraday_summary_nomination_code']}"
+								style="width: 100px;" sortBy="#{intradayNomSum.nominationCode}">
+								<h:outputText value="#{intradayNomSum.nominationCode}" />
+							</p:column>
+							<p:column headerText="#{msg['intraday_summary_intraday']}"
+								style="width: 50px;" sortBy="#{intradayNomSum.intraday}">
+								<h:outputText value="#{intradayNomSum.intraday}" />
+							</p:column>
+							<p:column headerText="#{msg['intraday_summary_contract_code']}"
+								style="width: 100px;" sortBy="#{intradayNomSum.contractCode}">
+								<h:outputText value="#{intradayNomSum.contractCode}" />
+							</p:column>
+							<p:column headerText="#{msg['intraday_summary_shipper_name']}"
+								style="width: 100px;" sortBy="#{intradayNomSum.shipperName}">
+								<h:outputText value="#{intradayNomSum.shipperName}" />
+							</p:column>
+							<p:column headerText="#{msg['intraday_summary_system_point']}"
+								style="width: 100px;" sortBy="#{intradayNomSum.systemPoint}">
+								<h:outputText value="#{intradayNomSum.systemPoint}" />
+							</p:column>
+							<p:column headerText="#{msg['intraday_summary_unit']}"
+								style="width: 100px;" sortBy="#{intradayNomSum.unit}">
+								<h:outputText value="#{intradayNomSum.unit}" />
+							</p:column>
+							<p:column headerText="#{msg['intraday_summary_h1']}"
+								style="width: 50px;" sortBy="#{intradayNomSum.h1}">
+								<h:outputText value="#{intradayNomSum.h1}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['intraday_summary_h2']}"
+								style="width: 50px;" sortBy="#{intradayNomSum.h2}">
+								<h:outputText value="#{intradayNomSum.h2}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['intraday_summary_h3']}"
+								style="width: 50px;" sortBy="#{intradayNomSum.h3}">
+								<h:outputText value="#{intradayNomSum.h3}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['intraday_summary_h4']}"
+								style="width: 50px;" sortBy="#{intradayNomSum.h4}">
+								<h:outputText value="#{intradayNomSum.h4}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['intraday_summary_h5']}"
+								style="width: 50px;" sortBy="#{intradayNomSum.h5}">
+								<h:outputText value="#{intradayNomSum.h5}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['intraday_summary_h6']}"
+								style="width: 50px;" sortBy="#{intradayNomSum.h6}">
+								<h:outputText value="#{intradayNomSum.h6}">
+									<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['intraday_summary_h7']}"
+								style="width: 50px;" sortBy="#{intradayNomSum.h7}">
+								<h:outputText value="#{intradayNomSum.h7}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['intraday_summary_h8']}"
+								style="width: 50px;" sortBy="#{intradayNomSum.h8}">
+								<h:outputText value="#{intradayNomSum.h8}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['intraday_summary_h9']}"
+								style="width: 50px;" sortBy="#{intradayNomSum.h9}">
+								<h:outputText value="#{intradayNomSum.h9}">
+									<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['intraday_summary_h10']}"
+								style="width: 50px;" sortBy="#{intradayNomSum.h10}">
+								<h:outputText value="#{intradayNomSum.h10}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['intraday_summary_h11']}"
+								style="width: 50px;" sortBy="#{intradayNomSum.h11}">
+								<h:outputText value="#{intradayNomSum.h11}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['intraday_summary_h12']}"
+								style="width: 50px;" sortBy="#{intradayNomSum.h12}">
+								<h:outputText value="#{intradayNomSum.h12}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['intraday_summary_h13']}"
+								style="width: 50px;" sortBy="#{intradayNomSum.h13}">
+								<h:outputText value="#{intradayNomSum.h13}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['intraday_summary_h14']}"
+								style="width: 50px;" sortBy="#{intradayNomSum.h14}">
+								<h:outputText value="#{intradayNomSum.h14}">
+									<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['intraday_summary_h15']}"
+								style="width: 50px;" sortBy="#{intradayNomSum.h15}">
+								<h:outputText value="#{intradayNomSum.h15}">
+									<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['intraday_summary_h16']}"
+								style="width: 50px;" sortBy="#{intradayNomSum.h16}">
+								<h:outputText value="#{intradayNomSum.h16}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['intraday_summary_h17']}"
+								style="width: 50px;" sortBy="#{intradayNomSum.h17}">
+								<h:outputText value="#{intradayNomSum.h17}">
+									<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['intraday_summary_h18']}"
+								style="width: 50px;" sortBy="#{intradayNomSum.h18}">
+								<h:outputText value="#{intradayNomSum.h18}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['intraday_summary_h19']}"
+								style="width: 50px;" sortBy="#{intradayNomSum.h19}">
+								<h:outputText value="#{intradayNomSum.h19}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['intraday_summary_h20']}"
+								style="width: 50px;" sortBy="#{intradayNomSum.h20}">
+								<h:outputText value="#{intradayNomSum.h20}">
+									<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['intraday_summary_h21']}"
+								style="width: 50px;" sortBy="#{intradayNomSum.h21}">
+								<h:outputText value="#{intradayNomSum.h21}">
+									<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['intraday_summary_h22']}"
+								style="width: 50px;" sortBy="#{intradayNomSum.h22}">
+								<h:outputText value="#{intradayNomSum.h22}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['intraday_summary_h23']}"
+								style="width: 50px;" sortBy="#{intradayNomSum.h23}">
+								<h:outputText value="#{intradayNomSum.h23}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['intraday_summary_h24']}"
+								style="width: 50px;" sortBy="#{intradayNomSum.h24}">
+								<h:outputText value="#{intradayNomSum.h24}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['intraday_summary_total']}"
+								style="width: 100px;" sortBy="#{intradayNomSum.total}">
+								<h:outputText value="#{intradayNomSum.total}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3" />
+								</h:outputText>
+							</p:column>
+						</shiro:hasPermission>
+					</p:dataTable>
+				</p:layoutUnit>
+			</p:layout>
+		</h:form>
+	</ui:define>
+</ui:composition>

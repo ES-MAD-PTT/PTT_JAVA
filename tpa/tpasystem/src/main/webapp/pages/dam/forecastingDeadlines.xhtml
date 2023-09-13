@@ -1,0 +1,318 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_dam']}" url="#" />
+			<p:menuitem value="#{msg['menu_parameters']}" url="#" />
+			<p:menuitem value="#{msg['menu_forecasting_deadline']}" url="/pages/dam/forecastingDeadlines.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="5000"/>
+			
+            <p:layout widgetVar="forecastingDeadlineLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false" collapsible="true" id="page_filters">	
+				<p:panelGrid columns="2" style="width:100%">
+					
+						<p:panelGrid>
+							<p:row>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['forecastingDeadline_Type']}" />
+								</p:column>
+								
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['forecastingDeadline_Start_Date']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['forecastingDeadline_End_Date']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								
+								<p:column>				           		
+					           		<p:selectOneMenu id="type" style="width:100px"   value="#{forecastingDeadlineView.filters.type}" >
+							               		<f:selectItem itemLabel="" itemValue="" />
+        								        <f:selectItems value="#{forecastingDeadlineView.types.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>											
+								</p:column>
+								
+								<p:column>
+									<p:calendar id="fecInicio"  size="10" pattern="dd/MM/yyyy" mask="true" 
+										value="#{forecastingDeadlineView.filters.startDate}"
+										showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="fecInicio"></p:ajax>
+										<p:ajax event="change" update="fecInicio"></p:ajax>
+									</p:calendar>
+								</p:column>
+								<p:column>
+									<p:calendar id="fecFin"  size="10" pattern="dd/MM/yyyy" mask="true" value="#{forecastingDeadlineView.filters.endDate}"
+										showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="fecFin"></p:ajax>
+										<p:ajax event="change" update="fecFin"></p:ajax>
+									</p:calendar>
+								</p:column>
+							
+								
+							</p:row>
+						</p:panelGrid>
+						<p:panelGrid columns="2" style="float:right;top:0px">
+							<shiro:hasPermission name="#{changeSystemView.system}.DAM.FORECASTING_DEADLINES.QUERY">
+								<p:commandButton value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{forecastingDeadlineView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,:#{p:component('forecastingDeadlines1')}"/>
+							</shiro:hasPermission>
+							
+							<p:commandButton  onclick="PF('forecastingDeadlineLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+							
+							<shiro:hasPermission name="#{changeSystemView.system}.DAM.FORECASTING_DEADLINES.QUERY">								
+								<p:commandButton value="#{msg['clear']}"
+									actionListener="#{forecastingDeadlineView.onClear}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" 
+									process="@this" 
+									update="form"/>  
+							</shiro:hasPermission>
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center"
+					resizable="false" closable="false" collapsible="false">
+
+					<p:dataTable widgetVar="w_forecastingDeadline1"  id="forecastingDeadlines1" var="forecastingDeadline" value="#{forecastingDeadlineView.items}" reflow="true" editable="true" 
+						style="margin-bottom:20px;border-collapse:collapse"
+					    paginator="true" rows="15"
+					    scrollable="true"  scrollHeight="100%"
+					    rowsPerPageTemplate="5,10,15,20,25, #{forecastingDeadlineView.itemsSize}" >
+
+							<f:facet name="header">
+								<p:outputPanel style="height:25px">
+									<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+	        						<p:columnToggler datasource="forecastingDeadlines1" trigger="toggler" style="width:200px"/>
+	        						<shiro:hasPermission name="#{changeSystemView.system}.DAM.FORECASTING_DEADLINES.ADD">
+		        						<p:commandButton id="new" type="button" value="New" icon="ui-icon fa fa-save" style="float:right;"
+		        							onclick="PF('dlgNewForecastingDeadline').show();"/>
+	        						</shiro:hasPermission>
+								</p:outputPanel>        										          
+					        </f:facet>
+					        
+					        <shiro:hasPermission name="#{changeSystemView.system}.DAM.FORECASTING_DEADLINES.MOD">
+						 		<p:ajax event="rowEditInit" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','hidden')});" />
+								<p:ajax event="rowEdit" listener="#{forecastingDeadlineView.onRowEdit}" update=":form:msgs" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>   
+								<p:ajax event="rowEditCancel" listener="#{forecastingDeadlineView.onRowCancel}" update=":form:msgs" onstart="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>
+						 </shiro:hasPermission>
+					      
+					       <p:column headerText="#{msg['forecastingDeadline_Type']}"  style="width: 100px;" sortBy="#{forecastingDeadline.type}" filterMatchMode="contains" filterBy="#{forecastingDeadline.type}">
+					       		<h:outputText value="#{forecastingDeadline.type}" />
+					          
+					       </p:column>
+					       
+					   			       
+					       <p:column headerText="#{msg['forecastingDeadline_Hour']}" style="width: 80px;" sortBy="#{forecastingDeadline.hour}" filterMatchMode="contains"  filterBy="#{forecastingDeadline.hour}">
+					         <p:cellEditor>
+					               <f:facet name="output">
+					               		<h:outputText value="#{forecastingDeadline.shour}" style="float:right"> </h:outputText> 
+										<!--<p:calendar value="#{forecastingDeadline.hour}"  pattern="HH:mm"  timeOnly="true" disabled="true"/>-->
+					               	</f:facet>
+					               <f:facet name="input">
+				               				<!--  <p:inputText  required="true" id="hour" value="#{forecastingDeadline.hour}"   />-->
+				               				<p:calendar  required="true" id="hour" value="#{forecastingDeadline.hour}" pattern="HH:mm" timeOnly="true" disabled="#{forecastingDeadlineView.disabledField(forecastingDeadline)}" />
+				               				
+					               </f:facet>
+					           </p:cellEditor>
+					          
+					       </p:column>
+					    
+					       <p:column headerText="#{msg['forecastingDeadline_Day']}" style="width: 100px;" sortBy="#{forecastingDeadline.day}" filterMatchMode="contains"  filterBy="#{forecastingDeadline.day}">
+					          <p:cellEditor>
+					               <f:facet name="output">
+   						 				<h:outputText value="#{forecastingDeadline.day}" style="float:right">
+              								<f:convertNumber pattern="#0" /> 
+           								 </h:outputText>
+      					  				
+					               	</f:facet>
+					               <f:facet name="input">
+					               		<p:inputText required="true" id="day" maxlength="2" value="#{forecastingDeadline.day}"
+											 disabled="#{forecastingDeadlineView.disabledField(forecastingDeadline)}" 
+											 requiredMessage="#{msg['forecastingDeadline_Day']}: #{msg['empty_field']}"
+											validatorMessage="#{msg['forecastingDeadline_Day']}: #{msg['range_day']} ">
+		   					  				<p:slider style="width: 150px"  minValue="0"  maxValue="31" for="day" disabled="#{forecastingDeadlineView.disabledField(forecastingDeadline)}"  />
+		   					  				<f:validateLength maximum="2"/>
+		   					  				<f:validateDoubleRange minimum="0" maximum="31" />
+		   					  				<f:validateRequired/>
+		   					  				<p:message for="day" />
+   					  					</p:inputText>
+				               					               			
+				               			
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					      
+			 				 <p:column headerText="#{msg['forecastingDeadline_Before_Month']}" style="width: 100px;" sortBy="#{forecastingDeadline.month}" filterMatchMode="contains"  filterBy="#{forecastingDeadline.month}">
+					          <p:cellEditor>
+					               <f:facet name="output">
+					               		<h:outputText value="#{forecastingDeadline.month}" style="float:right">
+              								<f:convertNumber pattern="####0" /> 
+           								 </h:outputText>
+					               	</f:facet>
+					               <f:facet name="input">
+				               				<p:inputNumber value="#{forecastingDeadline.month}" maxlength="5" style="width:100%" label="#{msg['forecastingDeadline_Month']}" 
+				               							disabled="#{forecastingDeadlineView.disabledField(forecastingDeadline)}" 
+					               						requiredMessage="#{msg['forecastingDeadline_Month']}: #{msg['empty_field']}"
+					               					 	validatorMessage="#{msg['forecastingDeadline_Month']}: #{msg['lenght_field']} 5 "
+					               					 	decimalPlaces="0" maxValue="99999"  minValue="0">
+					               			<f:validateLength maximum="5"/>
+					               			<f:validateRequired/>
+					               		</p:inputNumber>
+					               </f:facet>
+					           </p:cellEditor>
+					          
+					       </p:column>
+ 					       <p:column headerText="#{msg['forecastingDeadline_Start_Date']}" style="width: 100px;" sortBy="#{forecastingDeadline.startDate}" >
+					          <p:cellEditor>
+					               <f:facet name="output">
+					               			<h:outputText value="#{forecastingDeadline.startDate}" >
+					              				<f:convertDateTime pattern="dd/MM/yyyy" />
+					              		 </h:outputText>
+					               </f:facet>
+					               <f:facet name="input">
+					               		<p:calendar required="true" id="startDate"
+					               			readonlyInput="true"   mindate="#{(forecastingDeadlineView.sysdate).getTime()}"  
+					               			value="#{forecastingDeadline.startDate}" pattern="dd/MM/yyyy" 
+					               			disabled="#{forecastingDeadlineView.disabledField(forecastingDeadline)}"
+											requiredMessage="#{msg['forecastingDeadline_Start_Date']}: #{msg['empty_field']}" validatorMessage="#{msg['forecastingDeadline_Start_Date']}: #{msg['empty_field']}">
+											<f:convertDateTime pattern="dd/MM/yyyy"/>
+										</p:calendar>
+					               </f:facet>
+					           </p:cellEditor> 
+					       </p:column>
+					      
+					      <shiro:hasPermission name="#{changeSystemView.system}.DAM.FORECASTING_DEADLINES.MOD">
+						       <p:column style="width:32px">
+						           <p:rowEditor rendered="#{forecastingDeadlineView.renderItemEditor(forecastingDeadline)}"/>
+						       </p:column>
+					       </shiro:hasPermission>
+					   </p:dataTable>
+				</p:layoutUnit>
+
+			</p:layout>
+		</h:form>
+	<shiro:hasPermission name="#{changeSystemView.system}.DAM.FORECASTING_DEADLINES.ADD">
+		<p:dialog widgetVar="dlgNewForecastingDeadline" resizable="false"  closable="true" modal="true" appendTo="@(body)" header="New ForecastingDeadline">
+		<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario
+		 <p:ajax event="close" update="formNewEntity"  process="@this" listener="#{forecastingDeadlineView.cancel}" />	-->
+			<h:form id="formNewEntity">
+			<p:growl id="msgs" showDetail="true"  life="5000"/>
+				<p:panelGrid columns="4" style="width:100%">
+					<p:panelGrid>
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['forecastingDeadline_Type']}" />
+							</p:column>
+							<p:column>
+						   <p:selectOneMenu id="type" style="width:100px"    value="#{forecastingDeadlineView.newForecastingDeadline.idn_operation_term}" >
+						<!-- 		<p:selectOneMenu id="type" style="width:100px"    value="#{forecastingDeadlineView.newForecastingDeadline.idn_deadline_type}" > -->
+        					        <f:selectItems value="#{forecastingDeadlineView.types.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					          </p:selectOneMenu>		
+								<p:message for="type" />
+							</p:column>
+							<p:column>
+								<h:outputText  value="#{msg['forecastingDeadline_Hour']}" />
+							</p:column>
+							
+							<p:column>
+								  <p:calendar  required="true" id="hour" value="#{forecastingDeadlineView.newForecastingDeadline.hour}" pattern="HH:mm" timeOnly="true"  
+										requiredMessage="#{msg['forecastingDeadline_Hour']}: #{msg['empty_field']}" >
+							<!--	<p:inputText  required="true" id="hour" value="#{forecastingDeadlineView.newForecastingDeadline.hour}"   />-->
+								</p:calendar>
+								<p:message for="hour" />	
+							</p:column>
+							
+						</p:row>
+						<p:row>
+							
+							<p:column>
+								<h:outputText value="#{msg['forecastingDeadline_Day']}" />
+							</p:column>
+							<p:column>
+									<p:inputText required="true" id="day" maxlength="2" value="#{forecastingDeadlineView.newForecastingDeadline.day}" 
+										requiredMessage="#{msg['forecastingDeadline_Day']}: #{msg['empty_field']}" 
+										validatorMessage="#{msg['forecastingDeadline_Day']}: #{msg['range_day']} ">
+	   					  				<p:slider  minValue="0"  maxValue="31" for="day" />
+	   					  				<f:validateLength maximum="2"/>
+	   					  				<f:validateDoubleRange minimum="0" maximum="31" />
+	   					  				<f:validateRequired/>
+	   					  				<p:message for="day" />
+   					  				</p:inputText>
+							</p:column>
+							<p:column>
+								<h:outputText value="#{msg['forecastingDeadline_Before_Month']}" />
+							</p:column>
+							<p:column>
+								<p:inputNumber  required="true" id="month" maxlength="5" value="#{forecastingDeadlineView.newForecastingDeadline.month}" 
+											requiredMessage="#{msg['forecastingDeadline_Before_Month']}: #{msg['empty_field']}" 
+											validatorMessage="#{msg['forecastingDeadline_Before_Month']}: #{msg['lenght_field']} 5"
+											decimalPlaces="0" maxValue="99999" minValue="0">
+									<f:validateLength maximum="5"/>
+									
+									<f:validateRequired/>
+								</p:inputNumber>
+								<p:message for="month" />
+							</p:column>
+						</p:row>
+				
+						
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['forecastingDeadline_Start_Date']}"/>
+							</p:column>
+							<p:column>
+								<p:calendar required="true" id="startDate" 
+											value="#{forecastingDeadlineView.newForecastingDeadline.startDate}" pattern="dd/MM/yyyy"
+											readonlyInput="true"   mindate="#{(forecastingDeadlineView.sysdate).getTime()}" 
+											requiredMessage="#{msg['forecastingDeadline_Start_Date']}: #{msg['empty_field']}" 
+											validatorMessage="#{msg['forecastingDeadline_Start_Date']}: #{msg['lenght_field']}">
+								</p:calendar>
+								<p:message for="startDate" />
+							</p:column>
+							
+						</p:row>					
+						
+					</p:panelGrid>
+				</p:panelGrid>
+				
+				<p:separator/>
+				<p:panelGrid>
+					<p:row>
+						<p:column>
+							<p:commandButton value="#{msg['save']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" validateClient="true"
+								action="#{forecastingDeadlineView.save}" update=":#{p:component('forecastingDeadlines1')},:formNewEntity"
+								onstart="PF('cargando').show()"
+								oncomplete="PF('dlgNewForecastingDeadline').hide(),PF('cargando').hide()" />
+			        		<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close"
+			        			update="formNewEntity" process="@this" actionListener="#{forecastingDeadlineView.cancel}"
+			        		 	oncomplete="PF('dlgNewForecastingDeadline').hide()"/>
+						</p:column>					
+					</p:row>
+				</p:panelGrid>							
+			</h:form>			
+		</p:dialog>
+	</shiro:hasPermission>
+	</ui:define>
+
+
+</ui:composition>

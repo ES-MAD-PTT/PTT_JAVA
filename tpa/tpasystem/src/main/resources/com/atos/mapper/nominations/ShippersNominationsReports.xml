@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atos.mapper.nominations.ShippersNominationsReportsMapper">
+
+   <select id="selectShippersIds" resultType="com.atos.beans.ComboFilterNS">
+		
+	SELECT tuser.idn_user_group as key, tuser.user_group_id as value
+    FROM tpa_tuser_group tuser
+    WHERE tuser.idn_user_group_type = (SELECT idn_user_group_type 
+	         FROM tpa_tuser_group_type 
+			 WHERE type_code = 'SHIPPER')                      
+   </select>
+
+     <select id="selectShippersNomReports" parameterType="com.atos.filters.nominations.ShippersNominationsReportsFilter" resultType="com.atos.beans.nominations.ShippersNominationsReportsBean">
+		WITH
+  w_dates AS
+ (SELECT ((trunc(#{start_date})) + (LEVEL - 1)) AS days
+		    FROM dual
+		  CONNECT BY LEVEL <![CDATA[ <= ]]> (trunc(#{end_date}) - (trunc(#{start_date})) + 1)),
+  w_hv_param AS
+    (SELECT gp.idn_gas_quality_param AS idn FROM tpa_tgas_quality_param gp WHERE gp.parameter_code = 'HV'),
+
+  w_imbalalance_tolerance AS
+    (SELECT d.days AS gas_day,
+            p.idn_parameter,
+            p.parameter_code,
+            to_number(pv.parameter_value, p.data_format) AS valor,
+            CASE
+              WHEN p.parameter_code IN ('TARIFF.IMBALANCE.TOLERANCE.POSITIVE.ONSHORE', 'TARIFF.IMBALANCE.TOLERANCE.POSITIVE.OFFSHORE') THEN
+                'POSITIVE'
+              ELSE
+                'NEGATIVE'
+            END AS imbalance_type
+       FROM tpa_tparameter       p,
+            tpa_tparameter_value pv,
+            w_dates              d
+      WHERE p.parameter_code IN (CASE
+                                   WHEN #{idn_system} = (SELECT idn_pipeline_system FROM tpa_tpipeline_system WHERE pipeline_system_code = 'ONSHORE') THEN
+                                     'TARIFF.IMBALANCE.TOLERANCE.POSITIVE.ONSHORE'
+                                   WHEN #{idn_system} = (SELECT idn_pipeline_system FROM tpa_tpipeline_system WHERE pipeline_system_code = 'OFFSHORE') THEN
+                                     'TARIFF.IMBALANCE.TOLERANCE.POSITIVE.OFFSHORE'
+                                END,
+                                CASE
+                                   WHEN #{idn_system} = (SELECT idn_pipeline_system FROM tpa_tpipeline_system WHERE pipeline_system_code = 'ONSHORE') THEN
+                                     'TARIFF.IMBALANCE.TOLERANCE.NEGATIVE.ONSHORE'
+                                   WHEN #{idn_system} = (SELECT idn_pipeline_system FROM tpa_tpipeline_system WHERE pipeline_system_code = 'OFFSHORE') THEN
+                                     'TARIFF.IMBALANCE.TOLERANCE.NEGATIVE.OFFSHORE'
+                                END
+                                )
+        AND pv.idn_parameter = p.idn_parameter
+        AND pv.version_date = (SELECT MAX(pvx.version_date)
+                                 FROM tpa_tparameter_value pvx
+                                WHERE pvx.idn_parameter = pv.idn_parameter
+                                  AND pvx.start_date = pv.start_date)
+         AND d.days BETWEEN pv.start_date AND
+             nvl(pv.end_date,
+                 nvl((SELECT MIN(pvy.start_date) - 1
+                        FROM tpa_tparameter_value pvy
+                       WHERE pv.idn_parameter = pvy.idn_parameter
+                         AND pvy.start_date <![CDATA[ <= ]]> nvl(pvy.end_date, pvy.start_date)
+                         AND pvy.start_date > pv.start_date
+                         AND pvy.version_date = (SELECT MAX(pvz.version_date)
+                                                   FROM tpa_tparameter_value pvz
+                                                  WHERE pvz.idn_parameter = pvy.idn_parameter
+                                                    AND pvz.start_date = pvy.start_date)),
+                     to_date('31/12/9999', 'dd/mm/yyyy')))
+   ),
+  w_contracted AS
+    (SELECT d.days AS gas_day,
+            co.idn_user_group,
+            SUM(co.quantity) AS contracted_energy
+       FROM tpa_vcontract     co,
+            tpa_vsystem_point sp,
+            w_dates           d
+      WHERE co.idn_system_point = sp.idn_system_point
+        AND sp.type_code = 'ENTRY'
+        
+    <if test="shipper_id != null and shipper_id != ''">
+    	AND co.idn_user_group = #{shipper_id}
+    </if>
+        AND d.days BETWEEN co.agreement_start_date AND co.agreement_end_date
+      GROUP BY d.days, co.idn_user_group
+    ),
+  w_nominations AS
+    (SELECT d.days as gas_day,
+            n.idn_nomination,
+            n.idn_operation,
+            n.idn_contract,
+            n.idn_user_group,
+            CASE o.term_code
+              WHEN 'DAILY'  THEN 1
+              WHEN 'WEEKLY' THEN 2
+            END AS priority,
+            MIN(CASE o.term_code
+                  WHEN 'DAILY'  THEN 1
+                  WHEN 'WEEKLY' THEN 2
+                END) OVER (PARTITION BY d.days, n.idn_contract) AS min_priority
+       FROM tpa_tnomination n,
+            tpa_voperation  o,
+            tpa_tcontract   c,
+            w_dates         d
+      WHERE n.is_contracted = 'Y'
+        AND d.days BETWEEN n.start_date AND n.end_date
+        AND n.nomination_version =
+              (SELECT MAX(nx.nomination_version) FROM tpa_tnomination nx WHERE nx.nomination_code = n.nomination_code)
+        AND NOT (n.is_responsed = 'Y' AND n.is_valid = 'N')
+        AND n.idn_operation = o.idn_operation
+        AND o.category_code = 'NOMINATION'
+        
+    <if test="shipper_id != null and shipper_id != ''">
+    	AND n.idn_user_group = #{shipper_id}
+    </if>
+    
+        AND n.idn_contract = c.idn_contract
+        AND c.idn_pipeline_system = #{idn_system}
+    ),
+  w_best_nomination AS
+    (SELECT n.gas_day, n.idn_nomination, n.idn_operation, n.idn_contract, n.idn_user_group, n.priority
+       FROM w_nominations n
+      WHERE n.priority = n.min_priority
+      
+    <if test="shipper_id != null and shipper_id != ''">
+    	AND n.idn_user_group = #{shipper_id}
+    </if>
+    ),
+  w_concept_quantities AS
+    (SELECT bn.gas_day, bn.idn_nomination, bn.idn_contract, bn.idn_user_group,
+            ndq.idn_nomination_entity,
+            ndq.idn_nomination_concept,
+            nvl(ndq.day_matched_quantity, ndq.day_confirmed_quantity) AS day_matched_quantity,
+            ndq.idn_nomination_day,
+            nc.concept_code,
+            nc.is_point_concept,
+            nc.is_area_concept,
+            nc.is_zone_concept
+       FROM tpa_vnomination_day_quantity ndq,
+            tpa_tnomination_concept      nc,
+            w_best_nomination            bn
+      WHERE ndq.idn_nomination = bn.idn_nomination
+        AND ndq.gas_day = bn.gas_day
+        AND ndq.idn_nomination_concept = nc.idn_nomination_concept
+   <if test="shipper_id != null and shipper_id != ''">
+    	AND bn.idn_user_group = #{shipper_id}
+    </if>
+    	<!--AND nc.concept_code IN ('ENERGY', 'VOLUME', 'Min_Inventory', 'Shrinkage_Volume' /*????*/) Item 33-->
+        AND nc.concept_code IN ('ENERGY', 'VOLUME', 'Min_Inventory_Change', 'Shrinkage_Volume' /*????*/)
+        AND nc.is_enabled = 'Y'
+    ),
+  w_nominated_energy AS
+    (SELECT cq_e.gas_day,
+            cq_e.idn_nomination,
+            cq_e.idn_contract,
+            cq_e.idn_user_group,
+            cq_e.idn_nomination_entity,
+            cq_e.idn_nomination_concept,
+            cq_e.idn_nomination_day,
+            cq_e.day_matched_quantity
+       FROM w_concept_quantities cq_e
+      WHERE cq_e.concept_code = 'ENERGY'
+        AND cq_e.is_point_concept = 'Y'
+        
+    <if test="shipper_id != null and shipper_id != ''">
+    	AND cq_e.idn_user_group = #{shipper_id}
+    </if>
+     UNION
+     SELECT cq.gas_day,
+            cq.idn_nomination,
+            cq.idn_contract,
+            cq.idn_user_group,
+            cq.idn_nomination_entity,
+            cq.idn_nomination_concept,
+            cq.idn_nomination_day,
+            round(cq.day_matched_quantity * ngq.quality_value, 3) AS day_matched_quantity
+       FROM w_concept_quantities   cq,
+            tpa_tnomination_gasq ngq
+      WHERE cq.concept_code = 'VOLUME'
+        AND cq.is_point_concept = 'Y'
+        
+    <if test="shipper_id != null and shipper_id != ''">
+    	AND cq.idn_user_group = #{shipper_id}
+    </if>
+        AND cq.idn_nomination_entity = ngq.idn_nomination_entity
+        AND cq.idn_nomination_concept = ngq.idn_nomination_concept
+        AND ngq.idn_gas_quality_param = (SELECT idn FROM w_hv_param)
+        AND NOT EXISTS (SELECT 1
+                          FROM w_concept_quantities cq_e
+                         WHERE cq_e.gas_day = cq.gas_day
+                           AND cq_e.idn_nomination_entity = cq.idn_nomination_entity
+                           AND cq_e.concept_code = 'ENERGY'
+                           AND cq_e.is_point_concept = 'Y')
+    ),
+  w_nominated_energy_type AS
+    (SELECT nen.gas_day, nen.idn_nomination, nen.idn_contract, nen.idn_user_group,
+            nen.idn_nomination_entity, nen.idn_nomination_concept, nen.idn_nomination_day,
+            nen.day_matched_quantity, sp.type_code
+       FROM w_nominated_energy     nen,
+            tpa_tnomination_entity ne,
+            tpa_vsystem_point      sp
+      WHERE nen.idn_nomination_entity = ne.idn_nomination_entity
+        AND nen.idn_nomination = ne.idn_nomination
+        AND ne.idn_system_point = sp.idn_system_point
+        
+    <if test="shipper_id != null and shipper_id != ''">
+    	AND nen.idn_user_group = #{shipper_id}
+    </if>
+        
+    ),
+
+  w_nominated AS
+    (SELECT *
+       FROM (SELECT gas_day,
+                    idn_user_group,
+                    type_code,
+                    day_matched_quantity AS nominated_energy
+               FROM w_nominated_energy_type
+             UNION ALL
+             SELECT gas_day,
+                    idn_user_group,
+                    concept_code AS type_code,
+                    day_matched_quantity AS nominatd_energy
+               FROM w_concept_quantities
+               <!-- WHERE concept_code IN  ('Min_Inventory', 'Shrinkage_Volume') Item 33-->
+              WHERE concept_code IN  ('Min_Inventory_Change', 'Shrinkage_Volume')
+              
+               <if test="shipper_id != null and shipper_id != ''">
+			    	AND idn_user_group = #{shipper_id}
+			    </if>
+            ) x
+            <!-- PIVOT (SUM(nominated_energy) FOR type_code IN ('ENTRY' AS NOM_ENTRY, 'EXIT' AS NOM_EXIT, 'Min_Inventory' AS MIN_INV, 
+      Item 33-->
+      PIVOT (SUM(nominated_energy) FOR type_code IN ('ENTRY' AS NOM_ENTRY, 'EXIT' AS NOM_EXIT, 'Min_Inventory_Change' AS MIN_INV, 'Shrinkage_Volume' AS SV))
+    ),
+  Consulta AS
+  (
+  SELECT wc.gas_day, ug.user_group_id, ug.user_group_name,
+         wc.contracted_energy, wn.nom_entry AS nominated_energy,
+         wc.contracted_energy - wn.nom_entry AS difference,
+         wn.nom_entry - wn.nom_exit - wn.min_inv - wn.sv AS imbalance,
+         DECODE(ABS(wn.nom_entry - wn.nom_exit - wn.min_inv - wn.sv)-
+                ABS(((wn.nom_entry - wn.nom_exit - wn.min_inv - wn.sv)* wt.valor)/100),0,'N','Y') AS IS_WARNING,
+         wt.imbalance_type,
+         wt.valor AS tolerancia,
+         ((wn.nom_entry - wn.nom_exit - wn.min_inv - wn.sv)*wt.valor)/100 as tolerancia_permitida        
+    FROM w_contracted    wc,
+         w_nominated     wn,
+         tpa_tuser_group ug,
+         w_imbalalance_tolerance wt
+   WHERE wc.gas_day = wn.gas_day
+     AND wt.gas_day = wc.gas_day
+     AND wt.gas_day = wn.gas_day
+     AND wc.idn_user_group = wn.idn_user_group
+     AND wc.idn_user_group = ug.idn_user_group
+     
+      <if test="shipper_id != null and shipper_id != ''">
+    	AND wc.idn_user_group = #{shipper_id}
+    </if>
+      
+     AND wt.imbalance_type = 'NEGATIVE'
+     AND wt.imbalance_type = decode(substr(wn.nom_entry - wn.nom_exit - wn.min_inv - wn.sv,1,1),'-','NEGATIVE','POSITIVE') 
+   UNION ALL
+   SELECT wc.gas_day, ug.user_group_id, ug.user_group_name,
+         wc.contracted_energy, wn.nom_entry AS nominated_energy,
+         wc.contracted_energy - wn.nom_entry AS difference,
+         wn.nom_entry - wn.nom_exit - wn.min_inv - wn.sv AS imbalance,
+         DECODE(ABS(wn.nom_entry - wn.nom_exit - wn.min_inv - wn.sv)-
+                ABS(((wn.nom_entry - wn.nom_exit - wn.min_inv - wn.sv)* wt.valor)/100),0,'N','Y') AS IS_WARNING,
+         wt.imbalance_type,wt.valor AS tolerancia,
+         ((wn.nom_entry - wn.nom_exit - wn.min_inv - wn.sv)* wt.valor)/100 as tolerancia_permitida
+    FROM w_contracted    wc,
+         w_nominated     wn,
+         tpa_tuser_group ug,
+         w_imbalalance_tolerance wt
+   WHERE wc.gas_day = wn.gas_day
+     AND wt.gas_day = wc.gas_day
+     AND wt.gas_day = wn.gas_day
+     AND wc.idn_user_group = wn.idn_user_group
+     AND wc.idn_user_group = ug.idn_user_group
+     
+      <if test="shipper_id != null and shipper_id != ''">
+    	AND wc.idn_user_group = #{shipper_id}
+    </if>
+      
+     AND wt.imbalance_type = 'POSITIVE'
+     AND wt.imbalance_type = decode(substr(wn.nom_entry - wn.nom_exit - wn.min_inv - wn.sv,1,1),'-','NEGATIVE','POSITIVE')
+     )   
+     SELECT gas_day, user_group_id, user_group_name,
+         contracted_energy, 
+         nominated_energy,
+         difference,
+         imbalance,
+         tolerancia_permitida,
+         IS_WARNING
+    FROM Consulta
+   ORDER BY gas_day, user_group_id
+
+    </select>
+</mapper>

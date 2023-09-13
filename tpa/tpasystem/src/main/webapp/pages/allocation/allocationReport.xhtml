@@ -1,0 +1,315 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_allocation']}" url="#" />
+			<p:menuitem value="#{msg['menu_allocation_report']}" url="/pages/allocation/allocationReport.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+				
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="10000" />
+			
+            <p:layout widgetVar="AllocationManagLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">	
+					
+				<p:panelGrid columns="2" style="width:100%">
+					
+						<p:panelGrid>
+							<p:row>
+								<p:column  style="font-weight: bold;width=150px">
+									<h:outputText value="#{msg['alloc_report_date_from']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;width=150px">
+									<h:outputText value="#{msg['alloc_report_date_to']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['all_rev_shipper_code']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['all_rev_contract_code']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['alloc_report_contract_point']}" />
+								</p:column>
+								<ui:remove>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['all_rev_status']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['all_rev_review_code']}" />
+								</p:column>
+								</ui:remove>
+							</p:row>
+							<p:row>
+
+								<p:column>
+									<p:calendar id="gasDay" size="6" pattern="dd/MM/yyyy" mask="true" value="#{AllocationRepQryView.filters.dateFrom}"
+										showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="gasDay,contractId"></p:ajax>
+										<p:ajax event="change" update="gasDay,contractId"></p:ajax>
+									</p:calendar>
+								</p:column>
+								<p:column>
+									<p:calendar id="dateTo" size="6" pattern="dd/MM/yyyy" mask="true" value="#{AllocationRepQryView.filters.dateTo}"
+										showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="dateTo,contractId"></p:ajax>
+										<p:ajax event="change" update="dateTo,contractId"></p:ajax>
+									</p:calendar>
+								</p:column>
+								
+								<p:column>
+									<p:selectOneMenu id="shipperId" autoWidth="false" style="width:85px" value="#{AllocationRepQryView.filters.shipperId}" 
+										rendered="#{!AllocationRepQryView.isShipper}" >
+ 								   		<f:selectItem itemLabel="" itemValue=""  />
+      									<f:selectItems value="#{AllocationRepQryView.shipperIds.entrySet()}" var="entry" 
+      											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+										<p:ajax event="change" update="contractId" />
+					           		</p:selectOneMenu>
+					           		<h:outputText value="#{AllocationRepQryView.user.user_group_id}" style="float:left" rendered="#{AllocationRepQryView.isShipper()}"/>
+								</p:column>
+
+								<p:column>
+									<p:selectOneMenu id="contractId" autoWidth="false" style="width:100px" value="#{AllocationRepQryView.filters.contractId}" >
+								   		<f:selectItem itemLabel="" itemValue="" />
+      									<f:selectItems value="#{AllocationRepQryView.contractIds.entrySet()}" var="entry" 
+      										itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>						
+								</p:column>
+
+								<p:column>
+									<p:selectOneMenu id="pointId" autoWidth="false" style="width:100px" value="#{AllocationRepQryView.filters.nomPointId}" >
+								   		<f:selectItem itemLabel="" itemValue="" />
+      									<f:selectItems value="#{AllocationRepQryView.pointIds.entrySet()}" var="entry" 
+      										itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>						
+								</p:column>
+							<ui:remove>	
+								<p:column>
+									<p:selectCheckboxMenu id="status" autoWidth="false" style="width:100px" value="#{AllocationManagView.filters.statusCode}"
+										label="#{msg['all_rev_status']}" >
+								   		<f:selectItem itemLabel="#{msg['all_rev_not_reviewed']}" itemValue="NOT_REVIEWED" />
+								   		<f:selectItem itemLabel="#{msg['all_rev_initial']}" itemValue="INITIAL" />
+								   		<f:selectItem itemLabel="#{msg['all_rev_accepted']}" itemValue="ACCEPTED" />
+								   		<f:selectItem itemLabel="#{msg['all_rev_rejected']}" itemValue="REJECTED" />
+								   		<f:selectItem itemLabel="#{msg['all_rev_allocated']}" itemValue="ALLOCATED" />
+					           		</p:selectCheckboxMenu>							
+								</p:column>
+								</ui:remove>
+
+							<ui:remove>	
+								<p:column>
+									<p:inputText id="reviewCode" style="width:130px" value="#{AllocationManagView.filters.reviewCode}" />
+								</p:column>
+								</ui:remove>
+								
+							</p:row>
+							<p:row><p:column  style="font-weight: bold;"><br/></p:column></p:row>
+
+							<ui:remove>	
+							<p:row>
+								<p:column colspan="4">
+									<h:outputText value="#{msg['all_rev_dam_alloc_tolerance']}" style="font-weight: bold;"/>
+									<p:spacer width="3"/>
+				               		<h:outputText id="gasDayToleranceTxt" value="#{AllocationManagView.filters.gasDay}" style="font-weight: bold;">
+				              				<f:convertDateTime pattern="dd/MM/yyyy" />
+				              		</h:outputText>
+									<h:outputText id="gasDayToleranceValue" style="font-weight: bold;" 
+										value=": #{AllocationManagView.getAllocationReviewMaxPercentChange(AllocationManagView.filters.gasDay)} %" />				              		
+								</p:column>
+							</p:row>								
+							</ui:remove>
+
+						</p:panelGrid>
+						<p:panelGrid columns="2" style="float:right;top:0px">
+
+							<shiro:hasPermission name="#{changeSystemView.system}.ALLOCATION.REPORT.QUERY">									
+								<p:commandButton value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{AllocationRepQryView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,:#{p:component('allocations1')}"/>
+							</shiro:hasPermission>
+
+							<p:commandButton  onclick="PF('AllocationManagLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" 
+								value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+							<ui:remove>
+							<shiro:hasPermission name="#{changeSystemView.system}.ALLOCATION.MANAGEMENT.ADD">
+								<p:commandButton id="executeButton" type="button" value="#{msg['all_man_execute']}" style="float:left;"
+        							icon="ui-icon fa fa-gears" onclick="PF('dlgExecute').show();"/>
+							</shiro:hasPermission>
+							</ui:remove>
+
+							<shiro:hasPermission name="#{changeSystemView.system}.ALLOCATION.REPORT.QUERY">
+								 <p:commandButton value="#{msg['clear']}"
+									actionListener="#{AllocationRepQryView.onClear}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" 
+									process="@this"
+									update="msgs,@form"/>
+							</shiro:hasPermission>
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center" resizable="false" closable="false" collapsible="false" style="border: 0;">
+					
+					<!--No funciona demasiado bien. scrollWidth="80%" frozenColumns="4"  -->
+					<shiro:hasPermission name="#{changeSystemView.system}.ALLOCATION.REPORT.QUERY">		
+					<p:dataTable widgetVar="w_allocations1"  id="allocations1" var="item" value="#{AllocationRepQryView.resultList}"
+						reflow="true"  style="margin-bottom:20px;border-collapse:collapse"
+						scrollable="true" scrollHeight="400" 
+					    paginator="true" rows="15" rowsPerPageTemplate="5,10,15,20,25, #{shipperView.itemsSize}">
+
+	  						<f:facet name="header"> 
+								<p:outputPanel style="height:25px">
+				        			<h:commandLink style="float:right">
+								       <p:graphicImage name="/images/excel.png" width="24"/>
+								       <p:dataExporter type="xlsx" target="allocations1" fileName="allocationReport" 
+								       			postProcessor="#{AllocationRepQryView.postProcessXLS}"/>
+								       <p:spacer width="10" height="10"/>
+									</h:commandLink>
+								</p:outputPanel>        										          
+	 				        </f:facet>
+					    <p:column style="width:16px">
+            <p:rowToggler />
+        </p:column>
+
+					       <p:column headerText="#{msg['all_rev_gas_day']}" style="width: 70px;"  >
+			               		<h:outputText value="#{item.gasDay}" >
+			              				<f:convertDateTime pattern="dd/MM/yyyy" />
+			              		</h:outputText>
+					       </p:column>
+					       <p:column headerText="#{msg['all_rev_shipper_code']}" style="width: 100px;">
+					       		<h:outputText value="#{item.shipperCode}" />
+					       </p:column>
+					       <p:column headerText="#{msg['all_rev_shipper_name']}" style="width: 100px;">
+					       		<h:outputText value="#{item.shipperName}" />
+					       </p:column>
+					       <p:column headerText="#{msg['all_rev_contract_code']}" style="width: 100px;" >
+					       		<h:outputText value="#{item.contractCode}" />
+					       </p:column>
+
+					       <p:column headerText="#{msg['alloc_report_contract_point']}" style="width: 100px;" >
+					       		<h:outputText value="#{item.pointCode}" />
+					       </p:column>
+
+
+
+					       <p:column headerText="#{msg['alloc_report_point_type']}" style="width: 100px;" >
+					       		<h:outputText value="#{item.pointTypeCode}" />
+					       </p:column>
+							<p:column headerText="#{msg['all_rev_booked_cap']}" style="width: 100px;" >
+								<h:outputText style="float:right" value="#{item.contractedValue}">
+									<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['all_rev_nominated_cap']}" style="width: 100px;">
+								<h:outputText style="float:right" value="#{item.nominatedValue}">
+									<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['all_rev_allocation_tpa']}" style="width: 100px;" >
+								<h:outputText style="float:right" value="#{item.allocatedValue}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['alloc_report_res_bal_gas']}" style="width: 100px;" >
+								<h:outputText style="float:right" value="#{item.balancingGas}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+								</h:outputText>
+							</p:column>
+
+							<p:column headerText="#{msg['alloc_report_overusage']}" style="width: 100px;" >
+								<h:outputText style="float:right" value="#{item.overusage}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+								</h:outputText>
+							</p:column>
+							<p:rowExpansion>
+
+					<p:dataTable widgetVar="w_detail"  id="detail" var="det" value="#{AllocationRepQryView.getDetails(item)}"
+						  style="margin-bottom:20px;border-collapse:collapse"
+					    >
+
+					       <p:column headerText="#{msg['all_rev_gas_day']}" style="width: 70px;"  >
+			               		<h:outputText value="#{det.gasDay}" >
+			              				<f:convertDateTime pattern="dd/MM/yyyy" />
+			              		</h:outputText>
+					       </p:column>
+					       <p:column headerText="#{msg['all_rev_shipper_code']}" style="width: 100px;">
+					       		<h:outputText value="#{det.shipperCode}" />
+					       </p:column>
+					       <p:column headerText="#{msg['all_rev_shipper_name']}" style="width: 100px;">
+					       		<h:outputText value="#{det.shipperName}" />
+					       </p:column>
+					       <p:column headerText="#{msg['all_rev_contract_code']}" style="width: 100px;" >
+					       		<h:outputText value="#{det.contractCode}" />
+					       </p:column>
+
+					       <p:column headerText="#{msg['alloc_report_contract_point']}" style="width: 100px;" >
+					       		<h:outputText value="#{det.pointCode}" />
+					       </p:column>
+					       <p:column headerText="#{msg['all_rev_nomination_point_id']}" style="width: 100px;" >
+					       		<h:outputText value="#{det.nominationPoint}" />
+					       </p:column>
+
+					       <p:column headerText="#{msg['alloc_report_point_type']}" style="width: 100px;" >
+					       		<h:outputText value="#{det.pointTypeCode}" />
+					       </p:column>
+							<p:column headerText="#{msg['all_rev_booked_cap']}" style="width: 100px;" >
+								<h:outputText style="float:right" value="#{det.contractedValue}">
+									<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['all_rev_nominated_cap']}" style="width: 100px;">
+								<h:outputText style="float:right" value="#{det.nominatedValue}">
+									<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['all_rev_allocation_tpa']}" style="width: 100px;" >
+								<h:outputText style="float:right" value="#{det.allocatedValue}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{msg['alloc_report_res_bal_gas']}" style="width: 100px;" >
+								<h:outputText style="float:right" value="#{det.balancingGas}" >
+									<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+								</h:outputText>
+							</p:column>
+
+					    </p:dataTable>
+							</p:rowExpansion>
+					    </p:dataTable>
+					    </shiro:hasPermission>
+				</p:layoutUnit>
+			</p:layout>
+		</h:form>
+	
+
+		
+	</ui:define>
+	
+	<script type="text/javascript">
+	function start() {
+	    PF('cargando').show();
+	}
+	 
+	function stop() {
+	    PF('cargando').hide();
+	}
+	</script>
+</ui:composition>

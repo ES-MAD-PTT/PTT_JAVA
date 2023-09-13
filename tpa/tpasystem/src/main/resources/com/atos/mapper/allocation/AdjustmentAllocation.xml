@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<!-- Namespace -->
+<mapper namespace="com.atos.mapper.allocation.AdjustmentAllocationMapper">
+
+	<select id="selectAdjustmentAllocation" parameterType="com.atos.filters.allocation.AdjustmentAllocationFilter" resultType="com.atos.beans.allocation.AdjustmentAllocationBean">
+		WITH first_open_day AS
+		(SELECT nvl(MAX(bc.gas_day) + 1, to_date('2000-01-01', 'YYYY-MM-DD')) AS first_day
+		    FROM tpa_tbalance_closing bc
+		   WHERE bc.idn_balance_closing_type =
+		         (SELECT bct.idn_balance_closing_type FROM tpa_tbalance_closing_type bct WHERE bct.type_code = 'DEFINITIVE')
+		     AND bc.idn_pipeline_system = #{idn_active_system}
+		     AND bc.version_date =
+		         (SELECT MAX(bcx.version_date)
+		            FROM tpa_tbalance_closing bcx
+		           WHERE bcx.gas_day = bc.gas_day
+		             AND bcx.idn_pipeline_system = #{idn_active_system}
+		             AND bcx.idn_balance_closing_type =
+		                 (SELECT t.idn_allocation_type FROM tpa_tallocation_type t WHERE t.type_code = 'COMMERCIAL'))),
+		
+		adjustments AS
+		(SELECT aa.gas_day,
+		         c.idn_user_group AS idn_shipper,
+		         aa.idn_zone,
+		         aa.idn_contract,
+		         aa.operator_comments,
+		         aa.adjust_value,
+		         aa.status
+		    FROM tpa_tallocation_adjust  aa,
+		         tpa_tcontract           c,
+		         tpa_tnomination_concept nc   -- Item 89
+		   WHERE aa.version_date = (SELECT MAX(aaxx.version_date)
+		                              FROM tpa_tallocation_adjust aaxx
+		                             WHERE aaxx.adjust_code = aa.adjust_code
+		                               AND aaxx.idn_contract = aa.idn_contract
+		                                AND aaxx.idn_nomination_concept = nc.idn_nomination_concept)  -- Item 89
+		     AND aa.idn_contract = c.idn_contract
+		     AND EXISTS (SELECT 1 FROM tpa_tcontract_consolidate cc WHERE cc.idn_contract = c.idn_contract)
+		     AND c.idn_pipeline_system = #{idn_active_system}
+		     AND c.idn_user_group = #{shipperId}
+		     AND nc.idn_nomination_concept = aa.idn_nomination_concept 
+			 AND nc.concept_code = 'Allocation_month_adjust'           
+		     <if test="isShipper==true">
+		        AND c.idn_user_group = #{shipperId}
+		     </if>
+		     AND aa.gas_day >= #{startDate}
+		     AND c.end_date >= #{startDate}
+		     and #{endDate} >= aa.gas_day
+		     and #{endDate} >= c.start_date
+		  ),
+		
+		allocation AS
+		(SELECT a.gas_day,
+		         c.idn_user_group AS idn_shipper,
+		         ad.idn_zone,
+		         ad.idn_contract,
+                 decode(nc.concept_code, 'Imbalance_Stock', ad.allocated_value) AS allocated_value,
+                 decode(nc.concept_code, 'Allocation_month_adjust', ad.allocated_value) AS adjusted_value
+		    FROM tpa_tallocation         a,
+		         tpa_tallocation_data    ad,
+		         tpa_tcontract           c,
+                 tpa_tnomination_concept nc
+		   WHERE a.idn_allocation = ad.idn_allocation
+		     AND a.idn_pipeline_system = c.idn_pipeline_system
+		     AND a.idn_allocation_type =
+		         (SELECT t.idn_allocation_type FROM tpa_tallocation_type t WHERE t.type_code = 'COMMERCIAL')
+		     AND a.version_date = (SELECT MAX(ax.version_date)
+		                             FROM tpa_tallocation        ax,
+		                                  tpa_tallocation_origin ao
+		                            WHERE ax.gas_day = a.gas_day
+		                              AND ax.idn_pipeline_system = a.idn_pipeline_system
+		                              AND ax.idn_allocation_type = a.idn_allocation_type
+		                              AND ax.idn_allocation_origin = ao.idn_allocation_origin
+		                              AND ao.origin_code IN ('BALANCE', 'CLOSING_PROCESS'))
+		     AND ad.idn_nomination_concept = nc.idn_nomination_concept 
+             AND nc.concept_code IN ('Imbalance_Stock', 'Allocation_month_adjust')
+		     AND ad.idn_contract = c.idn_contract
+		     AND EXISTS (SELECT 1 FROM tpa_tcontract_consolidate cc WHERE cc.idn_contract = c.idn_contract)
+		     AND a.idn_pipeline_system = #{idn_active_system}
+		     AND c.idn_pipeline_system = #{idn_active_system}
+			 <if test="isShipper==true">
+		     	AND c.idn_user_group = #{shipperId}
+		     </if>
+		     AND c.idn_user_group = #{shipperId}
+		     AND a.gas_day >= #{startDate}
+		     AND c.end_date >= #{startDate}
+		     and #{endDate} >= a.gas_day
+		     and #{endDate} >= c.start_date
+		  )
+		
+		SELECT al.gas_day as gasDay,
+		       al.idn_shipper as idnShipper,
+		       (SELECT ug.user_group_id FROM tpa_tuser_group ug WHERE ug.idn_user_group = al.idn_shipper) AS shipperCode,
+		       al.idn_zone as idnZone,
+		       (SELECT z.zone_code FROM tpa_tzone z WHERE z.idn_zone = al.idn_zone) AS zoneCode,
+		       SUM(al.allocated_value) AS imbalanceStock,
+               SUM(al.adjusted_value) AS allocatedAdjust,
+		       MAX(decode(ad.status, 'ACCEPTED', ad.adjust_value, NULL)) AS pendingAdjust,
+		       SUM(al.allocated_value) + nvl(MAX(decode(ad.status, 'ACCEPTED', ad.adjust_value, NULL)), 0) AS finalAccImbalanceStock,
+		       ad.operator_comments,
+		       CASE
+		          WHEN al.gas_day >= (SELECT first_day FROM first_open_day) THEN
+		           'Y'
+		          ELSE
+		           'N'
+		       END AS isEditable
+		  FROM allocation  al,
+		       adjustments ad
+		WHERE ad.gas_day(+) = al.gas_day
+		   AND ad.idn_zone(+) = al.idn_zone
+		   <if test="zoneId != null">
+		   and al.idn_zone = #{zoneId}
+		   </if>
+		   AND ad.idn_contract(+) = al.idn_contract
+		   AND ad.idn_shipper(+) = al.idn_shipper
+		GROUP BY al.gas_day,
+		          al.idn_shipper,
+		          al.idn_zone,
+		          ad.operator_comments
+		ORDER BY 1,
+		          3,
+		          5
+	
+	</select>
+
+
+
+     <select id="selectZonesSystem" resultType="com.atos.beans.ComboFilterNS">		
+		SELECT z.idn_zone as key, z.zone_code as value
+	    FROM TPA_VZONE_TPA z
+	    WHERE z.idn_pipeline_system =#{idn_system}
+	    order by UPPER(z.zone_code)
+    </select>
+
+    <select id="selectShipperId" resultType="com.atos.beans.ComboFilterNS">
+		select tgr.idn_user_group as key, tgr.user_group_id as value
+		from tpa_tuser_group tgr
+		where tgr.idn_user_group_type = (select idn_user_group_type from tpa_tuser_group_type where type_code = 'SHIPPER')
+		order by upper(tgr.user_group_id) asc
+    </select>
+ 
+ 	<select id="selectNomConcept" parameterType="java.lang.String" resultType="java.math.BigDecimal">
+ 		select idn_nomination_concept from tpa_tnomination_concept
+		where concept_code = #{concept}
+ 	</select>
+	
+ 
+ 	<select id="getImbalanceCorrection" statementType="CALLABLE" parameterType="com.atos.beans.allocation.AdjustmentAllocationBean">
+		{call #{errorCode,jdbcType=INTEGER,mode=OUT} :=pck_allocation_balance.generate_day_month_adjusts(
+				#{gasDay,jdbcType=DATE,mode=IN},
+				#{idn_active_system,jdbcType=INTEGER,mode=IN},
+				#{idnZone,jdbcType=INTEGER,mode=IN},
+				#{idnShipper,jdbcType=INTEGER,mode=IN},
+				#{imbalanceCorrection,jdbcType=FLOAT,mode=IN},
+				#{user,jdbcType=VARCHAR,mode=IN},
+				#{language,jdbcType=VARCHAR,mode=IN},
+				#{operator_comments,jdbcType=VARCHAR,mode=IN},
+				#{idnNominationConcept,jdbcType=INTEGER,mode=IN},
+				#{errorDesc,jdbcType=VARCHAR,mode=OUT})}
+	</select>
+ 
+
+</mapper>    
+    
+    

@@ -1,0 +1,305 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_booking']}" url="#" />
+			<p:menuitem value="#{msg['menu_capacity_chart']}" url="/pages/booking/capacity_chart.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+	<script>
+	function extLegend() 
+		{
+		    this.cfg.legend= {
+		        show: true,
+		        location: 's',
+		        placement: 'outsideGrid'
+		    };
+		    $.jqplot.sprintf.thousandsSeparator = ',';
+		}
+	</script>
+	<style>
+		.ui-datepicker-calendar, .ui-datepicker-month {
+		    display: none;
+		}		
+	</style>
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" sticky="true"/>
+			
+            <p:layout widgetVar="capChartLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters" style="right:5px">	
+					
+				<p:panelGrid columns="3" style="width:100%">
+					
+						<p:panelGrid>
+							<p:row>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['cap_chart_year']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['cap_pub_select_all']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<p:selectOneMenu id="year" value="#{capacityChartView.filters.selectedYear}">
+            							<f:selectItems value="#{capacityChartView.years}" />
+        							</p:selectOneMenu>
+								</p:column>
+								<p:column style="text-align:center">
+									<p:selectBooleanCheckbox id="area_all" value="#{capacityChartView.filters.selectAll}" >
+										<p:ajax listener="#{capacityChartView.selectAll}" update=":#{p:component('area_a1')},
+										:#{p:component('area_a2')},:#{p:component('area_a3')},:#{p:component('area_b')},:#{p:component('area_c1')},
+										:#{p:component('area_c2')},:#{p:component('area_c4')},:#{p:component('area_c5')},
+										:#{p:component('area_c6')},:#{p:component('area_d')},:#{p:component('area_e')},:#{p:component('area_f1')},
+										:#{p:component('area_f2')},:#{p:component('area_g')},:#{p:component('area_h')},:#{p:component('area_r')},
+										:#{p:component('area_x1')},:#{p:component('area_x2')},:#{p:component('area_x3')},
+										:#{p:component('area_y')}" /> <!--  Must be added later  :#{p:component('area_c3')}, :#{p:component('area_s')},-->
+									</p:selectBooleanCheckbox>						
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column colspan="2">
+									<h:outputText style="color:red" value="#{msg['cap_not_official']}" />
+								</p:column>
+							</p:row>
+						</p:panelGrid>
+						<p:panelGrid>
+							<p:row>
+								<p:column style="font-weight: bold;font-size:15pt;" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<h:outputText value="A1" style="padding-left:5px;padding-right:5px;border:3px solid blue" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt;" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<h:outputText value="A2" style="padding-left:5px;padding-right:5px;border:3px solid blue" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt;" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<h:outputText value="A3" style="padding-left:5px;padding-right:5px;border:3px solid blue" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<h:outputText value="B" style="padding-left:5px;padding-right:5px;border:3px solid green" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<h:outputText value="C1" style="padding-left:5px;padding-right:5px;border:3px solid red" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<h:outputText value="C2" style="padding-left:5px;padding-right:5px;border:3px solid red" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<h:outputText value="C3" style="padding-left:5px;padding-right:5px;border:3px solid red" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<h:outputText value="C4" style="padding-left:5px;padding-right:5px;border:3px solid red" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<h:outputText value="C5" style="padding-left:5px;padding-right:5px;border:3px solid red" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<h:outputText value="C6" style="padding-left:5px;padding-right:5px;border:3px solid red" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column style="text-align:center" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_a1" value="#{capacityChartView.filters.area_a1}" >
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_a2" value="#{capacityChartView.filters.area_a2}" >
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_a3" value="#{capacityChartView.filters.area_a3}" >
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_b" value="#{capacityChartView.filters.area_b}" >
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_c1" value="#{capacityChartView.filters.area_c1}" >						
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_c2" value="#{capacityChartView.filters.area_c2}" >						
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_c3" value="" disabled="true">		<!-- Must be enable later value="#{capacityChartView.filters.area_c3}"  -->				
+										<!-- <p:ajax update=":#{p:component('area_all')}"/> -->
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_c4" value="#{capacityChartView.filters.area_c4}" >						
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_c5" value="#{capacityChartView.filters.area_c5}" >						
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_c6" value="#{capacityChartView.filters.area_c6}" >						
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<h:outputText value="D" style="padding-left:5px;padding-right:5px;border:3px solid orange" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<h:outputText value="E" style="padding-left:5px;padding-right:5px;border:3px solid yellow" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<h:outputText value="F1" style="padding-left:5px;padding-right:5px;border:3px solid deeppink" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<h:outputText value="F2" style="padding-left:5px;padding-right:5px;border:3px solid deeppink" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<h:outputText value="G" style="padding-left:5px;padding-right:5px;border:3px solid purple" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<h:outputText value="H" style="padding-left:5px;padding-right:5px;border:3px solid purple" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<h:outputText value="R" style="padding-left:5px;padding-right:5px;border:3px solid purple" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<h:outputText value="S" style="padding-left:5px;padding-right:5px;border:3px solid purple" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<h:outputText value="X1" style="padding-left:5px;padding-right:5px;border:3px solid darkgreen" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<h:outputText value="X2" style="padding-left:5px;padding-right:5px;border:3px solid darkgreen" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<h:outputText value="X3" style="padding-left:5px;padding-right:5px;border:3px solid darkgreen" />
+								</p:column>
+								<p:column style="font-weight: bold;font-size:15pt" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<h:outputText value="Y" style="padding-left:5px;padding-right:5px;border:3px solid black" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column style="text-align:center" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_d" value="#{capacityChartView.filters.area_d}" >						
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_e" value="#{capacityChartView.filters.area_e}" >						
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_f1" value="#{capacityChartView.filters.area_f1}" >						
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_f2" value="#{capacityChartView.filters.area_f2}" >						
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_g" value="#{capacityChartView.filters.area_g}" >						
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_h" value="#{capacityChartView.filters.area_h}" >						
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_r" value="#{capacityChartView.filters.area_r}" >						
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_s" value="" disabled="true">		<!-- Must be enable later value="#{capacityChartView.filters.area_s}"  -->									
+										<!-- <p:ajax update=":#{p:component('area_all')}"/> -->
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_x1" value="#{capacityChartView.filters.area_x1}" >						
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_x2" value="#{capacityChartView.filters.area_x2}" >						
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_x3" value="#{capacityChartView.filters.area_x3}" >						
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								<p:column style="text-align:center" rendered="#{capacityChartView.filters.onshoreSystem}">
+									<p:selectBooleanCheckbox id="area_y" value="#{capacityChartView.filters.area_y}" >						
+										<p:ajax update=":#{p:component('area_all')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>						
+							</p:row>
+						</p:panelGrid>
+						<p:panelGrid columns="2" style="float:right;top:0px">
+							<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CAPACITY_CHART.QUERY">
+								<p:commandButton value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{capacityChartView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,:#{p:component('capPub')}"/>
+							</shiro:hasPermission>
+							
+							<p:commandButton  onclick="PF('capChartLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+							
+							<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CAPACITY_CHART.QUERY">
+								<p:commandButton value="#{msg['clear']}"
+									actionListener="#{capacityChartView.onClear}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update=":form:msgs"/>
+							</shiro:hasPermission>
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center"
+					resizable="false" closable="false" collapsible="false">
+					
+					<p:panelGrid style="width:100%;height:500px;border:none !important;padding:0px !important" columns="1" layout="grid">
+						<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CAPACITY_CHART.QUERY">
+							<p:commandButton type="button" value="Reset Zoom" icon="ui-icon-cancel" onclick="PF('chart').resetZoom()"/>
+						
+							<p:chart id="capPub" widgetVar="chart" type="line" model="#{capacityChartView.graphicLine1}" style="height:480px;width:100%" extender="extLegend"/>
+						</shiro:hasPermission>
+					</p:panelGrid>
+				</p:layoutUnit>
+
+			</p:layout>
+		</h:form>
+
+	</ui:define>
+
+
+</ui:composition>

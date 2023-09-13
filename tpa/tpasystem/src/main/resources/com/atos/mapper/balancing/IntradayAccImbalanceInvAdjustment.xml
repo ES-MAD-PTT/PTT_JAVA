@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atos.mapper.balancing.IntradayAccImbalanceInvAdjustmentMapper">
+
+
+	<resultMap type="com.atos.beans.balancing.IntradayAccImbalanceInventoryAdjustmentBean" id="IntradayAccImbalanceInventoryAdjustment">
+		<id column="IDN_ACC_IMB_INV_OTHER" property="id" />
+		<result property="gasDay" column="gas_day" />
+		<result property="east" column="EAST_VALUE" />
+		<result property="west" column="WEST_VALUE" />
+		<result property="comments" column="COMMENTS" />
+	</resultMap>
+
+	<select id="selectIntradayAccImbalanceInvAdjustment" resultMap="IntradayAccImbalanceInventoryAdjustment">
+		SELECT aiio.gas_day, aiio.east_value, aiio.west_value, aiio.comments
+		FROM TPA_TACC_IMB_INV_OTHER aiio
+		WHERE aiio.VERSION_DATE = (select max(aiiox.version_date )
+        from TPA_TACC_IMB_INV_OTHER aiiox
+        where aiio.gas_day = aiiox.gas_day)
+
+ 		<if test="gasDay != null">
+        	AND aiio.gas_day = #{gasDay}
+  		</if>    
+	</select>
+	
+	<insert id="insertIntradayAccImbalanceInvAdjustment" useGeneratedKeys="true" keyProperty="IDN_ACC_IMB_INV_OTHER"
+		keyColumn="IDN_ACC_IMB_INV_OTHER" parameterType="com.atos.beans.balancing.IntradayAccImbalanceInventoryAdjustmentBean">
+		INSERT INTO TPA_TACC_IMB_INV_OTHER 
+		(IDN_ACC_IMB_INV_OTHER, 
+		GAS_DAY, 
+		EAST_VALUE, 
+		WEST_VALUE, 
+		COMMENTS)
+		VALUES(tpa_sacc_imb_inv_other.nextval, 
+		#{gasDay},#{east},#{west},#{comments})
+	</insert>
+
+</mapper>

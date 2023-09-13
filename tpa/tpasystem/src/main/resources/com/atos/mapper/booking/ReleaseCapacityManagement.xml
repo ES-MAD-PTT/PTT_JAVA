@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<!-- Namespace -->
+<mapper namespace="com.atos.mapper.booking.ReleaseCapacityManagementMapper">
+
+     <select id="selectShipperId" resultType="com.atos.beans.ComboFilterNS">
+		select tgr.idn_user_group as key, tgr.user_group_id as value
+		from tpa_tuser_group tgr
+		where tgr.idn_user_group_type = (select idn_user_group_type from tpa_tuser_group_type where type_code = 'SHIPPER')
+			  and trunc(sysdate) between tgr.start_date and nvl(tgr.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+		order by upper(tgr.user_group_id) asc
+    </select>
+
+	<!--  [21/07/2016] PPM: Por ahora no se filtra por tcon.is_grandfathering = 'N' -->
+    <select id="selectContractsByShipperId" resultType="com.atos.beans.ComboFilterNS">
+		select tcon.idn_contract as key,
+		       tcon.contract_code as value
+		from tpa_tcontract tcon,
+         	 tpa_voperation op
+		where tcon.idn_user_group = #{shipperId}
+          	  and tcon.end_date > sysdate
+	          and tcon.idn_operation = op.IDN_OPERATION
+	          and op.CATEGORY_CODE = 'CONTRACT'
+	          --and op.TERM_CODE in ('LONG','MEDIUM')
+			  and EXISTS (SELECT 1 FROM tpa_tcontract_consolidate tconso WHERE tcon.idn_contract = tconso.idn_contract)
+			  and tcon.idn_pipeline_system = #{idn_system}
+		order by tcon.contract_code asc
+    </select>
+     
+    <select id="selectContractCodeFromId" parameterType="java.math.BigDecimal" resultType="java.lang.String">
+		select tcon.contract_code from tpa_tcontract tcon where tcon.idn_contract = #{contractId} 
+    </select>
+    
+    <select id="selectContractInfoMail" parameterType="java.math.BigDecimal" resultType="com.atos.beans.booking.ReleaseCapacityManagementInfoMailBean">
+	    select c.start_date, c.end_date, o.term_desc
+		from tpa_voperation o, tpa_tcontract c
+		where idn_contract = #{idn_contract}
+		and c.idn_operation = o.idn_operation
+	</select>
+        
+    <resultMap type="com.atos.beans.booking.ReleaseCapacityManagementBean" id="releaseCapacityManagementMap">
+        <id property="capacityRequestId" column="idn_contract_request"/> 
+        <result property="requestCode" column="request_code"/>
+        <result property="submittedTimestamp" column="arriving_date"/>
+        <result property="shipperIdFrom" column="idn_user_group_from"/>
+        <result property="shipperCodeFrom" column="user_group_id_from"/>
+        <result property="contractIdFrom" column="idn_contract_from"/>    
+        <result property="contractCodeFrom" column="contract_code_from"/>
+        <result property="statusCode" column="status"/>
+        <result property="shipperIdTo" column="idn_user_group_to"/>
+        <result property="shipperCodeTo" column="user_group_id_to"/>
+        <result property="contractIdTo" column="idn_contract_to"/>
+        <result property="contractCodeTo" column="contract_code_to"/>
+        <result property="toOperator" column="is_released_to_operator"/>
+    </resultMap>
+
+    <select id="selectReleaseCapacityManagementRequests" resultMap="releaseCapacityManagementMap">
+	 select t1.request_code as request_code,
+	 		   t1.idn_contract_request as idn_contract_request,
+	           t1.arriving_date as arriving_date,
+	           t1.idn_user_group as idn_user_group_from,
+	           t1.user_group_id as user_group_id_from,
+	           t1.idn_contract as idn_contract_from,
+	           t1.contract_code as contract_code_from,
+	           t1.status as status,
+	           t1.is_released_to_operator as is_released_to_operator,
+	           t2.idn_user_group as idn_user_group_to,
+	           t2.user_group_id as user_group_id_to,
+	           t2.idn_contract as idn_contract_to,
+	           t2.contract_code as contract_code_to       
+	    from (select treq.request_code,
+	    			 treq.idn_contract_request,
+	                 treq.arriving_date,
+	                 treq.idn_user_group,
+	                 tugr.user_group_id,
+	                 treq.idn_contract,
+	                 tcon.contract_code,
+	                 treq.status,
+	                 treq.is_released_to_operator,
+	                 t3.released_to
+	          from tpa_tcontract_request treq, 
+	               tpa_tuser_group tugr, 
+	               tpa_tcontract tcon,
+	               (select distinct tagree.idn_contract_request,
+	                       tcpoint.received_from, 
+	                       tcpoint.released_to
+	                from tpa_tcontract_agreement tagree,
+	                     tpa_tcontract_point tcpoint
+	                where tcpoint.idn_contract_agreement=tagree.idn_contract_agreement) t3              
+	          where treq.is_capacity_release='Y'
+					<if test="shipperId != null and shipperId != ''">
+            		and treq.idn_user_group=#{shipperId}
+					</if>
+					<if test="statusCode != null and statusCode != ''">
+		            and treq.status=#{statusCode}
+					</if>
+					and treq.status!='ACCEPTED'
+                       and treq.idn_pipeline_system = #{idn_system}
+                       and tcon.idn_pipeline_system = treq.idn_pipeline_system
+	                and tugr.idn_user_group=treq.idn_user_group
+			 		and trunc(sysdate) between tugr.start_date and nvl(tugr.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+	                and tcon.idn_contract=treq.idn_contract
+	                and t3.idn_contract_request=treq.idn_contract_request
+	                and t3.received_from is null) t1     
+	      left outer join (select distinct tcon2.idn_user_group,
+	                             tugr2.user_group_id,
+	                             tcon2.idn_contract,
+	                             tcon2.contract_code
+	                      from tpa_tcontract tcon2,
+	                           tpa_tuser_group tugr2
+	                      where tugr2.idn_user_group=tcon2.idn_user_group
+			 					and trunc(sysdate) between tugr2.start_date and nvl(tugr2.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))) t2 
+	        on t2.idn_contract=t1.released_to
+	    order by t1.arriving_date asc 
+	
+    </select>
+
+	<!-- Se utiliza para obtener los details de la capacity request origen, de liberacion de capacidad. -->
+    <resultMap type="com.atos.beans.booking.ReleaseCapacitySubmissionBean" id="releaseCapacitySubmissionMap">
+        <result property="contractPointId" column="idn_contract_point"/>
+        <result property="contractAgreementId" column="idn_contract_agreement"/>
+        <result property="systemPointId" column="idn_system_point"/> 
+        <result property="systemPointCode" column="point_code"/>
+        <result property="pointTypeCode" column="point_type_code"/>
+        <result property="agreementStartDate" column="agreement_start_date"/>
+        <result property="agreementEndDate" column="agreement_end_date"/>    
+        <result property="releaseBBTuDay" column="quantity"/>
+        <result property="releaseMMscfd" column="volume"/>
+    </resultMap>
+
+	<!-- Se toman las cantidades en positivo, como cantidad a liberar. -->
+     <select id="selectPointsByCapacityRequestId" resultMap="releaseCapacitySubmissionMap">
+		select tconp.idn_contract_point as idn_contract_point,
+			   tagree.idn_contract_agreement as idn_contract_agreement,
+			   tsysp.idn_system_point as idn_system_point,
+		       tsysp.point_code as point_code,
+		       tsyspty.type_code as point_type_code,
+		       tagree.start_date as agreement_start_date,
+		       tagree.end_date as agreement_end_date,
+		       tconp.quantity * (-1) as quantity,
+		       tconp.volume * (-1) as volume       
+		from tpa_tcontract_agreement tagree, 
+		     tpa_tcontract_point tconp,
+		     tpa_tsystem_point tsysp,
+		     tpa_tsystem_point_type tsyspty
+		where tagree.idn_contract_request = #{capacityRequestId}
+		      and tconp.idn_contract_agreement=tagree.idn_contract_agreement
+		      and tsysp.idn_system_point=tconp.idn_system_point
+		      and tsyspty.idn_system_point_type=tsysp.idn_system_point_type
+	 		  and trunc(sysdate) between tsysp.start_date and nvl(tsysp.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+	    order by tagree.start_date asc, upper(tsysp.point_code) asc
+    </select>
+
+	<!-- Se utiliza para obtener los details del contrato destino, de liberacion de capacidad. -->
+    <resultMap type="com.atos.beans.booking.ReleaseCapacitySubmissionBean" id="releaseCapacitySubmissionMap2">
+        <result property="systemPointId" column="idn_system_point"/> 
+        <result property="systemPointCode" column="point_code"/>
+        <result property="pointTypeCode" column="point_type_code"/>
+        <result property="agreementStartDate" column="agreement_start_date"/>
+        <result property="agreementEndDate" column="agreement_end_date"/>    
+        <result property="operationId" column="idn_operation"/>
+        <result property="contratedBBTuDay" column="quantity"/>
+        <result property="contratedMMscfd" column="volume"/>
+    </resultMap>
+
+     <select id="selectPointsByContractId" resultMap="releaseCapacitySubmissionMap2">
+	    select vcon.idn_system_point as idn_system_point,
+	           tsysp.point_code as point_code,
+	           tsyspty.type_code as point_type_code,
+	           vcon.agreement_start_date as agreement_start_date,
+	           vcon.agreement_end_date as agreement_end_date,
+	           vcon.idn_operation as idn_operation,
+	           sum(vcon.quantity) as quantity,
+	           sum(vcon.volume) as volume
+	    from tpa_vcontract vcon, tpa_tsystem_point tsysp, tpa_tsystem_point_type tsyspty
+	    where vcon.idn_contract = #{contractId}
+	      and tsysp.idn_system_point = vcon.idn_system_point
+	      and tsyspty.idn_system_point_type = tsysp.idn_system_point_type
+	 	  and trunc(sysdate) between tsysp.start_date and nvl(tsysp.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+	    group by vcon.idn_system_point, 
+	             tsysp.point_code, 
+	             tsyspty.type_code, 
+	             vcon.agreement_start_date, 
+	             vcon.agreement_end_date,
+	             vcon.idn_operation 
+	    order by vcon.agreement_start_date asc, upper(tsysp.point_code) asc
+    </select>
+
+	<!-- Actualizacion de contrato donante (From): updateContractRequest.
+			Reject: insertRejectedPoint
+			Accept: insertContractConsolidate, updateContractPoint  -->
+	<update id="updateContractRequest" parameterType="com.atos.beans.booking.ReleaseCapacityManagementBean">
+		update tpa_tcontract_request set
+	       status = #{statusCode},
+	       response_date = sysdate,
+	       aud_last_user = #{username},
+	       aud_last_date = sysdate
+	    where idn_contract_request=#{capacityRequestId}
+	</update>
+
+	<insert id="insertRejectedPoint" useGeneratedKeys="true" keyProperty="id" keyColumn="idn_contract_reject_list" parameterType="com.atos.beans.booking.ContractRejectedPointBean">
+		insert into tpa_tcontract_reject_list 
+			(idn_contract_reject_list, idn_contract_request, idn_system_point, aud_ins_user, aud_last_user)
+		values 
+			(tpa_scontract_reject_list.nextval, 
+			#{contractRequestId}, 
+			#{systemPointId},
+			#{username},
+			#{username}) 		  
+	</insert>
+	
+	<insert id="insertContractConsolidate" useGeneratedKeys="true" keyProperty="idnContractConsolidate" keyColumn="idn_contract_consolidate" parameterType="com.atos.beans.booking.ContractConsolidateBean">
+		insert into tpa_tcontract_consolidate
+			(idn_contract_consolidate, idn_contract_agreement, idn_contract, aud_ins_user, aud_last_user)
+		values 
+			(tpa_scontract_consolidate.nextval, 
+			#{idnContractAgreement}, 
+			#{idnContract},
+			#{username},
+			#{username})
+	</insert>
+
+	<update id="updateContractPoint" parameterType="com.atos.beans.booking.ContractPointBean">
+		update tpa_tcontract_point set
+	       released_to = #{releasedToId},
+	       aud_last_user = #{username}
+	    where idn_contract_point=#{contractPointId}
+	</update>
+
+	<!-- Actualizacion de contrato receptor (To): insertContractRequest, insertContractAgreement, insertContractPoint, insertContractConsolidate -->
+    <insert id="insertContractRequest" useGeneratedKeys="true" keyProperty="id" keyColumn="idn_contract_request" parameterType="com.atos.beans.booking.CapacityRequestBean">
+		insert into tpa_tcontract_request (idn_contract_request,
+											request_code,
+		                                    idn_user_group,
+		                                    idn_operation,
+		                                    idn_contract,
+		                                    status,
+		                                    start_date,
+		                                    end_date,
+		                                    arriving_date,
+		                                    is_capacity_release,
+		                                    response_date,
+		                                    idn_pipeline_system, 
+	                                        aud_ins_user, 
+	                                        aud_last_user,
+	                                        IS_RELEASED_TO_OPERATOR)
+		values (tpa_scontract_request.nextval,
+		       #{requestCode},
+		       #{shipperId},
+		       #{contractTypeId},
+		       #{contractId},
+		       #{status},
+		       #{contractStartDate},
+		       #{contractEndDate},
+		       sysdate,
+		       'Y',
+		       sysdate,
+		       #{idn_system},
+			   #{username},
+			   #{username},
+			   'N')
+	</insert>
+	
+	<insert id="insertContractAgreement" useGeneratedKeys="true" keyProperty="idnContractAgreement" keyColumn="idn_contract_agreement" parameterType="com.atos.beans.booking.ContractAgreementBean">
+		insert into tpa_tcontract_agreement (idn_contract_agreement,
+		                                     idn_contract_request,
+		                                     start_date,
+		                                     end_date, 
+	                                         aud_ins_user, 
+	                                         aud_last_user)
+		values (tpa_scontract_agreement.nextval,
+				#{idnContractRequest},
+				#{startDate},
+				#{endDate},
+				#{username},
+			    #{username}) 
+	</insert>
+	
+	<insert id="insertContractPoint" useGeneratedKeys="true" keyProperty="contractPointId" keyColumn="idn_contract_point" parameterType="com.atos.beans.booking.ContractPointBean">
+		insert into tpa_tcontract_point (idn_contract_point,
+		                                 idn_contract_agreement,
+		                                 idn_system_point,
+		                                 quantity,
+		                                 max_hour_qty,
+		                                 volume,
+		                                 max_hour_vol,
+		                                 received_from, 
+	                                     aud_ins_user, 
+	                                     aud_last_user)
+		values (tpa_scontract_point.nextval,
+		       	#{contractAgreementId},
+		       	#{systemPointId},
+		       	#{quantity},
+		       	#{maxHourQuantity},
+		       	#{volume},
+		       	#{maxHourVolume},
+		       	#{receivedFromId},
+				#{username},
+			    #{username}) 
+	</insert>
+	
+</mapper>

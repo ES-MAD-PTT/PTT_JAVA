@@ -1,0 +1,299 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_dam']}" url="#" />
+			<p:menuitem value="#{msg['menu_parameters']}" url="#" />
+			<p:menuitem value="#{msg['menu_shrinkage_factor']}" url="/pages/dam/shrinkageFactors.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="5000"/>
+            <p:layout widgetVar="shrinkageFactorLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">	
+					
+				<p:panelGrid columns="2" style="width:100%">
+					
+						<p:panelGrid>
+							<p:row>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['shrinkageFactor_Zone']}" />
+								</p:column>
+							
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['shrinkageFactor_Start_Date']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['shrinkageFactor_End_Date']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								
+								<p:column>
+									
+					               	<p:selectOneMenu widgetVar="zone_w" id="zone" style="width:100px" value="#{shrinkageFactorView.filters.zone}" >
+										<f:selectItem itemLabel="" itemValue="" />
+										<!--offshore 
+										<f:selectItems value="#{shrinkageFactorView.zones.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" /> -->
+        								<f:selectItems value="#{shrinkageFactorView.zonesSystem.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+        								
+					           		</p:selectOneMenu>
+					               										
+								</p:column>
+								<p:column>
+									<p:calendar id="fecInicio"  size="10" pattern="dd/MM/yyyy" mask="true" value="#{shrinkageFactorView.filters.startDate}"
+										showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="fecInicio"></p:ajax>
+										<p:ajax event="change" update="fecInicio"></p:ajax>
+									</p:calendar>
+								</p:column>
+								<p:column>
+									<p:calendar id="fecFin"  size="10" pattern="dd/MM/yyyy" mask="true" value="#{shrinkageFactorView.filters.endDate}"
+										showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="fecFin"></p:ajax>
+										<p:ajax event="change" update="fecFin"></p:ajax>
+									</p:calendar>
+								</p:column>
+							
+								
+							</p:row>
+						</p:panelGrid>
+						<p:panelGrid columns="2" style="float:right;top:0px">
+							<shiro:hasPermission name="#{changeSystemView.system}.DAM.SF.QUERY">
+								<p:commandButton value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{shrinkageFactorView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,:#{p:component('shrinkageFactors1')}"/>
+							</shiro:hasPermission>
+							
+							<p:commandButton  onclick="PF('shrinkageFactorLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+							
+							<shiro:hasPermission name="#{changeSystemView.system}.DAM.SF.QUERY">
+								<p:commandButton value="#{msg['clear']}"
+									actionListener="#{shrinkageFactorView.onClear}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" 
+									process="@this" 
+								    update="form"/> 
+							</shiro:hasPermission>
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center"
+					resizable="false" closable="false" collapsible="false">
+
+					<p:dataTable widgetVar="w_shrinkageFactor1"  id="shrinkageFactors1" var="shrinkageFactor" value="#{shrinkageFactorView.items}"
+						reflow="true" editable="true" 
+						style="margin-bottom:20px;border-collapse:collapse"
+						scrollable="true"  scrollHeight="100%"
+					    paginator="true" rows="15" rowsPerPageTemplate="5,10,15,20,25, #{shrinkageFactorView.itemsSize}" >
+
+							<f:facet name="header">
+								<p:outputPanel style="height:25px">
+									<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+	        						<p:columnToggler datasource="shrinkageFactors1" trigger="toggler" style="width:200px"/>
+	        						<shiro:hasPermission name="#{changeSystemView.system}.DAM.SF.ADD">
+	        						<p:commandButton id="new" type="button" value="New" icon="ui-icon fa fa-save" style="float:right;"
+	        							onclick="PF('dlgNewShrinkageFactor').show();"/>
+	        						</shiro:hasPermission>	
+								</p:outputPanel>        										          
+					        </f:facet>
+					        <shiro:hasPermission name="#{changeSystemView.system}.DAM.SF.MOD">
+						 		<p:ajax event="rowEditInit" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','hidden')});" />
+								<p:ajax event="rowEdit" listener="#{shrinkageFactorView.onRowEdit}" update=":form:msgs" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>   
+								<p:ajax event="rowEditCancel" listener="#{shrinkageFactorView.onRowCancel}" update=":form:msgs" onstart="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>
+					 		</shiro:hasPermission>
+					       					       
+					        <p:column  headerText="#{msg['shrinkageFactor_Zone']}" style="width: 100px;" sortBy="#{shrinkageFactor.zone_code}" filterMatchMode="contains" filterBy="#{shrinkageFactor.zone_code}">
+					       		<!--   <p:selectOneMenu disabled="true" id="zone"  value="#{shrinkageFactor.zone}" required="true">
+							            <f:selectItem itemLabel="#{msg['shrinkageFactor_Zone']}" itemValue="" />
+        								<f:selectItems value="#{shrinkageFactorView.zones.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					            </p:selectOneMenu>
+					             -->
+					             <h:outputText value="#{shrinkageFactor.zone_code}">			
+					            </h:outputText>
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['shrinkageFactor_SF']}" style="width: 100px;" sortBy="#{shrinkageFactor.sF}" filterMatchMode="contains" filterBy="#{shrinkageFactor.sF}">
+					       		
+					       		
+					       		<p:cellEditor>
+					               <f:facet name="output">
+   						 				<h:outputText value="#{shrinkageFactor.sF}" style="float:right">
+              								<f:convertNumber pattern="#,##0.00" />
+           								 </h:outputText>
+      					  				
+					               	</f:facet>
+					               <f:facet name="input">
+				               			<!--  <h:outputText id="output" value="Set ratio to %#{sliderView.number2}"  disabled="#{shrinkageFactorView.disabledField(shrinkageFactor)}"/>
+        								<h:inputHidden id="txt2" value="#{shrinkageFactor.sF}" />
+        								<p:slider for="txt2" display="output" style="width: 100px" displayTemplate="Set ratio to %{value}" />
+        								-->
+        								<p:inputNumber value="#{shrinkageFactor.sF}" required="true" style="width:100%"  
+					              	  	 	label="#{msg['shrinkageFactor_SF']}" disabled="#{shrinkageFactorView.disabledField(shrinkageFactor)}"
+					               			requiredMessage="#{msg['shrinkageFactor_SF']}: #{msg['empty_field']}" 
+					               			validatorMessage="#{msg['shrinkageFactor_SF']}: #{msg['lenght_field']}"
+					               			decimalSeparator="." thousandSeparator="," decimalPlaces="2" minValue="0" maxValue="100.99">
+					               		</p:inputNumber>	
+        								
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					   	    <p:column headerText="#{msg['shrinkageFactor_Start_Date']}" style="width: 100px;" sortBy="#{shrinkageFactor.startDate}" >
+					          <p:cellEditor>
+					               <f:facet name="output">
+					               			<h:outputText value="#{shrinkageFactor.startDate}" >
+					              				<f:convertDateTime pattern="dd/MM/yyyy" />
+					              		 </h:outputText>
+					               </f:facet>
+					               <f:facet name="input">
+					               		<p:calendar required="true" id="startDate" value="#{shrinkageFactor.startDate}" pattern="dd/MM/yyyy" 
+					               			disabled="#{shrinkageFactorView.disabledField(shrinkageFactor)}"
+					               			readonlyInput="true"   mindate="#{(shrinkageFactorView.sysdate).getTime()}"
+											requiredMessage="#{msg['shrinkageFactor_Start_Date']}: #{msg['empty_field']}" validatorMessage="#{msg['shrinkageFactor_Start_Date']}: #{msg['empty_field']}">
+											<f:convertDateTime pattern="dd/MM/yyyy"/>
+										</p:calendar>
+					               </f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					       
+					       
+					      <shiro:hasPermission name="#{changeSystemView.system}.DAM.SF.MOD">
+					       <p:column style="width:32px">
+					          <p:rowEditor rendered="#{shrinkageFactorView.renderItemEditor(shrinkageFactor)}"/>
+					       </p:column>
+					       </shiro:hasPermission>
+					   </p:dataTable>
+				</p:layoutUnit>
+
+			</p:layout>
+		</h:form>
+
+	<shiro:hasPermission name="#{changeSystemView.system}.DAM.SF.ADD">
+		<p:dialog widgetVar="dlgNewShrinkageFactor" resizable="false"  closable="true" modal="true" appendTo="@(body)" header="New ShrinkageFactor">
+		<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario
+		 <p:ajax event="close" update="formNewEntity"  process="@this" listener="#{shrinkageFactorView.cancel}" />	-->
+			<h:form id="formNewEntity">
+			<p:growl id="msgs" showDetail="true"  life="5000"/>
+				<p:panelGrid columns="4" style="width:100%">
+					<p:panelGrid>
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['shrinkageFactor_Zone']}" />
+							</p:column>
+							<p:column>
+								<p:selectOneMenu id="zone" style="width:100px"   value="#{shrinkageFactorView.newShrinkageFactor.idn_zone}" >
+									 <!--offshore
+									  <f:selectItems value="#{shrinkageFactorView.zones.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" /> -->
+									  <f:selectItems value="#{shrinkageFactorView.zonesSystem.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+									 <p:ajax event="change" update=":#{p:component('idMsgDialog')}"></p:ajax>
+					           	</p:selectOneMenu>									
+							</p:column>
+							<p:column>
+								<h:outputText value="#{msg['shrinkageFactor_SF']}" />
+							</p:column>
+							<p:column>
+					           <p:inputNumber required="true" id="nominalCapacity" value="#{shrinkageFactorView.newShrinkageFactor.sF}" 
+											  requiredMessage="#{msg['shrinkageFactor_SF']}: #{msg['empty_field']}" 
+											  validatorMessage="#{msg['shrinkageFactor_SF']}: #{msg['lenght_field']}"
+                               				  decimalSeparator="." thousandSeparator="," decimalPlaces="2" minValue="0" maxValue="100.99">  
+               				   </p:inputNumber> 
+               				   <p:message for="nominalCapacity" />	
+							</p:column>
+							
+						</p:row>
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['shrinkageFactor_Start_Date']}"/>
+							</p:column>
+							<p:column>
+								<p:calendar required="true" id="startDate" 
+									value="#{shrinkageFactorView.newShrinkageFactor.startDate}" pattern="dd/MM/yyyy"
+									readonlyInput="true"  mindate="#{(shrinkageFactorView.sysdate).getTime()}" 
+									requiredMessage="#{msg['shrinkageFactor_Start_Date']}: #{msg['empty_field']}" validatorMessage="#{msg['shrinkageFactor_Start_Date']}: #{msg['lenght_field']}">
+								</p:calendar>
+								<p:message for="startDate" />
+							</p:column>
+							
+						</p:row>					
+						
+					</p:panelGrid>
+				</p:panelGrid>
+				
+				<p:separator/>
+				<p:panelGrid>
+					<p:row>
+						<p:column>
+							<p:commandButton value="#{msg['save']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" validateClient="true"
+								action="#{shrinkageFactorView.save}" update=":#{p:component('shrinkageFactors1')},:formNewEntity"
+								onstart="PF('cargando').show()"
+								oncomplete="PF('dlgNewShrinkageFactor').hide(),PF('cargando').hide()" />
+			        		<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close"
+			        			update="formNewEntity" process="@this" actionListener="#{shrinkageFactorView.cancel}" 
+			        			oncomplete="PF('dlgNewShrinkageFactor').hide()"/>
+						</p:column>					
+					</p:row>
+				</p:panelGrid>							
+			</h:form>			
+		</p:dialog>
+	</shiro:hasPermission>
+	
+	
+	
+	<!-- Si no se usa appendTo="@(body)", la ventana modal bloquea toda la interfaz. -->
+		<shiro:hasPermission name="#{changeSystemView.system}.DAM.SF.ADD">
+		<p:dialog header="#{msg['rel_cap_man_confirmation_dialog_header']}" widgetVar="w_confirmSaveDlg" id="w_confirmSaveDlg" 
+			modal="true" appendTo="@(body)" minHeight="250" >
+			<h:form id="confirmSaveFormId" style="width:100%;height:98%;border-collapse:collapse">
+				<p:panelGrid id="confirmSavePanelGridId" columns="2">
+
+					<p:row>
+						<p:column  style="font-weight: bold;">
+							<h:outputText id="idMsgDialog" value="#{shrinkageFactorView.msgDlg}"/>
+							
+						</p:column>
+					</p:row>
+
+ 					<p:row>
+						<p:column  style="font-weight: bold;">
+				       		<p:commandButton value="#{msg['yes']}"
+				       			actionListener="#{shrinkageFactorView.saveBD}" 
+				       			update="#{p:component('shrinkageFactors1')},#{p:component('msgs')}, #{p:component('formNewEntity')}"
+				       			oncomplete="PF('w_confirmSaveDlg').hide()"/>						
+						</p:column>
+						<p:column  style="font-weight: bold;">
+				       		<p:commandButton value="#{msg['no']}"
+				       			actionListener="#{shrinkageFactorView.onSearch}" 
+				       			update="#{p:component('form')},#{p:component('msgs')}, #{p:component('formNewEntity')}"
+				       			oncomplete="PF('w_confirmSaveDlg').hide()"/>
+						</p:column>
+					</p:row>
+				</p:panelGrid>
+			</h:form> 	    
+		</p:dialog>
+		</shiro:hasPermission>
+	
+	
+	
+	
+	</ui:define>
+
+
+</ui:composition>

@@ -1,0 +1,60 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home"
+				style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_dam']}" url="#" />
+			<p:menuitem value="#{msg['menu_parameters']}" url="#" />
+			<p:menuitem value="#{msg['menu_change_picture']}" 
+			url="/pages/dam/change_picture.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+		  <h:form enctype="multipart/form-data" id="form"
+			style="width:100%;height:98%;border-collapse:collapse"
+			fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="5000" />
+
+			<p:panelGrid>
+				<p:row>
+					<p:column>
+						<p:panelGrid>
+							<p:row>
+								<p:column>
+									<shiro:hasPermission
+										name="#{changeSystemView.system}.DAM.WEB_IMAGE.MOD">
+										<p:fileUpload id="upload" style="width:100%;"
+											fileUploadListener="#{changePictureView.handleFileUpload}"
+											mode="advanced" dragDropSupport="true" fileLimit="1"
+											ajax="true" update="msgs,upload" sizeLimit="5000000"
+											allowTypes="/(\.|\/)(png)$/"
+											onstart="PF('cargando').show()"
+											oncomplete="PF('cargando').hide()" />
+									</shiro:hasPermission>
+								</p:column>
+							</p:row>
+						</p:panelGrid>
+					</p:column>
+
+					<p:column>
+						<h:outputText value="#{msg['change_picture_files_supported']}"
+							style="float:left;font-weight: bold;" />
+						<!-- <p:graphicImage name="/images/excel.png" width="44" /> -->
+					</p:column>
+				</p:row>
+			</p:panelGrid>
+
+		</h:form>
+	</ui:define>
+	
+
+</ui:composition>

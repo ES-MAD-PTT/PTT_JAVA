@@ -1,0 +1,404 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_balancing']}" url="#" />
+			<p:menuitem value="#{msg['menu_reserve_balancing_gas_contracts']}" url="/pages/balancing/reserveBalancingGasContracts.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+				
+		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="10000" />
+			
+            <p:layout widgetVar="ResBalGasContractsLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">	
+					
+				<p:panelGrid columns="2" style="width:100%">
+					
+						<p:panelGrid>
+							<p:row>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['res_bal_con_shipper']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['res_bal_con_contract_id']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['res_bal_con_start_date']}" />
+								</p:column>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['res_bal_con_end_date']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['res_bal_con_zone']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+ 								<p:column>
+									<p:selectOneMenu id="shipperId" style="width:100px" value="#{ResBalGasContractsView.filters.shipperId}" 
+										rendered="#{!ResBalGasContractsView.isShipper()}" >
+ 								   		<f:selectItem itemLabel="" itemValue="" />
+      									<f:selectItems value="#{ResBalGasContractsView.shipperIds.entrySet()}" var="entry" 
+      											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+ 										<p:ajax event="change" update="resBalGasContractId" />
+					           		</p:selectOneMenu>
+					           		<h:outputText value="#{ResBalGasContractsView.user.user_group_id}" style="float:left" rendered="#{ResBalGasContractsView.isShipper()}"/>
+								</p:column>
+
+ 								<p:column>								
+									<p:selectOneMenu id="resBalGasContractId" style="width:140px" value="#{ResBalGasContractsView.filters.resBalGasContractId}">
+ 								   		<f:selectItem itemLabel="" itemValue="" />
+      									<f:selectItems value="#{ResBalGasContractsView.getReserveContractCodes(ResBalGasContractsView.filters).entrySet()}" var="entry" 
+      											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>							
+								</p:column>
+								
+								<p:column>
+									<p:calendar id="startDate" size="6" pattern="dd/MM/yyyy" value="#{ResBalGasContractsView.filters.startDate}"
+										mask="true" showButtonPanel="true" showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="startDate"></p:ajax>
+										<p:ajax event="change" update="startDate"></p:ajax>
+									</p:calendar>
+								</p:column>
+								
+								<p:column>
+									<p:calendar id="endDate" size="6" pattern="dd/MM/yyyy" value="#{ResBalGasContractsView.filters.endDate}"
+										mask="true" showButtonPanel="true" showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="endDate"></p:ajax>
+										<p:ajax event="change" update="endDate"></p:ajax>
+									</p:calendar>
+								</p:column>
+								
+ 								<p:column>								
+									<p:selectOneMenu id="zoneId" style="width:50px" value="#{ResBalGasContractsView.filters.zoneId}">
+ 								   		<f:selectItem itemLabel="" itemValue="" />
+      									<f:selectItems value="#{ResBalGasContractsView.getZones(changeSystemView.system).entrySet()}" var="entry" 
+      											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>							
+								</p:column>
+							</p:row>
+
+						</p:panelGrid>
+						<p:panelGrid columns="2" style="float:right;top:0px">
+
+ 							<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.RESERVE.BALANCING.CONTRACTS.QUERY">									
+								<p:commandButton value="#{msg['search']}" icon="ui-icon fa fa-search" 
+									actionListener="#{ResBalGasContractsView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()" 
+									update="msgs,:#{p:component('resContracts1')}"/>
+							</shiro:hasPermission>
+
+							<p:commandButton  onclick="PF('ResBalGasContractsLayout').toggle('north')" id="header_collapse" icon="fa fa-minus" 
+								value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+
+							<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.RESERVE.BALANCING.CONTRACTS.QUERY">
+								 <p:commandButton value="#{msg['clear']}"
+									actionListener="#{ResBalGasContractsView.onClear}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" 
+									process="@this"
+									update="msgs,@form"/>
+							</shiro:hasPermission>
+
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center" resizable="false" closable="false" collapsible="false" style="border: 0;">
+					
+					<!-- Este parametro (rowStatePreserved="true") se habria podido usar para poder ordenar campos en la tabla interna pero no funciona bien. -->
+ 					<p:dataTable widgetVar="w_resContracts1"  id="resContracts1" var="resContract" value="#{ResBalGasContractsView.items}"
+						reflow="true" style="margin-bottom:20px;border-collapse:collapse"
+						scrollable="true" scrollHeight="100%" 
+ 						selectionMode="single" selection="#{ResBalGasContractsView.selected}" rowKey="#{resContract.contractId}" 
+					    paginator="true" rows="15" rowsPerPageTemplate="5,10,15,20,25">
+ 					 	
+	 					<f:facet name="header">
+	 						<p:outputPanel style="height:30px">
+	 							<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+      							<p:columnToggler datasource="resContracts1" trigger="toggler" style="width:200px"/>
+	 							
+								<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.RESERVE.BALANCING.CONTRACTS.ADD">
+	   					       		<!-- No se crea newContract al pulsar el boton, porque se restea al acabar cada Save con resultado OK. 
+	   					       		actionListener="#{ResBalGasContractsView.createNewContract}"  -->
+	   					       		<p:commandButton value="#{msg['res_bal_con_new_contract_short']}" icon="ui-icon fa fa-save" style="float:right;"
+										update=":form:msgs,#{p:component('newContractFormId')}"
+										onstart="PF('cargando').show()"	oncomplete="PF('cargando').hide();PF('w_newContractDlg').show()" />	    									
+								</shiro:hasPermission>
+
+								<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.RESERVE.BALANCING.CONTRACTS.DELETE">
+	   					       		<p:commandButton value="#{msg['res_bal_con_delete']}" icon="ui-icon fa fa-trash" style="float:right;"
+										update=":form:msgs,resContracts1" actionListener="#{ResBalGasContractsView.removeContract}" 
+										onstart="PF('cargando').show()"	oncomplete="PF('cargando').hide()" />	    									
+								</shiro:hasPermission>
+	 						</p:outputPanel>       										          
+				        </f:facet>
+			        
+ 					 	<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.RESERVE.BALANCING.CONTRACTS.QUERY">
+
+							<!-- evento del click del p:rowExpansion -->
+							<!-- <p:ajax event="rowToggle" listener="#{guestUserView.onRowToggle}" update=":form:msgs" /> -->   						 
+							<p:column style="width:16px">
+		         			   <p:rowToggler />
+		       				</p:column>
+						
+							<p:column headerText="#{msg['res_bal_con_contract_id']}" style="width: 100px;" sortBy="#{resContract.contractCode}">
+					       		<h:outputText value="#{resContract.contractCode}" />
+							</p:column>
+
+							<p:column headerText="#{msg['res_bal_con_shipper']}" style="width: 100px;" sortBy="#{resContract.shipperCode}" 
+					       		rendered="#{not ResBalGasContractsView.isShipper}">
+					       		<h:outputText value="#{resContract.shipperCode}" />
+							</p:column>
+ 							
+							<p:column headerText="#{msg['res_bal_con_general_comments']}" style="width: 200px;" >
+								<h:outputText style="float:left" value="#{resContract.operatorComments}" title="#{resContract.operatorComments}" />
+							</p:column>
+
+							<p:column headerText="#{msg['res_bal_con_contract_file']}" style="width: 150px;" sortBy="#{resContract.fileName}">
+							    <p:commandButton ajax="false" actionListener="#{ResBalGasContractsView.getFile(resContract)}" 
+							    	oncomplete="PrimeFaces.monitorDownload(start, stop);" icon="ui-icon fa fa-save" title="#{resContract.fileName}" 
+							    	rendered="#{not empty resContract.fileName}">
+									<f:setPropertyActionListener value="#{resContract}" target="#{ResBalGasContractsView.selected}" />
+							        <p:fileDownload value="#{ResBalGasContractsView.selected.scFile}"/>
+							    </p:commandButton>
+								<h:outputText value="#{resContract.fileName}" title="#{resContract.fileName}" />							    
+							</p:column>
+					       
+							<p:rowExpansion >
+				        	<p:panelGrid style="width: 100%">
+				        	
+		 					<p:dataTable widgetVar="w_resBalGasContDetails1"  id="resBalGasContDetails1" var="det" value="#{resContract.details}"
+								reflow="true" style="margin-bottom:20px;border-collapse:collapse"
+								scrollable="true" scrollHeight="#{(not empty resContract.details and resContract.details.size() > 4)? '100': '100%'}">
+
+								<f:facet name="header">
+	 							<p:outputPanel style="height:30px">
+	 								<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+      								<p:columnToggler datasource="resBalGasContDetails1" trigger="toggler" style="width:200px"/>
+								</p:outputPanel>
+								</f:facet>
+			 					<p:column headerText="#{msg['res_bal_con_zone']}" style="width: 60px;" styleClass="greyColorRow">
+						       		<h:outputText value="#{det.zoneCode}" />
+			 					</p:column>
+			 					
+			 					<p:column headerText="#{msg['res_bal_con_start_date']}" style="width: 100px;" styleClass="greyColorRow">
+				               		<h:outputText value="#{det.startDate}" >
+				              				<f:convertDateTime pattern="dd/MM/yyyy" />
+				              		</h:outputText>
+			 					</p:column>
+			 					
+			 					<p:column headerText="#{msg['res_bal_con_end_date']}" style="width: 100px;" styleClass="greyColorRow">
+				               		<h:outputText value="#{det.endDate}" >
+				              				<f:convertDateTime pattern="dd/MM/yyyy" />
+				              		</h:outputText>
+			 					</p:column>
+			 					
+			 					<p:column headerText="#{msg['res_bal_con_point_type']}" style="width: 60px;" styleClass="greyColorRow">
+						       		<h:outputText value="#{det.pointTypeCode}" />
+			 					</p:column>
+
+			 					<p:column headerText="#{msg['res_bal_con_nom_point_id']}" style="width: 100px;" styleClass="greyColorRow">
+						       		<h:outputText value="#{det.pointCode}" />
+			 					</p:column>
+			 					
+				 				<p:column headerText="#{msg['res_bal_con_reserved_cap']}" style="width: 180px;" styleClass="greyColorRow">
+									<h:outputText style="float:right" value="#{det.dailyReservedCap}">
+										<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
+									</h:outputText>
+								</p:column>
+							
+				        	</p:dataTable>
+				        	<p:spacer width="10" height="20"/>
+				        	  
+				        	</p:panelGrid>
+				        	</p:rowExpansion>
+						</shiro:hasPermission>
+				   </p:dataTable>
+				</p:layoutUnit>
+			</p:layout>
+		</h:form>
+		
+	<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.RESERVE.BALANCING.CONTRACTS.ADD">
+		<p:dialog header="#{msg['res_bal_con_new_contract']}" widgetVar="w_newContractDlg" modal="true" appendTo="@(body)" height="550" width="950">
+			<h:form id="newContractFormId" style="width:100%;height:98%;border-collapse:collapse">
+				<p:panelGrid id="newContractPanelGridId" >
+				
+					<p:row>
+				     	<p:column style="width: 150px;">
+				       		<h:outputText value="#{msg['res_bal_con_contract_id_short']}" />
+				       	</p:column>	
+				       	<p:column>
+							<p:inputText id="inputTxtContractId" value="#{ResBalGasContractsView.newContract.contractCode}">
+								<p:ajax event="change" update="inputTxtContractId" />
+							</p:inputText>
+				       	</p:column>
+				       	<p:column>
+ 					       	<p:commandButton value="#{msg['save']}" icon="ui-icon fa fa-save" style="float:right;padding-right: 12px"
+								actionListener="#{ResBalGasContractsView.onSave}" update="#{p:component('msgs')},#{p:component('resContracts1')}"
+								onstart="PF('grabando').show()"	oncomplete="PF('grabando').hide();PF('w_newContractDlg').hide()"/>
+						</p:column>
+					</p:row>
+					<p:row>
+				     	<p:column style="width: 150px;">
+				       		<h:outputText value="#{msg['res_bal_con_shipper']}" />
+				       	</p:column>	
+				       	<p:column>
+		       				<p:selectOneMenu id="newContractShipperId" style="width:100px" value="#{ResBalGasContractsView.newContract.shipperId}" 
+								disabled="#{ResBalGasContractsView.isShipper}" >
+ 								<f:selectItem itemLabel="" itemValue="" />
+								<f:selectItems value="#{ResBalGasContractsView.validShipperIds.entrySet()}" var="entry" 
+											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+								<p:ajax event="change" update="newContractShipperId" />
+			           		</p:selectOneMenu>	
+				       	</p:column>
+				       	<p:column>
+ 					       	<p:commandButton value="#{msg['cancel']}" icon="ui-icon-close" style="float:right;"
+								oncomplete="PF('w_newContractDlg').hide()"/>
+						</p:column>
+					</p:row>
+					<p:row>
+				     	<p:column style="width: 150px;">
+				       		<h:outputText value="#{msg['res_bal_con_general_comments']}" />
+				       	</p:column>	
+				       	<p:column colspan="2">
+	 						<p:inputTextarea id="inputTxtComments" rows="2" cols="61" value="#{ResBalGasContractsView.newContract.operatorComments}" 
+	 							autoResize="false" maxlength="120">
+	 							<f:validateLength maximum="120" />
+	 							<p:ajax event="change" update="inputTxtComments,msgInputTxtComments" />	
+							</p:inputTextarea>
+							<p:message for="inputTxtComments" id="msgInputTxtComments"/>
+						</p:column>
+					</p:row>
+					<p:row>
+				     	<p:column style="width: 150px;">
+				       		<h:outputText value="#{msg['res_bal_con_contract_file']}" />
+				       	</p:column>	
+				       	<p:column colspan="2">
+							<!-- No se limita el tipo de fichero ni el tamaño. -->
+							<p:fileUpload id="docUpload" style="width:100%" fileUploadListener="#{ResBalGasContractsView.handleDocFileUpload}" 
+								mode="advanced" dragDropSupport="true" fileLimit="1" ajax="true" update=":form:msgs,:newContractFormId:fileNameUpdatedMsg"
+		     					auto="true" onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()"/>
+		     				<h:outputText id="fileNameUpdatedMsg" 
+		     					value="#{not empty ResBalGasContractsView.newContract.fileName? ResBalGasContractsView.newContract.fileName:'No'} #{msg['file_uploaded']}"/>
+				       	</p:column>
+					</p:row>
+					
+					
+
+					<p:row>
+				     	<p:column colspan="3">
+				<h:outputText value="#{msg['res_bal_con_warn']}" style="color:red"/>				
+		 					<p:dataTable widgetVar="w_newResContDetails1"  id="newResContDetails1" var="detail" value="#{ResBalGasContractsView.newContract.details}"
+								reflow="true" style="margin-bottom:20px;border-collapse:collapse"
+								scrollable="true" scrollHeight="100%"
+ 								selection="#{ResBalGasContractsView.selectedNewDetails}" rowKey="#{detail.randomId}"
+							    paginator="true" rows="4">
+		 					 	
+			 					<f:facet name="header">
+			 						<p:outputPanel style="height:30px">
+			 							<h:outputText value="#{msg['res_bal_con_contract_details']}" style="float:left;"/>
+			 							<p:commandButton value="#{msg['res_bal_con_delete_selected']}" icon="ui-icon-minus" style="float:right;"
+											actionListener="#{ResBalGasContractsView.deleteSelectedDetails}" update=":form:msgs,#{p:component('newResContDetails1')}"
+											onstart="PF('cargando').show()"	oncomplete="PF('cargando').hide()"/>
+		   					       		<p:commandButton value="#{msg['res_bal_con_new_detail']}" icon="ui-icon-plus" style="float:right;"
+											actionListener="#{ResBalGasContractsView.createNewDetail}" update=":form:msgs,#{p:component('newResContDetails1')}"
+											onstart="PF('cargando').show()"	oncomplete="PF('cargando').hide()"/>
+			 						</p:outputPanel>
+						        </f:facet>
+								
+								<!-- En cada cambio se actualiza el propio componente, porque si no, se pierden los cambios al pasar de pantalla en la paginacion. -->
+						       	<p:column headerText="#{msg['res_bal_con_zone']}" style="width: 75px;text-align: center;">
+									<p:selectOneMenu id="detZoneId" value="#{detail.zoneId}" autoWidth="false" style="width: 60px;">
+ 										<f:selectItem itemLabel="" itemValue="" />
+      									<f:selectItems value="#{ResBalGasContractsView.getValidZones(changeSystemView.system).entrySet()}" var="entry" 
+      											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+										<p:ajax event="change" update="detZoneId,detAreaId,detPointId" />
+					           		</p:selectOneMenu>	
+						       	</p:column>
+
+						       	<p:column headerText="#{msg['res_bal_con_area']}" style="width: 50px;text-align: center;">
+									<p:selectOneMenu id="detAreaId" value="#{detail.areaId}" autoWidth="false" style="width: 35px;">
+ 										<f:selectItem itemLabel="" itemValue="" />
+      									<f:selectItems value="#{ResBalGasContractsView.getAreas(changeSystemView.system, detail).entrySet()}" var="entry" 
+      											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+										<p:ajax event="change" update="detAreaId,detPointId" />
+					           		</p:selectOneMenu>	
+						       	</p:column>
+						       
+						       	<p:column headerText="#{msg['res_bal_con_point_type']}" style="width: 65px;text-align: center;">
+									<p:selectOneMenu id="detPointTypeId" value="#{detail.pointTypeId}" autoWidth="false" style="width: 50px;">
+ 										<f:selectItem itemLabel="" itemValue="" />
+      									<f:selectItems value="#{ResBalGasContractsView.pointTypes.entrySet()}" var="entry" 
+      											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+										<p:ajax event="change" update="detPointTypeId,detPointId" />
+					           		</p:selectOneMenu>	
+						       	</p:column>
+						       
+						   		<p:column headerText="#{msg['res_bal_con_nom_point_id']}" style="width: 105px;text-align: center;">
+									<p:selectOneMenu id="detPointId" value="#{detail.pointId}" autoWidth="false" style="width: 95px;">
+ 										<f:selectItem itemLabel="" itemValue="" />
+      									<f:selectItems value="#{ResBalGasContractsView.getValidPoints(detail).entrySet()}" var="entry" 
+      											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+										<p:ajax event="change" update="detPointId" />
+					           		</p:selectOneMenu>	
+						       	</p:column>
+						       	
+								<p:column headerText="#{msg['res_bal_con_start_date']}" style="width: 110px;text-align: center;">
+									<p:calendar id="detStartDate" size="6" pattern="dd/MM/yyyy" value="#{detail.startDate}"
+										mask="true" showButtonPanel="true" showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="detStartDate"></p:ajax>
+										<p:ajax event="change" update="detStartDate"></p:ajax>
+									</p:calendar>
+								</p:column>
+								
+								<p:column headerText="#{msg['res_bal_con_end_date']}" style="width: 110px;text-align: center;">
+									<p:calendar id="detEndDate" size="6" pattern="dd/MM/yyyy" value="#{detail.endDate}"
+										mask="true" showButtonPanel="true" showOn="button" navigator="true">
+										<p:ajax event="dateSelect" update="detEndDate"></p:ajax>
+										<p:ajax event="change" update="detEndDate"></p:ajax>
+									</p:calendar>
+								</p:column>
+
+								<p:column headerText="#{msg['res_bal_con_reserved_cap']}" style="width: 105px;text-align: right;">								
+									<p:inputNumber id="inputNumResCap" value="#{detail.dailyReservedCap}" minValue="0" decimalPlaces="4" thousandSeparator="," 
+											decimalSeparator="." emptyValue="empty" size="10">
+										<p:ajax event="change" update="inputNumResCap"></p:ajax>											
+									</p:inputNumber>
+								</p:column>
+								
+								<p:column headerText="Select" selectionMode="multiple" style="width:36px;text-align:center"/>
+							</p:dataTable>
+				     	</p:column>
+					</p:row>					
+				</p:panelGrid> 				
+			</h:form> 
+		</p:dialog>
+	</shiro:hasPermission>
+		
+	</ui:define>
+	
+	<script type="text/javascript">
+	function start() {
+	    PF('cargando').show();
+	}
+	 
+	function stop() {
+	    PF('cargando').hide();
+	}
+	</script>
+</ui:composition>

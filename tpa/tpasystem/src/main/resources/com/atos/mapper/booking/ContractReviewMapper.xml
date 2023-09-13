@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- Namespace -->
+<mapper namespace="com.atos.mapper.booking.ContractReviewMapper">
+<resultMap type="com.atos.beans.booking.CRReviewDto" id="CRReviewDto">
+<id column="Zone" property="zone"/>
+<id column="Area" property="area"/>
+<id column="Sub_Area" property="subArea"/>
+<id column="entry_Point" property="entryPoint"/>
+<id column="entry_Meter_Id" property="entryMeterId"/>
+<id column="NEW_CONNECTION" property="newConnection"/>
+<id column="Block_Valve" property="blockValve"/>
+<id column="pr_max" property="prMax"/>
+<id column="pr_min" property="prMin"/>
+<id column="Temperature_Range_max" property="temperatureRangeMax"/>
+<id column="temperature_Range_min" property="temperatureRangeMin"/>
+<id column="date_from" property="dateFrom"/>
+<id column="date_to" property="dateTo"/>
+
+</resultMap>
+
+<resultMap type="com.atos.beans.booking.CapacityDetailDto" id="CapacityDetailDto">
+<id column="Zone" property="zone"/>
+<id column="Area" property="area"/>
+<id column="Entry_Point" property="entryPoint"/>
+<id column="Contract_Type" property="contractType"/>
+<id column="Month_Year" property="monthYear"/>
+<id column="Comments" property="comments"/>
+<id column="OperationFile_ID" property="operationFileId"/>
+<id column="Daily_Booking_mbtu" property="dailyBookingmbtu"/>
+<id column="Hourly_Booking_MMBTU" property="hourlyBookingMmbtu"/>
+<id column="Daily_Booking_MMscfd" property="dailyBookingMmscfd"/>
+<id column="Hourly_Booking_MMscfd" property="hourlyBookingMmscfd"/>
+
+</resultMap>
+
+<resultMap type="com.atos.beans.booking.GasQualityDto" id="GasQualityDto">
+<id column="Zone" property="zone"/>
+<id column="Area" property="area"/>
+<id column="SubArea" property="subarea"/>
+<id column="Point" property="point"/>
+<id column="Meter_ID" property="meterId"/>
+<id column="Gas_Parameter" property="gasParameter"/>
+<id column="MinValue" property="minvalue"/>
+<id column="MaxValue" property="maxvalue"/>
+<id column="Sort_Value" property="sortValue"/>
+<id column="New_Connection" property="newConn"/>
+<id column="From_Date" property="dateFrom"/>
+<id column="To_Date" property="dateTo"/>
+
+</resultMap>
+
+<select id="proRequestUpdate" statementType="CALLABLE" resultType="hashmap"  parameterType="hashmap">
+{call pck_contract_submission.pro_request_update(
+			#{par_file, mode=IN},
+            #{par_user, mode=IN},
+            #{par_language,  mode=IN},
+            #{par_error_code, javaType=Integer, jdbcType=NUMERIC, mode=OUT },
+            #{par_error_desc, javaType=String, jdbcType=VARCHAR, mode=OUT})}
+</select>
+
+<insert id="insertModified" useGeneratedKeys="true"
+		keyProperty="idnOperationFileUpdate" keyColumn="idn_operation_file_update"
+		parameterType="com.atos.beans.booking.OperationFileUpdate">
+		Insert into TPA_TOPERATION_FILE_UPDATE
+		(IDN_OPERATION_FILE_UPDATE,
+		IDN_OPERATION_FILE,
+		IDN_USER_GROUP,
+		STATUS,
+		AUD_INS_USER,
+		AUD_LAST_USER,
+		xml_data) values (TPA_SOPERATION_FILE_UPDATE.nextval , #{idnOperationFile},
+		#{idnUserGroup},#{status},#{audInsUser}, #{audLastUser}, #{xmlData}
+		)
+	</insert>
+	<select id="isEditable" resultType="hashmap"  parameterType="String">
+		select PCK_CONTRACT_SUBMISSION.fun_is_request_modifiable(#{value}) editable  from dual
+	</select>
+	
+	<select id="getIdnUserGroup" resultType="java.math.BigDecimal"  parameterType="String">
+		select idn_user_group from tpa_tuser_group
+		where user_group_id=#{user_group_id}
+	</select>
+	
+	<select id="getMailData" resultType="com.atos.beans.booking.CapacityRequestMailBean"  parameterType="String">
+		SELECT r.idn_user_group,
+       	u.user_group_id,
+       	o.operation_desc,
+       	NVL(c.contract_code, r.request_code) AS contract_num,
+       	NVL(c.start_date, r.start_date) AS start_date,
+      	NVL(c.end_date, r.end_date) AS end_date
+  		FROM tpa_tcontract_request r
+		INNER JOIN tpa_tuser_group u
+    	ON r.idn_user_group = u.idn_user_group
+		INNER JOIN tpa_voperation o
+    	ON r.idn_operation = o.idn_operation
+  		LEFT JOIN tpa_tcontract c
+    	ON r.idn_contract = c.idn_contract
+		WHERE r.request_code = #{request_code}
+	</select>
+	
+
+	<select id="getGasQuality" resultMap="GasQualityDto" parameterType="String">
+		SELECT DISTINCT
+       vzone.ZONE_CODE         AS "Zone",
+       varea.AREA_CODE         AS "Area",
+       xheadr.SUBAREA          AS "SubArea",
+       spoint.POINT_CODE       AS "point",
+       vrequest.METERING_POINT AS "Meter_ID",
+       vrequest.IS_NEW_CONNECTION AS "New_Connection",
+       qparam.PARAMETER_CODE   AS "Gas_Parameter",
+       pgasq.MIN_VALUE         AS "MinValue",
+       pgasq.MAX_VALUE         AS "MaxValue",
+       From_To_Dates.FROM_DATE AS "From_Date",
+       From_To_Dates.TO_DATE AS "To_Date",
+       CASE qparam.PARAMETER_CODE
+           WHEN 'HV' THEN 1
+           WHEN 'WI' THEN 2
+           WHEN 'C2' THEN 3
+           WHEN 'CO2' THEN 4
+           WHEN 'O2' THEN 5
+           WHEN 'N2' THEN 6
+           WHEN 'H2S' THEN 7
+           WHEN 'S' THEN 8
+           WHEN 'Hg' THEN 9
+           WHEN 'H2O' THEN 10
+           WHEN 'HCDewPoint' THEN 11
+       END AS "Sort_Value"
+  FROM TPA_VCONTRACT_REQUEST vrequest, -- tpa_tcontract_request, tpa_tcontract_agreement, tpa_tcontract_point
+       TPA_TCONTRACT_XLS_HEADR  xheadr,
+       TPA_TCONTRACT_POINT_GASQ pgasq,
+       TPA_TGAS_QUALITY_PARAM   qparam,
+       TPA_TSYSTEM_POINT        spoint,
+       TPA_TSYSTEM_POINT_TYPE   ptype,
+       TPA_VZONE_TPA            vzone,
+       TPA_VAREA_TPA            varea,
+       (SELECT MIN(vcrequest.AGREEMENT_START_DATE) AS FROM_DATE, MAX(vcrequest.AGREEMENT_END_DATE) AS TO_DATE, vcrequest.IDN_SYSTEM_POINT
+          FROM TPA_VCONTRACT_REQUEST vcrequest
+         WHERE vcrequest.REQUEST_CODE = #{request_code}
+         GROUP BY vcrequest.IDN_SYSTEM_POINT) From_To_Dates
+ WHERE vrequest.REQUEST_CODE = #{request_code}
+   AND pgasq.IDN_CONTRACT_POINT = vrequest.IDN_CONTRACT_POINT
+   AND qparam.IDN_GAS_QUALITY_PARAM = pgasq.IDN_GAS_QUALITY_PARAM
+   AND qparam.PARAMETER_CODE NOT IN ('Pressure', 'Temperature')
+   AND spoint.IDN_SYSTEM_POINT = vrequest.IDN_SYSTEM_POINT
+   AND From_To_Dates.IDN_SYSTEM_POINT = spoint.IDN_SYSTEM_POINT
+   AND ptype.TYPE_CODE = 'ENTRY' 
+   AND spoint.IDN_SYSTEM_POINT_TYPE = ptype.IDN_SYSTEM_POINT_TYPE
+   AND varea.IDN_AREA = spoint.IDN_AREA
+   AND vzone.IDN_ZONE = varea.IDN_ZONE
+   AND xheadr.IDN_CONTRACT_REQUEST(+) = vrequest.IDN_CONTRACT_REQUEST
+   AND xheadr.IDN_SYSTEM_POINT(+) = spoint.IDN_SYSTEM_POINT
+ ORDER BY 1, 2,4,9
+	</select>
+
+	<select id="getCapacities" resultMap="CapacityDetailDto" parameterType="hashmap">
+			SELECT vzone.ZONE_CODE         AS "Zone",
+       varea.AREA_CODE         AS "Area",
+       spoint.POINT_CODE       AS "Entry_Point",
+       oterm.term_code         AS "Contract_Type",
+       vrequest.IDN_OPERATION_FILE AS "OperationFile_ID",
+       vrequest.OPERATOR_COMMENTS  AS "Comments",
+       vrequest.AGREEMENT_START_DATE AS "Month_Year",
+       vrequest.quantity       AS "Daily_Booking_mbtu",
+       vrequest.max_hour_qty   AS "Hourly_Booking_MMBTU",
+       vrequest.volume         AS "Daily_Booking_MMscfd", -- only for entry points
+       vrequest.max_hour_vol   AS "Hourly_Booking_MMscfd" -- only for entry points
+  FROM TPA_VCONTRACT_REQUEST    vrequest, -- tpa_tcontract_request, tpa_tcontract_agreement, tpa_tcontract_point
+       TPA_TSYSTEM_POINT        spoint,
+       TPA_TSYSTEM_POINT_TYPE   ptype,
+       TPA_VZONE_TPA            vzone,
+       TPA_VAREA_TPA            varea,
+       TPA_TOPERATION           toperation,
+       TPA_TOPERATION_TERM      oterm
+ WHERE vrequest.REQUEST_CODE = #{requestCode}
+   AND spoint.IDN_SYSTEM_POINT = vrequest.IDN_SYSTEM_POINT
+   AND ptype.TYPE_CODE = #{pointType}
+   AND spoint.IDN_SYSTEM_POINT_TYPE = ptype.IDN_SYSTEM_POINT_TYPE
+   AND varea.IDN_AREA = spoint.IDN_AREA
+   AND vzone.IDN_ZONE = varea.IDN_ZONE
+   AND toperation.IDN_OPERATION = vrequest.IDN_OPERATION
+   AND oterm.IDN_OPERATION_TERM = toperation.IDN_OPERATION_TERM
+ ORDER BY 1, 2, 3, 4
+	</select>
+
+	<select id="getCapacitiesContractQuery" resultMap="CapacityDetailDto" parameterType="hashmap">
+SELECT vzone.ZONE_CODE         AS "Zone",
+       varea.AREA_CODE         AS "Area",
+       spoint.POINT_CODE       AS "Entry_Point",
+       oterm.term_code         AS "Contract_Type",
+       vrequest.IDN_OPERATION_FILE   AS "OperationFile_ID",
+       vrequest.OPERATOR_COMMENTS    AS "Comments",
+       vrequest.AGREEMENT_START_DATE AS "Month_Year",
+       sum(nvl(vrequest.quantity, 0))       AS "Daily_Booking_mbtu",
+       sum(nvl(vrequest.max_hour_qty, 0))   AS "Hourly_Booking_MMBTU",
+       sum(nvl(vrequest.volume, 0))         AS "Daily_Booking_MMscfd", -- only for entry points
+       sum(nvl(vrequest.max_hour_vol, 0))   AS "Hourly_Booking_MMscfd" -- only for entry points
+  FROM TPA_VCONTRACT_REQ_CAPA_FIRM  vrequest, -- tpa_tcontract_request, tpa_tcontract_agreement, tpa_tcontract_point
+       TPA_TSYSTEM_POINT            spoint,
+       TPA_TSYSTEM_POINT_TYPE       ptype,
+       TPA_VZONE_TPA                vzone,
+       TPA_VAREA_TPA                varea,
+       TPA_TOPERATION               toperation,
+       TPA_TOPERATION_TERM          oterm
+WHERE vrequest.REQUEST_CODE = #{requestCode}
+   AND spoint.IDN_SYSTEM_POINT = vrequest.IDN_SYSTEM_POINT
+   AND ptype.TYPE_CODE = #{pointType}
+   AND spoint.IDN_SYSTEM_POINT_TYPE = ptype.IDN_SYSTEM_POINT_TYPE
+   AND varea.IDN_AREA = spoint.IDN_AREA
+   AND vzone.IDN_ZONE = varea.IDN_ZONE
+   AND toperation.IDN_OPERATION = vrequest.IDN_OPERATION
+   AND oterm.IDN_OPERATION_TERM = toperation.IDN_OPERATION_TERM
+GROUP BY vzone.ZONE_CODE, varea.AREA_CODE, spoint.POINT_CODE, oterm.term_code, vrequest.IDN_OPERATION_FILE, vrequest.OPERATOR_COMMENTS, vrequest.AGREEMENT_START_DATE   
+ ORDER BY 1, 2, 3, 4
+	</select>
+
+	<select id="getPoints" resultMap="CRReviewDto"
+		parameterType="hashmap">
+		SELECT DISTINCT
+       vzone.ZONE_CODE         AS "Zone",
+       varea.AREA_CODE         AS "Area",
+       xheadr.SUBAREA          AS "SubArea",
+       spoint.POINT_CODE       AS "entryPoint",
+       vrequest.METERING_POINT AS "entryMeterId",
+       vrequest.IS_NEW_CONNECTION as "NEW_CONNECTION",
+       xheadr.BLOCK_VALVE      AS "Block_Valve",
+       ctype.TYPE_CODE         AS "Type of Customer",
+       SUM(DECODE(qparam.PARAMETER_CODE, 'Pressure',    pgasq.MAX_VALUE)) AS "Pr_Max",
+       SUM(DECODE(qparam.PARAMETER_CODE, 'Pressure',    pgasq.MIN_VALUE)) AS "Pr_Min",
+       SUM(DECODE(qparam.PARAMETER_CODE, 'Temperature', pgasq.MAX_VALUE)) AS "Temperature_Range_max",
+       SUM(DECODE(qparam.PARAMETER_CODE, 'Temperature', pgasq.MIN_VALUE)) AS "Temperature_Range_Min",
+       From_To_Dates.FROM_DATE AS "Date_from",
+       From_To_Dates.TO_DATE AS "Date_to"
+  FROM TPA_VCONTRACT_REQUEST vrequest, -- tpa_tcontract_request, tpa_tcontract_agreement, tpa_tcontract_point
+       TPA_TCONTRACT_XLS_HEADR  xheadr,
+       TPA_TCONTRACT_POINT_GASQ pgasq,
+       TPA_TGAS_QUALITY_PARAM   qparam,
+       TPA_TSYSTEM_POINT        spoint,
+       TPA_TSYSTEM_POINT_TYPE   ptype,
+       TPA_VZONE_TPA            vzone,
+       TPA_VAREA_TPA            varea,
+       TPA_TCUSTOMER_TYPE       ctype,
+       (SELECT MIN(vcrequest.AGREEMENT_START_DATE) AS FROM_DATE, MAX(vcrequest.AGREEMENT_END_DATE) AS TO_DATE, vcrequest.IDN_SYSTEM_POINT
+          FROM TPA_VCONTRACT_REQUEST vcrequest
+         WHERE vcrequest.REQUEST_CODE = #{requestCode}
+         GROUP BY vcrequest.IDN_SYSTEM_POINT) From_To_Dates
+ WHERE vrequest.REQUEST_CODE = #{requestCode}
+   AND pgasq.IDN_CONTRACT_POINT = vrequest.IDN_CONTRACT_POINT
+   AND qparam.IDN_GAS_QUALITY_PARAM = pgasq.IDN_GAS_QUALITY_PARAM
+   AND qparam.PARAMETER_CODE IN ('Pressure', 'Temperature')
+   AND spoint.IDN_SYSTEM_POINT = vrequest.IDN_SYSTEM_POINT
+   AND From_To_Dates.IDN_SYSTEM_POINT = spoint.IDN_SYSTEM_POINT
+   AND ptype.TYPE_CODE = #{pointType}
+   AND spoint.IDN_SYSTEM_POINT_TYPE = ptype.IDN_SYSTEM_POINT_TYPE
+   AND varea.IDN_AREA = spoint.IDN_AREA
+   AND vzone.IDN_ZONE = varea.IDN_ZONE
+   AND xheadr.IDN_CONTRACT_REQUEST(+) = vrequest.IDN_CONTRACT_REQUEST
+   AND xheadr.IDN_SYSTEM_POINT(+) = spoint.IDN_SYSTEM_POINT
+   AND ctype.IDN_CUSTOMER_TYPE(+) = xheadr.IDN_CUSTOMER_TYPE
+ GROUP BY vzone.ZONE_CODE, varea.AREA_CODE, xheadr.SUBAREA, spoint.POINT_CODE, vrequest.METERING_POINT,vrequest.IS_NEW_CONNECTION, xheadr.BLOCK_VALVE, ctype.TYPE_CODE, vrequest.IDN_CONTRACT_POINT, From_To_Dates.FROM_DATE, From_To_Dates.TO_DATE
+ ORDER BY 1,2,3
+		</select>
+</mapper>

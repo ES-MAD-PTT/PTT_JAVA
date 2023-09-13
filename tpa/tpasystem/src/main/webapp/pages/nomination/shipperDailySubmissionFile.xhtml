@@ -1,0 +1,74 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:f="http://java.sun.com/jsf/core"	
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_nominations']}" url="#" />
+			<p:menuitem value="#{msg['menu_day_file']}" url="/pages/nomination/shipperDailySubmissionFile.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+		<h:form enctype="multipart/form-data" id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="5000"/>
+			
+				<p:panelGrid columns="2" style="width:100%">
+
+					<shiro:hasPermission name="#{changeSystemView.system}.NOMINATIONS.DAILY.SUB_SHIPPER.QUERY">
+					
+					<p:panelGrid id="filters">
+						<p:row>
+							<p:column  style="font-weight: bold;">
+								<h:outputText value="#{msg['gas_day']}" />
+							</p:column>
+							<p:column  style="font-weight: bold;">
+								<h:outputText value="#{msg['contract_code']}" />
+							</p:column>
+							<shiro:hasPermission name="#{changeSystemView.system}.NOMINATIONS.DAILY.SUB_SHIPPER.ADD">
+							<p:column rowspan="2" >
+								<p:fileUpload id="upload" style="width:100%" fileUploadListener="#{shipperDailySubmissionFileView.handleFileUpload}" mode="advanced" dragDropSupport="true"
+           							fileLimit="1" ajax="true" update="msgs,upload" sizeLimit="1000000" allowTypes="/(\.|\/)(xlsx|xls)$/" 
+           							onstart="PF('cargando').show()"
+	           						oncomplete="PF('cargando').hide()"/>
+							</p:column>
+							</shiro:hasPermission>
+							<p:column  style="font-weight: bold;">
+  								<h:outputText value="#{shipperDailySubmissionFileView.nominationSubmissionDeadlinePhrase}" />
+							</p:column>							
+						</p:row>
+						<p:row>
+							<p:column>
+								<p:calendar id="fecInicio" size="10" pattern="dd/MM/yyyy" mask="true" value="#{shipperDailySubmissionFileView.filters.start_date}"
+									showOn="button" navigator="true">
+									<p:ajax event="dateSelect" update="fecInicio,contract_code"></p:ajax>
+									<p:ajax event="change" update="fecInicio,contract_code"></p:ajax>
+								</p:calendar>
+							</p:column>
+							<p:column>
+								<p:selectOneMenu widgetVar="contract_code" id="contract_code" style="width:100px" value="#{shipperDailySubmissionFileView.filters.contract_code}" >
+									<f:selectItem itemLabel="" itemValue="" />
+       								<f:selectItems value="#{shipperDailySubmissionFileView.contractCodes.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+								
+									<p:ajax event="change" update="contract_code"></p:ajax>
+				           		</p:selectOneMenu>							
+							</p:column>
+							<p:column  style="font-weight: bold;">
+  								<h:outputText value="#{shipperDailySubmissionFileView.renominationSubmissionDeadlinePhrase}" />
+							</p:column>								
+						</p:row>
+					</p:panelGrid>
+					</shiro:hasPermission>
+				</p:panelGrid>
+
+		</h:form>
+	</ui:define>
+
+
+</ui:composition>

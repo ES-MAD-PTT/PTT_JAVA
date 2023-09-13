@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<!-- Namespace -->
+<mapper namespace="com.atos.mapper.balancing.BalanceManagementMapper">
+
+     <select id="selectOpenPeriodFirstDay" resultType="java.util.Date" parameterType="hashmap">
+		SELECT nvl((SELECT MAX(bc.gas_day) + 1 
+		             FROM tpa_tbalance_closing bc 
+		            WHERE bc.idn_balance_closing_type = (SELECT bct.idn_balance_closing_type 
+		                                                   FROM tpa_tbalance_closing_type bct 
+		                                                  WHERE bct.type_code = #{closingTypeCode}) 
+                           AND bc.idn_pipeline_system = #{idnSystem}
+		              AND bc.version_date = 
+		                  (SELECT MAX(bcx.version_date) 
+		                     FROM tpa_tbalance_closing bcx 
+		                    WHERE bcx.gas_day = bc.gas_day 
+                                   AND bcx.idn_pipeline_system = bc.idn_pipeline_system
+		                      AND bcx.idn_balance_closing_type = bc.idn_balance_closing_type)), 
+		           to_date(tval.parameter_value, tpar.data_format)) 
+		  FROM tpa_tparameter_value tval, 
+		       tpa_tparameter       tpar 
+		 WHERE tpar.idn_parameter = tval.idn_parameter 
+		 <if test="sysCode == 'ONSHORE'">
+		   AND tpar.parameter_code = 'ALLOCATION.START.DATE.ONSHORE' 
+		   </if>
+		 <if test="sysCode == 'OFFSHORE'">
+
+		   AND tpar.parameter_code = 'ALLOCATION.START.DATE.OFFSHORE'
+		   </if>
+		   AND trunc(SYSDATE) BETWEEN tval.start_date AND nvl(tval.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
+		   </select>
+
+    
+    <select id="selectBalanceClosingTypeCodes" resultType="com.atos.beans.ComboFilter">
+		select tbct.type_code as key, tbct.type_desc as value
+		from tpa_tbalance_closing_type tbct
+		order by upper(tbct.type_desc) asc
+    </select>
+    
+    <select id="closeBalance" statementType="CALLABLE" parameterType="com.atos.filters.balancing.BalanceManagementFilter">
+		{call #{errorCode,jdbcType=INTEGER,mode=OUT} :=
+			pck_balance.close_balance(
+				#{allocTypeCode,jdbcType=VARCHAR,mode=IN},
+				#{idnSystem,jdbcType=INTEGER,mode=IN},
+				#{closingTypeCode,jdbcType=VARCHAR,mode=IN},
+				#{closingDate,jdbcType=DATE,mode=IN},
+				#{user,jdbcType=VARCHAR,mode=IN},
+				#{lang,jdbcType=VARCHAR,mode=IN},
+				#{errorDetail,jdbcType=VARCHAR,mode=OUT},
+				#{errorDesc,jdbcType=VARCHAR,mode=OUT})}
+	</select>
+</mapper>

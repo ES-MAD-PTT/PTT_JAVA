@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<!-- Namespace -->
+<mapper namespace="com.atos.mapper.scadaAlarms.TagnameManagementMapper">
+
+    <resultMap type="com.atos.beans.scadaAlarms.TagnameManagementBean" id="TagnameManagement">
+        <id column="idn_scada_tag_name" property="idn_scada_tag_name"  />
+   		<result property="scada_tag_name" column="scada_tag_name"/>
+        <result property="scada_point" column="scada_point"/>   
+        <result property="scada_label" column="scada_label"/>   
+        <result property="min_alarm_threshold" column="min_alarm_threshold"/>
+        <result property="max_alarm_threshold" column="max_alarm_threshold"/>   
+        <result property="on_off_alarm_threshold" column="on_off_alarm_threshold"/>
+        <result property="is_binary" column="is_binary"/>
+        <result property="is_enabled" column="is_enabled"/>
+        <result property="idn_scada_label" column="idn_scada_label"/>
+        <result property="idn_scada_point" column="idn_scada_point"/>
+        <result property="idn_pipeline_system" column="idn_pipeline_system"/>   
+     </resultMap>
+     
+      <select id="selectScadaTagName" resultType="com.atos.beans.ComboFilterNS">
+		select tag.idn_scada_tag_name as key,  tag.scada_tag_name as value
+		from tpa_tscada_tag_name tag,
+			 tpa_tscada_point poi
+	   where tag.idn_scada_point = poi.idn_scada_point
+	     and poi.idn_pipeline_system = #{idn_system}
+	   		order by UPPER(tag.scada_tag_name)
+    </select>
+     
+     <select id="selectPoints" resultType="com.atos.beans.ComboFilterNS">
+		select a.idn_scada_point as key,  a.scada_point as value
+		from  tpa_tscada_point a
+	    where a.idn_pipeline_system = #{idn_system}
+		order by UPPER(a.scada_point)
+    </select>
+    
+     <select id="selectLabels" resultType="com.atos.beans.ComboFilterNS">
+		select a.idn_scada_label as key,  a.scada_label as value
+		from  tpa_tscada_label  a
+	    order by UPPER(a.scada_label)
+    </select>
+     
+      <select id="selectType" resultType="com.atos.beans.ComboFilterNS">
+		SELECT val
+		  FROM (SELECT 'ON' AS val FROM dual UNION SELECT 'OFF' AS val FROM dual)
+		WHERE #{is_binary} = 'Y'
+		UNION
+		SELECT val
+		  FROM (SELECT 'HIGH' AS val FROM dual UNION SELECT 'LOW' AS val FROM dual)
+		WHERE #{is_binary} = 'N'
+		ORDER BY 1 
+
+    </select>
+     
+   
+    <select id="selectTagnameManagement" resultMap="TagnameManagement" >
+		  SELECT tag.idn_scada_tag_name,
+		       tag.scada_tag_name,
+		       pnt.scada_point,
+		       lbl.scada_label,
+		       tag.min_alarm_threshold,
+		       tag.max_alarm_threshold,
+		       tag.on_off_alarm_threshold,
+		       tag.is_binary,
+		       tag.is_enabled,
+		       tag.idn_scada_label,
+		       tag.idn_scada_point,
+		       pnt.idn_pipeline_system
+		  FROM tpa_tscada_tag_name tag,
+		       tpa_tscada_label    lbl,
+		       tpa_tscada_point    pnt
+		 WHERE tag.idn_scada_label = lbl.idn_scada_label
+		   AND tag.idn_scada_point = pnt.idn_scada_point
+		   and pnt.idn_pipeline_system = #{idn_system} 
+		 	
+		 		
+	 	<if test="idnScadaTagName != null">
+			and tag.idn_scada_tag_name = #{idnScadaTagName}
+		</if> 		
+	 	<if test="idLabel != null">
+			and tag.idn_scada_label =  #{idLabel}
+		</if>
+		<if test="idPonit != null">
+			and  tag.idn_scada_point = #{idPonit}
+		</if>
+		<if test="binary != null and binary!=''">
+			and  tag.is_binary = #{binary}
+		</if>
+    	order by scada_tag_name 
+    </select>
+
+	 <select id="selectPermiso" resultType="java.math.BigDecimal" >
+	 		SELECT count(*)
+			FROM tpa_vuser_current_permission vp
+			WHERE   vp.idn_pipeline_system  = #{idn_system}
+			    AND vp.idn_user = #{idn_user}
+			    AND vp.permission_code = #{permission_code}
+	 </select>
+
+  
+    <select id="getTagnameId" resultType="java.lang.String">
+		SELECT t.IDN_SCADA_TAG_NAME   
+		FROM tpa_tscada_tag_name t
+		WHERE  t.SCADA_TAG_NAME= #{scada_tag_name}	
+	</select>
+	
+	 <select id="getLabelId" resultType="java.lang.String">
+		SELECT t.IDN_SCADA_LABEL  
+		FROM tpa_tscada_label t
+		WHERE  t.SCADA_LABEL= #{scadaLabel}	
+	</select>
+	
+	 <select id="getPointId" resultType="java.lang.String">
+		SELECT t.IDN_SCADA_POINT  
+		FROM tpa_tscada_POINT t
+		WHERE  t.SCADA_POINT= #{scadaPoint}	
+	</select>
+    
+    <update id="updateTagnameManagement" parameterType="com.atos.beans.scadaAlarms.TagnameManagementBean">
+		UPDATE tpa_tscada_tag_name  set
+            aud_last_user=#{username},
+			MIN_ALARM_THRESHOLD= #{min_alarm_threshold}, 
+			MAX_ALARM_THRESHOLD= #{max_alarm_threshold},
+			ON_OFF_ALARM_THRESHOLD= #{on_off_alarm_threshold},
+			IS_BINARY= #{binary},
+			IS_ENABLED= #{enabled}
+		where IDN_SCADA_TAG_NAME = #{idn_scada_tag_name}
+	</update>
+    
+    <insert id="insertTagnameManagements" parameterType="com.atos.beans.scadaAlarms.TagnameManagementBean">
+    		INSERT INTO tpa_tscada_tag_name
+		      (IDN_SCADA_TAG_NAME, 
+		      SCADA_TAG_NAME,
+		      IDN_SCADA_LABEL, 
+		      IDN_SCADA_POINT,
+		       MIN_ALARM_THRESHOLD,MAX_ALARM_THRESHOLD,
+		       ON_OFF_ALARM_THRESHOLD,IS_BINARY,IS_ENABLED,
+	                                        aud_ins_user,
+	                                        aud_last_user)
+		   VALUES
+		      (tpa_sscada_tag_name.nextval,
+		       #{scada_tag_name},
+		       #{idn_scada_label},
+		       #{idn_scada_point},
+		       #{min_alarm_threshold},
+		       #{max_alarm_threshold},
+		       #{on_off_alarm_threshold},
+		       #{binary},
+		       #{enabled},
+	     	   #{username},
+	           #{username})
+	</insert>
+	
+	 <insert id="insertScadaLabel" parameterType="com.atos.beans.scadaAlarms.ScadaLabelBean">
+	 
+		 INSERT INTO tpa_tscada_label
+		      (IDN_SCADA_LABEL, 
+		      SCADA_LABEL,
+              aud_ins_user,
+              aud_last_user)
+		   VALUES
+		      (tpa_sscada_label.nextval,
+		       #{scadaLabel},
+	     	   #{username},
+	           #{username})
+	 
+	 </insert>
+	 
+	 <insert id="insertScadaPoint" parameterType="com.atos.beans.scadaAlarms.ScadaPointBean">
+	 	INSERT INTO tpa_tscada_point
+		      (IDN_SCADA_POINT, 
+		      SCADA_POINT,
+		      idn_pipeline_system,
+              aud_ins_user,
+              aud_last_user)
+		   VALUES
+		      (tpa_sscada_POINT.nextval,
+		       #{scadaPoint},
+		       #{idn_pipeline_system},
+	     	   #{username},
+	           #{username})
+	 </insert>
+</mapper>

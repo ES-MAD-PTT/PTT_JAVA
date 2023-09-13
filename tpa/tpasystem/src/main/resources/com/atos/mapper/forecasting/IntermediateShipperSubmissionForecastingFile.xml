@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atos.mapper.forecasting.IntermediateShipperSubmissionForecastingFileMapper">
+
+     <select id="selectTemplateFile" parameterType="com.atos.beans.forecasting.OperationTemplateBean" resultType="com.atos.beans.forecasting.OperationTemplateBean">
+		select idn_operation_template,
+		       idn_operation_category,
+		       idn_operation_term,
+		       file_type,
+		       start_date,
+		       end_date,
+		       binary_data,
+		       file_name,
+		       idn_xml_map
+       		  from tpa_toperation_template ot
+		 where 
+			ot.idn_pipeline_system = #{idnSystem}
+		 and ot.idn_operation_category = #{idn_operation_category}
+		   and ot.idn_operation_term = #{idn_operation_term}
+		   and sysdate between start_date and nvl(end_date,sysdate)
+	</select>
+</mapper>

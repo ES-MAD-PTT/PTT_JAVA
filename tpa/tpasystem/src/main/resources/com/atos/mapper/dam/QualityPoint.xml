@@ -37,56 +37,59 @@
     </resultMap>
      
     <select id="selectQualityPoints" resultMap="QualityPoint">
-		WITH quality_point AS
-		 (SELECT sp.idn_system_point,
-		         sp.point_code,
-		         sp.point_desc,
-		         sp.type_code,
-		         sp.type_desc,
-		         sp.start_date,
-		         sp.end_date,
-		         sp.idn_system_point_type,
-		         sp.idn_system_point_group
-		    FROM tpa_vsystem_point sp
-		   WHERE sp.group_code = 'QUALITY' 
-		    <if test="startDate != null">
-		       AND nvl(sp.end_date,to_date('9999/12/31','yyyy/mm/dd'))>=  #{startDate}
-		    </if>
-		    <if test="endDate != null">
-		       AND #{endDate} >= sp.start_date
-		    </if>
-		    <if test="pointCode != null and pointCode != ''">
-		       AND sp.idn_system_point = #{pointCode}
-		    </if>
-		    <if test="typeCode != null and typeCode != ''">
-		        AND sp.idn_system_point_type = #{typeCode}
-		    </if>
-		  ),
-		metered_point AS
-		 (SELECT spp.idn_quality_point
-		    FROM tpa_vsystem_point       sp,
-		         tpa_varea_tpa           a,
-		         tpa_vzone_tpa           z,
-		         tpa_tsystem_point_param spp
-		   WHERE sp.group_code = 'METERED'
-		     AND sp.idn_system_point = spp.idn_system_point
-		     AND sp.idn_area = a.idn_area
-		     AND a.idn_zone = z.idn_zone
-		     AND z.idn_pipeline_system = #{idnPipelineSystem}
-		     AND spp.version_date = (SELECT MAX(sppx.version_date)
-		                               FROM tpa_tsystem_point_param sppx
-		                              WHERE sppx.idn_system_point = spp.idn_system_point
-		                                AND sppx.start_date = spp.start_date))
-		SELECT *
-		  FROM (SELECT qp.*
-		          FROM quality_point qp
-		         WHERE NOT EXISTS (SELECT 1 FROM tpa_tsystem_point_param spp WHERE spp.idn_quality_point = qp.idn_system_point)
-		        UNION
-		        SELECT qp.*
-		          FROM quality_point qp,
-		               metered_point mp
-		         WHERE qp.idn_system_point = mp.idn_quality_point)
-		 ORDER BY upper(point_code)
+             WITH quality_point AS
+             (SELECT sp.idn_system_point,
+                      sp.point_code,
+                      sp.point_desc,
+                      sp.type_code,
+                      sp.type_desc,
+                      sp.start_date,
+                      sp.end_date,
+                      sp.idn_system_point_type,
+                      sp.idn_system_point_group
+                 FROM tpa_vsystem_point sp
+                WHERE sp.group_code = 'QUALITY' 
+                 <if test="startDate != null">
+                    AND nvl(sp.end_date,to_date('9999/12/31','yyyy/mm/dd'))>=  #{startDate}
+                 </if>
+                 <if test="endDate != null">
+                    AND #{endDate} >= sp.start_date
+                 </if>
+                 <if test="pointCode != null and pointCode != ''">
+                    AND sp.idn_system_point = #{pointCode}
+                 </if>
+                 <if test="typeCode != null and typeCode != ''">
+                     AND sp.idn_system_point_type = #{typeCode}
+                 </if>
+               ),
+             metered_point AS
+             (SELECT DISTINCT 
+					spp.idn_quality_point, 
+                    z.idn_pipeline_system
+                 FROM tpa_vsystem_point       sp,
+                      tpa_varea_tpa           a,
+                      tpa_vzone_tpa           z,
+                      tpa_tsystem_point_param spp
+                WHERE sp.group_code = 'METERED'
+                  AND sp.idn_system_point = spp.idn_system_point
+                  AND sp.idn_area = a.idn_area
+                  AND a.idn_zone = z.idn_zone
+                  AND spp.version_date = (SELECT MAX(sppx.version_date)
+                                            FROM tpa_tsystem_point_param sppx
+                                           WHERE sppx.idn_system_point = spp.idn_system_point
+                                             AND sppx.start_date = spp.start_date))
+             SELECT *
+               FROM (SELECT qp.*
+                       FROM quality_point qp
+                      WHERE NOT EXISTS (SELECT 1 FROM metered_point spp WHERE spp.idn_quality_point = qp.idn_system_point)
+                     UNION
+                     SELECT qp.*
+                       FROM quality_point qp,
+                            metered_point mp
+                      WHERE qp.idn_system_point = mp.idn_quality_point
+                        AND mp.idn_pipeline_system = #{idnPipelineSystem})
+             ORDER BY upper(point_code)
+
 		 </select>
        
      <select id="selectPointTypes" resultType="com.atos.beans.ComboFilterNS">

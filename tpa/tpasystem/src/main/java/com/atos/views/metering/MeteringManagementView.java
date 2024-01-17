@@ -557,6 +557,9 @@ public class MeteringManagementView extends CommonView {
     	
 		// Si se ejectua el proceso en background, no tiene sentido actualizar los datos.
         // onSearch();
+		
+		// llamamos a acumInventory, baseInventory e intraday
+		service.updateWebservice();
 	}
 	
 	public void handleFileUpload( FileUploadEvent event) {

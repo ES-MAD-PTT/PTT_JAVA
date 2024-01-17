@@ -33,4 +33,5 @@ public interface MeteringManagementService extends Serializable {
 	public DefaultStreamedContent selectTemplateFile(BigDecimal _systemId) throws Exception;
 
 	public List<PointDto> getCheckedPoints(Date checkDate);
+	public void updateWebservice();
 }

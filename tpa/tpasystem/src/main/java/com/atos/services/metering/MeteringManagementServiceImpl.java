@@ -22,6 +22,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.primefaces.model.DefaultStreamedContent;
+import org.quartz.JobExecutionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskRejectedException;
@@ -50,6 +51,9 @@ import com.atos.mapper.NotificationMapper;
 import com.atos.mapper.SystemParameterMapper;
 import com.atos.mapper.metering.MeteringManagementMapper;
 import com.atos.mapper.utils.Xlsx2XmlMapper;
+import com.atos.quartz.AcumInventoryAutorunClient;
+import com.atos.quartz.AllocationAutorunIntradayClient;
+import com.atos.quartz.BaseInventoryAutorunClient;
 import com.atos.utils.Constants;
 import com.atos.utils.Xlsx2XmlConverter2;
 import com.atos.views.ChangeSystemView;
@@ -101,6 +105,15 @@ public class MeteringManagementServiceImpl implements MeteringManagementService 
 	
 	@Autowired
 	private Xlsx2XmlMapper xMapper;
+	
+	@Autowired
+    private AllocationAutorunIntradayClient intraday;
+
+	@Autowired
+	private AcumInventoryAutorunClient acumWS;
+	
+	@Autowired
+	private BaseInventoryAutorunClient baseWS;
 	
 	@Autowired
 	@Qualifier("meteringTaskExecutor")
@@ -875,6 +888,19 @@ public class MeteringManagementServiceImpl implements MeteringManagementService 
 	@Override
 	public List<PointDto> getCheckedPoints(Date checkDate) {
 		return mmMapper.checkPoints(checkDate);
+	}
+
+	@Override
+	public void updateWebservice() {
+		try {
+			acumWS.callAcumInventoryClient();
+			baseWS.callBaseInventoryClient();
+			intraday.callAllocationIntradayRequestClient();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
     
 }

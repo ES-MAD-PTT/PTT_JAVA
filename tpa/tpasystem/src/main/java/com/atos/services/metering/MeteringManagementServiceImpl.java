@@ -49,11 +49,13 @@ import com.atos.exceptions.ValidationException;
 import com.atos.filters.metering.MeteringManagementFilter;
 import com.atos.mapper.NotificationMapper;
 import com.atos.mapper.SystemParameterMapper;
+import com.atos.mapper.allocation.AllocationManagementMapper;
 import com.atos.mapper.metering.MeteringManagementMapper;
 import com.atos.mapper.utils.Xlsx2XmlMapper;
 import com.atos.quartz.AcumInventoryAutorunClient;
 import com.atos.quartz.AllocationAutorunIntradayClient;
 import com.atos.quartz.BaseInventoryAutorunClient;
+import com.atos.runnable.allocation.AllocationBalanceTask;
 import com.atos.utils.Constants;
 import com.atos.utils.Xlsx2XmlConverter2;
 import com.atos.views.ChangeSystemView;
@@ -92,6 +94,9 @@ public class MeteringManagementServiceImpl implements MeteringManagementService 
 	private  static final String[] permittedWSErrorCodes = {"ERR-PMISDWH-0000"};
 	
 	@Autowired
+	private AllocationManagementMapper amMapper;
+
+	@Autowired
 	private MeteringManagementMapper mmMapper;
 	
 	@Autowired
@@ -107,8 +112,9 @@ public class MeteringManagementServiceImpl implements MeteringManagementService 
 	private Xlsx2XmlMapper xMapper;
 	
 	@Autowired
-    private AllocationAutorunIntradayClient intraday;
-
+	@Qualifier("allocationBalanceTaskExecutor")
+	private ThreadPoolTaskExecutor allBalTaskExecutor;
+	
 	@Autowired
 	private AcumInventoryAutorunClient acumWS;
 	
@@ -118,10 +124,9 @@ public class MeteringManagementServiceImpl implements MeteringManagementService 
 	@Autowired
 	@Qualifier("meteringTaskExecutor")
 	private ThreadPoolTaskExecutor metTaskExecutor;
-	
+
 	private static final Logger log = LogManager.getLogger("com.atos.services.metering.MeteringManagementServiceImpl");
 
-	
 	public Date selectOpenPeriodFirstDay(){
 	
 		return mmMapper.selectOpenPeriodFirstDay();
@@ -890,16 +895,33 @@ public class MeteringManagementServiceImpl implements MeteringManagementService 
 		return mmMapper.checkPoints(checkDate);
 	}
 
+	
 	@Override
-	public void updateWebservice() {
+	public void updateWebservice(Date _startDate, Date _endDate, UserBean _user, LanguageBean _lang, BigDecimal idnSystem) throws ValidationException {
 		try {
 			acumWS.callAcumInventoryClient();
 			baseWS.callBaseInventoryClient();
-			intraday.callAllocationIntradayRequestClient();
+			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+
+		ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication().getResourceBundle(FacesContext.getCurrentInstance(),"msg");
+    	
+    	try{
+        	// Se lanza un thread para seguir con el proceso de forma asincrona/desatendida.
+        	// Si se alcanza el numero maximo de threads concurrentes definidos en el metTaskExecutor,
+        	// el siguiente thread no se puede lanzar y se genera una org.springframework.core.task.TaskRejectedException
+			allBalTaskExecutor.execute(new AllocationBalanceTask(_startDate, _endDate, _user, _lang, msgs, amMapper,
+					notifMapper, idnSystem));
+        }   
+        catch (TaskRejectedException tre) {	// Excepcion para el caso de que no se pueda generar un thread porque se ha alcanzado el maximo numero de threads.
+        			// En caso de error, se ha de liberar el bloqueo.
+					// En caso de ok, el bloqueo se libera en el thread.
+			log.error(tre.getMessage(), tre);
+			throw new ValidationException(msgs.getString("all_man_max_processes_reached_error"));
+		}        
 		
 	}
     

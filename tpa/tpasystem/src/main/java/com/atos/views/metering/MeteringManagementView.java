@@ -41,6 +41,8 @@ import com.atos.beans.metering.MeasurementBean;
 import com.atos.beans.metering.PointDto;
 import com.atos.exceptions.ValidationException;
 import com.atos.filters.metering.MeteringManagementFilter;
+import com.atos.services.allocation.AllocationIntradayService;
+import com.atos.services.allocation.AllocationManagementService;
 import com.atos.services.metering.MeteringManagementService;
 import com.atos.utils.Constants;
 import com.atos.utils.DateUtil;
@@ -81,6 +83,8 @@ public class MeteringManagementView extends CommonView {
 	
 	private static final Logger log = LogManager.getLogger("com.atos.views.metering.MeteringManagementView");
 
+	private Integer allocationMaxDateOffset = null;
+
 	private Date checkDate;
 	private List<PointDto> checkedPoints;
 	
@@ -91,6 +95,30 @@ public class MeteringManagementView extends CommonView {
 		this.service = service;
 	}
 	
+	@ManagedProperty("#{AllocationManagService}")
+	transient private AllocationManagementService e_service;
+    
+	public void setE_service(AllocationManagementService service) {
+		this.e_service = service;
+	}
+
+	@ManagedProperty("#{AllocationIntradayService}")
+    transient private AllocationIntradayService i_service;
+	
+	public void setService(AllocationIntradayService i_service) {
+		this.i_service = i_service;
+	}
+	private Date responsePeriodStartDate = null;
+
+	public Date getResponsePeriodStartDate() {
+		return responsePeriodStartDate;
+	}
+
+	public void setResponsePeriodStartDate(Date responsePeriodStartDate) {
+		this.responsePeriodStartDate = responsePeriodStartDate;
+	}
+
+
 	//geters/seters
 	public MeteringManagementFilter getFilters() {
 		return filters;
@@ -370,7 +398,17 @@ public class MeteringManagementView extends CommonView {
 		Calendar ayer = Calendar.getInstance();
 		ayer.add(Calendar.DAY_OF_YEAR,-1);	
 		updateMetsfilters.setGasDayFrom(ayer.getTime());
+	
 		
+		try{
+    		allocationMaxDateOffset = i_service.selectAllocationMaxDateOffset(getUser().getUsername(), getLanguage().getLocale());
+		}
+		catch(Exception e){
+			log.error(e.getMessage(), e);
+		}
+		
+		setResponsePeriod(allocationMaxDateOffset);
+
     	updateMetsfilters.setGasDayTo(Calendar.getInstance().getTime());
     	
     	// En el inicio no hace falta validar las fechas porque se han inicializado con valores coherentes.
@@ -559,7 +597,28 @@ public class MeteringManagementView extends CommonView {
         // onSearch();
 		
 		// llamamos a acumInventory, baseInventory e intraday
-		service.updateWebservice();
+		try {
+			service.updateWebservice(responsePeriodStartDate, responsePeriodStartDate, getUser(), getLanguage(),
+				getChangeSystemView().getIdn_active());
+		
+	    	String okMsg = msgs.getString("met_man_processing");
+	    	getMessages().addMessage(Constants.head_menu[8],
+					new MessageBean(Constants.INFO, summaryMsg, okMsg, Calendar.getInstance().getTime()));
+	    	log.info(okMsg);
+		} 
+		catch(ValidationException ve){
+			errorMsg = ve.getMessage();
+			getMessages().addMessage(Constants.head_menu[8],
+					new MessageBean(Constants.ERROR, summaryMsg, errorMsg, Calendar.getInstance().getTime()));    		
+		}
+		catch (Exception e) {
+			errorMsg = msgs.getString("internal_error");
+			getMessages().addMessage(Constants.head_menu[8],
+					new MessageBean(Constants.ERROR, summaryMsg, errorMsg, Calendar.getInstance().getTime()));
+			// Se guarda el detalle del error tecnico.
+	    	log.error(e.getMessage(), e);			
+		}
+		
 	}
 	
 	public void handleFileUpload( FileUploadEvent event) {
@@ -882,4 +941,28 @@ public class MeteringManagementView extends CommonView {
 				return 0;
 			}
 	}
+	 
+	private void setResponsePeriod(Integer _allocationMaxDateOffset){
+		// Primer dia de balance abierto.
+
+		/*HashMap<String, Object> params = new HashMap<>();
+		params.put("closingTypeCode", "DEFINITIVE");
+		params.put("idnSystem", getChangeSystemView().getIdn_active());
+		params.put("sysCode", getChangeSystemView().getSystem());
+		openPeriodFirstDay = service.selectOpenPeriodFirstDay(params);*/
+
+		Calendar tmpEndDate = Calendar.getInstance();
+		tmpEndDate.set(Calendar.HOUR_OF_DAY, 0);
+		tmpEndDate.set(Calendar.MINUTE, 0);
+		tmpEndDate.set(Calendar.SECOND, 0);
+		tmpEndDate.set(Calendar.MILLISECOND, 0);
+		tmpEndDate.add(Calendar.DAY_OF_MONTH, _allocationMaxDateOffset * (-1));
+		
+		responsePeriodStartDate=tmpEndDate.getTime();
+		
+		/*responsePeriodStartDate = openPeriodFirstDay;
+		responsePeriodEndDate = tmpEndDate.getTime();*/
+	}
+		
+	 
 }

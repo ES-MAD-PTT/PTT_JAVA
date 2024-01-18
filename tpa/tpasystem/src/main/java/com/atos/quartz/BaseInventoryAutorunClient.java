@@ -64,7 +64,7 @@ public class BaseInventoryAutorunClient  implements Serializable {
 	private static final String strNotifTypeCodeWsBaseInventoryyOK = "BASE.INVENTORY.WS.FINISH.OK";
 	private static final String strNotifTypeCodeWsBaseInventoryError = "BASE.INVENTORY.WS.FINISH.ERROR";
 
-	private static final String strNotifOrigin = "BALANCE";
+	private static final String strNotifOrigin = "BALANCING";
 	
 	private  static final String[] permittedWSErrorCodes = {"ERR-PMISDWH-0000"};
 	

@@ -104,10 +104,11 @@ public class MeteringManagementView extends CommonView {
 
 	@ManagedProperty("#{AllocationIntradayService}")
     transient private AllocationIntradayService i_service;
-	
-	public void setService(AllocationIntradayService i_service) {
+
+	public void setI_service(AllocationIntradayService i_service) {
 		this.i_service = i_service;
 	}
+
 	private Date responsePeriodStartDate = null;
 
 	public Date getResponsePeriodStartDate() {

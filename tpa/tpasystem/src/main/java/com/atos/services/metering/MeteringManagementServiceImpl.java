@@ -197,11 +197,11 @@ public class MeteringManagementServiceImpl implements MeteringManagementService 
         	
         	// 2.- Se comprueba si el proceso de actualizacion de medidas ya se ha lanzado
         	// actualmente por otro usuario. Para ello se consulta una tabla de bloqueos en BD.
-  //      	bTakeLock = takeLockMeteringQuery(userId);
+        	bTakeLock = takeLockMeteringQuery(userId);
         	
         	// Si en esta peticion no se pudo coger el bloqueo, se lanza una excepcion para enviar un mensaje de error al usuario.
-  //      	if(!bTakeLock)
-    //    		throw new ValidationException(msgs.getString("met_man_lock_error"));
+        	if(!bTakeLock)
+        		throw new ValidationException(msgs.getString("met_man_lock_error"));
         	
         	// Se lanza un thread para seguir con el proceso de forma asincrona/desatendida.
         	// Si se alcanza el numero maximo de threads concurrentes definidos en el metTaskExecutor,

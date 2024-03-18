@@ -74,7 +74,7 @@ pipeline {
 						       removePrefix: "tpa/tpa-ear/target",
 						       remoteDirectory: "",
 						       remoteDirectorySDF : false,
-						       execCommand: 'export CLASSPATH=/u01/app/oracle/middleware/wlserver/server/lib/weblogic.jar;sudo su oracle -;java weblogic.Deployer -adminurl t3://TPA1-wls-0:9071 -user weblogic -password 7HdFCSa98KoNbF2cH -deploy -name tpa-ear -targets TPA1_cluster -source /home/oracle/tpa-ear.ear -remote -upload'
+						       execCommand: 'export CLASSPATH=/u01/app/oracle/middleware/wlserver/server/lib/weblogic.jar;sudo cp /home/opc/deploy/tpa-ear.ear /home/oracle/tpa-ear.ear;sudo chown oracle:oracle /home/oracle/tpa-ear.ear;sudo su oracle -;java weblogic.Deployer -adminurl t3://TPA1-wls-0:9071 -user weblogic -password 7HdFCSa98KoNbF2cH -deploy -name tpa-ear -targets TPA1_cluster -source /home/oracle/tpa-ear.ear -remote -upload'
 						      )
 						     ])
 						   ])

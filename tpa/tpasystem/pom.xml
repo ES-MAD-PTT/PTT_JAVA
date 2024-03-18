@@ -2,7 +2,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.atos</groupId>
-	<artifactId>tpasystem${p.build.warname}</artifactId>
+	<artifactId>tpasystem</artifactId>
 	<packaging>war</packaging>
 	<version>1.3.61</version>
 	<name>tpasystem Maven Webapp</name>
@@ -286,7 +286,7 @@
 		</dependency>
 	</dependencies>
 	<build>
-		<finalName>tpasystem${p.build.warname}</finalName>
+		<finalName>tpasystem</finalName>
 		<resources>
 			<resource>
 				<directory>src/main/resources</directory>

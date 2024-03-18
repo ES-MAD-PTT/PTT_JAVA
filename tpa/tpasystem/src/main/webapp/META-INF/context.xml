@@ -36,7 +36,7 @@
           password="webservice123"
           driverClassName="oracle.jdbc.OracleDriver"
            
-          url="jdbc:oracle:thin:@172.24.59.19:1522/TPA01"
+          url="jdbc:oracle:thin:@172.24.59.19:1524/TPA03"
              />
        <!--    jdbcInterceptors="org.apache.tomcat.jdbc.pool.interceptor.ConnectionState;
 			org.apache.tomcat.jdbc.pool.interceptor.StatementFinalizer;

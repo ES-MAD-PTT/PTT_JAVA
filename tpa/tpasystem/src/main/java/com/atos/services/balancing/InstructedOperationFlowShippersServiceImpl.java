@@ -172,5 +172,14 @@ public class InstructedOperationFlowShippersServiceImpl implements InstructedOpe
 			return new DefaultStreamedContent(ba, bean.getContent_type(), bean.getFile_name());
 		}
 	}
+
+	@Transactional( rollbackFor = { Throwable.class })
+	public String updatePublished(InstructedOperationFlowShippersBean bean) {
+		int ins = mapper.updatePublishedFile(bean);
+		if(ins != 1){
+			return "-1";
+		}
+		return "0";
+	}
 	
 }

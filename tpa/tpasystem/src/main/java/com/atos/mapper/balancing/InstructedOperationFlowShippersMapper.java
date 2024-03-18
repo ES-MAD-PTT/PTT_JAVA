@@ -21,4 +21,5 @@ public interface InstructedOperationFlowShippersMapper extends Serializable {
 	public List<InstructedOperationFlowShipperFileBean> selectFileGasFlow (BigDecimal idn_intraday_gas_flow_file);
 	public int insertFileGasFlow(InstructedOperationFlowShipperFileBean bean);
 
+	public int updatePublishedFile(InstructedOperationFlowShippersBean bean);
 }

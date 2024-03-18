@@ -63,6 +63,12 @@
         	</properties>
 		</profile>
 		<profile>
+	        <id>tst2</id>
+			<properties>
+            	<p.build.warname></p.build.warname>
+        	</properties>
+		</profile>
+		<profile>
 	        <id>dev</id>
 			<properties>
             	<p.build.warname>-dev</p.build.warname>

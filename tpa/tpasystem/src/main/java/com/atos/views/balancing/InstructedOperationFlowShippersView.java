@@ -332,13 +332,13 @@ public class InstructedOperationFlowShippersView extends CommonView implements S
 
 	public void onPublicate() {
 		
-		boolean publish = false;
+//		boolean publish = false;
 		if(this.resultList==null) {
 			getMessages().addMessage(Constants.head_menu[9],new MessageBean(Constants.WARNING, "There is not registers to publish","There is not registers to publish",Calendar.getInstance().getTime()));
 			log.warn("There is not registers to publish", Calendar.getInstance().getTime());
 			return;
 		}
-		for(int i=0; i<this.resultList.size(); i++) {
+/*		for(int i=0; i<this.resultList.size(); i++) {
 			if(this.resultList.get(i).isCheckPublicate()) {
 				publish = true;
 			}
@@ -347,7 +347,7 @@ public class InstructedOperationFlowShippersView extends CommonView implements S
 			getMessages().addMessage(Constants.head_menu[9],new MessageBean(Constants.WARNING, "Must select some register to publish","Must select some register to publish",Calendar.getInstance().getTime()));
 			log.warn("Must select some register to publish", Calendar.getInstance().getTime());
 			return;
-		}
+		}*/
 		for(int i=0; i<this.resultList.size(); i++) {
 			InstructedOperationFlowShippersBean bean = this.resultList.get(i); 
 			if(this.resultList.get(i).isCheckPublicate()) {
@@ -369,6 +369,25 @@ public class InstructedOperationFlowShippersView extends CommonView implements S
 						e.printStackTrace();					
 					}				
 				}
+			}
+			if((this.resultList.get(i).isCheckPublicate() && !this.resultList.get(i).getPublished().equals("Y")) ||
+					(!this.resultList.get(i).isCheckPublicate() && !this.resultList.get(i).getPublished().equals("N"))) {
+				if(this.resultList.get(i).isCheckPublicate()) {
+					this.resultList.get(i).setPublished("Y");
+					String ret = service.updatePublished(this.resultList.get(i));
+					if(!ret.equals("0")) {
+						getMessages().addMessage(Constants.head_menu[9],new MessageBean(Constants.ERROR, "Error publishing","Error publishing a register",Calendar.getInstance().getTime()));
+						log.error("Error publishing a register", Calendar.getInstance().getTime());
+					}
+				} else {
+					this.resultList.get(i).setPublished("N");
+					String ret = service.updatePublished(this.resultList.get(i));
+					if(!ret.equals("0")) {
+						getMessages().addMessage(Constants.head_menu[9],new MessageBean(Constants.ERROR, "Error unpublishing","Error unpublishing a register",Calendar.getInstance().getTime()));
+						log.error("Error unpublishing a register", Calendar.getInstance().getTime());
+					}
+				}
+				
 			}
 		}
 		getMessages().addMessage(Constants.head_menu[9],new MessageBean(Constants.INFO, "Notifications have been sent correctly","Notifications sent.",Calendar.getInstance().getTime()));

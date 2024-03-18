@@ -39,6 +39,7 @@
         <result property="shipperComments" column="comment_shipper"/>  
         <result property="idn_intraday_gas_flow_file" column="idn_intraday_gas_flow_file"/>  
         <result property="file_name" column="file_name"/>  
+        <result property="published" column="published"/>  
         
           
     </resultMap> 
@@ -64,6 +65,7 @@
        gf.comment_shipper,
        gf.idn_intraday_gas_flow_file,
        (select file_name from tpa_tintraday_gas_flow_file t where t.idn_intraday_gas_flow_file = gf.idn_intraday_gas_flow_file) as file_name,
+       gf.published,
        'N' AS is_total
 FROM tpa_tintraday_gas_flow gf,
      tpa_tallocation a,
@@ -163,6 +165,14 @@ WHERE
 		       #{content_type},
 		       #{binary_data})
 	</insert>
+
+	<update id="updatePublishedFile" parameterType="com.atos.beans.balancing.InstructedOperationFlowShippersBean">
+		update tpa_tintraday_gas_flow set
+             published = #{published}
+		where idn_intraday_gas_flow = #{idn_intraday_gas_flow}
+		
+	</update>
+	
 	
 	
 </mapper>

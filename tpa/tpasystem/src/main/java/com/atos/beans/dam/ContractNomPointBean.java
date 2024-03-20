@@ -3,6 +3,8 @@ package com.atos.beans.dam;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.Objects;
+
 import com.atos.beans.UserAudBean;
 
 public class ContractNomPointBean extends UserAudBean implements Serializable {
@@ -14,10 +16,14 @@ public class ContractNomPointBean extends UserAudBean implements Serializable {
 	private BigDecimal idn_contract_point;
 	private BigDecimal idn_nomination_point;
 	private BigDecimal idn_system;
+	private String shipper;
+	private BigDecimal idn_shipper;
 
 	private String contract_id;
 	private Date startDate;
 	private Date endDate;
+	private Date startDateActive;
+	private Date endDateActive;
 	private String contract_point;
 	private String nomination_point;
 	
@@ -25,21 +31,31 @@ public class ContractNomPointBean extends UserAudBean implements Serializable {
 		super();
 	}
 
-	public ContractNomPointBean(BigDecimal idn_contract_nom_point, BigDecimal idn_contract, BigDecimal idn_contract_point, BigDecimal idn_nomination_point,
-			String contract_id, String contract_point, String nomination_point,
-			Date startDate, Date endDate) {
+
+	public ContractNomPointBean(BigDecimal idn_contract_nom_point, BigDecimal idn_contract,
+			BigDecimal idn_contract_point, BigDecimal idn_nomination_point, BigDecimal idn_system, String shipper,
+			BigDecimal idn_shipper, String contract_id, Date startDate, Date endDate, Date startDateActive,
+			Date endDateActive, String contract_point, String nomination_point) {
 		super();
 		this.idn_contract_nom_point = idn_contract_nom_point;
 		this.idn_contract = idn_contract;
 		this.idn_contract_point = idn_contract_point;
 		this.idn_nomination_point = idn_nomination_point;
+		this.idn_system = idn_system;
+		this.shipper = shipper;
+		this.idn_shipper = idn_shipper;
 		this.contract_id = contract_id;
-		this.contract_point = contract_point;
-		this.nomination_point = nomination_point;
 		this.startDate = startDate;
 		this.endDate = endDate;
+		this.startDateActive = startDateActive;
+		this.endDateActive = endDateActive;
+		this.contract_point = contract_point;
+		this.nomination_point = nomination_point;
 	}
-	
+
+
+
+
 	public BigDecimal getIdn_contract_nom_point() {
 		return idn_contract_nom_point;
 	}
@@ -62,6 +78,22 @@ public class ContractNomPointBean extends UserAudBean implements Serializable {
 
 	public void setIdn_nomination_point(BigDecimal idn_nomination_point) {
 		this.idn_nomination_point = idn_nomination_point;
+	}
+
+	public String getShipper() {
+		return shipper;
+	}
+
+	public void setShipper(String shipper) {
+		this.shipper = shipper;
+	}
+
+	public BigDecimal getIdn_shipper() {
+		return idn_shipper;
+	}
+
+	public void setIdn_shipper(BigDecimal idn_shipper) {
+		this.idn_shipper = idn_shipper;
 	}
 
 	public String getContract_id() {
@@ -122,20 +154,30 @@ public class ContractNomPointBean extends UserAudBean implements Serializable {
 
 	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((contract_id == null) ? 0 : contract_id.hashCode());
-		result = prime * result + ((contract_point == null) ? 0 : contract_point.hashCode());
-		result = prime * result + ((endDate == null) ? 0 : endDate.hashCode());
-		result = prime * result + ((idn_contract == null) ? 0 : idn_contract.hashCode());
-		result = prime * result + ((idn_contract_nom_point == null) ? 0 : idn_contract_nom_point.hashCode());
-		result = prime * result + ((idn_contract_point == null) ? 0 : idn_contract_point.hashCode());
-		result = prime * result + ((idn_nomination_point == null) ? 0 : idn_nomination_point.hashCode());
-		result = prime * result + ((idn_system == null) ? 0 : idn_system.hashCode());
-		result = prime * result + ((nomination_point == null) ? 0 : nomination_point.hashCode());
-		result = prime * result + ((startDate == null) ? 0 : startDate.hashCode());
-		return result;
+		return Objects.hash(contract_id, contract_point, endDate, endDateActive, idn_contract, idn_contract_nom_point,
+				idn_contract_point, idn_nomination_point, idn_shipper, idn_system, nomination_point, shipper, startDate,
+				startDateActive);
 	}
+
+	public Date getStartDateActive() {
+		return startDateActive;
+	}
+
+
+	public void setStartDateActive(Date startDateActive) {
+		this.startDateActive = startDateActive;
+	}
+
+
+	public Date getEndDateActive() {
+		return endDateActive;
+	}
+
+
+	public void setEndDateActive(Date endDateActive) {
+		this.endDateActive = endDateActive;
+	}
+
 
 	@Override
 	public boolean equals(Object obj) {
@@ -146,84 +188,25 @@ public class ContractNomPointBean extends UserAudBean implements Serializable {
 		if (getClass() != obj.getClass())
 			return false;
 		ContractNomPointBean other = (ContractNomPointBean) obj;
-		if (contract_id == null) {
-			if (other.contract_id != null)
-				return false;
-		} else if (!contract_id.equals(other.contract_id))
-			return false;
-		if (contract_point == null) {
-			if (other.contract_point != null)
-				return false;
-		} else if (!contract_point.equals(other.contract_point))
-			return false;
-		if (endDate == null) {
-			if (other.endDate != null)
-				return false;
-		} else if (!endDate.equals(other.endDate))
-			return false;
-		if (idn_contract == null) {
-			if (other.idn_contract != null)
-				return false;
-		} else if (!idn_contract.equals(other.idn_contract))
-			return false;
-		if (idn_contract_nom_point == null) {
-			if (other.idn_contract_nom_point != null)
-				return false;
-		} else if (!idn_contract_nom_point.equals(other.idn_contract_nom_point))
-			return false;
-		if (idn_contract_point == null) {
-			if (other.idn_contract_point != null)
-				return false;
-		} else if (!idn_contract_point.equals(other.idn_contract_point))
-			return false;
-		if (idn_nomination_point == null) {
-			if (other.idn_nomination_point != null)
-				return false;
-		} else if (!idn_nomination_point.equals(other.idn_nomination_point))
-			return false;
-		if (idn_system == null) {
-			if (other.idn_system != null)
-				return false;
-		} else if (!idn_system.equals(other.idn_system))
-			return false;
-		if (nomination_point == null) {
-			if (other.nomination_point != null)
-				return false;
-		} else if (!nomination_point.equals(other.nomination_point))
-			return false;
-		if (startDate == null) {
-			if (other.startDate != null)
-				return false;
-		} else if (!startDate.equals(other.startDate))
-			return false;
-		return true;
+		return Objects.equals(contract_id, other.contract_id) && Objects.equals(contract_point, other.contract_point)
+				&& Objects.equals(endDate, other.endDate) && Objects.equals(endDateActive, other.endDateActive)
+				&& Objects.equals(idn_contract, other.idn_contract)
+				&& Objects.equals(idn_contract_nom_point, other.idn_contract_nom_point)
+				&& Objects.equals(idn_contract_point, other.idn_contract_point)
+				&& Objects.equals(idn_nomination_point, other.idn_nomination_point)
+				&& Objects.equals(idn_shipper, other.idn_shipper) && Objects.equals(idn_system, other.idn_system)
+				&& Objects.equals(nomination_point, other.nomination_point) && Objects.equals(shipper, other.shipper)
+				&& Objects.equals(startDate, other.startDate) && Objects.equals(startDateActive, other.startDateActive);
 	}
 
 	@Override
 	public String toString() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("ContractNomPointBean [idn_contract_nom_point=");
-		builder.append(idn_contract_nom_point);
-		builder.append(", idn_contract=");
-		builder.append(idn_contract);
-		builder.append(", idn_contract_point=");
-		builder.append(idn_contract_point);
-		builder.append(", idn_nomination_point=");
-		builder.append(idn_nomination_point);
-		builder.append(", idn_system=");
-		builder.append(idn_system);
-		builder.append(", contract_id=");
-		builder.append(contract_id);
-		builder.append(", startDate=");
-		builder.append(startDate);
-		builder.append(", endDate=");
-		builder.append(endDate);
-		builder.append(", contract_point=");
-		builder.append(contract_point);
-		builder.append(", nomination_point=");
-		builder.append(nomination_point);
-		builder.append("]");
-		return builder.toString();
+		return "ContractNomPointBean [idn_contract_nom_point=" + idn_contract_nom_point + ", idn_contract="
+				+ idn_contract + ", idn_contract_point=" + idn_contract_point + ", idn_nomination_point="
+				+ idn_nomination_point + ", idn_system=" + idn_system + ", shipper=" + shipper + ", idn_shipper="
+				+ idn_shipper + ", contract_id=" + contract_id + ", startDate=" + startDate + ", endDate=" + endDate
+				+ ", startDateActive=" + startDateActive + ", endDateActive=" + endDateActive + ", contract_point="
+				+ contract_point + ", nomination_point=" + nomination_point + "]";
 	}
 
 	

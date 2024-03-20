@@ -234,7 +234,8 @@
 		</h:form>
 		
 		<shiro:hasPermission name="#{changeSystemView.system}.DAM.CONTRACT_NOMINATION.ADD">
-		<p:dialog widgetVar="dlgNewContractNomPoint" resizable="false"  closable="true" modal="true" appendTo="@(body)" header="New Contract Id-Nomination Point relation">
+		<p:dialog widgetVar="dlgNewContractNomPoint" resizable="false"  closable="true" modal="true" appendTo="@(body)" header="New Contract Id-Nomination Point relation"
+	width="50%">
 		<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario
 		 <p:ajax event="close" update="formNewEntity"  process="@this" listener="#{contractNomPointView.cancel}" />-->	
 			<h:form id="formNewEntity">
@@ -246,7 +247,7 @@
 								<h:outputText value="#{msg['contractNomPoint_shipper']}" />
 							</p:column>
 							<p:column>
-								<p:selectOneMenu id="new_shipper"  style="width:100px"   value="#{contractNomPointView.filters.idn_shipper}" >
+								<p:selectOneMenu id="new_shipper"  style="width:100px" value="#{contractNomPointView.newContractNomPoint.idn_shipper}" >
 											<f:selectItem itemLabel="" itemValue="" />
 											<f:selectItems value="#{contractNomPointView.shippers.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
 											<p:ajax update="new_contract_id"/>
@@ -328,10 +329,10 @@
 					<p:dataTable widgetVar="w_contractNomPoint1"  id="contractNomPoints2" var="contractNomPoint" value="#{contractNomPointView.items}"
 							 reflow="true" editable="true" 
 							 rowSelectMode="checkbox" selection="#{contractNomPointView.selecteds}" rowKey="#{contractNomPoint.idn_contract_nom_point}"
-							style="width:50%; margin-bottom:20px;border-collapse:collapse"
+							style="margin-bottom:20px;border-collapse:collapse"
 						    paginator="true" rows="5" 
 						    rowsPerPageTemplate="5,10,15,20,25"					    
-						    scrollable="true"  scrollHeight="50%"
+						    scrollable="true"  scrollHeight="100%"
 						    resizableColumns="false" >
 						        
 						        <shiro:hasPermission name="#{changeSystemView.system}.DAM.CONTRACT_NOMINATION.MOD">

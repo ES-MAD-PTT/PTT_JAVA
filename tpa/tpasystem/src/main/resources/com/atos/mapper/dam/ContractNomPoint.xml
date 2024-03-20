@@ -83,17 +83,22 @@ order by tcnp.idn_contract, tc.start_date
 	</select>
 
      <select id="selectContractForm" resultType="com.atos.beans.ComboFilterNS">
-
-		select t.idn_contract as key,
-         t.CONTRACT_code as value
-    from TPA_TCONTRACT t 
-       where 1=1
-<if test="startDate != null">
-        AND nvl(t.end_date,to_date('9999/12/31','yyyy/mm/dd'))>=  #{startDate}
-        </if>
-        <if test="endDate != null">
-          AND #{endDate} >= t.start_date
-		    </if> 
+		SELECT
+			t.idn_contract AS KEY,
+			t.CONTRACT_code AS value
+		FROM
+			TPA_TCONTRACT t,
+			TPA_TUSER_GROUP u
+		WHERE
+			1 = 1
+			AND t.idn_user_group = u.idn_user_group
+			AND t.idn_user_group = #{idn_shipper} 
+		<if test = "startDate != null">
+			AND nvl(t.end_date, to_date('9999/12/31', 'yyyy/mm/dd'))>= #{startDate}
+		</if>		
+		<if test = "endDate != null">
+			AND #{endDate} >= t.start_date
+		</if>
 	</select>
 
      <select id="selectContractNomPointsForm" resultType="com.atos.beans.ComboFilterNS">

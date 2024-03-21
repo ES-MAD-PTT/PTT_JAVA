@@ -27,3 +27,5 @@ tpa/tpasystem/target/*
 tpa/.project
 tpa/tpa-ear/.project
 tpa/tpasystem/.project
+tpa/tpasystem/.settings/*
+tpa/tpasystem/.classpath  

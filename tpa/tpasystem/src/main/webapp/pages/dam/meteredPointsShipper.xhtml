@@ -1,0 +1,371 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:f="http://java.sun.com/jsf/core"
+	template="/templates/template.xhtml">
+	<ui:define name="metadata">
+	</ui:define>
+	<ui:define name="breadCrumbComponent">
+		<p:breadCrumb id="path_page" style="margin-bottom:3px">
+			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home"
+				style="bottom: -3px;left: 3px" url="/home.xhtml" />
+			<p:menuitem value="#{msg['menu_dam']}" url="#" />
+			<p:menuitem value="#{msg['menu_assets']}" url="#" />
+			<p:menuitem value="#{msg['menu_metered_points_shipper']}"
+				url="/pages/dam/meteredPointsShipper.xhtml" />
+		</p:breadCrumb>
+	</ui:define>
+	<ui:define name="content">
+		<h:form id="form"
+			style="width:100%;height:98%;border-collapse:collapse"
+			fullPage="true">
+			<p:growl id="msgs" showDetail="true" life="5000" />
+
+			<p:layout widgetVar="contractNomPointLayout"
+				style="width:100%;height:100%" showEffect="clip" hideEffect="clip">
+
+				<p:layoutUnit position="north" resizable="false" closable="false"
+					collapsible="true" id="page_filters">
+
+					<p:panelGrid columns="2" style="width:100%">
+
+						<p:panelGrid>
+							<p:row>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['metPointShipper_shipper']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['metPointShipper_startDate']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['metPointShipper_endDate']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<p:selectOneMenu id="shipperId" style="width:100px"
+										value="#{meteredPointShipperView.filters.idnShipper}">
+										<f:selectItem itemLabel="" itemValue="" />
+										<f:selectItems
+											value="#{meteredPointShipperView.shippers.entrySet()}"
+											var="entry" itemValue="#{entry.key}"
+											itemLabel="#{entry.value}" />
+									</p:selectOneMenu>
+								</p:column>
+								<p:column>
+									<p:calendar required="true" id="startDateId" size="10"
+										pattern="dd/MM/yyyy" mask="true"
+										value="#{meteredPointShipperView.filters.startDate}"
+										requiredMessage="You need to select a date" showOn="button"
+										navigator="true">
+										<p:ajax event="dateSelect" update="startDateId"></p:ajax>
+										<p:ajax event="change" update="startDateId"></p:ajax>
+									</p:calendar>
+								</p:column>
+								<p:column>
+									<p:calendar required="true" id="endDateId" size="10"
+										pattern="dd/MM/yyyy" mask="true"
+										value="#{meteredPointShipperView.filters.endDate}"
+										requiredMessage="You need to select a date" showOn="button"
+										navigator="true">
+										<p:ajax event="dateSelect" update="endDateId"></p:ajax>
+										<p:ajax event="change" update="endDateId"></p:ajax>
+									</p:calendar>
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column style="font-weight: bold;">
+									<h:outputText
+										value="#{msg['metPointShipper_metered_point_id']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['metPointShipper_customer_type']}" />
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['metPointShipper_group_id']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<p:selectOneMenu id="meteredPointsId" style="width:100px"
+										value="#{meteredPointShipperView.filters.idnMeteredPoint}">
+										<f:selectItem itemLabel="" itemValue="" />
+										<f:selectItems
+											value="#{meteredPointShipperView.meteredPoints.entrySet()}"
+											var="entry" itemValue="#{entry.key}"
+											itemLabel="#{entry.value}" />
+									</p:selectOneMenu>
+								</p:column>
+								<p:column>
+									<p:selectOneMenu id="customerTypesId" style="width:100px"
+										value="#{meteredPointShipperView.filters.idnCustomerType}">
+										<f:selectItem itemLabel="" itemValue="" />
+										<f:selectItems
+											value="#{meteredPointShipperView.customerTypes.entrySet()}"
+											var="entry" itemValue="#{entry.key}"
+											itemLabel="#{entry.value}" />
+									</p:selectOneMenu>
+								</p:column>
+								<p:column>
+									<p:selectOneMenu id="groupsId" style="width:100px"
+										value="#{meteredPointShipperView.filters.idnGroup}">
+										<f:selectItem itemLabel="" itemValue="" />
+										<f:selectItems
+											value="#{meteredPointShipperView.groups.entrySet()}"
+											var="entry" itemValue="#{entry.key}"
+											itemLabel="#{entry.value}" />
+									</p:selectOneMenu>
+								</p:column>
+							</p:row>
+						</p:panelGrid>
+						<p:panelGrid columns="2" style="float:right;top:0px">
+							<shiro:hasPermission
+								name="#{changeSystemView.system}.DAM.CONTRACT_NOMINATION.QUERY">
+								<p:commandButton value="#{msg['search']}"
+									icon="ui-icon fa fa-search"
+									actionListener="#{meteredPointShipperView.onSearch}"
+									onstart="PF('cargando').show()"
+									oncomplete="PF('cargando').hide()"
+									update="msgs,:#{p:component('contractNomPoints1')}" />
+							</shiro:hasPermission>
+
+							<p:commandButton
+								onclick="PF('contractNomPointLayout').toggle('north')"
+								id="header_collapse" icon="fa fa-minus"
+								value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+
+							<shiro:hasPermission
+								name="#{changeSystemView.system}.DAM.CONTRACT_NOMINATION.QUERY">
+								<p:commandButton value="#{msg['clear']}"
+									actionListener="#{meteredPointShipperView.onClear}"
+									onstart="PF('limpiando').show()"
+									oncomplete="PF('limpiando').hide()" process="@this"
+									update="form" />
+							</shiro:hasPermission>
+						</p:panelGrid>
+					</p:panelGrid>
+
+				</p:layoutUnit>
+
+				<p:layoutUnit id="table_center_layout" position="center"
+					resizable="false" closable="false" collapsible="false">
+					<p:dataTable widgetVar="w_contractNomPoint1"
+						id="contractNomPoints1" var="item"
+						value="#{meteredPointShipperView.items}" reflow="true"
+						editable="true" rowSelectMode="checkbox"
+						rowKey="#{item.idnMeterdPointShipper}"
+						style="width:100%; margin-bottom:20px;border-collapse:collapse"
+						paginator="true" rows="10" rowsPerPageTemplate="5,10,15,20,25"
+						scrollable="true" scrollHeight="100%" resizableColumns="false">
+
+						<f:facet name="header">
+							<p:outputPanel style="height:25px">
+								<p:commandButton id="toggler" type="button" value="Columns"
+									style="float:right" icon="ui-icon-calculator" />
+								<p:columnToggler datasource="contractNomPoints1"
+									trigger="toggler" style="width:200px" />
+								<shiro:hasPermission
+									name="#{changeSystemView.system}.DAM.CONTRACT_NOMINATION.ADD">
+									<p:commandButton id="new" type="button" value="New"
+										icon="ui-icon fa fa-save" style="float:right;"
+										actionListener="#{meteredPointShipperView.prepareNew}"
+										onclick="PF('dlgNewContractNomPoint').show();" />
+								</shiro:hasPermission>
+								<shiro:hasPermission
+									name="#{changeSystemView.system}.DAM.CONTRACT_NOMINATION.MOD">
+									<p:commandButton id="delete" value="Delete"
+										icon="ui-icon fa fa-remove" style="float:right;"
+										actionListener="#{meteredPointShipperView.delete}"
+										update=":form:msgs,:#{p:component('contractNomPoints1')}"
+										onstart="PF('cargando').show()"
+										oncomplete="PF('cargando').hide()" />
+								</shiro:hasPermission>
+								<shiro:hasPermission
+									name="#{changeSystemView.system}.DAM.CONTRACT_NOMINATION.QUERY">
+									<h:commandLink style="float:right">
+										<p:graphicImage name="/images/excel.png" width="24" />
+										<p:dataExporter type="xls" target="contractNomPoints1"
+											fileName="ContractPoints"
+											postProcessor="#{meteredPointShipperView.postProcessXLS}" />
+									</h:commandLink>
+								</shiro:hasPermission>
+							</p:outputPanel>
+						</f:facet>
+
+						<shiro:hasPermission
+							name="#{changeSystemView.system}.DAM.CONTRACT_NOMINATION.MOD">
+							<p:ajax event="rowEditInit"
+								oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','hidden')});" />
+							<p:ajax event="rowEdit"
+								listener="#{meteredPointShipperView.onRowEdit}"
+								update=":form:msgs" onstart="PF('cargando').show()"
+								oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});PF('cargando').hide()" />
+							<p:ajax event="rowEditCancel"
+								listener="#{meteredPointShipperView.onRowCancel}"
+								update=":form:msgs"
+								onstart="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});" />
+						</shiro:hasPermission>
+
+						<p:column headerText="Select" selectionMode="multiple"
+							style="width:36px;text-align:center" />
+
+						<p:column styleClass=""
+							headerText="#{msg['metPointShipper_shipper']}"
+							style="width: 130px; " sortBy="#{item.shipper}"
+							filterMatchMode="contains" filterBy="#{item.shipper}">
+							<h:outputText value="#{item.shipper}" />
+						</p:column>
+						<p:column styleClass=""
+							headerText="#{msg['metPointShipper_startDate']}"
+							style="width: 70px;" sortBy="#{item.startDate}">
+							<h:outputText value="#{item.startDate}">
+								<f:convertDateTime pattern="dd/MM/yyyy" />
+							</h:outputText>
+						</p:column>
+						<p:column styleClass=""
+							headerText="#{msg['metPointShipper_endDate']}"
+							style="width: 70px;" sortBy="#{item.endDate}">
+							<h:outputText value="#{item.endDate}">
+								<f:convertDateTime pattern="dd/MM/yyyy" />
+							</h:outputText>
+						</p:column>
+						<p:column styleClass=""
+							headerText="#{msg['metPointShipper_metered_point_id']}"
+							style="width: 130px; " sortBy="#{item.meteringPoint}"
+							filterMatchMode="contains" filterBy="#{item.meteringPoint}">
+							<h:outputText value="#{item.meteringPoint}" />
+						</p:column>
+						<p:column styleClass=""
+							headerText="#{msg['metPointShipper_customer_type']}"
+							style="width: 130px; " sortBy="#{item.customerType}"
+							filterMatchMode="contains" filterBy="#{item.customerType}">
+							<h:outputText value="#{item.customerType}" />
+						</p:column>
+						<p:column styleClass=""
+							headerText="#{msg['metPointShipper_group_id']}"
+							style="width: 130px; " sortBy="#{item.group}"
+							filterMatchMode="contains" filterBy="#{item.group}">
+							<h:outputText value="#{item.group}" />
+						</p:column>
+					</p:dataTable>
+				</p:layoutUnit>
+
+			</p:layout>
+		</h:form>
+
+		<shiro:hasPermission
+			name="#{changeSystemView.system}.DAM.CONTRACT_NOMINATION.ADD">
+			<p:dialog widgetVar="dlgNewContractNomPoint" resizable="false"
+				closable="true" modal="true" appendTo="@(body)"
+				header="New Metered Points Limitation">
+				<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario
+		 <p:ajax event="close" update="formNewEntity"  process="@this" listener="#{meteredPointShipperView.cancel}" />-->
+				<h:form id="formNewEntity">
+					<p:growl id="msgs" showDetail="true" life="5000" />
+					<p:panelGrid style="width:100%;">
+						<p:row>
+							<p:column style="font-weight: bold;">
+								<h:outputText value="#{msg['metPointShipper_shipper']}" />
+							</p:column>
+							<p:column>
+								<p:selectOneMenu id="newShipperId" style="width:100px"
+									value="#{meteredPointShipperView.selection.idnShipper}">
+									<f:selectItem itemLabel="" itemValue="" />
+									<f:selectItems
+										value="#{meteredPointShipperView.shippers.entrySet()}"
+										var="entry" itemValue="#{entry.key}"
+										itemLabel="#{entry.value}" />
+								</p:selectOneMenu>
+							</p:column>
+							<p:column style="font-weight: bold;">
+								<h:outputText value="#{msg['metPointShipper_startDate']}" />
+							</p:column>
+							<p:column>
+								<p:calendar required="true" id="newStartDateId" size="10"
+									pattern="dd/MM/yyyy" mask="true"
+									value="#{meteredPointShipperView.selection.startDate}"
+									requiredMessage="You need to select a date" showOn="button"
+									navigator="true">
+									<p:ajax event="dateSelect" update="newStartDateId"></p:ajax>
+									<p:ajax event="change" update="newStartDateId"></p:ajax>
+								</p:calendar>
+							</p:column>
+							<p:column style="font-weight: bold;">
+								<h:outputText value="#{msg['metPointShipper_endDate']}" />
+							</p:column>
+							<p:column>
+								<p:calendar required="true" id="newEndDateId" size="10"
+									pattern="dd/MM/yyyy" mask="true"
+									value="#{meteredPointShipperView.selection.endDate}"
+									requiredMessage="You need to select a date" showOn="button"
+									navigator="true">
+									<p:ajax event="dateSelect" update="newEndDateId"></p:ajax>
+									<p:ajax event="change" update="newEndDateId"></p:ajax>
+								</p:calendar>
+							</p:column>
+						</p:row>
+						<p:row>
+							<p:column style="font-weight: bold;">
+								<h:outputText value="#{msg['metPointShipper_metered_point_id']}" />
+							</p:column>
+							<p:column>
+								<p:selectOneMenu id="newMeteredPointsId" style="width:100px"
+									value="#{meteredPointShipperView.selection.idnMeteringPoint}">
+									<f:selectItem itemLabel="" itemValue="" />
+									<f:selectItems
+										value="#{meteredPointShipperView.meteredPoints.entrySet()}"
+										var="entry" itemValue="#{entry.key}"
+										itemLabel="#{entry.value}" />
+								</p:selectOneMenu>
+							</p:column>
+							<p:column style="font-weight: bold;">
+								<h:outputText value="#{msg['metPointShipper_customer_type']}" />
+							</p:column>
+							<p:column>
+								<p:selectOneMenu id="newCustomerTypesId" style="width:100px"
+									value="#{meteredPointShipperView.selection.idnCustomerType}">
+									<f:selectItem itemLabel="" itemValue="" />
+									<f:selectItems
+										value="#{meteredPointShipperView.customerTypes.entrySet()}"
+										var="entry" itemValue="#{entry.key}"
+										itemLabel="#{entry.value}" />
+								</p:selectOneMenu>
+							</p:column>
+							<p:column style="font-weight: bold;">
+								<h:outputText value="#{msg['metPointShipper_group_id']}" />
+							</p:column>
+							<p:column>
+								<p:selectOneMenu id="newGroupsId" style="width:100px"
+									value="#{meteredPointShipperView.selection.idnGroup}">
+									<f:selectItem itemLabel="" itemValue="" />
+									<f:selectItems
+										value="#{meteredPointShipperView.groups.entrySet()}"
+										var="entry" itemValue="#{entry.key}"
+										itemLabel="#{entry.value}" />
+								</p:selectOneMenu>
+							</p:column>
+						</p:row>
+					</p:panelGrid>
+					<p:separator />
+					<p:panelGrid columns="2">
+						<p:commandButton value="#{msg['save']}"
+							styleClass="ui-confirmdialog-yes" icon="ui-icon-check"
+							validateClient="true" action="#{meteredPointShipperView.save}"
+							update=":#{p:component('contractNomPoints1')},:formNewEntity"
+							onstart="PF('cargando').show()"
+							oncomplete="PF('dlgNewContractNomPoint').hide(),PF('cargando').hide()" />
+						<p:commandButton value="#{msg['cancel']}"
+							styleClass="ui-confirmdialog-no" icon="ui-icon-close"
+							update="formNewEntity" process="@this"
+							oncomplete="PF('dlgNewContractNomPoint').hide()" />
+					</p:panelGrid>
+				</h:form>
+			</p:dialog>
+		</shiro:hasPermission>
+	</ui:define>
+
+
+</ui:composition>

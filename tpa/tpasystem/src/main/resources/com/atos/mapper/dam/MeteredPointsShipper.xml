@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+
+<mapper namespace="com.atos.mapper.dam.MeteredPointsShipperMapper">
+
+
+<!-- 	<select id="selectShippers" resultType="com.atos.beans.ComboFilterNS"> -->
+<!-- 		SELECT tuser.idn_user_group as key, tuser.user_group_id as value -->
+<!--     	FROM tpa_tuser_group tuser -->
+<!--     	WHERE tuser.idn_user_group_type = (SELECT idn_user_group_type FROM tpa_tuser_group_type WHERE type_code = 'SHIPPER') -->
+<!--     </select> -->
+
+<!--     <resultMap type="com.atos.beans.dam.ContractNomPointBean" id="ContractNomPoint"> -->
+<!--         <id column="idn_contract_nom_point" property="idn_contract_nom_point"  />  -->
+<!--         <result property="idn_contract" column="idn_contract"/> -->
+<!--         <result property="idn_contract_point" column="idn_contract_point"/> -->
+<!--         <result property="idn_nomination_point" column="idn_nomination_point"/> -->
+<!--         <result property="contract_id" column="contract_id"/> -->
+<!--         <result property="startDate" column="start_date"/>    -->
+<!--         <result property="endDate" column="end_date"/>   -->
+<!--        	<result property="contract_point" column="contract_point"/> -->
+<!--        	<result property="nomination_point" column="nomination_point"/> -->
+<!--     </resultMap> -->
+     
+     <select id="selectShippers" resultType="com.atos.beans.ComboFilterNS">
+		SELECT tuser.idn_user_group as key, tuser.user_group_id as value
+    	FROM tpa_tuser_group tuser
+    	WHERE tuser.idn_user_group_type = (SELECT idn_user_group_type FROM tpa_tuser_group_type WHERE type_code = 'SHIPPER')
+    </select>
+  
+</mapper>

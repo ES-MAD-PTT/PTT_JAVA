@@ -11,6 +11,10 @@ import com.atos.filters.dam.ContractNomPointFilter;
 public interface ContractNomPointService extends Serializable {
 
 	public List<ContractNomPointBean> selectContractNomPoints(ContractNomPointFilter filter);
+	
+	public List<ContractNomPointBean> selectContractNomPointsFormTable(ContractNomPointBean contractNomPoint);
+	
+	public List<ContractNomPointBean> selectContractNomPointsNullFormTable(ContractNomPointBean contractNomPoint);
 
 	public Map<BigDecimal, Object> selectShippers();
 

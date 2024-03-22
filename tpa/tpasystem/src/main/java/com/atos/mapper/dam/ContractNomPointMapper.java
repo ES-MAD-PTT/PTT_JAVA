@@ -10,6 +10,10 @@ import com.atos.filters.dam.ContractNomPointFilter;
 public interface ContractNomPointMapper {
 
 	public List<ContractNomPointBean> selectContractNomPoints(ContractNomPointFilter filters);
+	
+	public List<ContractNomPointBean> selectContractNomPointsFormTable(ContractNomPointBean contractNomPoint);
+	
+	public List<ContractNomPointBean> selectContractNomPointsNullFormTable(ContractNomPointBean contractNomPoint);
 
 	public List<ComboFilterNS> selectShippers();
 

@@ -43,6 +43,7 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 	private ContractNomPointBean newContractNomPoint;
 	private List<ContractNomPointBean> items;
 	private List<ContractNomPointBean> selecteds = new ArrayList<ContractNomPointBean>();
+	private List<ContractNomPointBean> selectedsFornNew = new ArrayList<ContractNomPointBean>();
 	private ContractNomPointBean selected;
 
 	@ManagedProperty("#{contractNomPointService}")
@@ -113,6 +114,14 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 		this.selected = selected;
 	}
 
+	public List<ContractNomPointBean> getSelectedsFornNew() {
+		return selectedsFornNew;
+	}
+
+	public void setSelectedsFornNew(List<ContractNomPointBean> selectedsFornNew) {
+		this.selectedsFornNew = selectedsFornNew;
+	}
+
 	@PostConstruct
 	public void init() {
 		filters = new ContractNomPointFilter();
@@ -171,6 +180,21 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 	}
 	public Map<BigDecimal, Object> getNominationPointsForm() {
 		return service.selectNominationPointsForm(newContractNomPoint);
+	}
+	//Para rellenar la tabla del new
+	public void contractNomPointsTable(){
+		if (newContractNomPoint.getIdn_contract_point() != null && newContractNomPoint.getIdn_contract_point().compareTo(BigDecimal.ZERO) == 0) {
+		    newContractNomPoint.setIdn_contract_point(null);
+		    selecteds = service.selectContractNomPointsNullFormTable(newContractNomPoint);
+		}
+
+		
+		if(newContractNomPoint.getIdn_contract_point() == null) {
+			selecteds = service.selectContractNomPointsNullFormTable(newContractNomPoint);
+		}else{
+			selecteds = service.selectContractNomPointsFormTable(newContractNomPoint);
+		}
+		
 	}
 
 	public void onSearch() {

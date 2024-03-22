@@ -262,6 +262,7 @@
 									<f:selectItem itemLabel="" itemValue="" />
 									<f:selectItems value="#{contractNomPointView.contractForm.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
 									<p:ajax event="change" update="new_contract_point"/>
+									<p:ajax event="change" listener="#{contractNomPointView.contractNomPointsTable}" update="contractNomPoints2" onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()"/>
 					           	</p:selectOneMenu>	
 					            <p:message for="new_contract_id" />	
 							</p:column>
@@ -296,16 +297,18 @@
 								<h:outputText value="#{msg['contractNomPoint_contract_point']}" />
 							</p:column>
 							<p:column>
-								<p:selectOneMenu id="new_contract_point" style="width:100px" value="#{contractNomPointView.newContractNomPoint.idn_contract_point}" 
-									required="true" requiredMessage="#{msg['contractNomPoint_contract_point']}: #{msg['empty_field']}"> >
-									<f:selectItem itemLabel="" itemValue="" />
-									<f:selectItems value="#{contractNomPointView.contractNomPointsForm.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
-									<p:ajax event="change" update="new_nomination_point"/>
-					           	</p:selectOneMenu>	
-					            <p:message for="new_contract_point" />	
+							    <p:selectOneMenu id="new_contract_point" style="width:100px" value="#{contractNomPointView.newContractNomPoint.idn_contract_point}" 
+							        required="true" requiredMessage="#{msg['contractNomPoint_contract_point']}: #{msg['empty_field']}"> 
+							        <f:selectItem itemLabel="" itemValue="0" />
+							        <f:selectItems value="#{contractNomPointView.contractNomPointsForm.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+							        <p:ajax event="change" listener="#{contractNomPointView.contractNomPointsTable}" update="contractNomPoints2" onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()" />                                    
+							    </p:selectOneMenu>    
+							    <p:message for="new_contract_point" />   
 							</p:column>
+
+
 							
-							<p:column style="font-weight: bold;">
+							<!-- <p:column style="font-weight: bold;">
 								<h:outputText value="#{msg['contractNomPoint_nomination_point']}" />
 							</p:column>
 							<p:column>
@@ -315,7 +318,7 @@
 									<f:selectItems value="#{contractNomPointView.nominationPointsForm.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
 					           	</p:selectOneMenu>	
 					            <p:message for="new_nomination_point" />	
-							</p:column>
+							</p:column> -->
 						</p:row>
 						<p:row>
 							<p:column>
@@ -326,9 +329,9 @@
 					
 				</p:panelGrid>
 				<p:panelGrid columns="4" style="width:100%">
-					<p:dataTable widgetVar="w_contractNomPoint1"  id="contractNomPoints2" var="contractNomPoint" value="#{contractNomPointView.items}"
+					<p:dataTable widgetVar="w_contractNomPoint1"  id="contractNomPoints2" var="contractNomPoint" value="#{contractNomPointView.selecteds}"
 							 reflow="true" editable="true" 
-							 rowSelectMode="checkbox" selection="#{contractNomPointView.selecteds}" rowKey="#{contractNomPoint.idn_contract_nom_point}"
+							 rowSelectMode="checkbox" selection="#{contractNomPointView.selectedsFornNew}" rowKey="#{contractNomPoint.idn_nomination_point}"
 							style="margin-bottom:20px;border-collapse:collapse"
 						    paginator="true" rows="5" 
 						    rowsPerPageTemplate="5,10,15,20,25"					    
@@ -343,12 +346,12 @@
 						  	  
 						  	  <p:column headerText="Select" selectionMode="multiple" style="width:36px;text-align:center"/>
 						  	  
-						  	  <p:column styleClass="" headerText="#{msg['contractNomPoint_contract_point']}" style="width: 130px; " sortBy="#{contractNomPoint.shipper}" >
-						       		<h:outputText value="#{contractNomPoint.shipper}" />
+						  	  <p:column styleClass="" headerText="#{msg['contractNomPoint_contract_point']}" style="width: 130px;text-align:center " sortBy="#{contractNomPoint.shipper}" >
+						       		<h:outputText value="#{contractNomPoint.contract_point}" />
 						       </p:column>
 						  	  
-						       <p:column styleClass="" headerText="#{msg['contractNomPoint_nomination_point']}" style="width: 130px; " sortBy="#{contractNomPoint.contract_id}">
-						       		<h:outputText value="#{contractNomPoint.contract_id}" />
+						       <p:column styleClass="" headerText="#{msg['contractNomPoint_nomination_point']}" style="width: 130px;text-align:center " sortBy="#{contractNomPoint.contract_id}">
+						       		<h:outputText value="#{contractNomPoint.nomination_point}" />
 						       </p:column>
 						      
 						   </p:dataTable>

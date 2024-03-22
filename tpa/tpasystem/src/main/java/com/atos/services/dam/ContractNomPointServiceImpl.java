@@ -129,7 +129,7 @@ public class ContractNomPointServiceImpl implements ContractNomPointService {
 	@Override
 	public Map<BigDecimal, Object> selectNominationPointsForm(ContractNomPointBean newContractNomPoint) {
 		Map<BigDecimal, Object> map = new LinkedHashMap<BigDecimal, Object>();
-		List<ComboFilterNS> list = contractNomPointMapper.selectNominationPointsForm(newContractNomPoint);
+		List<ComboFilterNS> list = contractNomPointMapper.selectNominationPointsForm(newContractNomPoint);		
 		for (ComboFilterNS combo : list) {
 			if (combo == null)
 				continue;
@@ -148,6 +148,16 @@ public class ContractNomPointServiceImpl implements ContractNomPointService {
 		
 		
 		return "0";
+	}
+
+	@Override
+	public List<ContractNomPointBean> selectContractNomPointsFormTable(ContractNomPointBean contractNomPoint) {
+		return  contractNomPointMapper.selectContractNomPointsFormTable(contractNomPoint);
+	}
+
+	@Override
+	public List<ContractNomPointBean> selectContractNomPointsNullFormTable(ContractNomPointBean contractNomPoint) {
+		return  contractNomPointMapper.selectContractNomPointsNullFormTable(contractNomPoint);
 	}
 	
 

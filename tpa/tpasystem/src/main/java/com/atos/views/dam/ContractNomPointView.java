@@ -329,7 +329,23 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 
 		String error = "0";
 		try {
-			error = service.insertContractNomPoint(newContractNomPoint);
+			
+//			newContractNomPoint.setUserName("manager");
+			List<BigDecimal> listIdnContractNomPoint = new ArrayList<>();
+			
+			for (ContractNomPointBean item : selectedsFornNew) {
+				listIdnContractNomPoint.add(item.getIdn_nomination_point());				
+	        }
+			
+			if(listIdnContractNomPoint != null) {
+				for (BigDecimal elemento : listIdnContractNomPoint) {
+		            newContractNomPoint.setIdn_nomination_point(elemento);
+		            error = service.insertContractNomPoint(newContractNomPoint);
+		        }
+			}
+			
+			listIdnContractNomPoint.clear();
+			
 		} catch (Exception e) {
 			log.catching(e);
 			// we assign the return message
@@ -372,6 +388,7 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 
 		// clean the formu new after save
 		newContractNomPoint = new ContractNomPointBean();
+		
 
 	}
 

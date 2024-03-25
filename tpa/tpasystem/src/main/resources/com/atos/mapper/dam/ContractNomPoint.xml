@@ -30,35 +30,43 @@
     <select id="selectContractNomPoints" resultMap="ContractNomPoint">
     
 select tcnp.idn_contract_nom_point as idn_contract_nom_point,
-      tcnp.idn_contract as idn_contract,
+       tcnp.idn_contract as idn_contract,
       (select idn_system_point from tpa_tsystem_point 
-		where idn_system_point in
-		(select idn_contract_point from tpa_tsystem_point_param 
-		where idn_nomination_point = tcnp.idn_nom_point)) as idn_contract_point,
+       where idn_system_point in
+           (select idn_contract_point from tpa_tsystem_point_param 
+            where idn_nomination_point = tcnp.idn_nom_point)) as idn_contract_point,
       tcnp.idn_nom_point as idn_nomination_point,
+      u.user_group_id as shipper,
+       tc.contract_code as contract_id,
       tc.start_date as start_date,
       tc.end_date as end_date,
-      tc.contract_code as contract_id,
-      (select point_code from tpa_tsystem_point 
-		where idn_system_point in
-		(select idn_contract_point from tpa_tsystem_point_param 
-		where idn_nomination_point = tcnp.idn_nom_point)) as contract_point,
-      (select t.point_desc from TPA_TSYSTEM_POINT t where t.idn_system_point = tcnp.idn_nom_point) as nomination_point
-  from TPA_TCONTRACT_NOM_POINT tcnp, TPA_TCONTRACT tc
- where tcnp.idn_contract = tc.idn_contract
+      tcnp.active_date_from as start_date_active,
+      tcnp.active_date_to as end_date_active,     
+      (select point_code from tpa_tsystem_point where idn_system_point in
+        (select idn_contract_point from tpa_tsystem_point_param 
+          where idn_nomination_point = tcnp.idn_nom_point)) as contract_point,
+      (select t.point_desc from TPA_TSYSTEM_POINT t where t.idn_system_point = tcnp.idn_nom_point) as nomination_point  
+  from TPA_TCONTRACT_NOM_POINT tcnp, 
+       TPA_TCONTRACT tc,
+       Tpa_Tuser_Group u
+  where tcnp.idn_contract = tc.idn_contract
+   and  tc.idn_user_group = u.idn_user_group
+   
+<if test="idn_contract != null">
    and tcnp.idn_contract = #{idn_contract}
-   <if test="idn_nomination_point !=null">
+</if>   
+<if test="idn_nomination_point != null">
    and idn_nom_point = #{idn_nomination_point}
-   </if>
-   <if test="startDate != null">
+</if>
+<if test="startDate != null">
     AND nvl(tc.end_date,to_date('9999/12/31','yyyy/mm/dd'))>=  #{startDate}
-    </if>
-    <if test="endDate != null">
+</if>
+<if test="endDate != null">
       AND #{endDate} >= tc.start_date
-    </if> 
-    <if test="idn_shipper != null">
+</if> 
+<if test="idn_shipper != null">
       AND tc.idn_user_group = #{idn_shipper}
-    </if> 
+</if> 
 order by tcnp.idn_contract, tc.start_date
 	</select>
 	
@@ -348,13 +356,15 @@ order by t1.point_code
 	</select>
  
 	<insert id="insertContractNomPoint" useGeneratedKeys="true" keyProperty="idn_contract_nom_point" keyColumn="idn_contract_nom_point" parameterType="com.atos.beans.dam.ContractNomPointBean">
-		INSERT INTO TPA_TCONTRACT_NOM_POINT
-			(idn_contract_nom_point,IDN_CONTRACT,IDN_NOM_POINT,
+		insert into tpa_tcontract_nom_point
+			(idn_contract_nom_point,idn_contract,idn_nom_point,active_date_from, active_date_to,
 			 aud_ins_user,aud_last_user)
-		VALUES
+		values
 			(tpa_scontract_nom_point.nextval,
 			 #{idn_contract},
 			 #{idn_nomination_point},
+			 #{startDate},
+			 #{endDate},
 		     #{username},
 			 #{username})
 	</insert>

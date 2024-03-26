@@ -126,6 +126,7 @@
 				</p:layoutUnit>
 
 				<p:layoutUnit id="table_center_layout" position="center" resizable="false" closable="false" collapsible="false">
+					<p:remoteCommand name="onCellEdit" update="form:contractNomPoints1"/>
 					<p:dataTable widgetVar="w_contractNomPoint1"  id="contractNomPoints1" var="contractNomPoint" value="#{contractNomPointView.items}"
 						 reflow="true" editable="true"
 						style="width:100%; margin-bottom:20px;border-collapse:collapse"
@@ -162,6 +163,7 @@
 						 		<p:ajax event="rowEditInit" oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','hidden')});" />
 								<p:ajax event="rowEdit" listener="#{contractNomPointView.onRowEdit}" update=":form:msgs" onstart="PF('cargando').show()"  oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});PF('cargando').hide()"/>   
 								<p:ajax event="rowEditCancel" listener="#{contractNomPointView.onRowCancel}" update=":form:msgs" onstart="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>
+							 	<p:ajax event="cellEdit" oncomplete="onCellEdit()" listener="#{contractNomPointView.onCellEdit(contractNomPoint)}"	update=":form:msgs" />
 							 </shiro:hasPermission>
 					  	  
 					  	  <!-- <p:column headerText="Select" selectionMode="multiple" style="width:36px;text-align:center"/> -->
@@ -222,10 +224,15 @@
 					       
 					      <shiro:hasPermission name="#{changeSystemView.system}.DAM.CONTRACT_NOMINATION.MOD">
 						       <p:column headerText="#{msg['contractNomPoint_limit_nomination_point']}" style="text-align:center;">
-						           <p:commandButton id="edit" type="button" icon="fa fa-fw fa-edit"
-		        							onclick="PF('dlgEditContractNomPoint').show();"
-		        						/>
-						       </p:column>
+								    <!-- <p:commandButton id="edit" type="button" icon="fa fa-fw fa-edit" update="formEditEntity" 
+								                     actionListener="#{contractNomPointView.prepareEdit(contractNomPoint)}" 
+										                     oncomplete="PF('dlgEditContractNomPoint').show();" /> -->
+									<p:commandButton id="edit" icon="fa fa-fw fa-edit" 
+									onstart="PF('cargando').show()" update="formEditEntity"
+									oncomplete="PF('cargando').hide(),PF('dlgEditContractNomPoint').show()"
+									actionListener="#{contractNomPointView.prepareEdit(contractNomPoint)}"/>
+								</p:column>
+
 					       </shiro:hasPermission>
 					   </p:dataTable>
 				</p:layoutUnit>
@@ -361,7 +368,7 @@
 	</shiro:hasPermission>
 	
 	<p:dialog widgetVar="dlgEditContractNomPoint" resizable="false"  closable="true" modal="true" appendTo="@(body)" header="Nomination Point Limitation"
-	width="50%">
+	width="50%" dynamic="true">
 		<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario
 		 <p:ajax event="close" update="formNewEntity"  process="@this" listener="#{contractNomPointView.cancel}" />-->	
 			<h:form id="formEditEntity">
@@ -373,7 +380,7 @@
 								<h:outputText value="#{msg['contractNomPoint_shipper']}" />
 							</p:column>
 							<p:column>
-								<p:selectOneMenu id="edit_shipper"  style="width:100px" value="#{contractNomPointView.newContractNomPoint.idn_shipper}" >
+								<p:selectOneMenu id="edit_shipper"  style="width:100px" value="#{contractNomPointView.editContractNomPoint.idn_shipper}" >
 											<f:selectItem itemLabel="" itemValue="" />
 											<f:selectItems value="#{contractNomPointView.shippers.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
 											<p:ajax update="edit_contract_id"/>
@@ -383,13 +390,14 @@
 								<h:outputText value="#{msg['contractNomPoint_id_contract']}" />
 							</p:column>
 							<p:column>
-								<p:selectOneMenu id="edit_contract_id" style="width:100px" value="#{contractNomPointView.newContractNomPoint.idn_contract}" 
-									required="true" requiredMessage="#{msg['contractNomPoint_id_contract']}: #{msg['empty_field']}"> >
-									<f:selectItem itemLabel="" itemValue="" />
-									<f:selectItems value="#{contractNomPointView.contractForm.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
-									<p:ajax event="change" update="edit_contract_point"/>
-									<p:ajax event="change" listener="#{contractNomPointView.contractNomPointsTable}" update="contractNomPoints2" onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()"/>
-					           	</p:selectOneMenu>	
+								<p:selectOneMenu id="edit_contract_id" style="width:100px" value="#{contractNomPointView.editContractNomPoint.idn_contract}" 
+								    required="true" requiredMessage="#{msg['contractNomPoint_id_contract']}: #{msg['empty_field']}">
+								    <f:selectItem itemLabel="" itemValue="" />
+								    <f:selectItems value="#{contractNomPointView.contractForm.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+								    <p:ajax event="change" update="edit_contract_point"/>
+								    <p:ajax event="change" listener="#{contractNomPointView.contractNomPointsTable}" update="contractNomPoints2" onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()"/>
+								</p:selectOneMenu>
+	
 					            <p:message for="edit_contract_id" />	
 							</p:column>
 						</p:row>
@@ -398,7 +406,7 @@
 								<h:outputText value="#{msg['contractNomPoint_date_from']}" />
 							</p:column>
 							<p:column>
-								<p:calendar required="true" id="edit_fecInicio" size="10" pattern="dd/MM/yyyy" mask="true" value="#{contractNomPointView.newContractNomPoint.startDate}"
+								<p:calendar required="true" id="edit_fecInicio" size="10" pattern="dd/MM/yyyy" mask="true" value="#{contractNomPointView.editContractNomPoint.startDate}"
 									requiredMessage="You need to select a date" 
 									showOn="button" navigator="true">
 									<p:ajax event="dateSelect" update="edit_fecInicio,edit_contract_id"></p:ajax>
@@ -409,7 +417,7 @@
 								<h:outputText value="#{msg['contractNomPoint_date_to']}" />
 							</p:column>
 							<p:column>
-								<p:calendar required="true" id="edit_fecFin" size="10" pattern="dd/MM/yyyy" mask="true" value="#{contractNomPointView.newContractNomPoint.endDate}"
+								<p:calendar required="true" id="edit_fecFin" size="10" pattern="dd/MM/yyyy" mask="true" value="#{contractNomPointView.editContractNomPoint.endDate}"
 									requiredMessage="You need to select a date" 
 									showOn="button" navigator="true">
 									<p:ajax event="dateSelect" update="edit_fecFin,edit_contract_id"></p:ajax>
@@ -423,7 +431,7 @@
 								<h:outputText value="#{msg['contractNomPoint_contract_point']}" />
 							</p:column>
 							<p:column>
-							    <p:selectOneMenu id="edit_contract_point" style="width:100px" value="#{contractNomPointView.newContractNomPoint.idn_contract_point}" 
+							    <p:selectOneMenu id="edit_contract_point" style="width:100px" value="#{contractNomPointView.editContractNomPoint.idn_contract_point}" 
 							        required="true" requiredMessage="#{msg['contractNomPoint_contract_point']}: #{msg['empty_field']}"> 
 							        <f:selectItem itemLabel="" itemValue="0" />
 							        <f:selectItems value="#{contractNomPointView.contractNomPointsForm.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
@@ -441,9 +449,9 @@
 					
 				</p:panelGrid>
 				<p:panelGrid columns="4" style="width:100%">
-					<p:dataTable widgetVar="w_contractNomPoint1"  id="contractNomPoints2" var="contractNomPoint" value="#{contractNomPointView.selecteds}"
+					<p:dataTable widgetVar="w_contractNomPoint1"  id="contractNomPoints2" var="contractNomPoint" value="#{contractNomPointView.selectedsFornNew}"
 							 reflow="true" editable="true" 
-							 rowSelectMode="checkbox" selection="#{contractNomPointView.selectedsFornNew}" rowKey="#{contractNomPoint.idn_nomination_point}"
+							 rowSelectMode="checkbox" selection="#{contractNomPointView.selectedsFornEdit}" rowKey="#{contractNomPoint.idn_nomination_point}"
 							style="margin-bottom:20px;border-collapse:collapse"
 						    paginator="true" rows="10" 
 						    rowsPerPageTemplate="5,10,15,20,25"					                                        
@@ -475,9 +483,9 @@
 							<p:commandButton value="#{msg['save']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" validateClient="true"
 								action="#{contractNomPointView.save}" update=":#{p:component('contractNomPoints2')},:formEditEntity"
 								onstart="PF('cargando').show()"
-								oncomplete="PF('dlgNewContractNomPoint').hide(),PF('cargando').hide()" />
+								oncomplete="PF('dlgEditContractNomPoint').hide(),PF('cargando').hide()" />
 			        		<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close"
-			        		 	update="formNewEntity" process="@this" actionListener="#{contractNomPointView.cancel}"
+			        		 	update="formEditEntity" process="@this" actionListener="#{contractNomPointView.cancel}"
 			        			oncomplete="PF('dlgNewContractNomPoint').hide()"/>
 						</p:column>					
 					</p:row>
@@ -485,8 +493,14 @@
 			</h:form>			
 		</p:dialog>
 	
+		<script type="text/javascript">
+				function start() {
+					PF('grabando').show();
+				}
 	
+				function stop() {
+					PF('grabando').hide();
+				}
+		</script>
 	</ui:define>
-
-
 </ui:composition>

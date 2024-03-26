@@ -41,9 +41,12 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 
 	private ContractNomPointFilter filters;
 	private ContractNomPointBean newContractNomPoint;
+	private ContractNomPointBean editContractNomPoint = new ContractNomPointBean();
+	private ContractNomPointBean contractNomPointIdShipper = new ContractNomPointBean();
 	private List<ContractNomPointBean> items;
 	private List<ContractNomPointBean> selecteds = new ArrayList<ContractNomPointBean>();
 	private List<ContractNomPointBean> selectedsFornNew = new ArrayList<ContractNomPointBean>();
+	private List<ContractNomPointBean> selectedsFornEdit = new ArrayList<ContractNomPointBean>();
 	private ContractNomPointBean selected;
 
 	@ManagedProperty("#{contractNomPointService}")
@@ -79,6 +82,22 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 
 	public ContractNomPointBean getNewContractNomPoint() {
 		return newContractNomPoint;
+	}
+
+	public ContractNomPointBean getEditContractNomPoint() {
+		return editContractNomPoint;
+	}
+
+	public void setEditContractNomPoint(ContractNomPointBean editContractNomPoint) {
+		this.editContractNomPoint = editContractNomPoint;
+	}
+
+	public ContractNomPointBean getContractNomPointIdShipper() {
+		return contractNomPointIdShipper;
+	}
+
+	public void setContractNomPointIdShipper(ContractNomPointBean contractNomPointIdShipper) {
+		this.contractNomPointIdShipper = contractNomPointIdShipper;
 	}
 
 	public void setNewContractNomPoint(ContractNomPointBean newContractNomPoint) {
@@ -120,6 +139,14 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 
 	public void setSelectedsFornNew(List<ContractNomPointBean> selectedsFornNew) {
 		this.selectedsFornNew = selectedsFornNew;
+	}
+
+	public List<ContractNomPointBean> getSelectedsFornEdit() {
+		return selectedsFornEdit;
+	}
+
+	public void setSelectedsFornEdit(List<ContractNomPointBean> selectedsFornEdit) {
+		this.selectedsFornEdit = selectedsFornEdit;
 	}
 
 	@PostConstruct
@@ -330,21 +357,29 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 		String error = "0";
 		try {
 			
-//			newContractNomPoint.setUserName("manager");
 			List<BigDecimal> listIdnContractNomPoint = new ArrayList<>();
 			
-			for (ContractNomPointBean item : selectedsFornNew) {
-				listIdnContractNomPoint.add(item.getIdn_nomination_point());				
-	        }
 			
-			if(listIdnContractNomPoint != null) {
-				for (BigDecimal elemento : listIdnContractNomPoint) {
-		            newContractNomPoint.setIdn_nomination_point(elemento);
-		            error = service.insertContractNomPoint(newContractNomPoint);
+			if(listIdnContractNomPoint.size() !=0 ) {
+				for (ContractNomPointBean item : selectedsFornNew) {
+					listIdnContractNomPoint.add(item.getIdn_nomination_point());				
 		        }
+				
+				if(listIdnContractNomPoint != null) {
+					for (BigDecimal elemento : listIdnContractNomPoint) {
+			            newContractNomPoint.setIdn_nomination_point(elemento);
+			            error = service.insertContractNomPoint(newContractNomPoint);
+			        }
+				}
+			}else {
+				errorMsg = msgs.getString("error_no_point_existing");
+				getMessages().addMessage(Constants.head_menu[0], new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
+				log.error(errorMsg);
+				return;
 			}
 			
-			listIdnContractNomPoint.clear();
+			
+			listIdnContractNomPoint = new ArrayList<>();
 			
 		} catch (Exception e) {
 			log.catching(e);
@@ -388,9 +423,21 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 
 		// clean the formu new after save
 		newContractNomPoint = new ContractNomPointBean();
-		
+		selectedsFornNew = new ArrayList<ContractNomPointBean>();
 
 	}
+	
+	public void prepareEdit(ContractNomPointBean itemEdit) {
+		contractNomPointIdShipper = service.selectIdShipper(itemEdit);
+		editContractNomPoint = itemEdit;
+		selectedsFornNew = service.selectContractNomPointsFormEdit(editContractNomPoint);
+		editContractNomPoint.setStartDate(editContractNomPoint.getStartDateActive());
+		editContractNomPoint.setEndDate(editContractNomPoint.getEndDateActive());
+		editContractNomPoint.setIdn_shipper(contractNomPointIdShipper.getIdn_shipper());
+		
+	}
+	
+	public void onCellEdit(ContractNomPointBean selection) {}
 
     public void delete(){
     	for(int i=0;i<selecteds.size();i++){

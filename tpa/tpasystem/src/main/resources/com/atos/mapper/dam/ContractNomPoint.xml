@@ -71,6 +71,15 @@ order by
 	tc.start_date
 	</select>
 	
+	<select id="selectIdShipper" resultMap="ContractNomPoint" parameterType="com.atos.beans.dam.ContractNomPointBean">
+    	SELECT	
+			u.IDN_USER_GROUP AS idn_shipper
+		FROM	
+			tpa_tuser_group u
+		WHERE 
+			u.USER_GROUP_id = #{shipper}
+	</select>
+	
 	<select id="selectContractNomPointsFormTable" resultMap="ContractNomPoint" parameterType="com.atos.beans.dam.ContractNomPointBean">
     	select (select sp.idn_system_point from tpa_tsystem_point sp where sp.idn_system_point=#{idn_contract_point}) as idn_contract_point,
 	       (select sp.point_code from tpa_tsystem_point sp where sp.idn_system_point=#{idn_contract_point}) as contract_point,
@@ -81,6 +90,58 @@ order by
 			       (select distinct idn_nomination_point
 			          from TPA_TSYSTEM_POINT_PARAM t
 			         where idn_contract_point = #{idn_contract_point})
+	</select>
+	
+	<select id="selectContractNomPointsFormEdit" resultMap="ContractNomPoint" parameterType="com.atos.beans.dam.ContractNomPointBean">
+    	SELECT
+	tcnp.idn_contract_nom_point AS idn_contract_nom_point,
+	tcnp.idn_contract AS idn_contract,
+	(
+	SELECT
+		idn_system_point
+	FROM
+		tpa_tsystem_point
+	WHERE
+		idn_system_point IN (
+		SELECT
+			idn_contract_point
+		FROM
+			tpa_tsystem_point_param
+		WHERE
+			idn_nomination_point = tcnp.idn_nom_point)) AS idn_contract_point,
+	tcnp.idn_nom_point AS idn_nomination_point,
+	(
+	SELECT
+		point_code
+	FROM
+		tpa_tsystem_point
+	WHERE
+		idn_system_point IN
+        (
+		SELECT
+			idn_contract_point
+		FROM
+			tpa_tsystem_point_param
+		WHERE
+			idn_nomination_point = tcnp.idn_nom_point)) AS contract_point,
+	(
+	SELECT
+		t.point_desc
+	FROM
+		TPA_TSYSTEM_POINT t
+	WHERE
+		t.idn_system_point = tcnp.idn_nom_point) AS nomination_point
+FROM
+	TPA_TCONTRACT_NOM_POINT tcnp,
+	TPA_TCONTRACT tc
+WHERE
+	tcnp.idn_contract = tc.idn_contract
+	AND tcnp.idn_contract = #{idn_contract}
+	AND tcnp.active_date_from = #{startDateActive}
+	AND tcnp.active_date_to = #{endDateActive}
+ORDER BY
+	tcnp.idn_contract,
+	tc.start_date
 
 	</select>
 	

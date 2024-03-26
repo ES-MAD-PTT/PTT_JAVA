@@ -15,6 +15,10 @@ public interface ContractNomPointService extends Serializable {
 	public List<ContractNomPointBean> selectContractNomPointsFormTable(ContractNomPointBean contractNomPoint);
 	
 	public List<ContractNomPointBean> selectContractNomPointsNullFormTable(ContractNomPointBean contractNomPoint);
+	
+	public List<ContractNomPointBean> selectContractNomPointsFormEdit(ContractNomPointBean contractNomPoint);
+	
+	public ContractNomPointBean selectIdShipper(ContractNomPointBean contractNomPoint);
 
 	public Map<BigDecimal, Object> selectShippers();
 

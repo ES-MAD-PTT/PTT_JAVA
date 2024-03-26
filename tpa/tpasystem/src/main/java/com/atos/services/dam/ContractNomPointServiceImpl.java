@@ -159,6 +159,16 @@ public class ContractNomPointServiceImpl implements ContractNomPointService {
 	public List<ContractNomPointBean> selectContractNomPointsNullFormTable(ContractNomPointBean contractNomPoint) {
 		return  contractNomPointMapper.selectContractNomPointsNullFormTable(contractNomPoint);
 	}
+
+	@Override
+	public List<ContractNomPointBean> selectContractNomPointsFormEdit(ContractNomPointBean contractNomPoint) {
+		return  contractNomPointMapper.selectContractNomPointsFormEdit(contractNomPoint);
+	}
+
+	@Override
+	public ContractNomPointBean selectIdShipper(ContractNomPointBean contractNomPoint) {		
+		return contractNomPointMapper.selectIdShipper(contractNomPoint);
+	}
 	
 
 }

@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -429,11 +430,11 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 	
 	public void prepareEdit(ContractNomPointBean itemEdit) {
 		contractNomPointIdShipper = service.selectIdShipper(itemEdit);
-		editContractNomPoint = itemEdit;
-		selectedsFornNew = service.selectContractNomPointsFormEdit(editContractNomPoint);
-		editContractNomPoint.setStartDate(editContractNomPoint.getStartDateActive());
-		editContractNomPoint.setEndDate(editContractNomPoint.getEndDateActive());
-		editContractNomPoint.setIdn_shipper(contractNomPointIdShipper.getIdn_shipper());
+		newContractNomPoint = itemEdit;
+		selectedsFornNew = service.selectContractNomPointsFormEdit(newContractNomPoint);
+		newContractNomPoint.setStartDate(newContractNomPoint.getStartDateActive());
+		newContractNomPoint.setEndDate(newContractNomPoint.getEndDateActive());
+		newContractNomPoint.setIdn_shipper(contractNomPointIdShipper.getIdn_shipper());
 		
 	}
 	
@@ -457,6 +458,38 @@ public class ContractNomPointView  extends CommonView implements Serializable {
     		
     	}
     	onSearch();
+    }
+    
+    public boolean isStartDateBeforeTomorrow() {
+        Calendar tomorrow = Calendar.getInstance();
+        tomorrow.add(Calendar.DAY_OF_MONTH, 1); // Sumar un día al calendario
+        
+        // Establecer la hora, minuto, segundo y milisegundo a 0 para el día de mañana
+        tomorrow.set(Calendar.HOUR_OF_DAY, 0);
+        tomorrow.set(Calendar.MINUTE, 0);
+        tomorrow.set(Calendar.SECOND, 0);
+        tomorrow.set(Calendar.MILLISECOND, 0);
+        
+        Date startDate = editContractNomPoint.getStartDate(); 
+        
+        // Comprobar si startDate es antes de mañana
+        return startDate != null && startDate.before(tomorrow.getTime());
+    }
+    
+    public boolean isEndDateBeforeTomorrow() {
+        Calendar tomorrow = Calendar.getInstance();
+        tomorrow.add(Calendar.DAY_OF_MONTH, 1); // Sumar un día al calendario
+        
+        // Establecer la hora, minuto, segundo y milisegundo a 0 para el día de mañana
+        tomorrow.set(Calendar.HOUR_OF_DAY, 0);
+        tomorrow.set(Calendar.MINUTE, 0);
+        tomorrow.set(Calendar.SECOND, 0);
+        tomorrow.set(Calendar.MILLISECOND, 0);
+        
+        Date endDate = editContractNomPoint.getEndDate(); 
+        
+        // Comprobar si startDate es antes de mañana
+        return endDate != null && endDate.before(tomorrow.getTime());
     }
 
 	
@@ -488,7 +521,7 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 			for (int i = 0; i < header.getPhysicalNumberOfCells() - 1; i++) {
 				HSSFCell cell = header.getCell(i);
 				cell.setCellStyle(cellStyleHeader);
-				if (i == 22) {
+				if (i == 6) {
 					cell.setCellStyle(cellStyleHide);
 					cell.setCellValue(" ");
 				}
@@ -513,7 +546,7 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 						}
 						*/
 						// el lapiz
-						if (j >= 4) {
+						if (j >= 6) {
 							cell.setCellStyle(cellStyleHide);
 							cell.setCellValue(" ");
 						}

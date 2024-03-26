@@ -224,9 +224,6 @@
 					       
 					      <shiro:hasPermission name="#{changeSystemView.system}.DAM.CONTRACT_NOMINATION.MOD">
 						       <p:column headerText="#{msg['contractNomPoint_limit_nomination_point']}" style="text-align:center;">
-								    <!-- <p:commandButton id="edit" type="button" icon="fa fa-fw fa-edit" update="formEditEntity" 
-								                     actionListener="#{contractNomPointView.prepareEdit(contractNomPoint)}" 
-										                     oncomplete="PF('dlgEditContractNomPoint').show();" /> -->
 									<p:commandButton id="edit" icon="fa fa-fw fa-edit" 
 									onstart="PF('cargando').show()" update="formEditEntity"
 									oncomplete="PF('cargando').hide(),PF('dlgEditContractNomPoint').show()"
@@ -380,25 +377,25 @@
 								<h:outputText value="#{msg['contractNomPoint_shipper']}" />
 							</p:column>
 							<p:column>
-								<p:selectOneMenu id="edit_shipper"  style="width:100px" value="#{contractNomPointView.editContractNomPoint.idn_shipper}" >
+								<p:selectOneMenu id="new_shipper"  style="width:100px" value="#{contractNomPointView.newContractNomPoint.idn_shipper}" disabled="#{contractNomPointView.isStartDateBeforeTomorrow()}">
 											<f:selectItem itemLabel="" itemValue="" />
 											<f:selectItems value="#{contractNomPointView.shippers.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
-											<p:ajax update="edit_contract_id"/>
+											<p:ajax update="new_contract_id"/>
 								</p:selectOneMenu>									
 							</p:column>
 							<p:column style="font-weight: bold;">
 								<h:outputText value="#{msg['contractNomPoint_id_contract']}" />
 							</p:column>
 							<p:column>
-								<p:selectOneMenu id="edit_contract_id" style="width:100px" value="#{contractNomPointView.editContractNomPoint.idn_contract}" 
-								    required="true" requiredMessage="#{msg['contractNomPoint_id_contract']}: #{msg['empty_field']}">
+								<p:selectOneMenu id="new_contract_id" style="width:100px" value="#{contractNomPointView.newContractNomPoint.idn_contract}" 
+								    required="true" requiredMessage="#{msg['contractNomPoint_id_contract']}: #{msg['empty_field']}" disabled="#{contractNomPointView.isStartDateBeforeTomorrow()}">
 								    <f:selectItem itemLabel="" itemValue="" />
 								    <f:selectItems value="#{contractNomPointView.contractForm.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
-								    <p:ajax event="change" update="edit_contract_point"/>
+								    <p:ajax event="change" update="new_contract_point"/>
 								    <p:ajax event="change" listener="#{contractNomPointView.contractNomPointsTable}" update="contractNomPoints2" onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()"/>
 								</p:selectOneMenu>
 	
-					            <p:message for="edit_contract_id" />	
+					            <p:message for="new_contract_id" />	
 							</p:column>
 						</p:row>
 						<p:row>
@@ -406,22 +403,22 @@
 								<h:outputText value="#{msg['contractNomPoint_date_from']}" />
 							</p:column>
 							<p:column>
-								<p:calendar required="true" id="edit_fecInicio" size="10" pattern="dd/MM/yyyy" mask="true" value="#{contractNomPointView.editContractNomPoint.startDate}"
+								<p:calendar required="true" id="new_fecInicio" size="10" pattern="dd/MM/yyyy" mask="true" value="#{contractNomPointView.newContractNomPoint.startDate}"
 									requiredMessage="You need to select a date" 
-									showOn="button" navigator="true">
-									<p:ajax event="dateSelect" update="edit_fecInicio,edit_contract_id"></p:ajax>
-									<p:ajax event="change" update="edit_fecInicio,edit_contract_id"></p:ajax>
+									showOn="button" navigator="true" disabled="#{contractNomPointView.isStartDateBeforeTomorrow()}">
+									<p:ajax event="dateSelect" update="new_fecInicio,new_contract_id"></p:ajax>
+									<p:ajax event="change" update="new_fecInicio,new_contract_id"></p:ajax>
 								</p:calendar>
 							</p:column>
 							<p:column  style="font-weight: bold;">
 								<h:outputText value="#{msg['contractNomPoint_date_to']}" />
 							</p:column>
 							<p:column>
-								<p:calendar required="true" id="edit_fecFin" size="10" pattern="dd/MM/yyyy" mask="true" value="#{contractNomPointView.editContractNomPoint.endDate}"
+								<p:calendar required="true" id="new_fecFin" size="10" pattern="dd/MM/yyyy" mask="true" value="#{contractNomPointView.newContractNomPoint.endDate}"
 									requiredMessage="You need to select a date" 
-									showOn="button" navigator="true">
-									<p:ajax event="dateSelect" update="edit_fecFin,edit_contract_id"></p:ajax>
-									<p:ajax event="change" update="edit_fecFin,edit_contract_id"></p:ajax>
+									showOn="button" navigator="true" disabled="#{contractNomPointView.isEndDateBeforeTomorrow()}">
+									<p:ajax event="dateSelect" update="new_fecFin,new_contract_id"></p:ajax>
+									<p:ajax event="change" update="new_fecFin,new_contract_id"></p:ajax>
 								</p:calendar>
 							</p:column>
 						</p:row>
@@ -431,13 +428,13 @@
 								<h:outputText value="#{msg['contractNomPoint_contract_point']}" />
 							</p:column>
 							<p:column>
-							    <p:selectOneMenu id="edit_contract_point" style="width:100px" value="#{contractNomPointView.editContractNomPoint.idn_contract_point}" 
-							        required="true" requiredMessage="#{msg['contractNomPoint_contract_point']}: #{msg['empty_field']}"> 
+							    <p:selectOneMenu id="new_contract_point" style="width:100px" value="#{contractNomPointView.newContractNomPoint.idn_contract_point}" 
+							        required="true" requiredMessage="#{msg['contractNomPoint_contract_point']}: #{msg['empty_field']}" disabled="#{contractNomPointView.isEndDateBeforeTomorrow()}"> 
 							        <f:selectItem itemLabel="" itemValue="0" />
 							        <f:selectItems value="#{contractNomPointView.contractNomPointsForm.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
 							        <p:ajax event="change" listener="#{contractNomPointView.contractNomPointsTable}" update="contractNomPoints2" onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()" />                                    
 							    </p:selectOneMenu>    
-							    <p:message for="edit_contract_point" />   
+							    <p:message for="new_contract_point" />   
 							</p:column>
 						</p:row>
 						<p:row>
@@ -483,10 +480,10 @@
 							<p:commandButton value="#{msg['save']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" validateClient="true"
 								action="#{contractNomPointView.save}" update=":#{p:component('contractNomPoints2')},:formEditEntity"
 								onstart="PF('cargando').show()"
-								oncomplete="PF('dlgEditContractNomPoint').hide(),PF('cargando').hide()" />
+								oncomplete="PF('dlgEditContractNomPoint').hide(),PF('cargando').hide()" disabled="#{contractNomPointView.isEndDateBeforeTomorrow()}"/>
 			        		<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close"
 			        		 	update="formEditEntity" process="@this" actionListener="#{contractNomPointView.cancel}"
-			        			oncomplete="PF('dlgNewContractNomPoint').hide()"/>
+			        			oncomplete="PF('dlgEditContractNomPoint').hide()"/>
 						</p:column>					
 					</p:row>
 				</p:panelGrid>							

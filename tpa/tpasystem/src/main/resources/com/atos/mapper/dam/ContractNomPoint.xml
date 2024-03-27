@@ -28,12 +28,27 @@
     </resultMap>
      
     <select id="selectContractNomPoints" resultMap="ContractNomPoint">
-    select
+    with cont_nom_point as (
+select
 	tcnp.idn_contract as idn_contract,
+	(
+	select
+		idn_system_point
+	from
+		tpa_tsystem_point
+	where
+		idn_system_point in (
+		select
+			idn_contract_point
+		from
+			tpa_tsystem_point_param
+		where
+			idn_nomination_point = tcnp.idn_nom_point)) as idn_contract_point,
 	u.user_group_id as shipper,
+	u.idn_user_group as idn_shipper,
 	tc.contract_code as contract_id,
-	tc.start_date as start_date,
-	tc.end_date as end_date,
+	tc.start_date,
+	tc.end_date,
 	tcnp.active_date_from as start_date_active,
 	tcnp.active_date_to as end_date_active
 from
@@ -43,12 +58,12 @@ from
 where
 	tcnp.idn_contract = tc.idn_contract
 	and tc.idn_user_group = u.idn_user_group
-   <if test = "idn_contract != null">
-	and tcnp.idn_contract = #{idn_contract}
-   </if>    
-   <if test = "idn_nomination_point !=null">
+	<if test = "idn_contract != null">
+		and tcnp.idn_contract = #{idn_contract}
+   	</if>   
+   	<if test = "idn_nomination_point !=null">
 	and idn_nom_point = #{idn_nomination_point}
-   </if>   
+   	</if>   
    <if test = "startDate != null">
 	and nvl(tc.end_date, to_date('9999/12/31', 'yyyy/mm/dd'))>= #{startDate}
     </if>
@@ -57,18 +72,31 @@ where
     </if> 
     <if test = "idn_shipper != null">
 	and tc.idn_user_group = #{idn_shipper}
-    </if>
+    </if> 
+
+)
+select
+	*
+from
+	cont_nom_point tcnp
+
+<if test = "idn_contract_point !=null">
+where
+	tcnp.idn_contract_point = #{idn_contract_point}
+</if>
 group by
 	tcnp.idn_contract,
-	u.user_group_id,
-	tc.contract_code,
-	tc.start_date,
-	tc.end_date ,
-	tcnp.active_date_from,
-	tcnp.active_date_to
+	tcnp.idn_contract_point,
+	tcnp.shipper,
+	tcnp.idn_shipper,
+	tcnp.contract_id,
+	tcnp.start_date,
+	tcnp.end_date ,
+	tcnp.start_date_active,
+	tcnp.end_date_active
 order by
 	tcnp.idn_contract,
-	tc.start_date
+	tcnp.start_date
 	</select>
 	
 	<select id="selectIdShipper" resultMap="ContractNomPoint" parameterType="com.atos.beans.dam.ContractNomPointBean">
@@ -339,9 +367,6 @@ select t1.idn_system_point as key, t1.point_code as value
 
 
      <select id="selectNominationPointsForm" resultType="com.atos.beans.ComboFilterNS">
-
-
-
 select t1.idn_system_point as key,
        t1.point_code as value
   from tpa_tsystem_point t1
@@ -349,8 +374,6 @@ select t1.idn_system_point as key,
        (select distinct idn_nomination_point
           from TPA_TSYSTEM_POINT_PARAM t
          where idn_contract_point = #{idn_contract_point})
-
-
 	</select>
 
 
@@ -415,6 +438,35 @@ select t1.idn_system_point as key,
           from TPA_TSYSTEM_POINT_PARAM t
          where idn_contract_point = #{idn_contract_point})
 order by t1.point_code
+	</select>
+	
+	<select id="selectExistingNumSlop" resultType="java.math.BigDecimal" parameterType="com.atos.beans.dam.ContractNomPointBean">
+		SELECT
+			count(*)
+		FROM
+			TPA_TCONTRACT_NOM_POINT t
+		WHERE
+			t.idn_contract = #{idn_contract}
+			<if test="lisIdnNominationPoint != null and !lisIdnNominationPoint.isEmpty()">
+			  	and t.idn_nom_point in
+			  	<foreach collection="lisIdnNominationPoint" item="item" open="(" separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+			AND (#{startDate} BETWEEN t.active_date_from AND t.active_date_to
+				OR #{endDate} BETWEEN t.active_date_from AND t.active_date_to)
+	</select>
+	
+	<select id="selectDateContra" resultType="java.util.Date" parameterType="com.atos.beans.dam.ContractNomPointBean">
+		select
+			c.end_date
+		from
+			tpa_tcontract c
+		where
+			c.idn_contract = #{idn_contract}    
+		<if test = "endDate != null">
+			and #{endDate} <![CDATA[<=]]> c.end_date
+		</if>
 	</select>
  
 	<insert id="insertContractNomPoint" useGeneratedKeys="true" keyProperty="idn_contract_nom_point" keyColumn="idn_contract_nom_point" parameterType="com.atos.beans.dam.ContractNomPointBean">

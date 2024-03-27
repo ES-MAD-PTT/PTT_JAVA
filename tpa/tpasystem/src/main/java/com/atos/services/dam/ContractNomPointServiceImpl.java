@@ -1,6 +1,7 @@
 package com.atos.services.dam;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -168,6 +169,18 @@ public class ContractNomPointServiceImpl implements ContractNomPointService {
 	@Override
 	public ContractNomPointBean selectIdShipper(ContractNomPointBean contractNomPoint) {		
 		return contractNomPointMapper.selectIdShipper(contractNomPoint);
+	}
+
+	@Override
+	public BigDecimal selectExistingNumSlop(ContractNomPointBean contractNomPoint) {
+		BigDecimal existingNumSlop = contractNomPointMapper.selectExistingNumSlop(contractNomPoint);
+		return existingNumSlop;
+	}
+
+	@Override
+	public Date selectDateContra(ContractNomPointBean contractNomPoint) {
+		Date dateContrat = contractNomPointMapper.selectDateContra(contractNomPoint);
+		return dateContrat;
 	}
 	
 

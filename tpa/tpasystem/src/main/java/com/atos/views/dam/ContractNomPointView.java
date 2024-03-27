@@ -2,6 +2,9 @@ package com.atos.views.dam;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -353,16 +356,46 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 				return;
 			}
 
+		}else {
+			Date dateEndContract = service.selectDateContra(newContractNomPoint);
+			
+			if(dateEndContract != null) {
+				// Convertir Date a LocalDate
+			    LocalDate localDateEndContract = dateEndContract.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+			    
+			    // Formatear LocalDate como una cadena de texto con el formato deseado: día/mes/año
+			    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+			    String dateEndContractString = localDateEndContract.format(formatter);
+			    
+				
+				errorMsg = msgs.getString("error_date_contract");
+				errorMsg = errorMsg + dateEndContractString;
+				getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
+				log.error(errorMsg );
+				return;
+			}
 		}
 
 		String error = "0";
 		try {
-			
+			BigDecimal existNumSlop = BigDecimal.ZERO;
 			List<BigDecimal> listIdnContractNomPoint = new ArrayList<>();
-			
+						
 			for (ContractNomPointBean item : selectedsFornNew) {
 				listIdnContractNomPoint.add(item.getIdn_nomination_point());				
 	        }
+			
+			newContractNomPoint.setLisIdnNominationPoint(listIdnContractNomPoint);
+			existNumSlop = service.selectExistingNumSlop(newContractNomPoint);
+			
+			if (existNumSlop.compareTo(BigDecimal.ZERO) != 0) {
+				errorMsg = msgs.getString("error_no_existing_overlap");
+				getMessages().addMessage(Constants.head_menu[0], new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
+				log.error(errorMsg);
+				newContractNomPoint = new ContractNomPointBean();
+				selectedsFornNew = new ArrayList<ContractNomPointBean>();
+				return;
+			}
 			
 			if(listIdnContractNomPoint.size() !=0 ) {
 				
@@ -377,6 +410,8 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 				errorMsg = msgs.getString("error_no_point_existing");
 				getMessages().addMessage(Constants.head_menu[0], new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
 				log.error(errorMsg);
+				newContractNomPoint = new ContractNomPointBean();
+				selectedsFornNew = new ArrayList<ContractNomPointBean>();
 				return;
 			}
 			
@@ -430,20 +465,14 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 	}
 	
 	public void prepareEdit(ContractNomPointBean itemEdit) {
-		BigDecimal idnContractPoint = BigDecimal.ZERO;
+		
 		
 		contractNomPointIdShipper = service.selectIdShipper(itemEdit);
 		newContractNomPoint = itemEdit;
 		selectedsFornNew = service.selectContractNomPointsFormEdit(newContractNomPoint);
 		newContractNomPoint.setStartDate(newContractNomPoint.getStartDateActive());
 		newContractNomPoint.setEndDate(newContractNomPoint.getEndDateActive());
-		newContractNomPoint.setIdn_shipper(contractNomPointIdShipper.getIdn_shipper());
 		
-		if (!selectedsFornNew.isEmpty()) {
-			ContractNomPointBean firstElement = selectedsFornNew.get(0);
-		    idnContractPoint = firstElement.getIdn_contract_point();
-		}
-		newContractNomPoint.setIdn_contract_point(idnContractPoint);
 		
 	}
 	

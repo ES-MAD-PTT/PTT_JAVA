@@ -478,7 +478,7 @@ public class ContractNomPointView  extends CommonView implements Serializable {
         tomorrow.set(Calendar.SECOND, 0);
         tomorrow.set(Calendar.MILLISECOND, 0);
         
-        Date startDate = editContractNomPoint.getStartDate(); 
+        Date startDate = newContractNomPoint.getStartDate(); 
         
         // Comprobar si startDate es antes de mañana
         return startDate != null && startDate.before(tomorrow.getTime());
@@ -494,7 +494,7 @@ public class ContractNomPointView  extends CommonView implements Serializable {
         tomorrow.set(Calendar.SECOND, 0);
         tomorrow.set(Calendar.MILLISECOND, 0);
         
-        Date endDate = editContractNomPoint.getEndDate(); 
+        Date endDate = newContractNomPoint.getEndDate(); 
         
         // Comprobar si startDate es antes de mañana
         return endDate != null && endDate.before(tomorrow.getTime());

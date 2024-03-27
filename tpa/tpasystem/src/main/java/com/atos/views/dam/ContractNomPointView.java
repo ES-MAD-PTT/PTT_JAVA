@@ -360,11 +360,12 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 			
 			List<BigDecimal> listIdnContractNomPoint = new ArrayList<>();
 			
+			for (ContractNomPointBean item : selectedsFornNew) {
+				listIdnContractNomPoint.add(item.getIdn_nomination_point());				
+	        }
 			
 			if(listIdnContractNomPoint.size() !=0 ) {
-				for (ContractNomPointBean item : selectedsFornNew) {
-					listIdnContractNomPoint.add(item.getIdn_nomination_point());				
-		        }
+				
 				
 				if(listIdnContractNomPoint != null) {
 					for (BigDecimal elemento : listIdnContractNomPoint) {
@@ -439,7 +440,7 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 		newContractNomPoint.setIdn_shipper(contractNomPointIdShipper.getIdn_shipper());
 		
 		if (!selectedsFornNew.isEmpty()) {
-			ContractNomPointBean firstElement = selecteds.get(0);
+			ContractNomPointBean firstElement = selectedsFornNew.get(0);
 		    idnContractPoint = firstElement.getIdn_contract_point();
 		}
 		newContractNomPoint.setIdn_contract_point(idnContractPoint);

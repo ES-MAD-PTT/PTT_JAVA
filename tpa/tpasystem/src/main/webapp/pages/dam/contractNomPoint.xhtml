@@ -365,7 +365,7 @@
 	</shiro:hasPermission>
 	
 	<p:dialog widgetVar="dlgEditContractNomPoint" resizable="false"  closable="true" modal="true" appendTo="@(body)" header="Nomination Point Limitation"
-	width="50%" dynamic="true">
+	width="50%" dynamic="true" onShow="updatePageWithData()">
 		<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario
 		 <p:ajax event="close" update="formNewEntity"  process="@this" listener="#{contractNomPointView.cancel}" />-->	
 			<h:form id="formEditEntity">

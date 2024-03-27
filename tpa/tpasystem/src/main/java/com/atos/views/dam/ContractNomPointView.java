@@ -438,7 +438,7 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 		newContractNomPoint.setEndDate(newContractNomPoint.getEndDateActive());
 		newContractNomPoint.setIdn_shipper(contractNomPointIdShipper.getIdn_shipper());
 		
-		if (!selecteds.isEmpty()) {
+		if (!selectedsFornNew.isEmpty()) {
 			ContractNomPointBean firstElement = selecteds.get(0);
 		    idnContractPoint = firstElement.getIdn_contract_point();
 		}

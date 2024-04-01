@@ -329,6 +329,7 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 		newContractNomPoint = new ContractNomPointBean();
 		newContractNomPoint.setStartDate(sysdate.getTime());
 		newContractNomPoint.setIdn_system(getChangeSystemView().getIdn_active());
+		selecteds = new ArrayList<ContractNomPointBean>();
 
 	}
 
@@ -465,11 +466,14 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 			log.info("Error inserting contractNomPoint. Generic Error: "	+ newContractNomPoint.toString(), Calendar.getInstance().getTime());
 		}
 
-		onSearch();
+		
 
 		// clean the formu new after save
 		newContractNomPoint = new ContractNomPointBean();
 		selectedsFornNew = new ArrayList<ContractNomPointBean>();
+		selecteds = new ArrayList<ContractNomPointBean>();
+		
+		onSearch();
 
 	}
 	

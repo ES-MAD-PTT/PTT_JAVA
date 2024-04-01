@@ -28,5 +28,52 @@
     	FROM tpa_tuser_group tuser
     	WHERE tuser.idn_user_group_type = (SELECT idn_user_group_type FROM tpa_tuser_group_type WHERE type_code = 'SHIPPER')
     </select>
+    
+    <select id="selectMeteredPoin" resultType="com.atos.beans.ComboFilterNS">
+    	SELECT sp.idn_system_point AS key, 
+             sp.point_code  AS value 
+		    FROM tpa_vsystem_point sp, 
+		         tpa_varea_tpa     a, 
+		         tpa_vzone_tpa     z 
+		   WHERE sp.group_code = 'METERED' 
+		     AND a.idn_area = sp.idn_area 
+		     AND a.idn_zone = z.idn_zone 
+		     AND z.idn_pipeline_system = #{idnSystem} 
+		   ORDER BY sp.point_code
+    </select>
+    
+    <select id="selectCustomerType" resultType="com.atos.beans.ComboFilterNS">
+    	SELECT ct.idn_customer_type as key,  
+       ct.TYPE_DESC as value              
+		     FROM tpa_vsystem_point tp, 
+		          tpa_tsystem_point_param  pp, 
+		          tpa_tcustomer_type ct,
+		          tpa_tsystem_point nomp, 
+		          tpa_tsystem_point conp,           
+		          tpa_varea_tpa a, 
+		          TPA_VZONE_TPA z, 
+		          tpa_tpipeline_system ps, 
+		          tpa_tsubarea sub
+		    WHERE tp.idn_system_point =  pp.idn_system_point
+		      AND tp.group_code= 'METERED'
+		      AND ct.IDN_CUSTOMER_TYPE (+)= pp.IDN_CUSTOMER_TYPE
+		      AND nomp.idn_system_point (+)= pp.idn_nomination_point
+		      AND conp.idn_system_point (+)= pp.idn_contract_point     
+		      AND sub.IDN_SUBAREA (+) = pp.IDN_SUBAREA
+		      AND a.idn_area = nomp.IDN_AREA
+		      AND a.IDN_ZONE = z.IDN_ZONE
+		      AND z.IDN_PIPELINE_SYSTEM = ps.IDN_PIPELINE_SYSTEM 
+		      AND nvl(pp.end_date, pp.start_date) >= pp.start_date
+		      AND pp.version_date = (SELECT max(ppx.version_date) 
+		                                FROM tpa_tsystem_point_param ppx 
+		                                WHERE pp.idn_system_point = ppx.idn_system_point 
+		                                  AND pp.start_date = ppx.start_date)
+		      AND ps.idn_pipeline_system = #{idnSystem}
+		<if test="idnMeteredPoint != null and idnMeteredPoint != ''"> 
+		   AND tp.idn_system_point = #{idnMeteredPoint}
+		</if>   
+			group by  ct.idn_customer_type, ct.TYPE_DESC 
+		   ORDER BY UPPER (value)
+    </select>
   
 </mapper>

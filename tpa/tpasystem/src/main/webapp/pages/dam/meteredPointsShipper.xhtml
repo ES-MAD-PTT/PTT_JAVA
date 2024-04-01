@@ -91,12 +91,14 @@
 							<p:row>
 								<p:column>
 									<p:selectOneMenu id="meteredPointsId" style="width:100px"
-										value="#{meteredPointShipperView.filters.idnMeteredPoint}">
+										value="#{meteredPointShipperView.filters.idnMeteredPoint}"
+										filter="true" filterMatchMode="">
 										<f:selectItem itemLabel="" itemValue="" />
 										<f:selectItems
 											value="#{meteredPointShipperView.meteredPoints.entrySet()}"
 											var="entry" itemValue="#{entry.key}"
 											itemLabel="#{entry.value}" />
+										<p:ajax update="customerTypesId"/>	
 									</p:selectOneMenu>
 								</p:column>
 								<p:column>
@@ -155,7 +157,6 @@
 					<p:dataTable widgetVar="w_contractNomPoint1"
 						id="contractNomPoints1" var="item"
 						value="#{meteredPointShipperView.items}" reflow="true"
-						editable="true" rowSelectMode="checkbox"
 						rowKey="#{item.idnMeterdPointShipper}"
 						style="width:100%; margin-bottom:20px;border-collapse:collapse"
 						paginator="true" rows="10" rowsPerPageTemplate="5,10,15,20,25"
@@ -195,23 +196,6 @@
 							</p:outputPanel>
 						</f:facet>
 
-						<shiro:hasPermission
-							name="#{changeSystemView.system}.DAM.CONTRACT_NOMINATION.MOD">
-							<p:ajax event="rowEditInit"
-								oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','hidden')});" />
-							<p:ajax event="rowEdit"
-								listener="#{meteredPointShipperView.onRowEdit}"
-								update=":form:msgs" onstart="PF('cargando').show()"
-								oncomplete="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});PF('cargando').hide()" />
-							<p:ajax event="rowEditCancel"
-								listener="#{meteredPointShipperView.onRowCancel}"
-								update=":form:msgs"
-								onstart="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});" />
-						</shiro:hasPermission>
-
-						<p:column headerText="Select" selectionMode="multiple"
-							style="width:36px;text-align:center" />
-
 						<p:column styleClass=""
 							headerText="#{msg['metPointShipper_shipper']}"
 							style="width: 130px; " sortBy="#{item.shipper}"
@@ -250,6 +234,12 @@
 							filterMatchMode="contains" filterBy="#{item.group}">
 							<h:outputText value="#{item.group}" />
 						</p:column>
+						<p:column width="3%" style="text-align:center;">
+							<p:commandButton icon="ui-icon fa fa-pencil" update="formNewEntity" process="@this"
+ 					       		onstart="PF('cargando').show()"	oncomplete="PF('cargando').hide(),PF('dlgNewContractNomPoint').show()">
+								<f:setPropertyActionListener value="#{item}" target="#{meteredPointShipperView.selection}" />
+							</p:commandButton>
+						</p:column>
 					</p:dataTable>
 				</p:layoutUnit>
 
@@ -260,95 +250,123 @@
 			name="#{changeSystemView.system}.DAM.CONTRACT_NOMINATION.ADD">
 			<p:dialog widgetVar="dlgNewContractNomPoint" resizable="false"
 				closable="true" modal="true" appendTo="@(body)"
-				header="New Metered Points Limitation">
-				<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario
-		 <p:ajax event="close" update="formNewEntity"  process="@this" listener="#{meteredPointShipperView.cancel}" />-->
+				header="New Metered Points Limitation" width="65%">
 				<h:form id="formNewEntity">
 					<p:growl id="msgs" showDetail="true" life="5000" />
-					<p:panelGrid style="width:100%;">
-						<p:row>
-							<p:column style="font-weight: bold;">
-								<h:outputText value="#{msg['metPointShipper_shipper']}" />
+					<h:panelGrid>
+						<p:panelGrid style="width:100%;">
+							<p:row>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['metPointShipper_shipper']}" />
+								</p:column>
+								<p:column>
+									<p:selectOneMenu id="newShipperId" style="width:100px"
+										value="#{meteredPointShipperView.selection.idnShipper}">
+										<f:selectItem itemLabel="" itemValue="" />
+										<f:selectItems
+											value="#{meteredPointShipperView.shippers.entrySet()}"
+											var="entry" itemValue="#{entry.key}"
+											itemLabel="#{entry.value}" />
+									</p:selectOneMenu>
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['metPointShipper_startDate']}" />
+								</p:column>
+								<p:column>
+									<p:calendar required="true" id="newStartDateId" size="10"
+										pattern="dd/MM/yyyy" mask="true"
+										value="#{meteredPointShipperView.selection.startDate}"
+										requiredMessage="You need to select a date" showOn="button"
+										navigator="true">
+										<p:ajax event="dateSelect" update="newStartDateId"></p:ajax>
+										<p:ajax event="change" update="newStartDateId"></p:ajax>
+									</p:calendar>
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['metPointShipper_endDate']}" />
+								</p:column>
+								<p:column>
+									<p:calendar required="true" id="newEndDateId" size="10"
+										pattern="dd/MM/yyyy" mask="true"
+										value="#{meteredPointShipperView.selection.endDate}"
+										requiredMessage="You need to select a date" showOn="button"
+										navigator="true">
+										<p:ajax event="dateSelect" update="newEndDateId"></p:ajax>
+										<p:ajax event="change" update="newEndDateId"></p:ajax>
+									</p:calendar>
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column style="font-weight: bold;">
+									<h:outputText
+										value="#{msg['metPointShipper_metered_point_id']}" />
+								</p:column>
+								<p:column>
+									<p:selectOneMenu id="newMeteredPointsId" style="width:100px"
+										value="#{meteredPointShipperView.selection.idnMeteringPoint}">
+										<f:selectItem itemLabel="" itemValue="" />
+										<f:selectItems
+											value="#{meteredPointShipperView.meteredPoints.entrySet()}"
+											var="entry" itemValue="#{entry.key}"
+											itemLabel="#{entry.value}" />
+									</p:selectOneMenu>
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['metPointShipper_customer_type']}" />
+								</p:column>
+								<p:column>
+									<p:selectOneMenu id="newCustomerTypesId" style="width:100px"
+										value="#{meteredPointShipperView.selection.idnCustomerType}">
+										<f:selectItem itemLabel="" itemValue="" />
+										<f:selectItems
+											value="#{meteredPointShipperView.customerTypes.entrySet()}"
+											var="entry" itemValue="#{entry.key}"
+											itemLabel="#{entry.value}" />
+									</p:selectOneMenu>
+								</p:column>
+								<p:column style="font-weight: bold;">
+									<h:outputText value="#{msg['metPointShipper_group_id']}" />
+								</p:column>
+								<p:column>
+									<p:selectOneMenu id="newGroupsId" style="width:100px"
+										value="#{meteredPointShipperView.selection.idnGroup}">
+										<f:selectItem itemLabel="" itemValue="" />
+										<f:selectItems
+											value="#{meteredPointShipperView.groups.entrySet()}"
+											var="entry" itemValue="#{entry.key}"
+											itemLabel="#{entry.value}" />
+									</p:selectOneMenu>
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column colspan="6">
+									<h:outputText
+										value="* Selected is mean that point will be displayed" />
+								</p:column>
+							</p:row>
+						</p:panelGrid>
+						<p:dataTable widgetVar="w_addMeteredPointShipper"
+							id="addMeteredPointShipperId" var="item"
+							value="#{meteredPointShipperView.items}" reflow="true"
+							rowSelectMode="checkbox" rowKey="#{item.idnMeterdPointShipper}"
+							style="margin-bottom:20px;border-collapse:collapse"
+							paginator="true" rows="10" rowsPerPageTemplate="5,10,15,20,25"
+							scrollable="true" scrollHeight="100%" resizableColumns="false">
+
+							<p:column headerText="Select" selectionMode="multiple"
+								style="width:36px;text-align:center" />
+
+							<p:column headerText="#{msg['metPointShipper_metered_point_id']}">
+								<h:outputText value="AAA" />
 							</p:column>
-							<p:column>
-								<p:selectOneMenu id="newShipperId" style="width:100px"
-									value="#{meteredPointShipperView.selection.idnShipper}">
-									<f:selectItem itemLabel="" itemValue="" />
-									<f:selectItems
-										value="#{meteredPointShipperView.shippers.entrySet()}"
-										var="entry" itemValue="#{entry.key}"
-										itemLabel="#{entry.value}" />
-								</p:selectOneMenu>
+							<p:column headerText="#{msg['metPointShipper_customer_type']}">
+								<h:outputText value="BBB" />
 							</p:column>
-							<p:column style="font-weight: bold;">
-								<h:outputText value="#{msg['metPointShipper_startDate']}" />
+							<p:column headerText="#{msg['metPointShipper_group_id']}">
+								<h:outputText value="CCC" />
 							</p:column>
-							<p:column>
-								<p:calendar required="true" id="newStartDateId" size="10"
-									pattern="dd/MM/yyyy" mask="true"
-									value="#{meteredPointShipperView.selection.startDate}"
-									requiredMessage="You need to select a date" showOn="button"
-									navigator="true">
-									<p:ajax event="dateSelect" update="newStartDateId"></p:ajax>
-									<p:ajax event="change" update="newStartDateId"></p:ajax>
-								</p:calendar>
-							</p:column>
-							<p:column style="font-weight: bold;">
-								<h:outputText value="#{msg['metPointShipper_endDate']}" />
-							</p:column>
-							<p:column>
-								<p:calendar required="true" id="newEndDateId" size="10"
-									pattern="dd/MM/yyyy" mask="true"
-									value="#{meteredPointShipperView.selection.endDate}"
-									requiredMessage="You need to select a date" showOn="button"
-									navigator="true">
-									<p:ajax event="dateSelect" update="newEndDateId"></p:ajax>
-									<p:ajax event="change" update="newEndDateId"></p:ajax>
-								</p:calendar>
-							</p:column>
-						</p:row>
-						<p:row>
-							<p:column style="font-weight: bold;">
-								<h:outputText value="#{msg['metPointShipper_metered_point_id']}" />
-							</p:column>
-							<p:column>
-								<p:selectOneMenu id="newMeteredPointsId" style="width:100px"
-									value="#{meteredPointShipperView.selection.idnMeteringPoint}">
-									<f:selectItem itemLabel="" itemValue="" />
-									<f:selectItems
-										value="#{meteredPointShipperView.meteredPoints.entrySet()}"
-										var="entry" itemValue="#{entry.key}"
-										itemLabel="#{entry.value}" />
-								</p:selectOneMenu>
-							</p:column>
-							<p:column style="font-weight: bold;">
-								<h:outputText value="#{msg['metPointShipper_customer_type']}" />
-							</p:column>
-							<p:column>
-								<p:selectOneMenu id="newCustomerTypesId" style="width:100px"
-									value="#{meteredPointShipperView.selection.idnCustomerType}">
-									<f:selectItem itemLabel="" itemValue="" />
-									<f:selectItems
-										value="#{meteredPointShipperView.customerTypes.entrySet()}"
-										var="entry" itemValue="#{entry.key}"
-										itemLabel="#{entry.value}" />
-								</p:selectOneMenu>
-							</p:column>
-							<p:column style="font-weight: bold;">
-								<h:outputText value="#{msg['metPointShipper_group_id']}" />
-							</p:column>
-							<p:column>
-								<p:selectOneMenu id="newGroupsId" style="width:100px"
-									value="#{meteredPointShipperView.selection.idnGroup}">
-									<f:selectItem itemLabel="" itemValue="" />
-									<f:selectItems
-										value="#{meteredPointShipperView.groups.entrySet()}"
-										var="entry" itemValue="#{entry.key}"
-										itemLabel="#{entry.value}" />
-								</p:selectOneMenu>
-							</p:column>
-						</p:row>
-					</p:panelGrid>
+						</p:dataTable>
+					</h:panelGrid>
 					<p:separator />
 					<p:panelGrid columns="2">
 						<p:commandButton value="#{msg['save']}"

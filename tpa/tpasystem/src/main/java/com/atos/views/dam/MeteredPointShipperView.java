@@ -134,6 +134,7 @@ public class MeteredPointShipperView  extends CommonView implements Serializable
 	//*********************Filters*************************************************
 	private void initializeFilters() {
 		filters = new MeteredPointsShipperFilter();
+		filters.setIdnSystem(getChangeSystemView().getIdn_active());
 	}
 	
 	public Map<BigDecimal, Object> getShippers() {
@@ -141,10 +142,16 @@ public class MeteredPointShipperView  extends CommonView implements Serializable
 	}
 
 	public Map<BigDecimal, Object> getMeteredPoints() {
+		if(meteredPoints == null && filters != null) {
+			meteredPoints = service.selectMeteredPoin(filters);
+		}
 		return meteredPoints;
 	}
 
 	public Map<BigDecimal, Object> getCustomerTypes() {
+		if(filters != null) {
+			customerTypes = service.selectCustomerType(filters);
+		}
 		return customerTypes;
 	}
 

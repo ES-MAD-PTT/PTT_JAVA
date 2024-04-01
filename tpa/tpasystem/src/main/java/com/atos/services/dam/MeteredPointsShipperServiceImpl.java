@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.atos.beans.ComboFilterNS;
+import com.atos.filters.dam.MeteredPointsShipperFilter;
 import com.atos.mapper.dam.MeteredPointsShipperMapper;
 
 @Service("meteredPointsShipperService")
@@ -22,6 +23,18 @@ public class MeteredPointsShipperServiceImpl implements MeteredPointsShipperServ
 	@Override
 	public Map<BigDecimal, Object> selectShippers() {
 		return meteredPointsShipperMapper.selectShippers().stream().collect(
+				Collectors.toMap(ComboFilterNS::getKey, ComboFilterNS::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+	}
+
+	@Override
+	public Map<BigDecimal, Object> selectMeteredPoin(MeteredPointsShipperFilter filters) {
+		return meteredPointsShipperMapper.selectMeteredPoin(filters).stream().collect(
+				Collectors.toMap(ComboFilterNS::getKey, ComboFilterNS::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+	}
+
+	@Override
+	public Map<BigDecimal, Object> selectCustomerType(MeteredPointsShipperFilter filters) {
+		return meteredPointsShipperMapper.selectCustomerType(filters).stream().collect(
 				Collectors.toMap(ComboFilterNS::getKey, ComboFilterNS::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 	}
 

@@ -472,8 +472,8 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 		selectedsFornNew = service.selectContractNomPointsFormEdit(newContractNomPoint);
 		newContractNomPoint.setStartDate(newContractNomPoint.getStartDateActive());
 		newContractNomPoint.setEndDate(newContractNomPoint.getEndDateActive());
-		
-		
+		newContractNomPoint.setIdn_system(getChangeSystemView().getIdn_active());
+		contractNomPointsTable();
 	}
 	
 	public void onCellEdit(ContractNomPointBean selection) {}

@@ -364,7 +364,7 @@
 	</shiro:hasPermission>
 	
 	<p:dialog widgetVar="dlgEditContractNomPoint" resizable="false"  closable="true" modal="true" appendTo="@(body)" header="Nomination Point Limitation"
-	width="50%" dynamic="true" onShow="updatePageWithData()">
+	width="50%">
 		<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario
 		 <p:ajax event="close" update="formNewEntity"  process="@this" listener="#{contractNomPointView.cancel}" />-->	
 			<h:form id="formEditEntity">
@@ -390,7 +390,7 @@
 								    required="true" requiredMessage="#{msg['contractNomPoint_id_contract']}: #{msg['empty_field']}" disabled="#{contractNomPointView.isStartDateBeforeTomorrow()}">
 								    <f:selectItem itemLabel="" itemValue="" />
 								    <f:selectItems value="#{contractNomPointView.contractForm.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
-								    <p:ajax event="change" update="new_contract_point"/>
+								    <p:ajax event="change" update="new_contract_point, new_contract_id"/>
 								    <p:ajax event="change" listener="#{contractNomPointView.contractNomPointsTable}" update="contractNomPoints2" onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()"/>
 								</p:selectOneMenu>
 	
@@ -445,9 +445,9 @@
 					
 				</p:panelGrid>
 				<p:panelGrid columns="4" style="width:100%">
-					<p:dataTable widgetVar="w_contractNomPoint1"  id="contractNomPoints2" var="contractNomPoint" value="#{contractNomPointView.selectedsFornNew}"
+					<p:dataTable widgetVar="w_contractNomPoint1"  id="contractNomPoints2" var="contractNomPoint" value="#{contractNomPointView.selecteds}"
 							 reflow="true" editable="true" 
-							 rowSelectMode="checkbox" selection="#{contractNomPointView.selectedsFornEdit}" rowKey="#{contractNomPoint.idn_nomination_point}"
+							 rowSelectMode="checkbox" selection="#{contractNomPointView.selectedsFornNew}" rowKey="#{contractNomPoint.idn_nomination_point}"
 							style="margin-bottom:20px;border-collapse:collapse"
 						    paginator="true" rows="10" 
 						    rowsPerPageTemplate="5,10,15,20,25"					                                        

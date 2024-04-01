@@ -51,6 +51,7 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 	private List<ContractNomPointBean> selecteds = new ArrayList<ContractNomPointBean>();
 	private List<ContractNomPointBean> selectedsFornNew = new ArrayList<ContractNomPointBean>();
 	private List<ContractNomPointBean> selectedsFornEdit = new ArrayList<ContractNomPointBean>();
+	private List<ContractNomPointBean> selectedsFornEditDelete = new ArrayList<ContractNomPointBean>();
 	private ContractNomPointBean selected;
 
 	@ManagedProperty("#{contractNomPointService}")
@@ -151,6 +152,14 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 
 	public void setSelectedsFornEdit(List<ContractNomPointBean> selectedsFornEdit) {
 		this.selectedsFornEdit = selectedsFornEdit;
+	}
+
+	public List<ContractNomPointBean> getSelectedsFornEditDelete() {
+		return selectedsFornEditDelete;
+	}
+
+	public void setSelectedsFornEditDelete(List<ContractNomPointBean> selectedsFornEditDelete) {
+		this.selectedsFornEditDelete = selectedsFornEditDelete;
 	}
 
 	@PostConstruct
@@ -464,16 +473,202 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 
 	}
 	
+	
+	
 	public void prepareEdit(ContractNomPointBean itemEdit) {
 		
 		
 		contractNomPointIdShipper = service.selectIdShipper(itemEdit);
 		newContractNomPoint = itemEdit;
 		selectedsFornNew = service.selectContractNomPointsFormEdit(newContractNomPoint);
+		selectedsFornEdit = selectedsFornNew;
 		newContractNomPoint.setStartDate(newContractNomPoint.getStartDateActive());
 		newContractNomPoint.setEndDate(newContractNomPoint.getEndDateActive());
 		newContractNomPoint.setIdn_system(getChangeSystemView().getIdn_active());
 		contractNomPointsTable();
+	}
+	
+	public void edit() {
+
+		String errorMsg = null;
+    	ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication().getResourceBundle(FacesContext.getCurrentInstance(),"msg");
+    	
+    	
+    	String[] params = {msgs.getString("contractNomPoint") };
+    	String summaryMsgOk = CommonView.getMessageResourceString("insert_ok", params);
+    	String summaryMsgNotOk= CommonView.getMessageResourceString("insert_noOk", params);
+
+		if (newContractNomPoint.getStartDate() != null) {
+			if (newContractNomPoint.getStartDate().before(sysdate.getTime())) {
+				errorMsg = msgs.getString("error_startDate_sysdate"); //error_startDate_sysdate= Start date must be later to sysdate
+				getMessages().addMessage(Constants.head_menu[0], new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
+				log.error(errorMsg);
+				return;
+			}
+		}
+
+		if (newContractNomPoint.getEndDate() != null) {
+			if (newContractNomPoint.getEndDate().before(sysdate.getTime())) {
+				errorMsg = msgs.getString("error_endDate_sysdate"); //error_endDate_sysdate= End Date must be later to sysdate
+				getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
+				log.error(errorMsg);
+				return;
+			}
+			if (newContractNomPoint.getStartDate().after(newContractNomPoint.getEndDate())) {
+				errorMsg = msgs.getString("error_startEarlierEnd"); //error_startEarlierEnd = Start Date must be earlier or equal to End Date
+				getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
+				log.error(errorMsg );
+				return;
+			}
+
+		}else {
+			Date dateEndContract = service.selectDateContra(newContractNomPoint);
+			
+			if(dateEndContract != null) {
+				// Convertir Date a LocalDate
+			    LocalDate localDateEndContract = dateEndContract.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+			    
+			    // Formatear LocalDate como una cadena de texto con el formato deseado: día/mes/año
+			    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+			    String dateEndContractString = localDateEndContract.format(formatter);
+			    
+				
+				errorMsg = msgs.getString("error_date_contract");
+				errorMsg = errorMsg + dateEndContractString;
+				getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
+				log.error(errorMsg );
+				return;
+			}
+		}
+
+		String error = "0";
+		try {
+			List<BigDecimal> listIdnContractNomPoint = new ArrayList<>();
+			List<BigDecimal> listIdnContractNomPointPrevious = new ArrayList<>();
+			List<BigDecimal> listIdnContractNomPointDelete = new ArrayList<>();
+			List<BigDecimal> listIdnContractNomPointDeleteIdnContractPoint = new ArrayList<>();
+			
+			
+			// Aqui guardamos en listIdnContractNomPointPrevious los Idn_nomination_point que estaban seleccionados antes del edit
+			for (ContractNomPointBean item : selectedsFornEdit) {
+				listIdnContractNomPointPrevious.add(item.getIdn_nomination_point());				
+	        }
+			
+			// Aqui guardamos en listIdnContractNomPoint los Idn_nomination_point que se han seleccionado nuevos
+			for (ContractNomPointBean item : selectedsFornNew) {
+				listIdnContractNomPoint.add(item.getIdn_nomination_point());				
+	        }
+			
+			newContractNomPoint.setLisIdnNominationPoint(listIdnContractNomPoint);
+			
+			if(listIdnContractNomPoint.size() !=0 ) {
+				
+				// Aqui guardamos en listIdnContractNomPointDelete los Idn_nomination_point que existian en listIdnContractNomPointPrevious 
+				//pero no existen ahora en listIdnContractNomPoint para borrarlos de BBDD
+				for (BigDecimal idnContractNomPointPrevious : listIdnContractNomPointPrevious) {
+				    if (!listIdnContractNomPoint.contains(idnContractNomPointPrevious)) {
+				        listIdnContractNomPointDelete.add(idnContractNomPointPrevious);
+				    }
+				}
+				
+				//Aqui guardamos el Idn_contract_point en nuestra lista listIdnContractNomPointDeleteIdnContractPoint idn_contract_nom_point
+				for (ContractNomPointBean item : selectedsFornEdit) {
+				    BigDecimal idnNominationPoint = item.getIdn_nomination_point();
+				    if (listIdnContractNomPointDelete.contains(idnNominationPoint)) {
+				        listIdnContractNomPointDeleteIdnContractPoint.add(item.getIdn_contract_nom_point());
+				    }
+				}
+				
+				//Borramos los Idn_nomination_point nuevos en BBDD
+				if(listIdnContractNomPointDeleteIdnContractPoint != null) {
+					for (BigDecimal elemento : listIdnContractNomPointDeleteIdnContractPoint) {
+			            newContractNomPoint.setIdn_contract_nom_point(elemento);
+			            error = service.deleteContractNomPoint(newContractNomPoint);
+			        }
+				}
+				
+				// Crear una copia de listIdnContractNomPoint para evitar la ConcurrentModificationException
+				List<BigDecimal> tempListIdnContractNomPoint = new ArrayList<>(listIdnContractNomPoint);
+
+				for (BigDecimal idnContractNomPointPrevious : listIdnContractNomPointPrevious) {
+				    if (tempListIdnContractNomPoint.contains(idnContractNomPointPrevious)) {
+				        tempListIdnContractNomPoint.remove(idnContractNomPointPrevious);
+				    }
+				}
+				
+				// Borrar todos los elementos de listIdnContractNomPoint
+				listIdnContractNomPoint.clear();
+
+				// Asignar los valores de tempListIdnContractNomPoint a listIdnContractNomPoint
+				listIdnContractNomPoint.addAll(tempListIdnContractNomPoint);
+				
+				//Insertamos los Idn_nomination_point nuevos en BBDD
+				if(listIdnContractNomPoint != null) {
+					for (BigDecimal elemento : listIdnContractNomPoint) {
+			            newContractNomPoint.setIdn_nomination_point(elemento);
+			            error = service.insertContractNomPoint(newContractNomPoint);
+			        }
+				}
+				
+				listIdnContractNomPoint.clear();
+				tempListIdnContractNomPoint.clear();
+				listIdnContractNomPointPrevious.clear();
+				listIdnContractNomPointDelete.clear();
+			}else {
+				errorMsg = msgs.getString("error_no_point_existing");
+				getMessages().addMessage(Constants.head_menu[0], new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
+				log.error(errorMsg);
+				newContractNomPoint = new ContractNomPointBean();
+				selectedsFornNew = new ArrayList<ContractNomPointBean>();
+				return;
+			}
+			
+		} catch (Exception e) {
+			log.catching(e);
+			// we assign the return message
+			error = e.getMessage();
+		}
+
+		String[] par2 = {newContractNomPoint.getContract_id()+"-"+newContractNomPoint.getNomination_point(),msgs.getString("contractNomPoint") };
+		
+		if (error != null && error.equals("0")) {
+			String msg = getMessageResourceString("inserting_ok", par2);
+			getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.INFO,summaryMsgOk, msg, Calendar.getInstance().getTime()));
+			log.info("ContractNomPoint Inserted ok" + newContractNomPoint.toString(), Calendar.getInstance().getTime());
+		} else if (error != null && error.equals("-1")) {
+			String msg = getMessageResourceString("error_aready_exit", par2); //error_aready_exit = The ID {0} already exists in the System
+			getMessages().addMessage(Constants.head_menu[0], new MessageBean(Constants.ERROR,summaryMsgNotOk,msg, Calendar.getInstance().getTime()));
+			log.info("Error inserting ContractNomPoint. The " + newContractNomPoint.toString() + " already exists in the System ", Calendar.getInstance().getTime());
+		} else if (error != null && error.equals("-2")) {
+			String msg = getMessageResourceString("error_inserting", par2);
+			getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.ERROR,summaryMsgNotOk, msg, Calendar.getInstance().getTime()));			
+			log.info("Error inserting contractNomPoint. Error inserting ContractNomPoint" + newContractNomPoint.toString(),Calendar.getInstance().getTime());
+		} else if (error != null && error.equals("-3")) {
+			String msg = getMessageResourceString("error_inserting", par2);
+			getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.ERROR,summaryMsgNotOk, msg, Calendar.getInstance().getTime()));
+			log.info("Error inserting contractNomPoint. Error inserting ContractNomPointParam"+ newContractNomPoint.toString(), Calendar.getInstance().getTime());
+		} else if (error != null && error.equals("-4")) {
+			String msg = getMessageResourceString("error_inserting", par2);
+			getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.ERROR,summaryMsgNotOk, msg, Calendar.getInstance().getTime()));
+			log.info("Error inserting contractNomPoint. Error inserting ContractNomPoint" + newContractNomPoint.toString(), Calendar.getInstance().getTime());
+		} else if (error != null && error.equals("-5")) {
+			String msg = getMessageResourceString("error_inserting", par2);
+			getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.ERROR,summaryMsgNotOk, msg, Calendar.getInstance().getTime()));
+			log.info("Error inserting contractNomPoint. Error inserting ContractNomPointParam(contract)"	+ newContractNomPoint.toString(), Calendar.getInstance().getTime());
+		} else {
+			String msg = getMessageResourceString("error_inserting", par2);
+			getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.ERROR,summaryMsgNotOk, msg, Calendar.getInstance().getTime()));
+			log.info("Error inserting contractNomPoint. Generic Error: "	+ newContractNomPoint.toString(), Calendar.getInstance().getTime());
+		}
+
+		onSearch();
+
+		// clean the formu new after save
+		newContractNomPoint = new ContractNomPointBean();
+		selectedsFornNew = new ArrayList<ContractNomPointBean>();
+		selectedsFornEditDelete = new ArrayList<ContractNomPointBean>();
+		selectedsFornEdit = new ArrayList<ContractNomPointBean>();
+
 	}
 	
 	public void onCellEdit(ContractNomPointBean selection) {}

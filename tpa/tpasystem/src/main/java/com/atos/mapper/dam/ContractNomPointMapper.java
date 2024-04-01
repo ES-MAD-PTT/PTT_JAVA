@@ -1,6 +1,7 @@
 package com.atos.mapper.dam;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 
 import com.atos.beans.ComboFilterNS;
@@ -10,6 +11,18 @@ import com.atos.filters.dam.ContractNomPointFilter;
 public interface ContractNomPointMapper {
 
 	public List<ContractNomPointBean> selectContractNomPoints(ContractNomPointFilter filters);
+	
+	public List<ContractNomPointBean> selectContractNomPointsFormTable(ContractNomPointBean contractNomPoint);
+	
+	public List<ContractNomPointBean> selectContractNomPointsNullFormTable(ContractNomPointBean contractNomPoint);
+	
+	public List<ContractNomPointBean> selectContractNomPointsFormEdit(ContractNomPointBean contractNomPoint);
+	
+	public ContractNomPointBean selectIdShipper(ContractNomPointBean contractNomPoint);
+	
+	public BigDecimal selectExistingNumSlop(ContractNomPointBean contractNomPoint);
+	
+	public Date selectDateContra(ContractNomPointBean contractNomPoint);
 
 	public List<ComboFilterNS> selectShippers();
 

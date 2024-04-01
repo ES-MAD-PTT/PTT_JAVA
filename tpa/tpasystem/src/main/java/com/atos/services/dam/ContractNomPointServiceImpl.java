@@ -1,6 +1,7 @@
 package com.atos.services.dam;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -129,7 +130,7 @@ public class ContractNomPointServiceImpl implements ContractNomPointService {
 	@Override
 	public Map<BigDecimal, Object> selectNominationPointsForm(ContractNomPointBean newContractNomPoint) {
 		Map<BigDecimal, Object> map = new LinkedHashMap<BigDecimal, Object>();
-		List<ComboFilterNS> list = contractNomPointMapper.selectNominationPointsForm(newContractNomPoint);
+		List<ComboFilterNS> list = contractNomPointMapper.selectNominationPointsForm(newContractNomPoint);		
 		for (ComboFilterNS combo : list) {
 			if (combo == null)
 				continue;
@@ -148,6 +149,38 @@ public class ContractNomPointServiceImpl implements ContractNomPointService {
 		
 		
 		return "0";
+	}
+
+	@Override
+	public List<ContractNomPointBean> selectContractNomPointsFormTable(ContractNomPointBean contractNomPoint) {
+		return  contractNomPointMapper.selectContractNomPointsFormTable(contractNomPoint);
+	}
+
+	@Override
+	public List<ContractNomPointBean> selectContractNomPointsNullFormTable(ContractNomPointBean contractNomPoint) {
+		return  contractNomPointMapper.selectContractNomPointsNullFormTable(contractNomPoint);
+	}
+
+	@Override
+	public List<ContractNomPointBean> selectContractNomPointsFormEdit(ContractNomPointBean contractNomPoint) {
+		return  contractNomPointMapper.selectContractNomPointsFormEdit(contractNomPoint);
+	}
+
+	@Override
+	public ContractNomPointBean selectIdShipper(ContractNomPointBean contractNomPoint) {		
+		return contractNomPointMapper.selectIdShipper(contractNomPoint);
+	}
+
+	@Override
+	public BigDecimal selectExistingNumSlop(ContractNomPointBean contractNomPoint) {
+		BigDecimal existingNumSlop = contractNomPointMapper.selectExistingNumSlop(contractNomPoint);
+		return existingNumSlop;
+	}
+
+	@Override
+	public Date selectDateContra(ContractNomPointBean contractNomPoint) {
+		Date dateContrat = contractNomPointMapper.selectDateContra(contractNomPoint);
+		return dateContrat;
 	}
 	
 

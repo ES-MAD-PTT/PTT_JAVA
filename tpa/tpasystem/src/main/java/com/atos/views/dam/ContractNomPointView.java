@@ -2,8 +2,12 @@ package com.atos.views.dam;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -41,8 +45,12 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 
 	private ContractNomPointFilter filters;
 	private ContractNomPointBean newContractNomPoint;
+	private ContractNomPointBean editContractNomPoint = new ContractNomPointBean();
+	private ContractNomPointBean contractNomPointIdShipper = new ContractNomPointBean();
 	private List<ContractNomPointBean> items;
 	private List<ContractNomPointBean> selecteds = new ArrayList<ContractNomPointBean>();
+	private List<ContractNomPointBean> selectedsFornNew = new ArrayList<ContractNomPointBean>();
+	private List<ContractNomPointBean> selectedsFornEdit = new ArrayList<ContractNomPointBean>();
 	private ContractNomPointBean selected;
 
 	@ManagedProperty("#{contractNomPointService}")
@@ -80,6 +88,22 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 		return newContractNomPoint;
 	}
 
+	public ContractNomPointBean getEditContractNomPoint() {
+		return editContractNomPoint;
+	}
+
+	public void setEditContractNomPoint(ContractNomPointBean editContractNomPoint) {
+		this.editContractNomPoint = editContractNomPoint;
+	}
+
+	public ContractNomPointBean getContractNomPointIdShipper() {
+		return contractNomPointIdShipper;
+	}
+
+	public void setContractNomPointIdShipper(ContractNomPointBean contractNomPointIdShipper) {
+		this.contractNomPointIdShipper = contractNomPointIdShipper;
+	}
+
 	public void setNewContractNomPoint(ContractNomPointBean newContractNomPoint) {
 		this.newContractNomPoint = newContractNomPoint;
 	}
@@ -111,6 +135,22 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 
 	public void setSelected(ContractNomPointBean selected) {
 		this.selected = selected;
+	}
+
+	public List<ContractNomPointBean> getSelectedsFornNew() {
+		return selectedsFornNew;
+	}
+
+	public void setSelectedsFornNew(List<ContractNomPointBean> selectedsFornNew) {
+		this.selectedsFornNew = selectedsFornNew;
+	}
+
+	public List<ContractNomPointBean> getSelectedsFornEdit() {
+		return selectedsFornEdit;
+	}
+
+	public void setSelectedsFornEdit(List<ContractNomPointBean> selectedsFornEdit) {
+		this.selectedsFornEdit = selectedsFornEdit;
 	}
 
 	@PostConstruct
@@ -171,6 +211,21 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 	}
 	public Map<BigDecimal, Object> getNominationPointsForm() {
 		return service.selectNominationPointsForm(newContractNomPoint);
+	}
+	//Para rellenar la tabla del new
+	public void contractNomPointsTable(){
+		if (newContractNomPoint.getIdn_contract_point() != null && newContractNomPoint.getIdn_contract_point().compareTo(BigDecimal.ZERO) == 0) {
+		    newContractNomPoint.setIdn_contract_point(null);
+		    selecteds = service.selectContractNomPointsNullFormTable(newContractNomPoint);
+		}
+
+		
+		if(newContractNomPoint.getIdn_contract_point() == null) {
+			selecteds = service.selectContractNomPointsNullFormTable(newContractNomPoint);
+		}else{
+			selecteds = service.selectContractNomPointsFormTable(newContractNomPoint);
+		}
+		
 	}
 
 	public void onSearch() {
@@ -301,11 +356,68 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 				return;
 			}
 
+		}else {
+			Date dateEndContract = service.selectDateContra(newContractNomPoint);
+			
+			if(dateEndContract != null) {
+				// Convertir Date a LocalDate
+			    LocalDate localDateEndContract = dateEndContract.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+			    
+			    // Formatear LocalDate como una cadena de texto con el formato deseado: día/mes/año
+			    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+			    String dateEndContractString = localDateEndContract.format(formatter);
+			    
+				
+				errorMsg = msgs.getString("error_date_contract");
+				errorMsg = errorMsg + dateEndContractString;
+				getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
+				log.error(errorMsg );
+				return;
+			}
 		}
 
 		String error = "0";
 		try {
-			error = service.insertContractNomPoint(newContractNomPoint);
+			BigDecimal existNumSlop = BigDecimal.ZERO;
+			List<BigDecimal> listIdnContractNomPoint = new ArrayList<>();
+						
+			for (ContractNomPointBean item : selectedsFornNew) {
+				listIdnContractNomPoint.add(item.getIdn_nomination_point());				
+	        }
+			
+			newContractNomPoint.setLisIdnNominationPoint(listIdnContractNomPoint);
+			existNumSlop = service.selectExistingNumSlop(newContractNomPoint);
+			
+			if (existNumSlop.compareTo(BigDecimal.ZERO) != 0) {
+				errorMsg = msgs.getString("error_no_existing_overlap");
+				getMessages().addMessage(Constants.head_menu[0], new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
+				log.error(errorMsg);
+				newContractNomPoint = new ContractNomPointBean();
+				selectedsFornNew = new ArrayList<ContractNomPointBean>();
+				return;
+			}
+			
+			if(listIdnContractNomPoint.size() !=0 ) {
+				
+				
+				if(listIdnContractNomPoint != null) {
+					for (BigDecimal elemento : listIdnContractNomPoint) {
+			            newContractNomPoint.setIdn_nomination_point(elemento);
+			            error = service.insertContractNomPoint(newContractNomPoint);
+			        }
+				}
+			}else {
+				errorMsg = msgs.getString("error_no_point_existing");
+				getMessages().addMessage(Constants.head_menu[0], new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
+				log.error(errorMsg);
+				newContractNomPoint = new ContractNomPointBean();
+				selectedsFornNew = new ArrayList<ContractNomPointBean>();
+				return;
+			}
+			
+			
+			listIdnContractNomPoint = new ArrayList<>();
+			
 		} catch (Exception e) {
 			log.catching(e);
 			// we assign the return message
@@ -348,8 +460,23 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 
 		// clean the formu new after save
 		newContractNomPoint = new ContractNomPointBean();
+		selectedsFornNew = new ArrayList<ContractNomPointBean>();
 
 	}
+	
+	public void prepareEdit(ContractNomPointBean itemEdit) {
+		
+		
+		contractNomPointIdShipper = service.selectIdShipper(itemEdit);
+		newContractNomPoint = itemEdit;
+		selectedsFornNew = service.selectContractNomPointsFormEdit(newContractNomPoint);
+		newContractNomPoint.setStartDate(newContractNomPoint.getStartDateActive());
+		newContractNomPoint.setEndDate(newContractNomPoint.getEndDateActive());
+		newContractNomPoint.setIdn_system(getChangeSystemView().getIdn_active());
+		contractNomPointsTable();
+	}
+	
+	public void onCellEdit(ContractNomPointBean selection) {}
 
     public void delete(){
     	for(int i=0;i<selecteds.size();i++){
@@ -369,6 +496,38 @@ public class ContractNomPointView  extends CommonView implements Serializable {
     		
     	}
     	onSearch();
+    }
+    
+    public boolean isStartDateBeforeTomorrow() {
+        Calendar tomorrow = Calendar.getInstance();
+        tomorrow.add(Calendar.DAY_OF_MONTH, 1); // Sumar un día al calendario
+        
+        // Establecer la hora, minuto, segundo y milisegundo a 0 para el día de mañana
+        tomorrow.set(Calendar.HOUR_OF_DAY, 0);
+        tomorrow.set(Calendar.MINUTE, 0);
+        tomorrow.set(Calendar.SECOND, 0);
+        tomorrow.set(Calendar.MILLISECOND, 0);
+        
+        Date startDate = newContractNomPoint.getStartDate(); 
+        
+        // Comprobar si startDate es antes de mañana
+        return startDate != null && startDate.before(tomorrow.getTime());
+    }
+    
+    public boolean isEndDateBeforeTomorrow() {
+        Calendar tomorrow = Calendar.getInstance();
+        tomorrow.add(Calendar.DAY_OF_MONTH, 1); // Sumar un día al calendario
+        
+        // Establecer la hora, minuto, segundo y milisegundo a 0 para el día de mañana
+        tomorrow.set(Calendar.HOUR_OF_DAY, 0);
+        tomorrow.set(Calendar.MINUTE, 0);
+        tomorrow.set(Calendar.SECOND, 0);
+        tomorrow.set(Calendar.MILLISECOND, 0);
+        
+        Date endDate = newContractNomPoint.getEndDate(); 
+        
+        // Comprobar si startDate es antes de mañana
+        return endDate != null && endDate.before(tomorrow.getTime());
     }
 
 	
@@ -400,7 +559,7 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 			for (int i = 0; i < header.getPhysicalNumberOfCells() - 1; i++) {
 				HSSFCell cell = header.getCell(i);
 				cell.setCellStyle(cellStyleHeader);
-				if (i == 22) {
+				if (i == 6) {
 					cell.setCellStyle(cellStyleHide);
 					cell.setCellValue(" ");
 				}
@@ -425,7 +584,7 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 						}
 						*/
 						// el lapiz
-						if (j >= 4) {
+						if (j >= 6) {
 							cell.setCellStyle(cellStyleHide);
 							cell.setCellValue(" ");
 						}

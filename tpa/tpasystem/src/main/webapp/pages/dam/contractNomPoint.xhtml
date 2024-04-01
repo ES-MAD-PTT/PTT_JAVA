@@ -240,8 +240,8 @@
 		<shiro:hasPermission name="#{changeSystemView.system}.DAM.CONTRACT_NOMINATION.ADD">
 		<p:dialog widgetVar="dlgNewContractNomPoint" resizable="false"  closable="true" modal="true" appendTo="@(body)" header="New Nomination Point Limitation"
 	width="50%">
-		<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario
-		 <p:ajax event="close" update="formNewEntity"  process="@this" listener="#{contractNomPointView.cancel}" />-->	
+		<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario-->	
+		 <p:ajax event="close" update="formNewEntity"  process="@this" listener="#{contractNomPointView.cancel}" />
 			<h:form id="formNewEntity">
 			<p:growl id="msgs" showDetail="true"  life="5000"/>
 				<p:panelGrid columns="4" style="width:100%">
@@ -365,8 +365,8 @@
 	
 	<p:dialog widgetVar="dlgEditContractNomPoint" resizable="false"  closable="true" modal="true" appendTo="@(body)" header="Nomination Point Limitation"
 	width="50%">
-		<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario
-		 <p:ajax event="close" update="formNewEntity"  process="@this" listener="#{contractNomPointView.cancel}" />-->	
+		<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario-->
+		 <p:ajax event="close" update="formNewEntity"  process="@this" listener="#{contractNomPointView.cancel}" />	
 			<h:form id="formEditEntity">
 			<p:growl id="msgs" showDetail="true"  life="5000"/>
 				<p:panelGrid columns="4" style="width:100%">
@@ -481,7 +481,7 @@
 								onstart="PF('cargando').show()"
 								oncomplete="PF('dlgEditContractNomPoint').hide(),PF('cargando').hide()" disabled="#{contractNomPointView.isEndDateBeforeTomorrow()}"/>
 			        		<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close"
-			        		 	update="formEditEntity" process="@this" actionListener="#{contractNomPointView.edit}"
+			        		 	update="formEditEntity" process="@this" actionListener="#{contractNomPointView.cancel}"
 			        			oncomplete="PF('dlgEditContractNomPoint').hide()"/>
 						</p:column>					
 					</p:row>

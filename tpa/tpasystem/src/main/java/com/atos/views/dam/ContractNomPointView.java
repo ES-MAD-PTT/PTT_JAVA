@@ -413,24 +413,7 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 				
 				if(listIdnContractNomPoint != null) {
 					for (BigDecimal elemento : listIdnContractNomPoint) {
-						ContractNomPointBean contractNomPointIdShipper = service.selectContraCodeById(newContractNomPoint);
-						newContractNomPoint.setIdn_nomination_point(elemento);
-						ContractNomPointBean nominationById = service.selectCodeNomPointById(newContractNomPoint);						
-
-						// Obtener la lista de códigos de nominación
-						List<String> listaCodeNominationPoint = newContractNomPoint.getListCodeNominationPoint();
-
-						// Verificar si la lista es null y, si lo es, inicializarla
-						if (listaCodeNominationPoint == null) {
-						    listaCodeNominationPoint = new ArrayList<>();
-						    newContractNomPoint.setListCodeNominationPoint(listaCodeNominationPoint);
-						}
-
-						// Añadir el código de nominación a la lista
-						String nominationPoint = nominationById.getNomination_point(); 
-						listaCodeNominationPoint.add(nominationPoint);
 						
-						newContractNomPoint.setContract_id(contractNomPointIdShipper.getContract_id());
 			            newContractNomPoint.setIdn_nomination_point(elemento);
 			            error = service.insertContractNomPoint(newContractNomPoint);
 			        }
@@ -451,6 +434,36 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 			log.catching(e);
 			// we assign the return message
 			error = e.getMessage();
+		}
+		
+		List<BigDecimal> listIdnContractNomPoint = new ArrayList<>();
+		
+		for (ContractNomPointBean item : selectedsFornNew) {
+			listIdnContractNomPoint.add(item.getIdn_nomination_point());				
+        }
+		
+		if(listIdnContractNomPoint != null) {
+			for (BigDecimal elemento : listIdnContractNomPoint) {
+				ContractNomPointBean contractNomPointIdShipper = service.selectContraCodeById(newContractNomPoint);
+				newContractNomPoint.setIdn_nomination_point(elemento);
+				ContractNomPointBean nominationById = service.selectCodeNomPointById(newContractNomPoint);						
+
+				// Obtener la lista de códigos de nominación
+				List<String> listaCodeNominationPoint = newContractNomPoint.getListCodeNominationPoint();
+
+				// Verificar si la lista es null y, si lo es, inicializarla
+				if (listaCodeNominationPoint == null) {
+				    listaCodeNominationPoint = new ArrayList<>();
+				    newContractNomPoint.setListCodeNominationPoint(listaCodeNominationPoint);
+				}
+
+				// Añadir el código de nominación a la lista
+				String nominationPoint = nominationById.getNomination_point(); 
+				listaCodeNominationPoint.add(nominationPoint);
+				
+				newContractNomPoint.setContract_id(contractNomPointIdShipper.getContract_id());
+	            newContractNomPoint.setIdn_nomination_point(elemento);
+	        }
 		}
 		
 		
@@ -631,21 +644,7 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 				//Insertamos los Idn_nomination_point nuevos en BBDD
 				if(listIdnContractNomPoint != null) {
 					for (BigDecimal elemento : listIdnContractNomPoint) {
-						newContractNomPoint.setIdn_nomination_point(elemento);
-						ContractNomPointBean nominationById = service.selectCodeNomPointById(newContractNomPoint);						
-
-						// Obtener la lista de códigos de nominación
-						List<String> listaCodeNominationPoint = newContractNomPoint.getListCodeNominationPoint();
-
-						// Verificar si la lista es null y, si lo es, inicializarla
-						if (listaCodeNominationPoint == null) {
-						    listaCodeNominationPoint = new ArrayList<>();
-						    newContractNomPoint.setListCodeNominationPoint(listaCodeNominationPoint);
-						}
-
-						// Añadir el código de nominación a la lista
-						String nominationPoint = nominationById.getNomination_point(); 
-						listaCodeNominationPoint.add(nominationPoint);
+						
 			            newContractNomPoint.setIdn_nomination_point(elemento);
 			            error = service.insertContractNomPoint(newContractNomPoint);
 			        }
@@ -668,6 +667,34 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 			log.catching(e);
 			// we assign the return message
 			error = e.getMessage();
+		}
+		
+		List<BigDecimal> listIdnContractNomPoint = new ArrayList<>();
+		
+		for (ContractNomPointBean item : selectedsFornNew) {
+			listIdnContractNomPoint.add(item.getIdn_nomination_point());				
+        }
+		
+		if(listIdnContractNomPoint != null) {
+			for (BigDecimal elemento : listIdnContractNomPoint) {
+				newContractNomPoint.setIdn_nomination_point(elemento);
+				ContractNomPointBean nominationById = service.selectCodeNomPointById(newContractNomPoint);						
+
+				// Obtener la lista de códigos de nominación
+				List<String> listaCodeNominationPoint = newContractNomPoint.getListCodeNominationPoint();
+
+				// Verificar si la lista es null y, si lo es, inicializarla
+				if (listaCodeNominationPoint == null) {
+				    listaCodeNominationPoint = new ArrayList<>();
+				    newContractNomPoint.setListCodeNominationPoint(listaCodeNominationPoint);
+				}
+
+				// Añadir el código de nominación a la lista
+				String nominationPoint = nominationById.getNomination_point(); 
+				listaCodeNominationPoint.add(nominationPoint);
+				
+	            newContractNomPoint.setIdn_nomination_point(elemento);
+	        }
 		}
 
 		// Obtener la lista de códigos de nominación como una cadena con comas entre cada elemento

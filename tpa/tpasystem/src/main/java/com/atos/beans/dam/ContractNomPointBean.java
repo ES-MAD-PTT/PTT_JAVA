@@ -28,6 +28,7 @@ public class ContractNomPointBean extends UserAudBean implements Serializable {
 	private String contract_point;
 	private String nomination_point;
 	private List<BigDecimal> lisIdnNominationPoint;
+	private List<String> listCodeNominationPoint;
 	
 	private BigDecimal idnUserGroup;
 	private String userName;
@@ -36,14 +37,11 @@ public class ContractNomPointBean extends UserAudBean implements Serializable {
 		super();
 	}
 
-	
-
-
 	public ContractNomPointBean(BigDecimal idn_contract_nom_point, BigDecimal idn_contract,
 			BigDecimal idn_contract_point, BigDecimal idn_nomination_point, BigDecimal idn_system, String shipper,
 			BigDecimal idn_shipper, String contract_id, Date startDate, Date endDate, Date startDateActive,
 			Date endDateActive, String contract_point, String nomination_point, List<BigDecimal> lisIdnNominationPoint,
-			BigDecimal idnUserGroup, String userName) {
+			List<String> listCodeNominationPoint, BigDecimal idnUserGroup, String userName) {
 		super();
 		this.idn_contract_nom_point = idn_contract_nom_point;
 		this.idn_contract = idn_contract;
@@ -60,12 +58,10 @@ public class ContractNomPointBean extends UserAudBean implements Serializable {
 		this.contract_point = contract_point;
 		this.nomination_point = nomination_point;
 		this.lisIdnNominationPoint = lisIdnNominationPoint;
+		this.listCodeNominationPoint = listCodeNominationPoint;
 		this.idnUserGroup = idnUserGroup;
 		this.userName = userName;
 	}
-
-
-
 
 	public BigDecimal getIdn_contract_nom_point() {
 		return idn_contract_nom_point;
@@ -187,11 +183,12 @@ public class ContractNomPointBean extends UserAudBean implements Serializable {
 		this.userName = userName;
 	}
 
-	@Override
-	public int hashCode() {
-		return Objects.hash(contract_id, contract_point, endDate, endDateActive, idnUserGroup, idn_contract,
-				idn_contract_nom_point, idn_contract_point, idn_nomination_point, idn_shipper, idn_system,
-				lisIdnNominationPoint, nomination_point, shipper, startDate, startDateActive, userName);
+	public List<String> getListCodeNominationPoint() {
+		return listCodeNominationPoint;
+	}
+
+	public void setListCodeNominationPoint(List<String> listCodeNominationPoint) {
+		this.listCodeNominationPoint = listCodeNominationPoint;
 	}
 
 	public Date getStartDateActive() {
@@ -212,7 +209,15 @@ public class ContractNomPointBean extends UserAudBean implements Serializable {
 	public void setEndDateActive(Date endDateActive) {
 		this.endDateActive = endDateActive;
 	}
+	
 
+	@Override
+	public int hashCode() {
+		return Objects.hash(contract_id, contract_point, endDate, endDateActive, idnUserGroup, idn_contract,
+				idn_contract_nom_point, idn_contract_point, idn_nomination_point, idn_shipper, idn_system,
+				lisIdnNominationPoint, listCodeNominationPoint, nomination_point, shipper, startDate, startDateActive,
+				userName);
+	}
 
 	@Override
 	public boolean equals(Object obj) {
@@ -231,6 +236,7 @@ public class ContractNomPointBean extends UserAudBean implements Serializable {
 				&& Objects.equals(idn_nomination_point, other.idn_nomination_point)
 				&& Objects.equals(idn_shipper, other.idn_shipper) && Objects.equals(idn_system, other.idn_system)
 				&& Objects.equals(lisIdnNominationPoint, other.lisIdnNominationPoint)
+				&& Objects.equals(listCodeNominationPoint, other.listCodeNominationPoint)
 				&& Objects.equals(nomination_point, other.nomination_point) && Objects.equals(shipper, other.shipper)
 				&& Objects.equals(startDate, other.startDate) && Objects.equals(startDateActive, other.startDateActive)
 				&& Objects.equals(userName, other.userName);
@@ -244,7 +250,8 @@ public class ContractNomPointBean extends UserAudBean implements Serializable {
 				+ idn_shipper + ", contract_id=" + contract_id + ", startDate=" + startDate + ", endDate=" + endDate
 				+ ", startDateActive=" + startDateActive + ", endDateActive=" + endDateActive + ", contract_point="
 				+ contract_point + ", nomination_point=" + nomination_point + ", lisIdnNominationPoint="
-				+ lisIdnNominationPoint + ", idnUserGroup=" + idnUserGroup + ", userName=" + userName + "]";
+				+ lisIdnNominationPoint + ", listCodeNominationPoint=" + listCodeNominationPoint + ", idnUserGroup="
+				+ idnUserGroup + ", userName=" + userName + "]";
 	}
 
 	

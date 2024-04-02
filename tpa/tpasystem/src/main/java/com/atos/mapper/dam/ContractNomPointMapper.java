@@ -20,6 +20,10 @@ public interface ContractNomPointMapper {
 	
 	public ContractNomPointBean selectIdShipper(ContractNomPointBean contractNomPoint);
 	
+	public ContractNomPointBean selectContraCodeById(ContractNomPointBean contractNomPoint);
+	
+	public ContractNomPointBean selectCodeNomPointById(ContractNomPointBean contractNomPoint);
+	
 	public BigDecimal selectExistingNumSlop(ContractNomPointBean contractNomPoint);
 	
 	public Date selectDateContra(ContractNomPointBean contractNomPoint);

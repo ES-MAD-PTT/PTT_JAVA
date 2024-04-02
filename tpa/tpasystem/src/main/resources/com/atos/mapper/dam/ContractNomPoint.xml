@@ -108,6 +108,25 @@ order by
 			u.USER_GROUP_id = #{shipper}
 	</select>
 	
+	<select id="selectContraCodeById" resultMap="ContractNomPoint" parameterType="com.atos.beans.dam.ContractNomPointBean">
+    	SELECT
+			c.contract_code as contract_id
+		FROM
+			tpa_tcontract c
+		WHERE
+			c.idn_contract = #{idn_contract}
+	</select>
+	
+	<select id="selectCodeNomPointById" resultMap="ContractNomPoint" parameterType="com.atos.beans.dam.ContractNomPointBean">
+    	SELECT
+			sp.point_code as nomination_point
+		FROM
+			tpa_vsystem_point sp
+		WHERE
+			sp.group_code = 'NOMINATION'
+			AND sp.idn_system_point = #{idn_nomination_point}
+	</select>
+	
 	<select id="selectContractNomPointsFormTable" resultMap="ContractNomPoint" parameterType="com.atos.beans.dam.ContractNomPointBean">
     	select (select sp.idn_system_point from tpa_tsystem_point sp where sp.idn_system_point=#{idn_contract_point}) as idn_contract_point,
 	       (select sp.point_code from tpa_tsystem_point sp where sp.idn_system_point=#{idn_contract_point}) as contract_point,

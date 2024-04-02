@@ -388,6 +388,7 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 
 		String error = "0";
 		try {
+			
 			BigDecimal existNumSlop = BigDecimal.ZERO;
 			List<BigDecimal> listIdnContractNomPoint = new ArrayList<>();
 						
@@ -412,6 +413,24 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 				
 				if(listIdnContractNomPoint != null) {
 					for (BigDecimal elemento : listIdnContractNomPoint) {
+						ContractNomPointBean contractNomPointIdShipper = service.selectContraCodeById(newContractNomPoint);
+						newContractNomPoint.setIdn_nomination_point(elemento);
+						ContractNomPointBean nominationById = service.selectCodeNomPointById(newContractNomPoint);						
+
+						// Obtener la lista de códigos de nominación
+						List<String> listaCodeNominationPoint = newContractNomPoint.getListCodeNominationPoint();
+
+						// Verificar si la lista es null y, si lo es, inicializarla
+						if (listaCodeNominationPoint == null) {
+						    listaCodeNominationPoint = new ArrayList<>();
+						    newContractNomPoint.setListCodeNominationPoint(listaCodeNominationPoint);
+						}
+
+						// Añadir el código de nominación a la lista
+						String nominationPoint = nominationById.getNomination_point(); 
+						listaCodeNominationPoint.add(nominationPoint);
+						
+						newContractNomPoint.setContract_id(contractNomPointIdShipper.getContract_id());
 			            newContractNomPoint.setIdn_nomination_point(elemento);
 			            error = service.insertContractNomPoint(newContractNomPoint);
 			        }
@@ -433,8 +452,11 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 			// we assign the return message
 			error = e.getMessage();
 		}
-
-		String[] par2 = {newContractNomPoint.getContract_id()+"-"+newContractNomPoint.getNomination_point(),msgs.getString("contractNomPoint") };
+		
+		
+		// Obtener la lista de códigos de nominación como una cadena con comas entre cada elemento
+		String listaComoCadena = String.join(",", newContractNomPoint.getListCodeNominationPoint());
+		String[] par2 = {newContractNomPoint.getContract_id()+"-"+listaComoCadena,msgs.getString("contractNomPoint") };
 		
 		if (error != null && error.equals("0")) {
 			String msg = getMessageResourceString("inserting_ok", par2);

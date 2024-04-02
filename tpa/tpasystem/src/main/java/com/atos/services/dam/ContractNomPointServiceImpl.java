@@ -182,6 +182,16 @@ public class ContractNomPointServiceImpl implements ContractNomPointService {
 		Date dateContrat = contractNomPointMapper.selectDateContra(contractNomPoint);
 		return dateContrat;
 	}
+
+	@Override
+	public ContractNomPointBean selectContraCodeById(ContractNomPointBean contractNomPoint) {
+		return contractNomPointMapper.selectContraCodeById(contractNomPoint);
+	}
+
+	@Override
+	public ContractNomPointBean selectCodeNomPointById(ContractNomPointBean contractNomPoint) {
+		return contractNomPointMapper.selectCodeNomPointById(contractNomPoint);
+	}
 	
 
 }

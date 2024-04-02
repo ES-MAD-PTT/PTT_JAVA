@@ -92,11 +92,11 @@ public class ContractNomPointServiceImpl implements ContractNomPointService {
 	@Transactional(rollbackFor = { Throwable.class })
 	public String insertContractNomPoint(ContractNomPointBean contractNomPoint) throws Exception {
 
-		List<BigDecimal> list = contractNomPointMapper.getContractNomPointCode(contractNomPoint);
-		if (list.size() > 0) {
-			// the id is already inserted
-			throw new Exception("-1");
-		}
+		//List<BigDecimal> list = contractNomPointMapper.getContractNomPointCode(contractNomPoint);
+//		if (list.size() > 0) {
+//			// the id is already inserted
+//			throw new Exception("-1");
+//		}
 		int ins = contractNomPointMapper.insertContractNomPoint(contractNomPoint);
 		if (ins != 1) {
 			throw new Exception("-2");

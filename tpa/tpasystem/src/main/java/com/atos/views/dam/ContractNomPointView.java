@@ -531,17 +531,39 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 	
 	
 	
-	public void prepareEdit(ContractNomPointBean itemEdit) {
-		
+	public void prepareEdit(ContractNomPointBean itemEdit) {		
 		
 		contractNomPointIdShipper = service.selectIdShipper(itemEdit);
 		newContractNomPoint = itemEdit;
 		selectedsFornNew = service.selectContractNomPointsFormEdit(newContractNomPoint);
+		
+		List<BigDecimal> listIdnContractNomPoint = new ArrayList<>();
+		for (ContractNomPointBean item : selectedsFornNew) {
+			listIdnContractNomPoint.add(service.getIdnSystemPoint(item));				
+        }
+		// Verifica si todos los elementos son iguales
+        boolean allEquals = true;
+        BigDecimal primerElemento = listIdnContractNomPoint.get(0); // Obtén el primer elemento
+        for (BigDecimal elemento : listIdnContractNomPoint) {
+            if (!elemento.equals(primerElemento)) {
+            	allEquals = false;
+                break;
+            }
+        }
+
+        // Imprime el resultado
+        if (allEquals) {
+        	newContractNomPoint.setIdn_contract_point(primerElemento);
+        } else {
+        	newContractNomPoint.setIdn_contract_point(null);
+        }
+		
 		selectedsFornEdit = selectedsFornNew;
 		newContractNomPoint.setStartDate(newContractNomPoint.getStartDateActive());
 		newContractNomPoint.setEndDate(newContractNomPoint.getEndDateActive());
 		newContractNomPoint.setIdn_system(getChangeSystemView().getIdn_active());
 		contractNomPointsTable();
+		listIdnContractNomPoint.clear();
 	}
 	
 	public void edit() {

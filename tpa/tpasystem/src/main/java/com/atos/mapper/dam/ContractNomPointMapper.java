@@ -50,4 +50,6 @@ public interface ContractNomPointMapper {
 
 	public int deleteContractNomPoint(ContractNomPointBean bean) throws Exception;
 	
+	public BigDecimal getIdnSystemPoint(ContractNomPointBean contractNomPoint);
+	
 }

@@ -193,6 +193,11 @@ public class ContractNomPointServiceImpl implements ContractNomPointService {
 		return contractNomPointMapper.selectCodeNomPointById(contractNomPoint);
 	}
 
+	@Override
+	public BigDecimal getIdnSystemPoint(ContractNomPointBean contractNomPoint) {
+		return contractNomPointMapper.getIdnSystemPoint(contractNomPoint);
+	}
+
 //	@Override
 //	public void downloadExcel(XSSFWorkbook wb, List<ContractNomPointBean> items) throws IOException {
 //		ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication()

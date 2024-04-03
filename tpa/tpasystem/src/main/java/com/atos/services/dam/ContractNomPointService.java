@@ -49,6 +49,8 @@ public interface ContractNomPointService extends Serializable {
 
 	public String deleteContractNomPoint(ContractNomPointBean bean) throws Exception;
 	
+	public BigDecimal getIdnSystemPoint(ContractNomPointBean contractNomPoint);
+	
 	//public void downloadExcel(XSSFWorkbook wb, List<ContractNomPointBean> items)throws IOException;
 
 }

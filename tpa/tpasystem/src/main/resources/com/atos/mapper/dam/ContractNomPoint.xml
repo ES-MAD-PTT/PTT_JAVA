@@ -49,10 +49,10 @@ where
 		and tcnp.idn_contract = #{idn_contract}
    	</if>  
    <if test = "startDate != null">
-	and nvl(tc.end_date, to_date('9999/12/31', 'yyyy/mm/dd'))>= #{startDate}
+	and nvl(tcnp.active_date_to, to_date('9999/12/31', 'yyyy/mm/dd'))>= #{startDate}
     </if>
     <if test = "endDate != null">
-	and #{endDate} >= tc.start_date
+	and #{endDate} >= tcnp.active_date_from
     </if> 
     <if test = "idn_shipper != null">
 	and tc.idn_user_group = #{idn_shipper}
@@ -497,6 +497,21 @@ order by t1.point_code
           AND  t.IDN_NOM_POINT = #{idn_nomination_point}
           AND  t.active_date_from = #{startDate}
           AND  t.active_date_to = #{endDate}      
+	</select>
+	
+	<select id="getIdnSystemPoint" resultType="java.math.BigDecimal" parameterType="com.atos.beans.dam.ContractNomPointBean">
+	    SELECT
+			idn_system_point
+		FROM
+			tpa_tsystem_point
+		WHERE
+			idn_system_point IN (
+			SELECT
+				idn_contract_point
+			FROM
+				tpa_tsystem_point_param
+			WHERE
+				idn_nomination_point = #{idn_nomination_point})     
 	</select>
 	
 	<delete id="deleteContractNomPoint" parameterType="com.atos.beans.dam.ContractNomPointBean">

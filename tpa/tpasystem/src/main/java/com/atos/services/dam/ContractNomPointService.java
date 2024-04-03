@@ -48,5 +48,7 @@ public interface ContractNomPointService extends Serializable {
 	public Map<BigDecimal, Object> selectNominationPointsForm(ContractNomPointBean newContractNomPoint);
 
 	public String deleteContractNomPoint(ContractNomPointBean bean) throws Exception;
+	
+	//public void downloadExcel(XSSFWorkbook wb, List<ContractNomPointBean> items)throws IOException;
 
 }

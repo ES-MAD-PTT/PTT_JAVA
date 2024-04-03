@@ -53,6 +53,9 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 	private List<ContractNomPointBean> selectedsFornEdit = new ArrayList<ContractNomPointBean>();
 	private List<ContractNomPointBean> selectedsFornEditDelete = new ArrayList<ContractNomPointBean>();
 	private ContractNomPointBean selected;
+	
+//	private StreamedContent fileSC;
+//	private File file;
 
 	@ManagedProperty("#{contractNomPointService}")
 	transient private ContractNomPointService service;
@@ -161,6 +164,20 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 	public void setSelectedsFornEditDelete(List<ContractNomPointBean> selectedsFornEditDelete) {
 		this.selectedsFornEditDelete = selectedsFornEditDelete;
 	}
+	
+//	@SuppressWarnings("resource")
+//	public StreamedContent getFileSC() throws FileNotFoundException {
+//		if (file != null) {
+//			InputStream is = new FileInputStream(file);
+//			fileSC = DefaultStreamedContent.builder().name(file.getName())
+//					.contentType(new MimetypesFileTypeMap().getContentType(file)).stream(() -> is).build();
+//		}
+//		return fileSC;
+//	}
+//
+//	public void setFileSC(StreamedContent fileSC) {
+//		this.fileSC = fileSC;
+//	}
 
 	@PostConstruct
 	public void init() {
@@ -469,7 +486,7 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 		
 		// Obtener la lista de códigos de nominación como una cadena con comas entre cada elemento
 		String listaComoCadena = String.join(",", newContractNomPoint.getListCodeNominationPoint());
-		String[] par2 = {newContractNomPoint.getContract_id()+"-"+listaComoCadena,msgs.getString("contractNomPoint") };
+		String[] par2 = {newContractNomPoint.getContract_id()+"  -  "+listaComoCadena,msgs.getString("contractNomPoint") };
 		
 		if (error != null && error.equals("0")) {
 			String msg = getMessageResourceString("inserting_ok", par2);
@@ -794,6 +811,24 @@ public class ContractNomPointView  extends CommonView implements Serializable {
         // Comprobar si startDate es antes de mañana
         return endDate != null && endDate.before(tomorrow.getTime());
     }
+    
+    
+  //**************************************Excel*************************************************************************
+	
+//	public void downloadExcel() throws IOException {
+//		try {  
+//			XSSFWorkbook wb = new XSSFWorkbook();
+//			service.downloadExcel(wb, items);
+//			file = new File("ContractNomPointRelation.xlsx");
+//			FileOutputStream fos = new FileOutputStream(file);
+//			wb.write(fos);
+//			fos.close();
+//		} catch (Exception e) {
+//			getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.ERROR, "Internal Error", 
+//					getMessageResourceString("excel_download_noOk", null), Calendar.getInstance().getTime()));
+//			return;
+//		}
+//	}
 
 	
 	public void postProcessXLS(Object document) {

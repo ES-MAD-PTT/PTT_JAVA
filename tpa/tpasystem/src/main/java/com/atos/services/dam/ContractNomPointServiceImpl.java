@@ -182,6 +182,65 @@ public class ContractNomPointServiceImpl implements ContractNomPointService {
 		Date dateContrat = contractNomPointMapper.selectDateContra(contractNomPoint);
 		return dateContrat;
 	}
+
+	@Override
+	public ContractNomPointBean selectContraCodeById(ContractNomPointBean contractNomPoint) {
+		return contractNomPointMapper.selectContraCodeById(contractNomPoint);
+	}
+
+	@Override
+	public ContractNomPointBean selectCodeNomPointById(ContractNomPointBean contractNomPoint) {
+		return contractNomPointMapper.selectCodeNomPointById(contractNomPoint);
+	}
+
+	@Override
+	public BigDecimal getIdnSystemPoint(ContractNomPointBean contractNomPoint) {
+		return contractNomPointMapper.getIdnSystemPoint(contractNomPoint);
+	}
+
+//	@Override
+//	public void downloadExcel(XSSFWorkbook wb, List<ContractNomPointBean> items) throws IOException {
+//		ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication()
+//				.getResourceBundle(FacesContext.getCurrentInstance(), "msg");
+//		
+//		// Generate fonts
+//		Font contentFontBold = POIXSSFExcelUtils.createFont(wb, IndexedColors.BLACK.index, (short)11, true);
+//		Font contentFont = POIXSSFExcelUtils.createFont(wb, IndexedColors.BLACK.index, (short)11, false);
+//		// Generate styles
+//		DataFormat format = wb.createDataFormat();
+//		CellStyle cellStyleContentFontBold = POIXSSFExcelUtils.createStyle(wb, contentFontBold, HorizontalAlignment.CENTER, null, IndexedColors.WHITE.index, 
+//				false, IndexedColors.GREY_80_PERCENT.index, BorderStyle.NONE, false, format.getFormat("#,##"));
+//		CellStyle cellStyleTableGreyCenter = POIXSSFExcelUtils.createStyle(wb, contentFontBold, HorizontalAlignment.CENTER, null, IndexedColors.GREY_25_PERCENT.index, 
+//				true, IndexedColors.GREY_80_PERCENT.index, BorderStyle.THIN, false, wb.getCreationHelper().createDataFormat().getFormat("dd-MMM-yyyy"));
+//		CellStyle cellStyleTableBoldFormatTexto = POIXSSFExcelUtils.createStyle2(wb, contentFontBold, HorizontalAlignment.LEFT, IndexedColors.WHITE.index, 
+//				true, IndexedColors.GREY_80_PERCENT.index, BorderStyle.THIN, true, format.getFormat("#,##0.00"));
+//		CellStyle cellStyleTableWithoutFormatNumberAndCenter = POIXSSFExcelUtils.createStyle2(wb, contentFont, HorizontalAlignment.CENTER, IndexedColors.WHITE.index, 
+//				true, IndexedColors.GREY_80_PERCENT.index, BorderStyle.THIN, true, format.getFormat("#,##0.00"));
+//		CellStyle cellStyleTableBoldFormatNumber = POIXSSFExcelUtils.createStyle(wb, contentFontBold, HorizontalAlignment.RIGHT, null, IndexedColors.WHITE.index, 
+//				true, IndexedColors.GREY_80_PERCENT.index, BorderStyle.THIN, true, format.getFormat("#,##0.000"));
+//		CellStyle cellStyleTableFormatNumber = POIXSSFExcelUtils.createStyle(wb, contentFont, HorizontalAlignment.RIGHT, null, IndexedColors.WHITE.index, 
+//				true, IndexedColors.GREY_80_PERCENT.index, BorderStyle.THIN, true, format.getFormat("#,##0.000"));
+//		
+//		XSSFSheet sheet = wb.createSheet("Contract Nom. Point Relation");
+//		if(wb!=null) {
+//			//Tabla1
+//			List<String> headerTableTitle = Arrays.asList(msgs.getString("contractNomPoint_id_shipper"), msgs.getString("contractNomPoint_id_contract"), 
+//					msgs.getString("contractNomPoint_date_from_contract"),msgs.getString("contractNomPoint_date_to_contract"),msgs.getString("contractNomPoint_date_from_active"),
+//					msgs.getString("contractNomPoint_date_to_active"));
+//			
+//			XSSFRow row = sheet.createRow(0);
+//			XSSFCell cell = row.createCell(0);
+//			
+//			int cellNum = 0;
+//			for(int i = 0; i < headerTableTitle.size(); i++) {//Insertamos cabecera
+//			cell = row.createCell(cellNum);
+//			cell.setCellStyle(cellStyleTableGreyCenter);
+//			cell.setCellValue(headerTableTitle.get(i));				
+//			cellNum++;
+//			}
+//		}
+//		
+//	}
 	
 
 }

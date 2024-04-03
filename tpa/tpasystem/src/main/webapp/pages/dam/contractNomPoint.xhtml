@@ -30,10 +30,10 @@
 						<p:panelGrid>
 							<p:row>
 								<p:column  style="font-weight: bold;" >
-									<h:outputText value="#{msg['contractNomPoint_date_from']}" />
+									<h:outputText value="#{msg['contractNomPoint_date_from_active']}" />
 								</p:column>
 								<p:column  style="font-weight: bold;">
-									<h:outputText value="#{msg['contractNomPoint_date_to']}" />
+									<h:outputText value="#{msg['contractNomPoint_date_to_active']}" />
 								</p:column>
 								<p:column  style="font-weight: bold;" >
 									<h:outputText value="#{msg['contractNomPoint_shipper']}" />
@@ -72,20 +72,20 @@
 									<p:selectOneMenu id="contract_id" style="width:100px"    value="#{contractNomPointView.filters.idn_contract}" >
 												<f:selectItem itemLabel="" itemValue="" />
         								        <f:selectItems value="#{contractNomPointView.contractIds.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
-        								        <p:ajax update="contract_point,nomination_point"/>
+        								        <!-- <p:ajax update="contract_point,nomination_point"/> -->
 					               	</p:selectOneMenu>									
 								</p:column>
 								
 							</p:row>
-						<p:row>
+						<!-- <p:row>
 								<p:column  style="font-weight: bold;">
 									<h:outputText value="#{msg['contractNomPoint_contract_point']}" />
 								</p:column>
 								<p:column  style="font-weight: bold;">
 									<h:outputText value="#{msg['contractNomPoint_nomination_point']}" />
 								</p:column>
-						</p:row>
-						<p:row>
+						</p:row> -->
+						<!-- <p:row>
 								<p:column>
 									<p:selectOneMenu id="contract_point" style="width:100px"    value="#{contractNomPointView.filters.idn_contract_point}" >
 												<f:selectItem itemLabel="" itemValue="" />
@@ -99,7 +99,7 @@
         								        <f:selectItems value="#{contractNomPointView.nominationPoints.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
 					               	</p:selectOneMenu>									
 								</p:column>
-						</p:row>	
+						</p:row> -->	
 						</p:panelGrid>
 						<p:panelGrid columns="2" style="float:right;top:0px">
 							<shiro:hasPermission name="#{changeSystemView.system}.DAM.CONTRACT_NOMINATION.QUERY">
@@ -144,13 +144,14 @@
 		        							onclick="PF('dlgNewContractNomPoint').show();"
 		        						/>
 	        						</shiro:hasPermission>
-	        						<!-- <shiro:hasPermission name="#{changeSystemView.system}.DAM.CONTRACT_NOMINATION.MOD">
-		        						<p:commandButton id="delete" value="Delete" icon="ui-icon fa fa-remove" style="float:right;"
-		        							actionListener="#{contractNomPointView.delete}" update=":form:msgs,:#{p:component('contractNomPoints1')}"
-		        							onstart="PF('cargando').show()"
-											oncomplete="PF('cargando').hide()"/>
-									</shiro:hasPermission> -->
 	        						<shiro:hasPermission name="#{changeSystemView.system}.DAM.CONTRACT_NOMINATION.QUERY">
+	        							<!-- <h:commandLink style="float:right"
+											onclick="PrimeFaces.monitorDownload(start, stop);"
+											actionListener="#{contractNomPointView.downloadExcel}"
+											rendered="#{not empty contractNomPointView.items}">
+											<p:graphicImage name="/images/excel.png" width="24" />
+											<p:fileDownload value="#{contractNomPointView.fileSC}" />
+										</h:commandLink> -->
 					        			<h:commandLink style="float:right">
 										       <p:graphicImage name="/images/excel.png" width="24"/>
 										       <p:dataExporter type="xls" target="contractNomPoints1" fileName="ContractPoints" postProcessor="#{contractNomPointView.postProcessXLS}"/>
@@ -196,31 +197,6 @@
 		              				<f:convertDateTime pattern="dd/MM/yyyy" />
 		 	             	   </h:outputText>
 					       </p:column>
-
-					       <!-- <p:column headerText="#{msg['contractNomPoint_contract_point']}" style="width: 130px; " sortBy="#{contractNomPoint.contract_point}" filterMatchMode="contains"  filterBy="#{contractNomPoint.contract_point}">
-					          <p:cellEditor>
-					               <f:facet name="output"><h:outputText value="#{contractNomPoint.contract_point}" /></f:facet>
-					               <f:facet name="input" >
-					               		<p:selectOneMenu id="cont_point"  style="width:75%" value="#{contractNomPoint.idn_contract_point}" 
-					               				 required="true">
-							               		<f:selectItems value="#{contractNomPointView.contractPointsTabla(contractNomPoint.idn_contract).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
-							               		<p:ajax event="change" update="nom_point"/>
-					               		</p:selectOneMenu>
-					               	</f:facet>
-					           </p:cellEditor>
-					       </p:column>
-					       					       
-					       <p:column headerText="#{msg['contractNomPoint_nomination_point']}" style="width: 130px; " sortBy="#{contractNomPoint.nomination_point}" filterMatchMode="contains"  filterBy="#{contractNomPoint.nomination_point}">
-					          <p:cellEditor>
-					               <f:facet name="output"><h:outputText value="#{contractNomPoint.nomination_point}" /></f:facet>
-					               <f:facet name="input" >
-					               		<p:selectOneMenu id="nom_point"  style="width:75%" value="#{contractNomPoint.idn_nomination_point}" 
-					               				 required="true">
-							               		<f:selectItems value="#{contractNomPointView.nominationPointsTabla(contractNomPoint.idn_contract,contractNomPoint.idn_contract_point).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
-					               		</p:selectOneMenu>
-					               	</f:facet>
-					           </p:cellEditor>
-					       </p:column> -->
 					       
 					      <shiro:hasPermission name="#{changeSystemView.system}.DAM.CONTRACT_NOMINATION.MOD">
 						       <p:column headerText="#{msg['contractNomPoint_limit_nomination_point']}" style="text-align:center;">
@@ -240,8 +216,8 @@
 		<shiro:hasPermission name="#{changeSystemView.system}.DAM.CONTRACT_NOMINATION.ADD">
 		<p:dialog widgetVar="dlgNewContractNomPoint" resizable="false"  closable="true" modal="true" appendTo="@(body)" header="New Nomination Point Limitation"
 	width="50%">
-		<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario
-		 <p:ajax event="close" update="formNewEntity"  process="@this" listener="#{contractNomPointView.cancel}" />-->	
+		<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario-->	
+		 <p:ajax event="close" update="formNewEntity"  process="@this" listener="#{contractNomPointView.cancel}" />
 			<h:form id="formNewEntity">
 			<p:growl id="msgs" showDetail="true"  life="5000"/>
 				<p:panelGrid columns="4" style="width:100%">
@@ -365,8 +341,8 @@
 	
 	<p:dialog widgetVar="dlgEditContractNomPoint" resizable="false"  closable="true" modal="true" appendTo="@(body)" header="Nomination Point Limitation"
 	width="50%">
-		<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario
-		 <p:ajax event="close" update="formNewEntity"  process="@this" listener="#{contractNomPointView.cancel}" />-->	
+		<!-- Este ajax es para que cunado cierre por el  aspa limpie el formulario-->
+		 <p:ajax event="close" update="formNewEntity"  process="@this" listener="#{contractNomPointView.cancel}" />	
 			<h:form id="formEditEntity">
 			<p:growl id="msgs" showDetail="true"  life="5000"/>
 				<p:panelGrid columns="4" style="width:100%">
@@ -477,7 +453,7 @@
 					<p:row>
 						<p:column>
 							<p:commandButton value="#{msg['save']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" validateClient="true"
-								action="#{contractNomPointView.save}" update=":#{p:component('contractNomPoints2')},:formEditEntity"
+								action="#{contractNomPointView.edit}" update=":#{p:component('contractNomPoints2')},:formEditEntity"
 								onstart="PF('cargando').show()"
 								oncomplete="PF('dlgEditContractNomPoint').hide(),PF('cargando').hide()" disabled="#{contractNomPointView.isEndDateBeforeTomorrow()}"/>
 			        		<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close"

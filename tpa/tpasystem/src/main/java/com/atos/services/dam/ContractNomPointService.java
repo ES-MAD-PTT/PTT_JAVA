@@ -21,6 +21,10 @@ public interface ContractNomPointService extends Serializable {
 	
 	public ContractNomPointBean selectIdShipper(ContractNomPointBean contractNomPoint);
 	
+	public ContractNomPointBean selectContraCodeById(ContractNomPointBean contractNomPoint);
+	
+	public ContractNomPointBean selectCodeNomPointById(ContractNomPointBean contractNomPoint);
+	
 	public BigDecimal selectExistingNumSlop(ContractNomPointBean contractNomPoint);
 	
 	public Date selectDateContra(ContractNomPointBean contractNomPoint);
@@ -44,5 +48,9 @@ public interface ContractNomPointService extends Serializable {
 	public Map<BigDecimal, Object> selectNominationPointsForm(ContractNomPointBean newContractNomPoint);
 
 	public String deleteContractNomPoint(ContractNomPointBean bean) throws Exception;
+	
+	public BigDecimal getIdnSystemPoint(ContractNomPointBean contractNomPoint);
+	
+	//public void downloadExcel(XSSFWorkbook wb, List<ContractNomPointBean> items)throws IOException;
 
 }

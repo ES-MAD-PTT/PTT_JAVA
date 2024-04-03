@@ -20,6 +20,10 @@ public interface ContractNomPointMapper {
 	
 	public ContractNomPointBean selectIdShipper(ContractNomPointBean contractNomPoint);
 	
+	public ContractNomPointBean selectContraCodeById(ContractNomPointBean contractNomPoint);
+	
+	public ContractNomPointBean selectCodeNomPointById(ContractNomPointBean contractNomPoint);
+	
 	public BigDecimal selectExistingNumSlop(ContractNomPointBean contractNomPoint);
 	
 	public Date selectDateContra(ContractNomPointBean contractNomPoint);
@@ -45,5 +49,7 @@ public interface ContractNomPointMapper {
 	public List<ComboFilterNS> selectNominationPointsForm(ContractNomPointBean newContractNomPoint);
 
 	public int deleteContractNomPoint(ContractNomPointBean bean) throws Exception;
+	
+	public BigDecimal getIdnSystemPoint(ContractNomPointBean contractNomPoint);
 	
 }

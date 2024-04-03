@@ -20,8 +20,13 @@ public class MeteredPointsShipperFilter implements Serializable{
 	private BigDecimal idnGroup;
 	private BigDecimal idnSystem;
 	
+	public MeteredPointsShipperFilter() {}
 	
-	
+	public MeteredPointsShipperFilter(BigDecimal idnShipper, Date startDate, Date endDate) {
+		this.idnShipper = idnShipper;
+		this.startDate = startDate;
+		this.endDate = endDate;
+	}
 	public BigDecimal getIdnShipper() {
 		return idnShipper;
 	}

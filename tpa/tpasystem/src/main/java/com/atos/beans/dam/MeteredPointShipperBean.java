@@ -10,16 +10,20 @@ public class MeteredPointShipperBean implements Serializable {
 	private static final long serialVersionUID = -5255211382691787452L;
 
 	private BigDecimal idnMeterdPointShipper;
-	private BigDecimal idnShipper;
-	private String shipper;
+	private BigDecimal idnGroup;
+	private String group;
 	private Date startDate;
 	private Date endDate;
 	private BigDecimal idnMeteringPoint;
 	private String meteringPoint;
 	private BigDecimal idnCustomerType;
 	private String customerType;
-	private BigDecimal idnGroup;
-	private String group;
+	private BigDecimal idnShipper;
+	private String shipper;
+
+	private BigDecimal compositeKey;
+	private BigDecimal idnSystem;
+	private String userName;
 	
 	
 	public MeteredPointShipperBean() {}
@@ -40,6 +44,30 @@ public class MeteredPointShipperBean implements Serializable {
 
 	public void setShipper(String shipper) {
 		this.shipper = shipper;
+	}
+
+	public String getUserName() {
+		return userName;
+	}
+
+	public void setUserName(String userName) {
+		this.userName = userName;
+	}
+
+	public BigDecimal getCompositeKey() {
+		return compositeKey;
+	}
+
+	public void setCompositeKey(BigDecimal compositeKey) {
+		this.compositeKey = compositeKey;
+	}
+
+	public BigDecimal getIdnSystem() {
+		return idnSystem;
+	}
+
+	public void setIdnSystem(BigDecimal idnSystem) {
+		this.idnSystem = idnSystem;
 	}
 
 	public BigDecimal getIdnMeterdPointShipper() {

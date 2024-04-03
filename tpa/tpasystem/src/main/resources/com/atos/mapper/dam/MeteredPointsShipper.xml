@@ -5,28 +5,247 @@
 <mapper namespace="com.atos.mapper.dam.MeteredPointsShipperMapper">
 
 
-<!-- 	<select id="selectShippers" resultType="com.atos.beans.ComboFilterNS"> -->
-<!-- 		SELECT tuser.idn_user_group as key, tuser.user_group_id as value -->
-<!--     	FROM tpa_tuser_group tuser -->
-<!--     	WHERE tuser.idn_user_group_type = (SELECT idn_user_group_type FROM tpa_tuser_group_type WHERE type_code = 'SHIPPER') -->
-<!--     </select> -->
-
-<!--     <resultMap type="com.atos.beans.dam.ContractNomPointBean" id="ContractNomPoint"> -->
-<!--         <id column="idn_contract_nom_point" property="idn_contract_nom_point"  />  -->
-<!--         <result property="idn_contract" column="idn_contract"/> -->
-<!--         <result property="idn_contract_point" column="idn_contract_point"/> -->
-<!--         <result property="idn_nomination_point" column="idn_nomination_point"/> -->
-<!--         <result property="contract_id" column="contract_id"/> -->
-<!--         <result property="startDate" column="start_date"/>    -->
-<!--         <result property="endDate" column="end_date"/>   -->
-<!--        	<result property="contract_point" column="contract_point"/> -->
-<!--        	<result property="nomination_point" column="nomination_point"/> -->
-<!--     </resultMap> -->
+    <resultMap type="com.atos.beans.dam.MeteredPointShipperBean" id="MeteredPointShipper">
+        <id property="idnMeterdPointShipper" column="IDN_SHIPPER_MET_POINT" /> 
+        <result property="idnShipper" column="IDN_USER_GROUP"/>
+        <result property="shipper" column="USER_GROUP_ID"/>
+        <result property="startDate" column="ACTIVE_DATE_FROM"/>
+        <result property="endDate" column="ACTIVE_DATE_TO"/>
+        <result property="idnCustomerType" column="IDN_CUSTOMER_TYPE"/>
+        <result property="customerType" column="TYPE_DESC"/>
+        <result property="idnGroup" column="IDN_GROUP_ID"/>
+        <result property="group" column="GROUP_ID"/>
+        <result property="idnMeteringPoint" column="IDN_MET_POINT"/>
+        <result property="meteringPoint" column="POINT_CODE"/>
+        <result property="compositeKey" column="compositeKey"/>
+    </resultMap>
      
      <select id="selectShippers" resultType="com.atos.beans.ComboFilterNS">
 		SELECT tuser.idn_user_group as key, tuser.user_group_id as value
     	FROM tpa_tuser_group tuser
     	WHERE tuser.idn_user_group_type = (SELECT idn_user_group_type FROM tpa_tuser_group_type WHERE type_code = 'SHIPPER')
     </select>
+    
+    <select id="selectMeteredPoin" resultType="com.atos.beans.ComboFilterNS">
+    	SELECT sp.idn_system_point AS key, 
+             sp.point_code  AS value 
+		    FROM tpa_vsystem_point sp, 
+		         tpa_varea_tpa     a, 
+		         tpa_vzone_tpa     z 
+		   WHERE sp.group_code = 'METERED' 
+		     AND a.idn_area = sp.idn_area 
+		     AND a.idn_zone = z.idn_zone 
+		     AND z.idn_pipeline_system = #{idnSystem} 
+		   ORDER BY sp.point_code
+    </select>
+    
+    <select id="selectCustomerType" resultType="com.atos.beans.ComboFilterNS">
+    	SELECT ct.idn_customer_type as key,  
+       ct.TYPE_DESC as value              
+		     FROM tpa_vsystem_point tp, 
+		          tpa_tsystem_point_param  pp, 
+		          tpa_tcustomer_type ct,
+		          tpa_tsystem_point nomp, 
+		          tpa_tsystem_point conp,           
+		          tpa_varea_tpa a, 
+		          TPA_VZONE_TPA z, 
+		          tpa_tpipeline_system ps, 
+		          tpa_tsubarea sub
+		    WHERE tp.idn_system_point =  pp.idn_system_point
+		      AND tp.group_code= 'METERED'
+		      AND ct.IDN_CUSTOMER_TYPE (+)= pp.IDN_CUSTOMER_TYPE
+		      AND nomp.idn_system_point (+)= pp.idn_nomination_point
+		      AND conp.idn_system_point (+)= pp.idn_contract_point     
+		      AND sub.IDN_SUBAREA (+) = pp.IDN_SUBAREA
+		      AND a.idn_area = nomp.IDN_AREA
+		      AND a.IDN_ZONE = z.IDN_ZONE
+		      AND z.IDN_PIPELINE_SYSTEM = ps.IDN_PIPELINE_SYSTEM 
+		      AND nvl(pp.end_date, pp.start_date) >= pp.start_date
+		      AND pp.version_date = (SELECT max(ppx.version_date) 
+		                                FROM tpa_tsystem_point_param ppx 
+		                                WHERE pp.idn_system_point = ppx.idn_system_point 
+		                                  AND pp.start_date = ppx.start_date)
+		      AND ps.idn_pipeline_system = #{idnSystem}
+		<if test="idnMeteringPoint != null and idnMeteringPoint != ''"> 
+		   AND tp.idn_system_point = #{idnMeteringPoint}
+		</if>   
+			group by  ct.idn_customer_type, ct.TYPE_DESC 
+		   ORDER BY UPPER (value)
+    </select>
+    
+    <select id="selectGroupId" resultType="com.atos.beans.ComboFilterNS">
+    	SELECT conp.idn_system_point as key , conp.point_code as value
+		  FROM tpa_vsystem_point tp, 
+		          tpa_tsystem_point_param  pp, 
+		          tpa_tcustomer_type ct,
+		          tpa_tsystem_point nomp, 
+		          tpa_tsystem_point conp,           
+		          tpa_varea_tpa a, 
+		          TPA_VZONE_TPA z, 
+		          tpa_tpipeline_system ps, 
+		          tpa_tsubarea sub
+		    WHERE tp.idn_system_point =  pp.idn_system_point
+		      AND tp.group_code= 'METERED'
+		      AND ct.IDN_CUSTOMER_TYPE (+)= pp.IDN_CUSTOMER_TYPE
+		      AND nomp.idn_system_point (+)= pp.idn_nomination_point
+		      AND conp.idn_system_point (+)= pp.idn_contract_point     
+		      AND sub.IDN_SUBAREA (+) = pp.IDN_SUBAREA
+		      AND a.idn_area = nomp.IDN_AREA
+		      AND a.IDN_ZONE = z.IDN_ZONE
+		      AND z.IDN_PIPELINE_SYSTEM = ps.IDN_PIPELINE_SYSTEM 
+		      AND nvl(pp.end_date, pp.start_date) >= pp.start_date
+		      AND pp.version_date = (SELECT max(ppx.version_date) 
+		                                FROM tpa_tsystem_point_param ppx 
+		                                WHERE pp.idn_system_point = ppx.idn_system_point 
+		                                  AND pp.start_date = ppx.start_date)
+		      AND ps.idn_pipeline_system = #{idnSystem}
+		   
+		  <if test="idnMeteringPoint != null and idnMeteringPoint != ''"> 
+		   	AND tp.idn_system_point = #{idnMeteringPoint}
+		  </if> 
+			 GROUP BY conp.idn_system_point, conp.point_code
+			 ORDER BY UPPER (value)
+    </select>
+    
+    <select id="selectMeteredPointShipper" resultMap="MeteredPointShipper">
+    	with ship_met_point as (select mt.idn_user_group,
+		       u.user_group_id,
+		       mt.active_date_from,
+		       mt.active_date_to,
+		      (select idn_system_point from tpa_tsystem_point where idn_system_point in (select idn_system_point from tpa_tsystem_point_param 
+		                                                                               where idn_system_point = mt.idn_met_point)) as idn_met_point
+			from tpa_tshipper_met_point mt,
+			     Tpa_Tuser_Group u
+			     
+			where mt.idn_user_group = u.idn_user_group  
+			  
+			  <if test="startDate != null">
+			    	AND nvl(mt.active_date_to ,to_date('9999/12/31','yyyy/mm/dd'))>=  #{startDate}
+			    </if>
+			    <if test="endDate != null">
+			      	AND #{endDate} >= mt.active_date_from
+			    </if> 
+			    <if test="idnShipper != null and idnShipper != ''">
+			      	AND mt.idn_user_group = #{idnShipper}
+			    </if> 
+			 )
+			 select * 
+			from  ship_met_point mt  
+			group by  mt.idn_user_group, mt.user_group_id, mt.active_date_from, mt.active_date_to, mt.idn_met_point
+			order by mt.idn_user_group, mt.active_date_from
+    </select>
+    
+    <select id="selectAllDataMeteredPointShipper" resultMap="MeteredPointShipper">
+    	select to_number(tp.idn_system_point || ct.idn_customer_type || conp.idn_system_point) as compositeKey,
+    			tsmp.idn_shipper_met_point as idn_shipper_met_point,
+		       tsmp.idn_met_point,
+		       tp.POINT_CODE,
+		       tsmp.idn_user_group as idn_user_group,
+		       ct.idn_customer_type as idn_customer_type,  
+		       ct.TYPE_DESC as TYPE_DESC ,
+		       conp.idn_system_point as idn_GROUP_ID , conp.point_code as GROUP_ID
+		      
+		  from TPA_TSHIPPER_MET_POINT tsmp, 
+		       TPA_TUSER_GROUP u,
+		       tpa_tcustomer_type ct,
+		       tpa_tsystem_point conp, 
+		       tpa_tsystem_point_param  pp,
+		       tpa_vsystem_point tp
+		  where tsmp.idn_user_group = u.idn_user_group
+		    and tp.idn_system_point =  pp.idn_system_point
+		    and tsmp.idn_met_point = tp.IDN_SYSTEM_POINT
+		    AND tp.group_code= 'METERED'
+		    AND ct.IDN_CUSTOMER_TYPE (+)= pp.IDN_CUSTOMER_TYPE    
+		    AND conp.idn_system_point (+)= pp.idn_contract_point  
+		    AND nvl(pp.end_date, pp.start_date) >= pp.start_date
+		    AND pp.version_date = (SELECT max(ppx.version_date) 
+		                                FROM tpa_tsystem_point_param ppx 
+		                                WHERE pp.idn_system_point = ppx.idn_system_point 
+		                                  AND pp.start_date = ppx.start_date) 
+		     <if test="idnShipper != null and idnShipper != ''">                       
+		    	and tsmp.idn_user_group = #{idnShipper}
+		    </if>
+		     <if test="idnMeteringPoint != null and idnMeteringPoint != ''">
+		    	and tsmp.idn_met_point = #{idnMeteringPoint}
+		    </if>
+		 group by to_number(tp.idn_system_point || ct.idn_customer_type || conp.idn_system_point),
+		 		  tsmp.idn_shipper_met_point,
+		          tsmp.idn_met_point,
+		          tp.POINT_CODE,
+		          tsmp.idn_user_group,
+		          ct.idn_customer_type,  
+		          ct.TYPE_DESC,
+		          conp.idn_system_point, conp.point_code
+    </select>
+    
+    <select id="selectMetPointCustomerGroup" resultMap="MeteredPointShipper">
+    	SELECT to_number(tp.idn_system_point || ct.idn_customer_type || conp.idn_system_point) as compositeKey,
+    			tp.idn_system_point as IDN_MET_POINT, tp.POINT_CODE as POINT_CODE,
+		       ct.idn_customer_type as idn_customer_type,  
+		       ct.TYPE_DESC as TYPE_DESC ,
+		       conp.idn_system_point as idn_GROUP_ID , conp.point_code as GROUP_ID
+		  FROM tpa_vsystem_point tp, 
+		          tpa_tsystem_point_param  pp, 
+		          tpa_tcustomer_type ct,
+		          tpa_tsystem_point nomp, 
+		          tpa_tsystem_point conp,           
+		          tpa_varea_tpa a, 
+		          TPA_VZONE_TPA z, 
+		          tpa_tpipeline_system ps, 
+		          tpa_tsubarea sub
+		    WHERE tp.idn_system_point =  pp.idn_system_point
+		      AND tp.group_code= 'METERED'
+		      AND ct.IDN_CUSTOMER_TYPE (+)= pp.IDN_CUSTOMER_TYPE
+		      AND nomp.idn_system_point (+)= pp.idn_nomination_point
+		      AND conp.idn_system_point (+)= pp.idn_contract_point     
+		      AND sub.IDN_SUBAREA (+) = pp.IDN_SUBAREA
+		      AND a.idn_area = nomp.IDN_AREA
+		      AND a.IDN_ZONE = z.IDN_ZONE
+		      AND z.IDN_PIPELINE_SYSTEM = ps.IDN_PIPELINE_SYSTEM 
+		      AND nvl(pp.end_date, pp.start_date) >= pp.start_date
+		      AND pp.version_date = (SELECT max(ppx.version_date) 
+		                                FROM tpa_tsystem_point_param ppx 
+		                                WHERE pp.idn_system_point = ppx.idn_system_point 
+		                                  AND pp.start_date = ppx.start_date)
+		      AND ps.idn_pipeline_system = #{idnSystem}
+		   
+		<if test="idnMeteringPoint != null and idnMeteringPoint != ''">
+		   	AND tp.idn_system_point = #{idnMeteringPoint}
+		</if>
+		
+		<if test="idnCustomerType != null and idnCustomerType != ''">
+		  	AND ct.idn_customer_type = #{idnCustomerType}
+		</if>
+		
+		<if test="idnGroup != null and idnGroup != ''">
+		  	AND conp.idn_system_point = #{idnGroup}
+		</if>
+		  order by tp.POINT_CODE
+    </select>
+    
+    <insert id="insertMeteredPointShipper">
+    	INSERT INTO TPA_TSHIPPER_MET_POINT(IDN_SHIPPER_MET_POINT,
+                                   IDN_USER_GROUP,
+                                   IDN_MET_POINT,
+                                   ACTIVE_DATE_FROM,
+                                   ACTIVE_DATE_TO,
+                                   AUD_INS_DATE,
+                                   AUD_LAST_DATE,
+                                   AUD_INS_USER,
+                                   AUD_LAST_USER)
+		VALUES(tpa_sshipper_met_point.nextval, 
+		#{idnShipper}, 
+		#{idnMeteringPoint}, 
+		#{startDate}, 
+		#{endDate}, 
+		sysdate, 
+		sysdate, 
+		#{userName}, 
+		#{userName}) 
+    </insert>
+    
+    <delete id="deleteMeteredPointShipper">
+    	DELETE TPA_TSHIPPER_MET_POINT T WHERE T.IDN_SHIPPER_MET_POINT = #{idnMeterdPointShipper}
+    </delete>
   
 </mapper>

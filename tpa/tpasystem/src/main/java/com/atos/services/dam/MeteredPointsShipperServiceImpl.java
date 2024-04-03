@@ -62,11 +62,10 @@ public class MeteredPointsShipperServiceImpl implements MeteredPointsShipperServ
 	}
 
 	@Override
-	public String insertMeteredPointShipper(MeteredPointShipperBean meteredPoint, List<MeteredPointShipperBean> listMeteredPoint, String userName) throws Throwable {
+	public String insertMeteredPointShipper(MeteredPointShipperBean meteredPoint, List<MeteredPointShipperBean> listMeteredPoint) throws Throwable {
 		try {
 			listMeteredPoint.forEach(item -> {
 				meteredPoint.setIdnMeteringPoint(item.getIdnMeteringPoint());
-				meteredPoint.setUserName(userName);
 				meteredPointsShipperMapper.insertMeteredPointShipper(meteredPoint);
 			});
 		} catch (Exception e) {
@@ -85,6 +84,16 @@ public class MeteredPointsShipperServiceImpl implements MeteredPointsShipperServ
 			throw new Exception("1");
 		}
 		return "0";
+	}
+
+	@Override
+	public String updateDateMeteredPointShipper(MeteredPointShipperBean item) {
+		Integer ins = meteredPointsShipperMapper.updateDateMeteredPointShipper(item);
+		if(ins != 1) {
+			return "1";
+		}else {
+			return "0";
+		}
 	}
 
 	

@@ -24,8 +24,10 @@ public interface MeteredPointsShipperService extends Serializable {
 	
 	public List<MeteredPointShipperBean> selectMetPointCustomerGroup (MeteredPointShipperBean item);
 	
-	public String insertMeteredPointShipper(MeteredPointShipperBean meteredPoint, List<MeteredPointShipperBean> listMeteredPoint, String userName) throws Throwable;
+	public String insertMeteredPointShipper(MeteredPointShipperBean meteredPoint, List<MeteredPointShipperBean> listMeteredPoint) throws Throwable;
 	
 	public String deleteMeteredPointShipper(List<MeteredPointShipperBean> listMeteredPoint) throws Throwable;
+	
+	public String updateDateMeteredPointShipper(MeteredPointShipperBean item);
 
 }

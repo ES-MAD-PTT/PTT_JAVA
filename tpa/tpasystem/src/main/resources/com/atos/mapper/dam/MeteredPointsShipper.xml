@@ -108,7 +108,7 @@
     </select>
     
     <select id="selectMeteredPointShipper" resultMap="MeteredPointShipper">
-    	with ship_met_point as (select mt.idn_user_group,
+    	with ship_met_point as (select mt.IDN_SHIPPER_MET_POINT, mt.idn_user_group,
 		       u.user_group_id,
 		       mt.active_date_from,
 		       mt.active_date_to,
@@ -131,7 +131,7 @@
 			 )
 			 select * 
 			from  ship_met_point mt  
-			group by  mt.idn_user_group, mt.user_group_id, mt.active_date_from, mt.active_date_to, mt.idn_met_point
+			group by  mt.IDN_SHIPPER_MET_POINT, mt.idn_user_group, mt.user_group_id, mt.active_date_from, mt.active_date_to, mt.idn_met_point
 			order by mt.idn_user_group, mt.active_date_from
     </select>
     
@@ -247,5 +247,13 @@
     <delete id="deleteMeteredPointShipper">
     	DELETE TPA_TSHIPPER_MET_POINT T WHERE T.IDN_SHIPPER_MET_POINT = #{idnMeterdPointShipper}
     </delete>
+    
+    <update id="updateDateMeteredPointShipper" parameterType="com.atos.beans.dam.MeteredPointShipperBean">
+		update TPA_TSHIPPER_MET_POINT smp
+		set smp.ACTIVE_DATE_TO = #{endDate},    
+		    smp.AUD_INS_USER = #{userName},
+            smp.AUD_LAST_USER = #{userName}
+		where smp.IDN_SHIPPER_MET_POINT = #{idnMeterdPointShipper}
+	</update>
   
 </mapper>

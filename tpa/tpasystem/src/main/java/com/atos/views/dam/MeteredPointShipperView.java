@@ -169,6 +169,7 @@ public class MeteredPointShipperView  extends CommonView implements Serializable
 		edit = true;
 		selection = item;
 		selection.setIdnSystem(getChangeSystemView().getIdn_active());
+		selection.setUserName(getUser().getUsername());
 		selectionTableAddEdit = new ArrayList<MeteredPointShipperBean>();
 		allDataTableAddEdit = new ArrayList<MeteredPointShipperBean>();
 		copySelectionTableAddEdit = new ArrayList<MeteredPointShipperBean>();
@@ -256,7 +257,7 @@ public class MeteredPointShipperView  extends CommonView implements Serializable
 				log.error(errorMsg);
 				return;
 			}
-			error = service.insertMeteredPointShipper(selection, selectionTableAddEdit, getUser().getUsername());
+			error = service.insertMeteredPointShipper(selection, selectionTableAddEdit);
 			switch (error) {
 			case "0":
 				String[] par2 = {selection.getShipper(), msgs.getString("metPointShipper_msg") };
@@ -272,25 +273,29 @@ public class MeteredPointShipperView  extends CommonView implements Serializable
 				log.error(errorMsg);
 				break;
 			}
-		}else {
+		}else if(edit) {
 			String updateMsgOk = CommonView.getMessageResourceString("update_ok", params);
 	    	String updateMsgNotOk= CommonView.getMessageResourceString("update_noOk", params);
-			// Filtrar objetos que se agregarán
-	        List<MeteredPointShipperBean> addMeteredPoint = selectionTableAddEdit.stream()
-	                .filter(object -> copySelectionTableAddEdit.stream().noneMatch(o -> o.getCompositeKey() == object.getCompositeKey()))
-	                .collect(Collectors.toList());
-
-	        // Filtrar objetos que se eliminarán
-	        List<MeteredPointShipperBean> deleteMeteredPoint = copySelectionTableAddEdit.stream()
-	                .filter(object -> selectionTableAddEdit.stream().noneMatch(o -> o.getCompositeKey() == object.getCompositeKey()))
-	                .collect(Collectors.toList());
-			
-	        if(addMeteredPoint != null && !addMeteredPoint.isEmpty()) {
-	        	error = service.insertMeteredPointShipper(selection, addMeteredPoint, getUser().getUsername());
-	        }
-	        if(deleteMeteredPoint != null && !deleteMeteredPoint.isEmpty()) {
-	        	error = service.deleteMeteredPointShipper(deleteMeteredPoint);
-	        }
+			if(!renderedEndDateEdit) {
+				// Filtrar objetos que se agregarán
+		        List<MeteredPointShipperBean> addMeteredPoint = selectionTableAddEdit.stream()
+		                .filter(object -> copySelectionTableAddEdit.stream().noneMatch(o -> o.getCompositeKey() == object.getCompositeKey()))
+		                .collect(Collectors.toList());
+	
+		        // Filtrar objetos que se eliminarán
+		        List<MeteredPointShipperBean> deleteMeteredPoint = copySelectionTableAddEdit.stream()
+		                .filter(object -> selectionTableAddEdit.stream().noneMatch(o -> o.getCompositeKey() == object.getCompositeKey()))
+		                .collect(Collectors.toList());
+				
+		        if(addMeteredPoint != null && !addMeteredPoint.isEmpty()) {
+		        	error = service.insertMeteredPointShipper(selection, addMeteredPoint);
+		        }
+		        if(deleteMeteredPoint != null && !deleteMeteredPoint.isEmpty()) {
+		        	error = service.deleteMeteredPointShipper(deleteMeteredPoint);
+		        }
+			}else {
+				error = service.updateDateMeteredPointShipper(selection);
+			}
 			switch (error) {
 			case "0":
 				String[] par2 = {selection.getShipper(), msgs.getString("metPointShipper_msg") };

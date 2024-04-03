@@ -26,4 +26,6 @@ public interface MeteredPointsShipperMapper {
 	
 	public int deleteMeteredPointShipper(MeteredPointShipperBean item);
 	
+	public int updateDateMeteredPointShipper(MeteredPointShipperBean item);
+	
 }

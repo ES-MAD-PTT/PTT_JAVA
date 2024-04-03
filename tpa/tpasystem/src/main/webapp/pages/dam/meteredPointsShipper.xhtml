@@ -296,14 +296,14 @@
 					<p:dataTable widgetVar="w_addMeteredPointShipper"
 						id="addMeteredPointShipperId" var="item"
 						value="#{meteredPointShipperView.allDataTableAddEdit}"
-						reflow="true" rowSelectMode="checkbox"
+						reflow="true" rowSelectMode="checkbox" disabledSelection="#{meteredPointShipperView.disabledEdit}"
 						rowKey="#{item.compositeKey}"
 						selection="#{meteredPointShipperView.selectionTableAddEdit}"
 						style="margin-bottom:20px;border-collapse:collapse"
 						paginator="true" rows="10" rowsPerPageTemplate="5,10,15,20,25"
 						scrollable="true" scrollHeight="100%" resizableColumns="false">
 
-						<p:column selectionMode="multiple" rendered="#{!meteredPointShipperView.disabledEdit}"
+						<p:column selectionMode="multiple" 
 							style="width:36px;text-align:center" />
 						<p:column headerText="#{msg['metPointShipper_metered_point_id']}">
 							<h:outputText value="#{item.meteringPoint}" />

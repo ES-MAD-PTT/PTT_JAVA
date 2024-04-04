@@ -108,12 +108,11 @@
     </select>
     
     <select id="selectMeteredPointShipper" resultMap="MeteredPointShipper">
-    	with ship_met_point as (select mt.IDN_SHIPPER_MET_POINT, mt.idn_user_group,
+    	with ship_met_point as (select mt.idn_user_group,
 		       u.user_group_id,
 		       mt.active_date_from,
-		       mt.active_date_to,
-		      (select idn_system_point from tpa_tsystem_point where idn_system_point in (select idn_system_point from tpa_tsystem_point_param 
-		                                                                               where idn_system_point = mt.idn_met_point)) as idn_met_point
+		       mt.active_date_to
+		     
 			from tpa_tshipper_met_point mt,
 			     Tpa_Tuser_Group u
 			     
@@ -131,7 +130,7 @@
 			 )
 			 select * 
 			from  ship_met_point mt  
-			group by  mt.IDN_SHIPPER_MET_POINT, mt.idn_user_group, mt.user_group_id, mt.active_date_from, mt.active_date_to, mt.idn_met_point
+			group by mt.idn_user_group, mt.user_group_id, mt.active_date_from, mt.active_date_to
 			order by mt.idn_user_group, mt.active_date_from
     </select>
     
@@ -162,12 +161,10 @@
 		                                FROM tpa_tsystem_point_param ppx 
 		                                WHERE pp.idn_system_point = ppx.idn_system_point 
 		                                  AND pp.start_date = ppx.start_date) 
-		     <if test="idnShipper != null and idnShipper != ''">                       
-		    	and tsmp.idn_user_group = #{idnShipper}
-		    </if>
-		     <if test="idnMeteringPoint != null and idnMeteringPoint != ''">
-		    	and tsmp.idn_met_point = #{idnMeteringPoint}
-		    </if>
+		                           
+		    and tsmp.idn_user_group = #{idnShipper}
+		    and tsmp.active_date_from = #{startDate}
+   			and tsmp.active_date_to = #{endDate}
 		 group by to_number(tp.idn_system_point || ct.idn_customer_type || conp.idn_system_point),
 		 		  tsmp.idn_shipper_met_point,
 		          tsmp.idn_met_point,
@@ -176,6 +173,7 @@
 		          ct.idn_customer_type,  
 		          ct.TYPE_DESC,
 		          conp.idn_system_point, conp.point_code
+		 order by tp.POINT_CODE, ct.TYPE_DESC, conp.point_code asc
     </select>
     
     <select id="selectMetPointCustomerGroup" resultMap="MeteredPointShipper">

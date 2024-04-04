@@ -173,7 +173,7 @@ public class MeteredPointShipperView  extends CommonView implements Serializable
 		selectionTableAddEdit = new ArrayList<MeteredPointShipperBean>();
 		allDataTableAddEdit = new ArrayList<MeteredPointShipperBean>();
 		copySelectionTableAddEdit = new ArrayList<MeteredPointShipperBean>();
-		if(selection != null && selection.getIdnShipper() != null && selection.getIdnMeteringPoint() != null) {
+		if(selection != null) {
 			selectionTableAddEdit = service.selectAllDataMeteredPointShipper(selection);
 			copySelectionTableAddEdit.addAll(selectionTableAddEdit);
 		}

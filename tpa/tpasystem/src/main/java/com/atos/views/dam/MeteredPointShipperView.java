@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -25,6 +26,7 @@ import com.atos.beans.dam.MeteredPointShipperBean;
 import com.atos.filters.dam.MeteredPointsShipperFilter;
 import com.atos.services.dam.MeteredPointsShipperService;
 import com.atos.utils.Constants;
+import com.atos.utils.DateUtil;
 import com.atos.views.CommonView;
 
 @ManagedBean(name = "meteredPointShipperView")
@@ -51,7 +53,7 @@ public class MeteredPointShipperView  extends CommonView implements Serializable
 	private Map<BigDecimal, Object> customerTypes;
 	private Map<BigDecimal, Object> groups;
 	
-	private Calendar sysdate = Calendar.getInstance();
+	private Date sysdate = DateUtil.getToday();
 
 	@ManagedProperty("#{meteredPointsShipperService}")
 	transient private MeteredPointsShipperService service;
@@ -67,12 +69,12 @@ public class MeteredPointShipperView  extends CommonView implements Serializable
 	public void setItems(List<MeteredPointShipperBean> items) {
 		this.items = items;
 	}
-	
-	public Calendar getSysdate() {
+
+	public Date getSysdate() {
 		return sysdate;
 	}
 
-	public void setSysdate(Calendar sysdate) {
+	public void setSysdate(Date sysdate) {
 		this.sysdate = sysdate;
 	}
 
@@ -158,6 +160,7 @@ public class MeteredPointShipperView  extends CommonView implements Serializable
 	public void prepareNew() {
 		selection = new MeteredPointShipperBean();
 		selection.setIdnSystem(getChangeSystemView().getIdn_active());
+		selection.setUserName(getUser().getUsername());
 		chargeAddEditTable();
 		disabledEdit = false;
 		renderedButtonAcceptEdit = true;
@@ -179,21 +182,21 @@ public class MeteredPointShipperView  extends CommonView implements Serializable
 		}
 		selection.setIdnMeteringPoint(null);
 		chargeAddEditTable();
-		if(selection.getIdnShipper() != null && selection.getStartDate().before(sysdate.getTime()) && selection.getEndDate().after(sysdate.getTime())) {
+		if(selection.getIdnShipper() != null && selection.getStartDate().before(Calendar.getInstance().getTime()) && selection.getEndDate().after(Calendar.getInstance().getTime())) {
 			//Cuando el dia de hoy está entre las dos fecahs
 			//Deshabilitado todo y se puede cambiar fecha fin
 			disabledEdit = true;
 			renderedButtonAcceptEdit = true;
 			renderedEndDateEdit = true;
 		}
-		if(selection.getIdnShipper() != null && selection.getEndDate().before(sysdate.getTime())) {
+		if(selection.getIdnShipper() != null && selection.getEndDate().before(Calendar.getInstance().getTime())) {
 			//Cuando las fechas son a pasado
 			//Deshabilitado todo
 			disabledEdit = true;
 			renderedButtonAcceptEdit = false;
 			renderedEndDateEdit = false;
 		}
-		if(selection.getIdnShipper() != null && selection.getStartDate().after(sysdate.getTime())) {
+		if(selection.getIdnShipper() != null && selection.getStartDate().after(Calendar.getInstance().getTime())) {
 			//Cuando las fechas son a futuro 
 			//habilitar todo
 			disabledEdit = false;
@@ -279,12 +282,12 @@ public class MeteredPointShipperView  extends CommonView implements Serializable
 			if(!renderedEndDateEdit) {
 				// Filtrar objetos que se agregarán
 		        List<MeteredPointShipperBean> addMeteredPoint = selectionTableAddEdit.stream()
-		                .filter(object -> copySelectionTableAddEdit.stream().noneMatch(o -> o.getCompositeKey() == object.getCompositeKey()))
+		                .filter(object -> copySelectionTableAddEdit.stream().noneMatch(o -> o.getCompositeKey().compareTo(object.getCompositeKey()) == 0))
 		                .collect(Collectors.toList());
 	
 		        // Filtrar objetos que se eliminarán
 		        List<MeteredPointShipperBean> deleteMeteredPoint = copySelectionTableAddEdit.stream()
-		                .filter(object -> selectionTableAddEdit.stream().noneMatch(o -> o.getCompositeKey() == object.getCompositeKey()))
+		                .filter(object -> selectionTableAddEdit.stream().noneMatch(o -> o.getCompositeKey().compareTo(object.getCompositeKey()) == 0))
 		                .collect(Collectors.toList());
 				
 		        if(addMeteredPoint != null && !addMeteredPoint.isEmpty()) {

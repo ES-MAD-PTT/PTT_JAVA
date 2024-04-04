@@ -211,9 +211,9 @@
 									pattern="dd/MM/yyyy" mask="true"
 									rendered="#{selection.idnShipper == null}"
 									value="#{selection.startDate}" navigator="true"
-									showOn="button">
-									<p:ajax event="dateSelect" update="newStartDateId"></p:ajax>
-									<p:ajax event="change" update="newStartDateId"></p:ajax>
+									showOn="button" mindate="#{meteredPointShipperView.sysdate}">
+									<p:ajax event="dateSelect" update="newStartDateId, newEndDateId"></p:ajax>
+									<p:ajax event="change" update="newStartDateId, newEndDateId"></p:ajax>
 								</p:calendar>
 								<h:outputText value="#{selection.startDate}"
 									rendered="#{selection.idnShipper != null}">
@@ -228,7 +228,7 @@
 									pattern="dd/MM/yyyy" mask="true"
 									rendered="#{meteredPointShipperView.renderedEndDateEdit}"
 									value="#{selection.endDate}" navigator="true"
-									showOn="button">
+									showOn="button" mindate="#{selection.startDate}">
 									<p:ajax event="dateSelect" update="newEndDateId"></p:ajax>
 									<p:ajax event="change" update="newEndDateId"></p:ajax>
 								</p:calendar>

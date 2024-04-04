@@ -133,11 +133,8 @@
 								</shiro:hasPermission>
 								<shiro:hasPermission
 									name="#{changeSystemView.system}.DAM.METERING.SHIPPER.QUERY">
-									<h:commandLink style="float:right">
+									<h:commandLink style="float:right" actionListener="#{meteredPointShipperView.downloadFile}">
 										<p:graphicImage name="/images/excel.png" width="24" />
-										<p:dataExporter type="xls" target="contractNomPoints1"
-											fileName="ContractPoints"
-											postProcessor="#{meteredPointShipperView.postProcessXLS}" />
 									</h:commandLink>
 								</shiro:hasPermission>
 							</p:outputPanel>

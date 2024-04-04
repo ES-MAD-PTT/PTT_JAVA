@@ -1,8 +1,13 @@
 package com.atos.views.dam;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -18,8 +23,11 @@ import javax.faces.context.FacesContext;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.primefaces.context.RequestContext;
-import org.primefaces.event.RowEditEvent;
 
 import com.atos.beans.MessageBean;
 import com.atos.beans.dam.MeteredPointShipperBean;
@@ -27,6 +35,7 @@ import com.atos.filters.dam.MeteredPointsShipperFilter;
 import com.atos.services.dam.MeteredPointsShipperService;
 import com.atos.utils.Constants;
 import com.atos.utils.DateUtil;
+import com.atos.utils.POIXSSFExcelUtils;
 import com.atos.views.CommonView;
 
 @ManagedBean(name = "meteredPointShipperView")
@@ -344,20 +353,9 @@ public class MeteredPointShipperView  extends CommonView implements Serializable
 		return groups;
 	}
 	
-	public void delete() {
-		
-	}
-	
-	public void postProcessXLS(Object document) {
-		
-	}
-	
-	public void onRowEdit(RowEditEvent event) {
-		
-	}
-	
-	public void onRowCancel(RowEditEvent event) {
-		
+	public void downloadFile() {
+		File file = loadRequest();
+		POIXSSFExcelUtils.downloadFile(file);
 	}
 
 	//*********************Filters*************************************************
@@ -369,176 +367,86 @@ public class MeteredPointShipperView  extends CommonView implements Serializable
 	public Map<BigDecimal, Object> getShippers() {
 		return service.selectShippers();
 	}
+	
+	//*********************Other methods***********************************************
+	
+	private File loadRequest() {
+		ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication().getResourceBundle(FacesContext.getCurrentInstance(),"msg");
+		File file = null;
+		try {
+			Row row = null;
+			Cell cell = null;
+			int rowNum = 0;
+			XSSFWorkbook workBook = new XSSFWorkbook();
+			XSSFSheet sheet = workBook.createSheet("Data");
+			List<String> headerTable = Arrays.asList(msgs.getString("metPointShipper_shipper"), msgs.getString("metPointShipper_startDate"), msgs.getString("metPointShipper_endDate"));
+			List<String> headerTable2 = Arrays.asList(msgs.getString("metPointShipper_metered_point_id"), msgs.getString("metPointShipper_customer_type"), msgs.getString("metPointShipper_group_id"));
+			
+			row = sheet.createRow(rowNum);
+			for(int z = 0; z < headerTable.size(); z++) {
+				cell = row.createCell(z);
+				cell.setCellValue(headerTable.get(z));
+			}
+			rowNum ++;
+			if(items != null && !items.isEmpty()) {
+				for(int i = 0; i < items.size(); i++) {
+					row = sheet.createRow(rowNum);
+					for(int j = 0; j < 3; j++) {
+						cell = row.createCell(j);
+						switch (j) {
+						case 0:
+							cell.setCellValue(items.get(i).getShipper());
+							break;
+						case 1:
+							cell.setCellValue(items.get(i).getStartDate());
+							break;
+						case 2:
+							cell.setCellValue(items.get(i).getEndDate());
+							break;
+						}
+					}
+					rowNum++;
+					row = sheet.createRow(rowNum);
+					for(int k = 0; k < headerTable2.size(); k++) {
+						cell = row.createCell(k);
+						cell.setCellValue(headerTable2.get(k));
+					}
+					selectionTableAddEdit = new ArrayList<MeteredPointShipperBean>();
+					selectionTableAddEdit = service.selectAllDataMeteredPointShipper(items.get(i));
+					rowNum++;
+					if(selectionTableAddEdit != null && !selectionTableAddEdit.isEmpty()) {
+						for(int m = 0; m < selectionTableAddEdit.size(); m++) {
+							row = sheet.createRow(rowNum);
+							for(int n = 0; n < 3; n++) {
+								cell = row.createCell(n);
+								switch (n) {
+								case 0:
+									cell.setCellValue(selectionTableAddEdit.get(m).getMeteringPoint());
+									break;
+								case 1:
+									cell.setCellValue(selectionTableAddEdit.get(m).getCustomerType());
+									break;
+								case 2:
+									cell.setCellValue(selectionTableAddEdit.get(m).getGroup());
+									break;
+								}
+							}
+							rowNum++;
+						}
+					}
+				}
+			}
 
-	
+			FileOutputStream outFile = new FileOutputStream("MeteredPointShipper.xlsx");
+			workBook.write(outFile);
+			outFile.close();
+			file = new File("MeteredPointShipper.xlsx");
 
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	//*********************************************************************************
-//	public void onRowEdit(RowEditEvent event) {
-//
-//		ContractNomPointBean contractNomPoint = (ContractNomPointBean) event.getObject();
-//
-//		String errorMsg = null;
-//	    
-//    	ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication().getResourceBundle(FacesContext.getCurrentInstance(),"msg");
-//    	String[] params = {msgs.getString("contractNomPoint") };
-//    	String summaryMsgOk = CommonView.getMessageResourceString("update_ok", params);
-//    	String summaryMsgNotOk= CommonView.getMessageResourceString("update_noOk", params);
-//		
-//		if (contractNomPoint.getEndDate() != null) {
-//			if (contractNomPoint.getStartDate().after(contractNomPoint.getEndDate())) {
-//				errorMsg = msgs.getString("start_previous_end"); //start_previous_end= Start date must be previous to end date
-//				getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
-//		    	log.error(errorMsg);
-//				return;
-//			}
-//
-//		}
-//
-//		String error = "0";
-//		try {
-//			error = service.updateContractNomPoint(contractNomPoint);
-//		} catch (Exception e) {
-//			log.catching(e);
-//			// we assign the return message
-//			error = e.getMessage();
-//		}
-//		String[] par2 = {contractNomPoint.getContract_id()+"-"+contractNomPoint.getNomination_point(),msgs.getString("contractNomPoint")};
-//		
-//		if (error != null && error.equals("0")) {
-//			String msg = CommonView.getMessageResourceString("updating_ok", par2);
-//			getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.INFO,summaryMsgOk, msg, Calendar.getInstance().getTime()));
-//			log.info("ContractNomPoint Updated: " + contractNomPoint.toString(), Calendar.getInstance().getTime());
-//		} else if (error != null && error.equals("-1")) {
-//			String msg = CommonView.getMessageResourceString("error_updating", par2);
-//			getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.ERROR,summaryMsgNotOk, msg, Calendar.getInstance().getTime()));
-//			log.info("Error updating  ContractNomPoint " + contractNomPoint.toString(), Calendar.getInstance().getTime());
-//		} else if (error != null && error.equals("-2")) {
-//			String msg = CommonView.getMessageResourceString("error_updating", par2);
-//			getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.ERROR,summaryMsgNotOk, msg, Calendar.getInstance().getTime()));
-//			log.info("Error updating/insert ContractNomPointParam " + contractNomPoint.toString(),	Calendar.getInstance().getTime());
-//		} else if (error != null && error.equals("-10")) {
-//			String msg = CommonView.getMessageResourceString("error_updating", par2);
-//			getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.ERROR,summaryMsgNotOk, msg, Calendar.getInstance().getTime()));
-//			log.info("Error Updating ContractNomPointParam. ContractNomPointParam, Error: " + error + ". "	+ contractNomPoint.toString(), Calendar.getInstance().getTime());
-//		} else {
-//			String msg = CommonView.getMessageResourceString("error_updating", par2);
-//			getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.ERROR,summaryMsgNotOk, msg, Calendar.getInstance().getTime()));
-//			log.info("Error updating/insert ContractNomPoint. ContractNomPoint, Error: " + error + ". "+ contractNomPoint.toString(), Calendar.getInstance().getTime());
-//		}
-//		filters.setIdn_system(getChangeSystemView().getIdn_active());
-//		items = service.selectContractNomPoints(filters);
-//	}
-//
-//	public void onRowCancel(RowEditEvent event) {
-//	
-//
-//	}
-//
-//	public void cancel() {
-//		// RequestContext.getCurrentInstance().reset("formNewEntity");
-//		newContractNomPoint = new ContractNomPointBean();
-//		newContractNomPoint.setStartDate(sysdate.getTime());
-//		newContractNomPoint.setIdn_system(getChangeSystemView().getIdn_active());
-//
-//	}
-//
-//	public void save() {
-//
-//		String errorMsg = null;
-//    	ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication().getResourceBundle(FacesContext.getCurrentInstance(),"msg");
-//    	
-//    	
-//    	String[] params = {msgs.getString("contractNomPoint") };
-//    	String summaryMsgOk = CommonView.getMessageResourceString("insert_ok", params);
-//    	String summaryMsgNotOk= CommonView.getMessageResourceString("insert_noOk", params);
-//
-//		if (newContractNomPoint.getStartDate() != null) {
-//			if (newContractNomPoint.getStartDate().before(sysdate.getTime())) {
-//				errorMsg = msgs.getString("error_startDate_sysdate"); //error_startDate_sysdate= Start date must be later to sysdate
-//				getMessages().addMessage(Constants.head_menu[0], new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
-//				log.error(errorMsg);
-//				return;
-//			}
-//		}
-//
-//		if (newContractNomPoint.getEndDate() != null) {
-//			if (newContractNomPoint.getEndDate().before(sysdate.getTime())) {
-//				errorMsg = msgs.getString("error_endDate_sysdate"); //error_endDate_sysdate= End Date must be later to sysdate
-//				getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
-//				log.error(errorMsg);
-//				return;
-//			}
-//			if (newContractNomPoint.getStartDate().after(newContractNomPoint.getEndDate())) {
-//				errorMsg = msgs.getString("error_startEarlierEnd"); //error_startEarlierEnd = Start Date must be earlier or equal to End Date
-//				getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
-//				log.error(errorMsg );
-//				return;
-//			}
-//
-//		}
-//
-//		String error = "0";
-//		try {
-//			error = service.insertContractNomPoint(newContractNomPoint);
-//		} catch (Exception e) {
-//			log.catching(e);
-//			// we assign the return message
-//			error = e.getMessage();
-//		}
-//
-//		String[] par2 = {newContractNomPoint.getContract_id()+"-"+newContractNomPoint.getNomination_point(),msgs.getString("contractNomPoint") };
-//		
-//		if (error != null && error.equals("0")) {
-//			String msg = getMessageResourceString("inserting_ok", par2);
-//			getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.INFO,summaryMsgOk, msg, Calendar.getInstance().getTime()));
-//			log.info("ContractNomPoint Inserted ok" + newContractNomPoint.toString(), Calendar.getInstance().getTime());
-//		} else if (error != null && error.equals("-1")) {
-//			String msg = getMessageResourceString("error_aready_exit", par2); //error_aready_exit = The ID {0} already exists in the System
-//			getMessages().addMessage(Constants.head_menu[0], new MessageBean(Constants.ERROR,summaryMsgNotOk,msg, Calendar.getInstance().getTime()));
-//			log.info("Error inserting ContractNomPoint. The " + newContractNomPoint.toString() + " already exists in the System ", Calendar.getInstance().getTime());
-//		} else if (error != null && error.equals("-2")) {
-//			String msg = getMessageResourceString("error_inserting", par2);
-//			getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.ERROR,summaryMsgNotOk, msg, Calendar.getInstance().getTime()));			
-//			log.info("Error inserting contractNomPoint. Error inserting ContractNomPoint" + newContractNomPoint.toString(),Calendar.getInstance().getTime());
-//		} else if (error != null && error.equals("-3")) {
-//			String msg = getMessageResourceString("error_inserting", par2);
-//			getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.ERROR,summaryMsgNotOk, msg, Calendar.getInstance().getTime()));
-//			log.info("Error inserting contractNomPoint. Error inserting ContractNomPointParam"+ newContractNomPoint.toString(), Calendar.getInstance().getTime());
-//		} else if (error != null && error.equals("-4")) {
-//			String msg = getMessageResourceString("error_inserting", par2);
-//			getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.ERROR,summaryMsgNotOk, msg, Calendar.getInstance().getTime()));
-//			log.info("Error inserting contractNomPoint. Error inserting ContractNomPoint" + newContractNomPoint.toString(), Calendar.getInstance().getTime());
-//		} else if (error != null && error.equals("-5")) {
-//			String msg = getMessageResourceString("error_inserting", par2);
-//			getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.ERROR,summaryMsgNotOk, msg, Calendar.getInstance().getTime()));
-//			log.info("Error inserting contractNomPoint. Error inserting ContractNomPointParam(contract)"	+ newContractNomPoint.toString(), Calendar.getInstance().getTime());
-//		} else {
-//			String msg = getMessageResourceString("error_inserting", par2);
-//			getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.ERROR,summaryMsgNotOk, msg, Calendar.getInstance().getTime()));
-//			log.info("Error inserting contractNomPoint. Generic Error: "	+ newContractNomPoint.toString(), Calendar.getInstance().getTime());
-//		}
-//
-//		onSearch();
-//
-//		// clean the formu new after save
-//		newContractNomPoint = new ContractNomPointBean();
-//
-//	}
-
-
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return file;
+	}
 }

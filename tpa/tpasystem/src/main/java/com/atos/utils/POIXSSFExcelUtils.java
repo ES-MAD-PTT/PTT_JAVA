@@ -1,10 +1,21 @@
 package com.atos.utils;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.Closeable;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+
+import javax.activation.MimetypesFileTypeMap;
+import javax.faces.context.ExternalContext;
+import javax.faces.context.FacesContext;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.hssf.usermodel.HSSFFont;
@@ -342,5 +353,72 @@ public class POIXSSFExcelUtils implements Serializable {
 		
 		
 		return style;
+	}
+	
+	public static void downloadFile(File file) {
+		int DEFAULT_BUFFER_SIZE = 10240;
+		FacesContext facesContext = FacesContext.getCurrentInstance();
+		BufferedInputStream input = null;
+		BufferedOutputStream output = null;
+ 
+		// Prepare.
+		try {
+			ExternalContext externalContext = facesContext.getExternalContext();
+			HttpServletResponse response = (HttpServletResponse) externalContext.getResponse();
+ 
+			// Open file.
+			input = new BufferedInputStream(new FileInputStream(file), DEFAULT_BUFFER_SIZE);
+			// Init servlet response.
+			response.reset();
+			response.setContentType(new MimetypesFileTypeMap().getContentType(file));
+			response.setContentLength((int) file.length());
+			response.setHeader("Content-disposition", "attachment; filename=\"" + file.getName() + "\"");
+ 
+			try {
+				output = new BufferedOutputStream(response.getOutputStream(), DEFAULT_BUFFER_SIZE);
+ 
+				// Write file contents to response.
+				byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
+				int length;
+				while ((length = input.read(buffer)) > 0) {
+					output.write(buffer, 0, length);
+				}
+ 
+				// Finalize task.
+				output.flush();
+ 
+				// Inform JSF that it doesn't need to handle response.
+				// This is very important, otherwise you will get the following
+				// exception in the logs:
+				// java.lang.IllegalStateException: Cannot forward after
+				// response has
+				// been committed.
+				facesContext.responseComplete();
+ 
+			} catch (IOException err) {
+				err.printStackTrace();
+			}
+ 
+		} catch (Exception re) {
+			// return UiConstants.FAILURE;
+		} finally {
+			// Gently close streams.
+			close(output);
+			close(input);
+		}
+	}
+ 
+	private static void close(Closeable resource) {
+		if (resource != null) {
+			try {
+				resource.close();
+			} catch (IOException e) {
+				// Do your thing with the exception. Print it, log it or mail
+				// it. It may be useful to
+				// know that this will generally only be thrown when the client
+				// aborted the download.
+				e.printStackTrace();
+			}
+		}
 	}
 }

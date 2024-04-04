@@ -7,7 +7,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -21,12 +23,18 @@ import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.hssf.usermodel.HSSFFont;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.hssf.util.HSSFColor;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.DataFormat;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 
 public class POIXSSFExcelUtils implements Serializable {
@@ -420,5 +428,69 @@ public class POIXSSFExcelUtils implements Serializable {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	public static Font createFont(XSSFWorkbook wb, short fontColor, short fontHeight, boolean fontBold) {
+		Font font = wb.createFont();
+		font.setBold(fontBold);
+		font.setColor(fontColor);
+		font.setFontName("Calibri");
+		font.setFontHeightInPoints(fontHeight);
+ 
+		return font;
+	}
+	
+	public static CellStyle createStyle(XSSFWorkbook wb, Font font, short cellAlign, short cellColor, boolean cellBorder, short cellBorderColor, short border, 
+			boolean numberFormat,short dataFormat) {
+		
+		CellStyle style = wb.createCellStyle();
+		style.setFont(font);
+		style.setAlignment(cellAlign);
+		style.setFillForegroundColor(cellColor);
+		style.setFillPattern(CellStyle.SOLID_FOREGROUND);
+		
+		if (cellBorder) {
+			style.setBorderTop(border);
+			style.setBorderLeft(border);
+			style.setBorderRight(border);
+			style.setBorderBottom(border);
+ 
+			style.setTopBorderColor(cellBorderColor);
+			style.setLeftBorderColor(cellBorderColor);
+			style.setRightBorderColor(cellBorderColor);
+			style.setBottomBorderColor(cellBorderColor);
+		}
+		if(numberFormat){
+			style.setDataFormat(dataFormat);
+		}
+		return style;
+	}
+	
+	public static void createSimpleHeaderTable(Sheet sheet, Row row, Cell cell, int numRow, int startCell, List<String> headerTitles, CellStyle style) {
+		row = sheet.createRow(numRow);
+		for(int i = 0, j = 0 + startCell; j < headerTitles.size() + startCell; i++, j++) {//Insertamos cabecera
+			cell = row.createCell(j);
+			cell.setCellStyle(style);
+			cell.setCellValue(headerTitles.get(i));	
+		}
+	}
+	
+	public static void createCellsTable(Row row, Cell cell, int startCell,CellStyle cellStyleTableFormatDate, CellStyle cellStyleTableFormatNumber, CellStyle cellNormalStyle, Object[] properties) {
+		for (int i = 0, j = 0 + startCell; j < properties.length + startCell; i++, j++) {
+	        cell = row.createCell(j);
+	        if(properties[i] != null) {
+	        	if (properties[i] instanceof Date) {
+		            cell.setCellValue((Date) properties[i]);
+		            cell.setCellStyle(cellStyleTableFormatDate);
+		        }else if (properties[i] instanceof Number) {
+		        	cell.setCellValue(((Number) properties[i]).doubleValue());
+		        	cell.setCellStyle(cellStyleTableFormatNumber);
+	        	}else if (properties[i] instanceof String) {
+	        		cell.setCellValue((String) properties[i]);
+	        	}
+	        }else {
+	        	cell.setCellValue("");
+	        }
+	    }
 	}
 }

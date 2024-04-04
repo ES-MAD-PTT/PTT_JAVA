@@ -145,17 +145,16 @@
 		        						/>
 	        						</shiro:hasPermission>
 	        						<shiro:hasPermission name="#{changeSystemView.system}.DAM.CONTRACT_NOMINATION.QUERY">
-	        							<!-- <h:commandLink style="float:right"
+	        							<h:commandLink style="float:right"
 											onclick="PrimeFaces.monitorDownload(start, stop);"
-											actionListener="#{contractNomPointView.downloadExcel}"
+											actionListener="#{contractNomPointView.downloadFile}"
 											rendered="#{not empty contractNomPointView.items}">
 											<p:graphicImage name="/images/excel.png" width="24" />
-											<p:fileDownload value="#{contractNomPointView.fileSC}" />
-										</h:commandLink> -->
-					        			<h:commandLink style="float:right">
+										</h:commandLink>
+					        			<!-- <h:commandLink style="float:right">
 										       <p:graphicImage name="/images/excel.png" width="24"/>
 										       <p:dataExporter type="xls" target="contractNomPoints1" fileName="ContractPoints" postProcessor="#{contractNomPointView.postProcessXLS}"/>
-										</h:commandLink>	 
+										</h:commandLink> -->	 
 								  </shiro:hasPermission>
 								</p:outputPanel>        										          
 					        </f:facet>

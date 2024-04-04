@@ -955,7 +955,7 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 			CellStyle cellStyleTableFormatNumber = POIXSSFExcelUtils.createStyle(workBook, contentFont, CellStyle.ALIGN_RIGHT, IndexedColors.WHITE.index, 
 					true, IndexedColors.GREY_80_PERCENT.index, CellStyle.BORDER_THIN, true, workBook.getCreationHelper().createDataFormat().getFormat("#,##0.00"));
 			CellStyle cellStyleTableFormatDate = POIXSSFExcelUtils.createStyle(workBook, contentFont, CellStyle.ALIGN_LEFT, IndexedColors.WHITE.index, 
-					true, IndexedColors.GREY_80_PERCENT.index, CellStyle.BORDER_THIN, true, workBook.getCreationHelper().createDataFormat().getFormat("dd-MMM-yyyy"));
+					true, IndexedColors.GREY_80_PERCENT.index, CellStyle.BORDER_THIN, true, workBook.getCreationHelper().createDataFormat().getFormat("dd-MM-yyyy"));
 			CellStyle cellNormalStyle = POIXSSFExcelUtils.createStyle(workBook, contentFont, CellStyle.ALIGN_LEFT, IndexedColors.WHITE.index, 
 					true, IndexedColors.GREY_80_PERCENT.index, CellStyle.BORDER_THIN, false, workBook.getCreationHelper().createDataFormat().getFormat("#,##0.00"));
 			

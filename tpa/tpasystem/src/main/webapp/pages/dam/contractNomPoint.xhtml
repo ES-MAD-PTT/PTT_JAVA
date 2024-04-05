@@ -146,7 +146,6 @@
 	        						</shiro:hasPermission>
 	        						<shiro:hasPermission name="#{changeSystemView.system}.DAM.CONTRACT_NOMINATION.QUERY">
 	        							<h:commandLink style="float:right"
-											onclick="PrimeFaces.monitorDownload(start, stop);"
 											actionListener="#{contractNomPointView.downloadFile}"
 											rendered="#{not empty contractNomPointView.items}">
 											<p:graphicImage name="/images/excel.png" width="24" />

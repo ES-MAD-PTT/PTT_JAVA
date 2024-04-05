@@ -385,13 +385,13 @@ public class MeteredPointShipperView  extends CommonView implements Serializable
 			Font contentFontBold = POIXSSFExcelUtils.createFont(workBook, IndexedColors.BLACK.index, (short)11, true);
 			Font contentFont = POIXSSFExcelUtils.createFont(workBook, IndexedColors.BLACK.index, (short)11, false);
 			CellStyle cellStyleTableBlueCenter = POIXSSFExcelUtils.createStyle(workBook, contentFontBold, CellStyle.ALIGN_CENTER, IndexedColors.PALE_BLUE.index, 
-					true, IndexedColors.GREY_80_PERCENT.index, CellStyle.BORDER_THIN, false, workBook.getCreationHelper().createDataFormat().getFormat("dd-MMM-yyyy"));
+					true, IndexedColors.GREY_80_PERCENT.index, CellStyle.BORDER_THIN, false, workBook.getCreationHelper().createDataFormat().getFormat("dd-MM-yyyy"));
 			CellStyle cellStyleTableGreyCenter = POIXSSFExcelUtils.createStyle(workBook, contentFontBold, CellStyle.ALIGN_CENTER, IndexedColors.GREY_25_PERCENT.index, 
-					true, IndexedColors.GREY_80_PERCENT.index, CellStyle.BORDER_THIN, false, workBook.getCreationHelper().createDataFormat().getFormat("dd-MMM-yyyy"));
+					true, IndexedColors.GREY_80_PERCENT.index, CellStyle.BORDER_THIN, false, workBook.getCreationHelper().createDataFormat().getFormat("dd-MM-yyyy"));
 			CellStyle cellStyleTableFormatNumber = POIXSSFExcelUtils.createStyle(workBook, contentFont, CellStyle.ALIGN_RIGHT, IndexedColors.WHITE.index, 
 					true, IndexedColors.GREY_80_PERCENT.index, CellStyle.BORDER_THIN, true, workBook.getCreationHelper().createDataFormat().getFormat("#,##0.00"));
 			CellStyle cellStyleTableFormatDate = POIXSSFExcelUtils.createStyle(workBook, contentFont, CellStyle.ALIGN_LEFT, IndexedColors.WHITE.index, 
-					true, IndexedColors.GREY_80_PERCENT.index, CellStyle.BORDER_THIN, true, workBook.getCreationHelper().createDataFormat().getFormat("dd-MMM-yyyy"));
+					true, IndexedColors.GREY_25_PERCENT.index, CellStyle.BORDER_THIN, true, workBook.getCreationHelper().createDataFormat().getFormat("dd-MM-yyyy"));
 			CellStyle cellNormalStyle = POIXSSFExcelUtils.createStyle(workBook, contentFont, CellStyle.ALIGN_LEFT, IndexedColors.WHITE.index, 
 					true, IndexedColors.GREY_80_PERCENT.index, CellStyle.BORDER_THIN, false, workBook.getCreationHelper().createDataFormat().getFormat("#,##0.00"));
 			List<String> headerTable1 = Arrays.asList(msgs.getString("metPointShipper_shipper"), msgs.getString("metPointShipper_startDate"), msgs.getString("metPointShipper_endDate"));

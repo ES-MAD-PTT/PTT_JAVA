@@ -451,7 +451,7 @@
 					<p:row>
 						<p:column>
 							<p:commandButton value="#{msg['save']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" validateClient="true"
-								action="#{contractNomPointView.edit}" update=":#{p:component('contractNomPoints2')},:formEditEntity"
+								action="#{contractNomPointView.edit}" update=":#{p:component('contractNomPoints1')},:formEditEntity"
 								onstart="PF('cargando').show()"
 								oncomplete="PF('dlgEditContractNomPoint').hide(),PF('cargando').hide()" disabled="#{contractNomPointView.isEndDateBeforeTomorrow()}"/>
 			        		<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close"

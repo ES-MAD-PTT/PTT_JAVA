@@ -19,7 +19,6 @@ import javax.faces.context.FacesContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.DataFormat;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
@@ -30,6 +29,7 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import com.atos.beans.MessageBean;
+import com.atos.beans.nominations.ShippersNominationReportsDailyBean;
 import com.atos.beans.nominations.ShippersNominationsReportsBean;
 import com.atos.filters.nominations.ShippersNominationsReportsFilter;
 import com.atos.services.nominations.ShippersNominationsReportsService;
@@ -49,6 +49,27 @@ public class ShippersNominationsReportsView extends CommonView implements Serial
 
 	private ShippersNominationsReportsFilter filters;
 	private List<ShippersNominationsReportsBean> items;
+	private ShippersNominationsReportsBean selected;
+	
+	// Detail tabs
+	private List<ShippersNominationReportsDailyBean> east_tab, west_tab, mix_tab;
+
+	private boolean showHideDaysEast1 = true; 
+	private String widthEast1 = "4300px"; 
+	private boolean showHideDaysEast2 = true; 
+	private String widthEast2 = "2500px"; 
+	private boolean showHideDaysWest1 = true; 
+	private String widthWest1 = "4300px"; 
+	private boolean showHideDaysWest2 = true; 
+	private String widthWest2 = "2850px"; 
+	private boolean showHideDaysEastWest1 = true; 
+	private String widthEastWest1 = "4300px"; 
+	private boolean showHideDaysEastWest2 = true; 
+	private String widthEastWest2 = "2850px"; 
+
+	// Detail tabs park/unpark
+	private List<ShippersNominationReportsDailyBean> east_tab_park, west_tab_park, mix_tab_park;
+	
 
 	@ManagedProperty("#{shippersNominationsReportsService}")
     transient private ShippersNominationsReportsService service;
@@ -79,6 +100,39 @@ public class ShippersNominationsReportsView extends CommonView implements Serial
 	public void setItems(List<ShippersNominationsReportsBean> items) {
 		this.items = items;
 	}
+
+	public ShippersNominationsReportsBean getSelected() {
+		return selected;
+	}
+
+	public void setSelected(ShippersNominationsReportsBean selected) {
+		this.selected = selected;
+	}
+
+	public List<ShippersNominationReportsDailyBean> getEast_tab() {
+		return east_tab;
+	}
+
+	public List<ShippersNominationReportsDailyBean> getWest_tab() {
+		return west_tab;
+	}
+
+	public List<ShippersNominationReportsDailyBean> getMix_tab() {
+		return mix_tab;
+	}
+
+	public List<ShippersNominationReportsDailyBean> getEast_tab_park() {
+		return east_tab_park;
+	}
+
+	public List<ShippersNominationReportsDailyBean> getWest_tab_park() {
+		return west_tab_park;
+	}
+
+	public List<ShippersNominationReportsDailyBean> getMix_tab_park() {
+		return mix_tab_park;
+	}
+
 
 	@PostConstruct
     public void init() {
@@ -260,10 +314,184 @@ public class ShippersNominationsReportsView extends CommonView implements Serial
 		return getUser().isUser_type(Constants.SHIPPER);
 	}
 	
-	public String is_warning_difference(ShippersNominationsReportsBean bean) {
+/*	public String is_warning_difference(ShippersNominationsReportsBean bean) {
 		if (bean.getDifference().compareTo(BigDecimal.ZERO) < 0)
 			return "Y";
 		return "N";
+	}*/
+
+	public void onRowSelect(ShippersNominationsReportsBean bean) {
+		this.setSelected(bean);
+		
+		Map<String, BigDecimal> map = service.selectZonesNomination();
+		
+		bean.setIdn_zone(map.get(Constants.EAST));
+		east_tab  = service.selectShipperNomReportsDailyDetail(bean);
+		east_tab_park = service.selectShipperNomReportsParkUnpark(bean);
+
+		bean.setIdn_zone(map.get(Constants.WEST));
+		west_tab  = service.selectShipperNomReportsDailyDetail(bean);
+		west_tab_park = service.selectShipperNomReportsParkUnpark(bean);
+
+		
+		bean.setIdn_zone(map.get(Constants.MIX));
+		mix_tab  = service.selectShipperNomReportsDailyDetail(bean);
+		mix_tab_park = service.selectShipperNomReportsParkUnpark(bean);
+		
+    }
+	
+	 public void daysDetailEast1() {
+		 if(this.showHideDaysEast1==false) {
+			 this.showHideDaysEast1=true;
+		 } else {
+			 this.showHideDaysEast1= false;
+		 }
+	 }
+	 public boolean getShowHideDaysEast1() {
+		 if(this.showHideDaysEast1 == true) {
+			 this.widthEast1 = "4300px";
+			 return true;
+		 } else {
+			 this.widthEast1 = "1900px";
+			 return false;
+		 }
+	 }
+	public String getWidthEast1() {
+		if(this.showHideDaysEast1 == true) {
+			this.widthEast1 = "4300px";
+		} else {
+			this.widthEast1 = "1900px";
+		}
+		return widthEast1; 
 	}
 
+	public void daysDetailEast2() {
+		 if(this.showHideDaysEast2==false) {
+			 this.showHideDaysEast2=true;
+		 } else {
+			 this.showHideDaysEast2= false;
+		 }
+	 }
+	 public boolean getShowHideDaysEast2() {
+		 if(this.showHideDaysEast2 == true) {
+			 this.widthEast2 = "2850px";
+			 return true;
+		 } else {
+			 this.widthEast2 = "450px";
+			 return false;
+		 }
+	 }
+	 public String getWidthEast2() {
+		 if(this.showHideDaysEast2 == true) {
+			 this.widthEast2 = "2850px";
+		 } else {
+			 this.widthEast2 = "450px";
+		 }
+		 return widthEast2; 
+	 }
+
+	public void daysDetailWest1() {
+		 if(this.showHideDaysWest1==false) {
+			 this.showHideDaysWest1=true;
+		 } else {
+			 this.showHideDaysWest1= false;
+		 }
+	 }
+	 public boolean getShowHideDaysWest1() {
+		 if(this.showHideDaysWest1 == true) {
+			 this.widthWest1 = "4300px";
+			 return true;
+		 } else {
+			 this.widthWest1 = "1900px";
+			 return false;
+		 }
+	 }
+
+	 public String getWidthWest1() {
+		 if(this.showHideDaysWest1 == true) {
+			 this.widthWest1 = "4300px";
+		 } else {
+			 this.widthWest1 = "1900px";
+		 }
+		 return widthWest1; 
+	 }
+	 
+	 public void daysDetailWest2() {
+		 if(this.showHideDaysWest2==false) {
+			 this.showHideDaysWest2=true;
+		 } else {
+			 this.showHideDaysWest2= false;
+		 }
+	 }
+	 public boolean getShowHideDaysWest2() {
+		 if(this.showHideDaysWest2 == true) {
+			 this.widthWest2 = "2850px";
+			 return true;
+		 } else {
+			 this.widthWest2 = "450px";
+			 return false;
+		 }
+	 }
+
+	 public String getWidthWest2() {
+		 if(this.showHideDaysWest2 == true) {
+			 this.widthWest2 = "2850px";
+		 } else {
+			 this.widthWest2 = "450px";
+		 }
+		 return widthWest2; 
+	 }
+	 
+	 public void daysDetailEastWest1() {
+		 if(this.showHideDaysEastWest1==false) {
+			 this.showHideDaysEastWest1=true;
+		 } else {
+			 this.showHideDaysEastWest1= false;
+		 }
+	 }
+	 public boolean getShowHideDaysEastWest1() {
+		 if(this.showHideDaysEastWest1 == true) {
+			 this.widthEastWest1 = "4300px";
+			 return true;
+		 } else {
+			 this.widthEastWest1 = "1900px";
+			 return false;
+		 }
+	 }
+
+	 public String getWidthEastWest1() {
+		 if(this.showHideDaysEastWest1 == true) {
+			 this.widthEastWest1 = "4300px";
+		 } else {
+			 this.widthEastWest1 = "1900px";
+		 }
+		 return widthEastWest1; 
+	 }
+	 
+	 public void daysDetailEastWest2() {
+		 if(this.showHideDaysEastWest2==false) {
+			 this.showHideDaysEastWest2=true;
+		 } else {
+			 this.showHideDaysEastWest2= false;
+		 }
+	 }
+	 public boolean getShowHideDaysEastWest2() {
+		 if(this.showHideDaysEastWest2 == true) {
+			 this.widthEastWest2 = "2850px";
+			 return true;
+		 } else {
+			 this.widthEastWest2 = "450px";
+			 return false;
+		 }
+	 }
+
+	 public String getWidthEastWest2() {
+		 if(this.showHideDaysEastWest2 == true) {
+			 this.widthEastWest2 = "2850px";
+		 } else {
+			 this.widthEastWest2 = "450px";
+		 }
+		 return widthEastWest2; 
+	 }
+	
 }

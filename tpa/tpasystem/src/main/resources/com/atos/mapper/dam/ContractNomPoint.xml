@@ -167,8 +167,7 @@ WHERE
 	AND tcnp.active_date_from = #{startDateActive}
 	AND tcnp.active_date_to = #{endDateActive}
 ORDER BY
-	tcnp.idn_contract,
-	tc.start_date
+	contract_point, nomination_point asc
 
 	</select>
 	

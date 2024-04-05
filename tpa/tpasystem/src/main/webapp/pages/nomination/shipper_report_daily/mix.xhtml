@@ -1,0 +1,190 @@
+<ui:composition
+	xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:shiro="http://shiro.apache.org/tags"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+<p:dataTable id="mix_table" var="mix" value="#{shippersNominationsReportsView.mix_tab}" editable="true" style="width:#{shippersNominationsReportsView.widthEastWest1};margin-bottom:20px;border-collapse:collapse"
+paginator="true" rows="15" rowsPerPageTemplate="5,10,15,20,25">
+<f:facet name="header">
+	<p:commandButton type="button" style="float: right" value="#{msg['day_nom_show_hide']}">
+		<p:ajax event="click" listener="#{shippersNominationsReportsView.daysDetailEastWest1}" update=":#{p:component('mix_table')}" 
+		onstart="PF('cargando').show()" onerror="PF('cargando').hide()" oncomplete="PF('cargando').hide()"/>
+	</p:commandButton>
+	 						<p:outputPanel style="height:30px">
+							<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+      						<p:columnToggler datasource="mix_table" trigger="toggler" style="width:200px"/>
+							</p:outputPanel>
+							</f:facet>
+
+	<p:column style="width:150px" headerText="#{msg['nom_supply_demand']}">
+	<h:outputText value="#{mix.supply_demand}" />
+	</p:column>
+	<p:column style="width:100px" headerText="#{msg['nom_area_desc']}">
+	<h:outputText value="#{mix.area}" />
+	</p:column>
+	<p:column style="width:100px" headerText="#{msg['nom_area_code']}">
+	<h:outputText value="#{mix.area_code}" />
+	</p:column>
+	<p:column style="width:100px" headerText="#{msg['nom_subarea']}">
+	<h:outputText value="#{mix.subarea}" />
+	</p:column>
+	<p:column style="width:100px" headerText="#{msg['contract_code']}">
+	<h:outputText value="#{mix.contract_code}" />
+	</p:column>
+	<p:column style="width:250px" headerText="#{msg['nom_point_id']}">
+	<h:outputText value="#{mix.point_id}" />
+	</p:column>
+	<p:column style="width:100px" headerText="#{msg['nom_type']}">
+	<h:outputText value="#{mix.cust_type}" />
+	</p:column>
+	<p:column style="width:100px" headerText="#{msg['nom_unit']}">
+	<h:outputText value="#{mix.unit}" />
+	</p:column>
+	<p:column style="width:100px" headerText="#{msg['nom_entry_exit']}">
+	<h:outputText value="#{mix.entry_exit}" />
+	</p:column>
+	<p:column style="width:100px" headerText="#{msg['nom_wi']}" >
+	<h:outputText style="float:right" styleClass="#{mix.is_warned_wi eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{mix.wi}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column style="width:100px" headerText="#{msg['nom_hv']}" >
+	<h:outputText style="float:right" styleClass="#{mix.is_warned_hv eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{mix.hv}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column style="width:100px" headerText="#{msg['nom_sg']}">
+	<h:outputText style="float:right" styleClass="#{mix.is_warned_sg eq 'Y'? 'overnomValue' : 'nonOvernomValue'}" value="#{mix.sg}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_01']}" visible="#{shippersNominationsReportsView.showHideDaysEastWest1}" >
+	<h:outputText style="float:right" value="#{mix.hour_01}" styleClass="#{mix.is_warned_h01 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_02']}" visible="#{shippersNominationsReportsView.showHideDaysEastWest1}" >
+	<h:outputText style="float:right" value="#{mix.hour_02}" styleClass="#{mix.is_warned_h02 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_03']}" visible="#{shippersNominationsReportsView.showHideDaysEastWest1}" >
+	<h:outputText style="float:right" value="#{mix.hour_03}" styleClass="#{mix.is_warned_h03 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_04']}" visible="#{shippersNominationsReportsView.showHideDaysEastWest1}">
+	<h:outputText style="float:right" value="#{mix.hour_04}" styleClass="#{mix.is_warned_h04 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_05']}" visible="#{shippersNominationsReportsView.showHideDaysEastWest1}" >
+	<h:outputText style="float:right" value="#{mix.hour_05}" styleClass="#{mix.is_warned_h05 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_06']}" visible="#{shippersNominationsReportsView.showHideDaysEastWest1}" >
+	<h:outputText style="float:right" value="#{mix.hour_06}" styleClass="#{mix.is_warned_h06 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_07']}" visible="#{shippersNominationsReportsView.showHideDaysEastWest1}" >
+	<h:outputText style="float:right" value="#{mix.hour_07}" styleClass="#{mix.is_warned_h07 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_08']}" visible="#{shippersNominationsReportsView.showHideDaysEastWest1}">
+	<h:outputText style="float:right" value="#{mix.hour_08}" styleClass="#{mix.is_warned_h08 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_09']}" visible="#{shippersNominationsReportsView.showHideDaysEastWest1}">
+	<h:outputText style="float:right" value="#{mix.hour_09}" styleClass="#{mix.is_warned_h09 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_10']}" visible="#{shippersNominationsReportsView.showHideDaysEastWest1}">
+	<h:outputText style="float:right" value="#{mix.hour_10}" styleClass="#{mix.is_warned_h10 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_11']}" visible="#{shippersNominationsReportsView.showHideDaysEastWest1}">
+	<h:outputText style="float:right" value="#{mix.hour_11}" styleClass="#{mix.is_warned_h11 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_12']}" visible="#{shippersNominationsReportsView.showHideDaysEastWest1}">
+	<h:outputText style="float:right" value="#{mix.hour_12}" styleClass="#{mix.is_warned_h12 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_13']}" visible="#{shippersNominationsReportsView.showHideDaysEastWest1}">
+	<h:outputText style="float:right" value="#{mix.hour_13}" styleClass="#{mix.is_warned_h13 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_14']}" visible="#{shippersNominationsReportsView.showHideDaysEastWest1}">
+	<h:outputText style="float:right" value="#{mix.hour_14}" styleClass="#{mix.is_warned_h14 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_15']}" visible="#{shippersNominationsReportsView.showHideDaysEastWest1}">
+	<h:outputText style="float:right" value="#{mix.hour_15}" styleClass="#{mix.is_warned_h15 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_16']}" visible="#{shippersNominationsReportsView.showHideDaysEastWest1}">
+	<h:outputText style="float:right" value="#{mix.hour_16}" styleClass="#{mix.is_warned_h16 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_17']}" visible="#{shippersNominationsReportsView.showHideDaysEastWest1}">
+	<h:outputText style="float:right" value="#{mix.hour_17}" styleClass="#{mix.is_warned_h17 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_18']}" visible="#{shippersNominationsReportsView.showHideDaysEastWest1}">
+	<h:outputText style="float:right" value="#{mix.hour_18}" styleClass="#{mix.is_warned_h18 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_19']}" visible="#{shippersNominationsReportsView.showHideDaysEastWest1}">
+	<h:outputText style="float:right" value="#{mix.hour_19}" styleClass="#{mix.is_warned_h19 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_20']}" visible="#{shippersNominationsReportsView.showHideDaysEastWest1}">
+	<h:outputText style="float:right" value="#{mix.hour_20}" styleClass="#{mix.is_warned_h20 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_21']}" visible="#{shippersNominationsReportsView.showHideDaysEastWest1}">
+	<h:outputText style="float:right" value="#{mix.hour_21}" styleClass="#{mix.is_warned_h21 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_22']}" visible="#{shippersNominationsReportsView.showHideDaysEastWest1}">
+	<h:outputText style="float:right" value="#{mix.hour_22}" styleClass="#{mix.is_warned_h22 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_23']}" visible="#{shippersNominationsReportsView.showHideDaysEastWest1}">
+	<h:outputText style="float:right" value="#{mix.hour_23}" styleClass="#{mix.is_warned_h23 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column toggleable="false" headerText="#{msg['nom_hour_24']}" visible="#{shippersNominationsReportsView.showHideDaysEastWest1}">
+	<h:outputText style="float:right" value="#{mix.hour_24}" styleClass="#{mix.is_warned_h24 eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+	<p:column style="width:120px" headerText="#{msg['nom_total']}">
+	<h:outputText style="float:right" value="#{mix.total}" >
+		<f:convertNumber groupingUsed="true" minFractionDigits="3" maxFractionDigits="3"/>
+	</h:outputText>
+	</p:column>
+
+</p:dataTable>
+</ui:composition>

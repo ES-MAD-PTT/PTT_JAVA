@@ -133,6 +133,14 @@ public class MeteredPointShipperView  extends CommonView implements Serializable
 		this.allDataTableAddEdit = allDataTableAddEdit;
 	}
 
+	public Boolean getEdit() {
+		return edit;
+	}
+
+	public void setEdit(Boolean edit) {
+		this.edit = edit;
+	}
+
 	public Boolean getDisabledEdit() {
 		return disabledEdit;
 	}
@@ -235,12 +243,6 @@ public class MeteredPointShipperView  extends CommonView implements Serializable
 		}
 		if(selection.getStartDate() == null) {
 			errorMsg = msgs.getString("metPointShipper_need_dateFrom"); 
-			getMessages().addMessage(Constants.head_menu[0], new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
-			log.error(errorMsg);
-			return;
-		}
-		if(selection.getEndDate() == null) {
-			errorMsg = msgs.getString("metPointShipper_need_dateTo"); 
 			getMessages().addMessage(Constants.head_menu[0], new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
 			log.error(errorMsg);
 			return;
@@ -424,54 +426,6 @@ public class MeteredPointShipperView  extends CommonView implements Serializable
 					}
 				}
 			}
-//			if(items != null && !items.isEmpty()) {
-//				for(int i = 0; i < items.size(); i++) {
-//					row = sheet.createRow(rowNum);
-//					for(int j = 0; j < 3; j++) {
-//						cell = row.createCell(j);
-//						switch (j) {
-//						case 0:
-//							cell.setCellValue(items.get(i).getShipper());
-//							break;
-//						case 1:
-//							cell.setCellValue(items.get(i).getStartDate());
-//							break;
-//						case 2:
-//							cell.setCellValue(items.get(i).getEndDate());
-//							break;
-//						}
-//					}
-//					rowNum++;
-//					row = sheet.createRow(rowNum);
-//					for(int k = 0; k < headerTable2.size(); k++) {
-//						cell = row.createCell(k);
-//						cell.setCellValue(headerTable2.get(k));
-//					}
-//					selectionTableAddEdit = new ArrayList<MeteredPointShipperBean>();
-//					selectionTableAddEdit = service.selectAllDataMeteredPointShipper(items.get(i));
-//					rowNum++;
-//					if(selectionTableAddEdit != null && !selectionTableAddEdit.isEmpty()) {
-//						for(int m = 0; m < selectionTableAddEdit.size(); m++) {
-//							row = sheet.createRow(rowNum);
-//							for(int n = 0; n < 3; n++) {
-//								cell = row.createCell(n);
-//								switch (n) {
-//								case 0:
-//									cell.setCellValue(selectionTableAddEdit.get(m).getMeteringPoint());
-//									break;
-//								case 1:
-//									cell.setCellValue(selectionTableAddEdit.get(m).getCustomerType());
-//									break;
-//								case 2:
-//									cell.setCellValue(selectionTableAddEdit.get(m).getGroup());
-//									break;
-//								}
-//							}
-//							rowNum++;
-//						}
-//					}
-//				}
-//			}
 
 			FileOutputStream outFile = new FileOutputStream("MeteredPointShipper.xlsx");
 			workBook.write(outFile);

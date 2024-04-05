@@ -21,125 +21,268 @@
 		<h:form id="form" style="width:100%;height:98%;border-collapse:collapse" fullPage="true">
 			<p:growl id="msgs" showDetail="true" life="10000" />
 			
-            <p:layout widgetVar="shipperNomReport" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
-				
-				<p:layoutUnit position="north" resizable="false" closable="false"
-					collapsible="true" id="page_filters">	
-					
-				<p:panelGrid columns="2" style="width:100%">
-					
-						<p:panelGrid>
-							<p:row>
-									<p:column style="font-weight: bold;"><h:outputText value="#{msg['shipperNomReport_shipper']}" /></p:column>
-									<p:column style="font-weight: bold;"><h:outputText value="#{msg['shipperNomReport_startDate']}" /></p:column>
-									<p:column style="font-weight: bold;"><h:outputText value="#{msg['shipperNomReport_endDate']}" /></p:column>
-							</p:row>
-							<p:row>					
-								<p:column>
-									<p:selectOneMenu id="idShipper"  style="width:100px"   value="#{shippersNominationsReportsView.filters.shipper_id}" >
-							       		<f:selectItem itemLabel="" itemValue="" />        							
-        								<f:selectItems value="#{shippersNominationsReportsView.idsShipper.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
-					           		</p:selectOneMenu>									
-								</p:column>
-							<p:column>
-								<p:calendar required="true" id="startDate" showOn="button" navigator="true" size="10" mask="true"
-											value="#{shippersNominationsReportsView.filters.start_date}" pattern="dd/MM/yyyy"
-											requiredMessage="#{msg['shipperNomReport_startDate']}: #{msg['empty_field']}"
-											validatorMessage="#{msg['shipperNomReport_startDate']}: #{msg['lenght_field']}">
-								</p:calendar>
-							</p:column>
-							<p:column>
-								<p:calendar required="true" id="endDate" showOn="button" navigator="true" size="10" mask="true"
-											value="#{shippersNominationsReportsView.filters.end_date}" pattern="dd/MM/yyyy"
-											requiredMessage="#{msg['shipperNomReport_endDate']}: #{msg['empty_field']}"
-											validatorMessage="#{msg['shipperNomReport_endDate']}: #{msg['lenght_field']}">
-								</p:calendar>
-							</p:column>
-							</p:row>
+ 			<pe:masterDetail id="masterDetail">  
+			   
+			    <pe:masterDetailLevel level="1" >  
+		            <p:layout widgetVar="shipperNomReport" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+						
+						<p:layoutUnit position="north" resizable="false" closable="false"
+							collapsible="true" id="page_filters">	
+							
+						<p:panelGrid columns="2" style="width:100%">
+							
+								<p:panelGrid>
+									<p:row>
+											<p:column style="font-weight: bold;"><h:outputText value="#{msg['shipperNomReport_shipper']}" /></p:column>
+											<p:column style="font-weight: bold;"><h:outputText value="#{msg['shipperNomReport_startDate']}" /></p:column>
+											<p:column style="font-weight: bold;"><h:outputText value="#{msg['shipperNomReport_endDate']}" /></p:column>
+									</p:row>
+									<p:row>					
+										<p:column>
+											<p:selectOneMenu id="idShipper"  style="width:100px"   value="#{shippersNominationsReportsView.filters.shipper_id}" >
+									       		<f:selectItem itemLabel="" itemValue="" />        							
+		        								<f:selectItems value="#{shippersNominationsReportsView.idsShipper.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+							           		</p:selectOneMenu>									
+										</p:column>
+									<p:column>
+										<p:calendar required="true" id="startDate" showOn="button" navigator="true" size="10" mask="true"
+													value="#{shippersNominationsReportsView.filters.start_date}" pattern="dd/MM/yyyy"
+													requiredMessage="#{msg['shipperNomReport_startDate']}: #{msg['empty_field']}"
+													validatorMessage="#{msg['shipperNomReport_startDate']}: #{msg['lenght_field']}">
+										</p:calendar>
+									</p:column>
+									<p:column>
+										<p:calendar required="true" id="endDate" showOn="button" navigator="true" size="10" mask="true"
+													value="#{shippersNominationsReportsView.filters.end_date}" pattern="dd/MM/yyyy"
+													requiredMessage="#{msg['shipperNomReport_endDate']}: #{msg['empty_field']}"
+													validatorMessage="#{msg['shipperNomReport_endDate']}: #{msg['lenght_field']}">
+										</p:calendar>
+									</p:column>
+									</p:row>
+		
+								</p:panelGrid>
+								<p:panelGrid columns="2" style="float:right;top:0px">
+									<shiro:hasPermission name="#{changeSystemView.system}.NOMINATION.SHIPPER.REPORT.QUERY">									
+										<p:commandButton id="btnSearch" value="#{msg['search']}" icon="ui-icon fa fa-search" 
+											actionListener="#{shippersNominationsReportsView.onSearch}"
+											onstart="PF('cargando').show()"
+											oncomplete="PF('cargando').hide()" 
+											update="msgs,:#{p:component('shipperNomReport1')}"/>
+									</shiro:hasPermission>
+		
+									<p:commandButton  onclick="PF('shipperNomReport').toggle('north')" id="header_collapse" icon="fa fa-minus" 
+										value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
+																	
+									<shiro:hasPermission name="#{changeSystemView.system}.NOMINATION.SHIPPER.REPORT.QUERY">	
+										 <p:commandButton value="#{msg['clear']}"
+											actionListener="#{shippersNominationsReportsView.onClear}"
+											onstart="PF('limpiando').show()"
+											oncomplete="PF('limpiando').hide()" 
+											process="@this"
+											update="msgs,@form"/>
+									</shiro:hasPermission>
+								</p:panelGrid>
+							</p:panelGrid>
+		
+						</p:layoutUnit>
+		
+						<p:layoutUnit id="shipperNominationsReportsLayout" position="center" resizable="false" closable="false" collapsible="false" style="border: 0;">
+		
+							<p:dataTable widgetVar="w_shipperNomReport1"  id="shipperNomReport1" var="shipperNomReport" value="#{shippersNominationsReportsView.items}"
+								reflow="true" style="margin-bottom:20px;border-collapse:collapse"
+								scrollable="true" scrollHeight="100%"
+								paginator="true" rows="15" rowsPerPageTemplate="5,10,15,20,25, #{shippersNominationsReportsView.itemsSize}">
+		
+			  						<f:facet name="header"> 
+										<p:outputPanel style="height:25px">
+											<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
+											<p:columnToggler datasource="shipperNomReport1" trigger="toggler" style="width:200px"/>
+						        			<h:commandLink style="float:right">
+										       <p:graphicImage name="/images/excel.png" width="24"/>
+										       <p:dataExporter type="xlsx" target="shipperNomReport1" fileName="shipperNomReport1Report" 
+										       			postProcessor="#{shippersNominationsReportsView.postProcessXLS}"/>
+										       <p:spacer width="10" height="10"/>
+											</h:commandLink>
+										</p:outputPanel>        										          
+			 				        </f:facet>
+		
+		 					 	<shiro:hasPermission name="#{changeSystemView.system}.NOMINATION.SHIPPER.REPORT.QUERY">
 
-						</p:panelGrid>
-						<p:panelGrid columns="2" style="float:right;top:0px">
-							<shiro:hasPermission name="#{changeSystemView.system}.NOMINATION.SHIPPER.REPORT.QUERY">									
-								<p:commandButton id="btnSearch" value="#{msg['search']}" icon="ui-icon fa fa-search" 
-									actionListener="#{shippersNominationsReportsView.onSearch}"
-									onstart="PF('cargando').show()"
-									oncomplete="PF('cargando').hide()" 
-									update="msgs,:#{p:component('shipperNomReport1')}"/>
-							</shiro:hasPermission>
+							    <p:column style="width:16px">
+						            <p:rowToggler />
+						        </p:column>
+							       <p:column style="width:130px" headerText="#{msg['shipperNomReport_detail']}" >
+							       		<p:commandLink value="#{msg['shipperNomReport_detail']}" onstart="PF('cargando').show()"
+											oncomplete="PF('cargando').hide()">
+						                    <pe:selectDetailLevel level="2" listener="#{shippersNominationsReportsView.onRowSelect(shipperNomReport)}"/>  
+						                </p:commandLink> 
+							       </p:column>
+	
+		
+							       <p:column headerText="#{msg['shipperNomReport_gasDay']}" style="width: 100px;" sortBy="#{shipperNomReport.gas_day}">
+							       		<h:outputText value="#{shipperNomReport.gas_day}" >
+							       			 	<f:convertDateTime pattern="dd/MM/yyyy" />
+							       		</h:outputText>
+							       </p:column>
+							       <p:column headerText="#{msg['shipperNomReport_shipper']}" style="width: 100px;" sortBy="#{shipperNomReport.user_group_id}">
+							       		<h:outputText value="#{shipperNomReport.user_group_id}" />
+							       </p:column>					       
+							       <p:column headerText="#{msg['shipperNomReport_shipperName']}" style="width: 100px;" sortBy="#{shipperNomReport.user_group_name}">
+							       		<h:outputText value="#{shipperNomReport.user_group_name}" />
+							       </p:column>					       
+							       <p:column headerText="#{msg['shipperNomReport_contracted']}" style="width: 100px;" sortBy="#{shipperNomReport.contracted_energy}">
+							       		<h:outputText value="#{shipperNomReport.contracted_energy}" >
+							       			<f:convertNumber groupingUsed="true"  minFractionDigits="3" maxFractionDigits="3" />
+							       		</h:outputText>
+							       </p:column>
+							       <p:column headerText="#{msg['shipperNomReport_energy']}" style="width: 100px;" sortBy="#{shipperNomReport.nominated_energy}">
+							       		<h:outputText value="#{shipperNomReport.nominated_energy}" >
+							       			<f:convertNumber groupingUsed="true"  minFractionDigits="3" maxFractionDigits="3" />
+							       		</h:outputText>
+							       </p:column>
+							       <p:column headerText="#{msg['shipperNomReport_overusage']}" style="width: 100px;" sortBy="#{shipperNomReport.overusage}">
+							       		<h:outputText value="#{shipperNomReport.overusage}">
+							       			<f:convertNumber groupingUsed="true"  minFractionDigits="3" maxFractionDigits="3" />
+							       		</h:outputText>
+							       </p:column>
+							       <p:column headerText="#{msg['shipperNomReport_imbalance']}" style="width: 100px;" sortBy="#{shipperNomReport.imbalance}">
+							       		<h:outputText value="#{shipperNomReport.imbalance}" styleClass="#{shipperNomReport.is_warning eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
+							       			<f:convertNumber groupingUsed="true"  minFractionDigits="3" maxFractionDigits="3" />
+							       		</h:outputText>
+							       </p:column>
 
-							<p:commandButton  onclick="PF('shipperNomReport').toggle('north')" id="header_collapse" icon="fa fa-minus" 
-								value="#{msg['minimize']}" title="#{msg['collapse_header']}" />
-															
-							<shiro:hasPermission name="#{changeSystemView.system}.NOMINATION.SHIPPER.REPORT.QUERY">	
-								 <p:commandButton value="#{msg['clear']}"
-									actionListener="#{shippersNominationsReportsView.onClear}"
-									onstart="PF('limpiando').show()"
-									oncomplete="PF('limpiando').hide()" 
-									process="@this"
-									update="msgs,@form"/>
-							</shiro:hasPermission>
-						</p:panelGrid>
-					</p:panelGrid>
 
-				</p:layoutUnit>
+							<p:rowExpansion>
 
-				<p:layoutUnit id="shipperNominationsReportsLayout" position="center" resizable="false" closable="false" collapsible="false" style="border: 0;">
+					<p:dataTable widgetVar="w_detail"  id="detail" var="det" value="#{shipperNomReport.details}"
+						  style="margin-bottom:20px;border-collapse:collapse; width:100%"
+					    >
 
-					<p:dataTable widgetVar="w_shipperNomReport1"  id="shipperNomReport1" var="shipperNomReport" value="#{shippersNominationsReportsView.items}"
-						reflow="true" style="margin-bottom:20px;border-collapse:collapse"
-						scrollable="true" scrollHeight="100%"
-						paginator="true" rows="15" rowsPerPageTemplate="5,10,15,20,25, #{shippersNominationsReportsView.itemsSize}">
-
-	  						<f:facet name="header"> 
-								<p:outputPanel style="height:25px">
-									<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
-									<p:columnToggler datasource="shipperNomReport1" trigger="toggler" style="width:200px"/>
-				        			<h:commandLink style="float:right">
-								       <p:graphicImage name="/images/excel.png" width="24"/>
-								       <p:dataExporter type="xlsx" target="shipperNomReport1" fileName="shipperNomReport1Report" 
-								       			postProcessor="#{shippersNominationsReportsView.postProcessXLS}"/>
-								       <p:spacer width="10" height="10"/>
-									</h:commandLink>
-								</p:outputPanel>        										          
-	 				        </f:facet>
-
- 					 	<shiro:hasPermission name="#{changeSystemView.system}.NOMINATION.SHIPPER.REPORT.QUERY">
-
-					       <p:column headerText="#{msg['shipperNomReport_gasDay']}" style="width: 100px;" sortBy="#{shipperNomReport.gas_day}">
-					       		<h:outputText value="#{shipperNomReport.gas_day}" >
-					       			 	<f:convertDateTime pattern="dd/MM/yyyy" />
-					       		</h:outputText>
+					       <p:column headerText="#{msg['shipperNomReport_gasDay']}"  >
+			               		<h:outputText value="#{det.gas_day}" >
+			              				<f:convertDateTime pattern="dd/MM/yyyy" />
+			              		</h:outputText>
 					       </p:column>
-					       <p:column headerText="#{msg['shipperNomReport_shipper']}" style="width: 100px;" sortBy="#{shipperNomReport.user_group_id}">
-					       		<h:outputText value="#{shipperNomReport.user_group_id}" />
-					       </p:column>					       
-					       <p:column headerText="#{msg['shipperNomReport_shipperName']}" style="width: 100px;" sortBy="#{shipperNomReport.user_group_name}">
-					       		<h:outputText value="#{shipperNomReport.user_group_name}" />
-					       </p:column>					       
-					       <p:column headerText="#{msg['shipperNomReport_contracted']}" style="width: 100px;" sortBy="#{shipperNomReport.contracted_energy}">
-					       		<h:outputText value="#{shipperNomReport.contracted_energy}" >
-					       			<f:convertNumber groupingUsed="true"  minFractionDigits="3" maxFractionDigits="3" />
-					       		</h:outputText>
+					       <p:column headerText="#{msg['shipperNomReport_shipper']}" >
+					       		<h:outputText value="#{det.user_group_id}" />
 					       </p:column>
-					       <p:column headerText="#{msg['shipperNomReport_energy']}" style="width: 100px;" sortBy="#{shipperNomReport.nominated_energy}">
-					       		<h:outputText value="#{shipperNomReport.nominated_energy}" >
-					       			<f:convertNumber groupingUsed="true"  minFractionDigits="3" maxFractionDigits="3" />
-					       		</h:outputText>
+					       <p:column headerText="#{msg['shipperNomReport_shipperName']}" >
+					       		<h:outputText value="#{det.user_group_name}" />
 					       </p:column>
-					       <p:column headerText="#{msg['shipperNomReport_difference']}" style="width: 100px;" sortBy="#{shipperNomReport.difference}">
-					       		<h:outputText value="#{shipperNomReport.difference}" styleClass="#{shippersNominationsReportsView.is_warning_difference(shipperNomReport) eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
-					       			<f:convertNumber groupingUsed="true"  minFractionDigits="3" maxFractionDigits="3" />
-					       		</h:outputText>
+					       <p:column headerText="#{msg['shipperNomReport_area']}" >
+					       		<h:outputText value="#{det.area_code}" />
 					       </p:column>
-					       <p:column headerText="#{msg['shipperNomReport_imbalance']}" style="width: 100px;" sortBy="#{shipperNomReport.imbalance}">
-					       		<h:outputText value="#{shipperNomReport.imbalance}" styleClass="#{shipperNomReport.is_warning eq 'Y'? 'overnomValue' : 'nonOvernomValue'}">
-					       			<f:convertNumber groupingUsed="true"  minFractionDigits="3" maxFractionDigits="3" />
-					       		</h:outputText>
+
+					       <p:column headerText="#{msg['shipperNomReport_contracted']}" >
+					       		<h:outputText value="#{det.contracted_energy}" />
 					       </p:column>
-						</shiro:hasPermission>
-				   </p:dataTable>
-				</p:layoutUnit>
-			</p:layout>
+					       <p:column headerText="#{msg['shipperNomReport_energy']}" >
+					       		<h:outputText value="#{det.nominated_energy}" />
+					       </p:column>
+
+					       <p:column headerText="#{msg['shipperNomReport_overusage']}" >
+					       		<h:outputText value="#{det.overusage}" />
+					       </p:column>
+
+					    </p:dataTable>
+							</p:rowExpansion>
+
+
+								</shiro:hasPermission>
+						   </p:dataTable>
+						</p:layoutUnit>
+					</p:layout>
+			    </pe:masterDetailLevel>  
+			  
+			    <pe:masterDetailLevel level="2" levelLabel="#{msg['nom_detail']}">  
+
+		            <p:layout widgetVar="dayNomDetailLayout" style="width:100%;height:100%" showEffect="clip"  hideEffect="clip">
+
+						<p:layoutUnit position="north" resizable="false" closable="false"
+							collapsible="true" id="page_details">	
+							
+						<p:panelGrid columns="2" style="width:100%">
+							
+								<p:panelGrid id="detail_filters">
+									<p:row>
+										<p:column  style="font-weight: bold;">
+											<h:outputText value="#{msg['gas_day']}" />
+										</p:column>
+									</p:row>
+									<p:row>
+										<p:column>
+											<h:outputText value="#{shippersNominationsReportsView.selected.gas_day}" >
+							          			<f:convertDateTime pattern="dd/MM/yyyy" />
+							          		</h:outputText>					
+										</p:column>
+										
+									</p:row>
+								</p:panelGrid>
+								<p:panelGrid columns="3" style="float:right;top:0px">
+										<h:outputText/> 
+								        <p:commandButton value="Back" icon="ui-icon fa fa-arrow-left"
+								        	actionListener="#{shippersNominationsReportsView.onSearch}"
+								        	onstart="PF('cargando').show()"
+											oncomplete="PF('cargando').hide()" >  
+								            <pe:selectDetailLevel level="1"/>  
+								        </p:commandButton>  
+								</p:panelGrid>
+							</p:panelGrid>
+		
+						</p:layoutUnit>
+		
+						<p:layoutUnit id="detail_table_center_layout" position="center"
+							resizable="false" closable="false" collapsible="false">
+
+							<p:tabView scrollable="true">
+		
+								<p:tab title="#{msg['nom_east']}" rendered="#{changeSystemView.isOnshore()}">
+								
+									<p:tabView scrollable="true" >
+										<p:tab title="#{msg['nom_points_concepts']}">
+											<ui:include src="/pages/nomination/shipper_report_daily/east.xhtml" />
+										</p:tab>
+										<p:tab title="#{msg['nom_park_unpark']}">
+											<ui:include src="/pages/nomination/shipper_report_daily/east_park.xhtml" />
+										</p:tab>
+									</p:tabView>
+								</p:tab>
+								<p:tab title="#{msg['nom_west']}" rendered="#{changeSystemView.isOnshore()}">
+								
+									<p:tabView scrollable="true" >
+										<p:tab title="#{msg['nom_points_concepts']}">
+											<ui:include src="/pages/nomination/shipper_report_daily/west.xhtml" />
+										</p:tab>
+										<p:tab title="#{msg['nom_park_unpark']}">
+											<ui:include src="/pages/nomination/shipper_report_daily/west_park.xhtml" />
+										</p:tab>
+									</p:tabView>
+		
+		
+								</p:tab>
+								<p:tab title="#{msg['nom_mix']}" rendered="#{changeSystemView.isOnshore()}">
+								
+									<p:tabView scrollable="true" >
+										<p:tab title="#{msg['nom_points_concepts']}">
+											<ui:include src="/pages/nomination/shipper_report_daily/mix.xhtml" />
+										</p:tab>
+										<p:tab title="#{msg['nom_park_unpark']}">
+											<ui:include src="/pages/nomination/shipper_report_daily/mix_park.xhtml" />
+										</p:tab>
+									</p:tabView>
+		
+								</p:tab>
+								
+							</p:tabView>
+		
+						</p:layoutUnit>
+		
+					</p:layout>
+			    </pe:masterDetailLevel>  
+			  
+			</pe:masterDetail>  
+
+
 		</h:form> 
 	</ui:define>
 	</ui:composition>

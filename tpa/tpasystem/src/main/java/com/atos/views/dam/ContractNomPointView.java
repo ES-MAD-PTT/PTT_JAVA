@@ -25,14 +25,8 @@ import javax.faces.context.FacesContext;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.poi.hssf.usermodel.HSSFCell;
-import org.apache.poi.hssf.usermodel.HSSFCellStyle;
-import org.apache.poi.hssf.usermodel.HSSFRow;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.DataFormat;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
@@ -848,89 +842,6 @@ public class ContractNomPointView  extends CommonView implements Serializable {
     
     
   //**************************************Excel*************************************************************************
-	
-//	public void downloadExcel() throws IOException {
-//		try {  
-//			XSSFWorkbook wb = new XSSFWorkbook();
-//			service.downloadExcel(wb, items);
-//			file = new File("ContractNomPointRelation.xlsx");
-//			FileOutputStream fos = new FileOutputStream(file);
-//			wb.write(fos);
-//			fos.close();
-//		} catch (Exception e) {
-//			getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.ERROR, "Internal Error", 
-//					getMessageResourceString("excel_download_noOk", null), Calendar.getInstance().getTime()));
-//			return;
-//		}
-//	}
-
-	
-	public void postProcessXLS(Object document) {
-		
-		HSSFWorkbook wb;
-		
-			wb = new HSSFWorkbook();
-			wb = (HSSFWorkbook) document;
-			HSSFSheet sheet = wb.getSheetAt(0);
-			HSSFRow header = sheet.getRow(0);
-			
-			wb.setSheetName(0, "ContractNomPoint");		
-					
-			// Generate styles
-			DataFormat format = wb.createDataFormat();
-			
-			HSSFCellStyle cellStyleHeader  =  POIXSSFExcelUtils.createStyleHeader(wb);
-			HSSFCellStyle cellStyleHide  =     POIXSSFExcelUtils.createStyleHide(wb);
-			HSSFCellStyle cellStyleText  =     POIXSSFExcelUtils.createStyleText(wb);
-/*			HSSFCellStyle cellStyleTotal  =     POIXSSFExcelUtils.createStyleTotal(wb);
-			HSSFCellStyle cellStyleTwoeDec =   POIXSSFExcelUtils.createStyleTwoDec(wb);
-			HSSFCellStyle cellStyleThreeDec =  POIXSSFExcelUtils.createStyleThreeDec(wb);
-			HSSFCellStyle cellStyleFourDec =   POIXSSFExcelUtils.createStyleFourDec(wb);
-			HSSFCellStyle cellStyleTotalTwoeDec =   POIXSSFExcelUtils.createStyleTotalTwoDec(wb);
-			HSSFCellStyle cellStylZeroDec  =        POIXSSFExcelUtils.createStyleZeroDec(wb);*/
-			
-			//CABECERA: quitamos el see datail
-			for (int i = 0; i < header.getPhysicalNumberOfCells() - 1; i++) {
-				HSSFCell cell = header.getCell(i);
-				cell.setCellStyle(cellStyleHeader);
-				if (i == 6) {
-					cell.setCellStyle(cellStyleHide);
-					cell.setCellValue(" ");
-				}
-				
-			}
-			//ancho de la cabecera
-			header.setHeight((short) 0x249);
-		   
-			//DETALLE	
-		     for (int i = 1; i < sheet.getPhysicalNumberOfRows(); i++) {
-					for (int j = 0; j <= sheet.getRow(i).getPhysicalNumberOfCells() - 1; j++) {
-						
-						HSSFCell cell = sheet.getRow(i).getCell(j);
-						cell.setCellStyle(cellStyleText);
-						/*String tmpStrValue = cell.getStringCellValue();
-
-						
-						// el NOMINAL capacity , presures
-						if (j ==8 || j ==9 ||j ==10) {
-							cell.setCellStyle(cellStyleThreeDec);
-							
-						}
-						*/
-						// el lapiz
-						if (j >= 6) {
-							cell.setCellStyle(cellStyleHide);
-							cell.setCellValue(" ");
-						}
-						
-					}//for (int j = 0; j <= sheet.getRow(i).getPhysicalNumberOfCells() - 1; j++) {
-					
-					for (int k = 0; k < sheet.getRow(i).getPhysicalNumberOfCells() - 1; k++) {
-						sheet.autoSizeColumn(k);
-					}
-					
-		     } //for (int i = 1; i < sheet.getPhysicalNumberOfRows()
-		}
 	
 	public void downloadFile() {
 		File file = loadRequest();

@@ -1,11 +1,16 @@
 package com.atos.views.dam;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -25,7 +30,14 @@ import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.DataFormat;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.primefaces.event.RowEditEvent;
 
 import com.atos.beans.MessageBean;
@@ -919,4 +931,79 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 					
 		     } //for (int i = 1; i < sheet.getPhysicalNumberOfRows()
 		}
+	
+	public void downloadFile() {
+		File file = loadRequest();
+		POIXSSFExcelUtils.downloadFile(file);
+	}
+	
+	private File loadRequest() {
+		ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication().getResourceBundle(FacesContext.getCurrentInstance(),"msg");
+		File file = null;
+		try {
+			Row row = null;
+			Cell cell = null;
+			int rowNum = 0;
+			XSSFWorkbook workBook = new XSSFWorkbook();
+			XSSFSheet sheet = workBook.createSheet("Data");
+			Font contentFontBold = POIXSSFExcelUtils.createFont(workBook, IndexedColors.BLACK.index, (short)11, true);
+			Font contentFont = POIXSSFExcelUtils.createFont(workBook, IndexedColors.BLACK.index, (short)11, false);
+			CellStyle cellStyleTableBlueCenter = POIXSSFExcelUtils.createStyle(workBook, contentFontBold, CellStyle.ALIGN_CENTER, IndexedColors.PALE_BLUE.index, 
+					true, IndexedColors.GREY_80_PERCENT.index, CellStyle.BORDER_THIN, true, workBook.getCreationHelper().createDataFormat().getFormat("dd-MMM-yyyy"));
+			CellStyle cellStyleTableGreyCenter = POIXSSFExcelUtils.createStyle(workBook, contentFontBold, CellStyle.ALIGN_CENTER, IndexedColors.GREY_25_PERCENT.index, 
+					true, IndexedColors.GREY_80_PERCENT.index, CellStyle.BORDER_THIN, true, workBook.getCreationHelper().createDataFormat().getFormat("dd-MMM-yyyy"));
+			CellStyle cellStyleTableFormatNumber = POIXSSFExcelUtils.createStyle(workBook, contentFont, CellStyle.ALIGN_RIGHT, IndexedColors.WHITE.index, 
+					true, IndexedColors.GREY_80_PERCENT.index, CellStyle.BORDER_THIN, true, workBook.getCreationHelper().createDataFormat().getFormat("#,##0.00"));
+			CellStyle cellStyleTableFormatDate = POIXSSFExcelUtils.createStyle(workBook, contentFont, CellStyle.ALIGN_LEFT, IndexedColors.WHITE.index, 
+					true, IndexedColors.GREY_80_PERCENT.index, CellStyle.BORDER_THIN, true, workBook.getCreationHelper().createDataFormat().getFormat("dd-MM-yyyy"));
+			CellStyle cellNormalStyle = POIXSSFExcelUtils.createStyle(workBook, contentFont, CellStyle.ALIGN_LEFT, IndexedColors.WHITE.index, 
+					true, IndexedColors.GREY_80_PERCENT.index, CellStyle.BORDER_THIN, true, workBook.getCreationHelper().createDataFormat().getFormat("#,##0.00"));
+			
+			List<String> headerTable1 = Arrays.asList(msgs.getString("contractNomPoint_id_shipper"), msgs.getString("contractNomPoint_id_contract"), 
+					msgs.getString("contractNomPoint_date_from_contract"),msgs.getString("contractNomPoint_date_to_contract"),msgs.getString("contractNomPoint_date_from_active"),
+					msgs.getString("contractNomPoint_date_to_active"));
+			List<String> headerTable2 = Arrays.asList(msgs.getString("contractNomPoint_contract_point"), msgs.getString("contractNomPoint_nomination_point"));
+			
+			POIXSSFExcelUtils.createSimpleHeaderTable(sheet, row, cell, rowNum, 0, headerTable1, cellStyleTableBlueCenter);
+			rowNum ++;
+			if(items != null && !items.isEmpty()) {
+				for(int i = 0; i < items.size(); i++) {
+					row = sheet.createRow(rowNum);
+					Object[] properties1 = {
+							items.get(i).getShipper(),items.get(i).getContract_id(), items.get(i).getStartDate(), items.get(i).getEndDate(), items.get(i).getStartDateActive(), items.get(i).getEndDateActive()
+					    };
+					POIXSSFExcelUtils.createCellsTable(row, cell, 0, cellStyleTableFormatDate, cellStyleTableFormatNumber, cellNormalStyle, properties1);
+					rowNum++;
+					//Creamos la cabecera de los detalles con sus detalles
+					POIXSSFExcelUtils.createSimpleHeaderTable(sheet, row, cell, rowNum, 2, headerTable2, cellStyleTableGreyCenter);
+					selectedsFornNew = service.selectContractNomPointsFormEdit(items.get(i));
+					rowNum++;
+					if(selectedsFornNew != null && !selectedsFornNew.isEmpty()) {
+						for(int m = 0; m < selectedsFornNew.size(); m++) {
+							row = sheet.createRow(rowNum);
+							Object[] properties2 = {
+									selectedsFornNew.get(m).getContract_point(), selectedsFornNew.get(m).getNomination_point()
+							    };
+							POIXSSFExcelUtils.createCellsTable(row, cell, 2, cellStyleTableFormatDate, cellStyleTableFormatNumber, cellNormalStyle, properties2);
+							rowNum++;
+						}
+					}
+				}
+			}
+
+			FileOutputStream outFile = new FileOutputStream("ContractNomPointRelation.xlsx");
+			workBook.write(outFile);
+			outFile.close();
+			file = new File("ContractNomPointRelation.xlsx");
+
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return file;
+	}
+	
+	
+	
 }

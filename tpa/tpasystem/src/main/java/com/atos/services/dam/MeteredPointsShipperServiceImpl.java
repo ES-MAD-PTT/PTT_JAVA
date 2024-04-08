@@ -87,13 +87,26 @@ public class MeteredPointsShipperServiceImpl implements MeteredPointsShipperServ
 	}
 
 	@Override
-	public String updateDateMeteredPointShipper(MeteredPointShipperBean item) {
-		Integer ins = meteredPointsShipperMapper.updateDateMeteredPointShipper(item);
+	public String updateDateMeteredPointShipper(MeteredPointShipperBean item, List<MeteredPointShipperBean> selectionTableAddEdit) {
+		Integer ins = 0;
+		try {
+			for(MeteredPointShipperBean i: selectionTableAddEdit) {
+				item.setIdnMeterdPointShipper(i.getIdnMeterdPointShipper());
+				ins = meteredPointsShipperMapper.updateDateMeteredPointShipper(item);
+			}
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
 		if(ins != 1) {
 			return "1";
 		}else {
 			return "0";
 		}
+	}
+
+	@Override
+	public MeteredPointShipperBean selectMetPointByDatesAndUserGroup(MeteredPointShipperBean item) {
+		return meteredPointsShipperMapper.selectMetPointByDatesAndUserGroup(item);
 	}
 
 	

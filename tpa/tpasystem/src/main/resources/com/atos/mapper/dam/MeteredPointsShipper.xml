@@ -164,7 +164,9 @@
 		                           
 		    and tsmp.idn_user_group = #{idnShipper}
 		    and tsmp.active_date_from = #{startDate}
-   			and tsmp.active_date_to = #{endDate}
+		    <if test="endDate != null">
+   				and tsmp.active_date_to = #{endDate}
+   			</if>
 		 group by to_number(tp.idn_system_point || ct.idn_customer_type || conp.idn_system_point),
 		 		  tsmp.idn_shipper_met_point,
 		          tsmp.idn_met_point,
@@ -221,6 +223,13 @@
 		  order by tp.POINT_CODE
     </select>
     
+    <select id="selectMetPointByDatesAndUserGroup" resultMap="MeteredPointShipper">
+    	select * from TPA_TSHIPPER_MET_POINT t 
+			where t.idn_user_group = 2
+			AND nvl(t.active_date_to ,to_date('9999/12/31','yyyy/mm/dd')) >= #{startDate}
+			AND #{endDate} >= t.active_date_from
+    </select>
+    
     <insert id="insertMeteredPointShipper">
     	INSERT INTO TPA_TSHIPPER_MET_POINT(IDN_SHIPPER_MET_POINT,
                                    IDN_USER_GROUP,
@@ -248,7 +257,8 @@
     
     <update id="updateDateMeteredPointShipper" parameterType="com.atos.beans.dam.MeteredPointShipperBean">
 		update TPA_TSHIPPER_MET_POINT smp
-		set smp.ACTIVE_DATE_TO = #{endDate},    
+		set smp.ACTIVE_DATE_TO = #{endDate},
+			smp.ACTIVE_DATE_FROM = #{startDate},    
 		    smp.AUD_INS_USER = #{userName},
             smp.AUD_LAST_USER = #{userName}
 		where smp.IDN_SHIPPER_MET_POINT = #{idnMeterdPointShipper}

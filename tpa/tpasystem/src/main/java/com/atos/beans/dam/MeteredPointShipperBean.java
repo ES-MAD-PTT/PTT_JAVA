@@ -132,15 +132,17 @@ public class MeteredPointShipperBean implements Serializable {
 	}
 	@Override
 	public String toString() {
-		return "MeteredPointShipperBean [idnShipper=" + idnShipper + ", startDate=" + startDate + ", endDate=" + endDate
-				+ ", idnMeteringPoint=" + idnMeteringPoint + ", meteringPoint=" + meteringPoint + ", idnCustomerType="
-				+ idnCustomerType + ", customerType=" + customerType + ", idnGroup=" + idnGroup + ", group=" + group
-				+ "]";
+		return "MeteredPointShipperBean [idnMeterdPointShipper=" + idnMeterdPointShipper + ", idnGroup=" + idnGroup
+				+ ", group=" + group + ", startDate=" + startDate + ", endDate=" + endDate + ", idnMeteringPoint="
+				+ idnMeteringPoint + ", meteringPoint=" + meteringPoint + ", idnCustomerType=" + idnCustomerType
+				+ ", customerType=" + customerType + ", idnShipper=" + idnShipper + ", shipper=" + shipper
+				+ ", compositeKey=" + compositeKey + ", idnSystem=" + idnSystem + ", userName=" + userName + "]";
 	}
 	@Override
 	public int hashCode() {
-		return Objects.hash(customerType, endDate, group, idnCustomerType, idnGroup, idnMeteringPoint, idnShipper,
-				meteringPoint, startDate);
+		return Objects.hash(compositeKey, customerType, endDate, group, idnCustomerType, idnGroup,
+				idnMeterdPointShipper, idnMeteringPoint, idnShipper, idnSystem, meteringPoint, shipper, startDate,
+				userName);
 	}
 	@Override
 	public boolean equals(Object obj) {
@@ -151,11 +153,14 @@ public class MeteredPointShipperBean implements Serializable {
 		if (getClass() != obj.getClass())
 			return false;
 		MeteredPointShipperBean other = (MeteredPointShipperBean) obj;
-		return Objects.equals(customerType, other.customerType) && Objects.equals(endDate, other.endDate)
-				&& Objects.equals(group, other.group) && Objects.equals(idnCustomerType, other.idnCustomerType)
-				&& Objects.equals(idnGroup, other.idnGroup) && Objects.equals(idnMeteringPoint, other.idnMeteringPoint)
-				&& Objects.equals(idnShipper, other.idnShipper) && Objects.equals(meteringPoint, other.meteringPoint)
-				&& Objects.equals(startDate, other.startDate);
+		return Objects.equals(compositeKey, other.compositeKey) && Objects.equals(customerType, other.customerType)
+				&& Objects.equals(endDate, other.endDate) && Objects.equals(group, other.group)
+				&& Objects.equals(idnCustomerType, other.idnCustomerType) && Objects.equals(idnGroup, other.idnGroup)
+				&& Objects.equals(idnMeterdPointShipper, other.idnMeterdPointShipper)
+				&& Objects.equals(idnMeteringPoint, other.idnMeteringPoint)
+				&& Objects.equals(idnShipper, other.idnShipper) && Objects.equals(idnSystem, other.idnSystem)
+				&& Objects.equals(meteringPoint, other.meteringPoint) && Objects.equals(shipper, other.shipper)
+				&& Objects.equals(startDate, other.startDate) && Objects.equals(userName, other.userName);
 	}
 	
 	

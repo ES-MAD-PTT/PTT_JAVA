@@ -55,6 +55,7 @@ public class MeteredPointShipperView  extends CommonView implements Serializable
 	private List<MeteredPointShipperBean> allDataTableAddEdit;
 	private Boolean disabledEdit;
 	private Boolean renderedEndDateEdit;
+	private Boolean renderedStartDateEdit;
 	private Boolean renderedButtonAcceptEdit;
 	private Boolean edit;
 
@@ -107,6 +108,14 @@ public class MeteredPointShipperView  extends CommonView implements Serializable
 
 	public void setRenderedEndDateEdit(Boolean renderedEndDateEdit) {
 		this.renderedEndDateEdit = renderedEndDateEdit;
+	}
+
+	public Boolean getRenderedStartDateEdit() {
+		return renderedStartDateEdit;
+	}
+
+	public void setRenderedStartDateEdit(Boolean renderedStartDateEdit) {
+		this.renderedStartDateEdit = renderedStartDateEdit;
 	}
 
 	public Boolean getRenderedButtonAcceptEdit() {
@@ -169,28 +178,31 @@ public class MeteredPointShipperView  extends CommonView implements Serializable
 	}
 
 	public void onClear() {
-		// RequestContext.getCurrentInstance().reset("form");
-//		filters = new ContractNomPointFilter();
-//		filters.setStartDate(Calendar.getInstance().getTime());
-//		if (items != null) {
-//			items.clear();
-//		}
+		RequestContext.getCurrentInstance().reset("form");
+		initializeFilters();
+		items = new ArrayList<MeteredPointShipperBean>();
 	}
 	
 	public void prepareNew() {
+		selectionTableAddEdit = new ArrayList<MeteredPointShipperBean>();
 		selection = new MeteredPointShipperBean();
 		selection.setIdnSystem(getChangeSystemView().getIdn_active());
 		selection.setUserName(getUser().getUsername());
+		selection.setStartDate(null);
+		selection.setEndDate(null);
 		chargeAddEditTable();
 		disabledEdit = false;
 		renderedButtonAcceptEdit = true;
 		renderedEndDateEdit = true;
+		renderedStartDateEdit = true;
 		edit = false;
 	}
 	
 	public void prepareEdit(MeteredPointShipperBean item) {
+		//MeteredPointShipperBean idMetPointShipper = service.selectMetPointByDatesAndUserGroup(item);
 		edit = true;
 		selection = item;
+		//selection.setIdnMeterdPointShipper(idMetPointShipper.getIdnMeterdPointShipper());
 		selection.setIdnSystem(getChangeSystemView().getIdn_active());
 		selection.setUserName(getUser().getUsername());
 		selectionTableAddEdit = new ArrayList<MeteredPointShipperBean>();
@@ -202,28 +214,42 @@ public class MeteredPointShipperView  extends CommonView implements Serializable
 		}
 		selection.setIdnMeteringPoint(null);
 		chargeAddEditTable();
-		if(selection.getIdnShipper() != null && selection.getStartDate().before(Calendar.getInstance().getTime()) && selection.getEndDate().after(Calendar.getInstance().getTime())) {
-			//Cuando el dia de hoy está entre las dos fecahs
-			//Deshabilitado todo y se puede cambiar fecha fin
-			disabledEdit = true;
-			renderedButtonAcceptEdit = true;
-			renderedEndDateEdit = true;
+		if(selection.getEndDate() != null) {
+			if(selection.getIdnShipper() != null && selection.getStartDate().before(Calendar.getInstance().getTime()) && selection.getEndDate().after(Calendar.getInstance().getTime())) {
+				//Cuando el dia de hoy está entre las dos fecahs. Deshabilitado todo y se puede cambiar fecha fin
+				disabledEdit = true;
+				renderedButtonAcceptEdit = true;
+				renderedEndDateEdit = true;
+				renderedStartDateEdit = false;
+			}
+			if(selection.getIdnShipper() != null && selection.getEndDate().before(Calendar.getInstance().getTime())) {
+				//Cuando las fechas son a pasado. Deshabilitado todo
+				disabledEdit = true;
+				renderedButtonAcceptEdit = false;
+				renderedEndDateEdit = false;
+				renderedStartDateEdit = false;
+			}
+			if(selection.getIdnShipper() != null && selection.getStartDate().after(Calendar.getInstance().getTime())) {
+				//Cuando las fechas son a futuro. Habilitar todo
+				disabledEdit = false;
+				renderedButtonAcceptEdit = true;
+				renderedEndDateEdit = true;
+				renderedStartDateEdit = true;
+			}
+		}else 
+			if(selection.getStartDate().after(Calendar.getInstance().getTime())){
+				//Cuando starDate es a futuro y endDate es nulo. Habilitar todo
+				disabledEdit = false;
+				renderedButtonAcceptEdit = true;
+				renderedEndDateEdit = true;
+				renderedStartDateEdit = true;
+			}else if(selection.getEndDate().before(Calendar.getInstance().getTime())) {
+				//Cuando starDate es a pasado y endDate es nulo. Deshabilitado todo y se puede cambiar fecha fin
+				disabledEdit = true;
+				renderedButtonAcceptEdit = true;
+				renderedEndDateEdit = true;
+				renderedStartDateEdit = false;
 		}
-		if(selection.getIdnShipper() != null && selection.getEndDate().before(Calendar.getInstance().getTime())) {
-			//Cuando las fechas son a pasado
-			//Deshabilitado todo
-			disabledEdit = true;
-			renderedButtonAcceptEdit = false;
-			renderedEndDateEdit = false;
-		}
-		if(selection.getIdnShipper() != null && selection.getStartDate().after(Calendar.getInstance().getTime())) {
-			//Cuando las fechas son a futuro 
-			//habilitar todo
-			disabledEdit = false;
-			renderedButtonAcceptEdit = true;
-			renderedEndDateEdit = false;
-		}
-		
 	}
 	
 	public void save() throws Throwable {
@@ -254,6 +280,7 @@ public class MeteredPointShipperView  extends CommonView implements Serializable
 			log.error(errorMsg);
 			return;
 		}		
+		List<String> meteredPointId = new ArrayList<String>();
 		if(!edit) {
 			//Lo que tenemos seleccionado ya existe en base de datos sacamos mensaje
 			List<MeteredPointShipperBean> metPoint = service.selectAllDataMeteredPointShipper(selection);
@@ -275,9 +302,10 @@ public class MeteredPointShipperView  extends CommonView implements Serializable
 				return;
 			}
 			error = service.insertMeteredPointShipper(selection, selectionTableAddEdit);
+			meteredPointId = selectionTableAddEdit.stream().map(MeteredPointShipperBean::getMeteringPoint).collect(Collectors.toList());
 			switch (error) {
 			case "0":
-				String[] par2 = {selection.getShipper(), msgs.getString("metPointShipper_msg") };
+				String[] par2 = {selection.getShipper() + "-" + meteredPointId, msgs.getString("metPointShipper_msg") };
 				String msg = getMessageResourceString("inserting_ok", par2);
 				getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.INFO,summaryMsgOk, msg, Calendar.getInstance().getTime()));
 				log.error(errorMsg);
@@ -293,36 +321,46 @@ public class MeteredPointShipperView  extends CommonView implements Serializable
 		}else if(edit) {
 			String updateMsgOk = CommonView.getMessageResourceString("update_ok", params);
 	    	String updateMsgNotOk= CommonView.getMessageResourceString("update_noOk", params);
-			if(!renderedEndDateEdit) {
-				// Filtrar objetos que se agregarán
-		        List<MeteredPointShipperBean> addMeteredPoint = selectionTableAddEdit.stream()
-		                .filter(object -> copySelectionTableAddEdit.stream().noneMatch(o -> o.getCompositeKey().compareTo(object.getCompositeKey()) == 0))
-		                .collect(Collectors.toList());
-	
-		        // Filtrar objetos que se eliminarán
-		        List<MeteredPointShipperBean> deleteMeteredPoint = copySelectionTableAddEdit.stream()
-		                .filter(object -> selectionTableAddEdit.stream().noneMatch(o -> o.getCompositeKey().compareTo(object.getCompositeKey()) == 0))
-		                .collect(Collectors.toList());
+			if(renderedEndDateEdit && renderedStartDateEdit) {
+				error = service.updateDateMeteredPointShipper(selection, copySelectionTableAddEdit);
+				if(error.equals("0")){
+					// Filtrar objetos que se agregarán
+			        List<MeteredPointShipperBean> addMeteredPoint = selectionTableAddEdit.stream()
+			                .filter(object -> copySelectionTableAddEdit.stream().noneMatch(o -> o.getCompositeKey().compareTo(object.getCompositeKey()) == 0))
+			                .collect(Collectors.toList());
+		
+			        // Filtrar objetos que se eliminarán
+			        List<MeteredPointShipperBean> deleteMeteredPoint = copySelectionTableAddEdit.stream()
+			                .filter(object -> selectionTableAddEdit.stream().noneMatch(o -> o.getCompositeKey().compareTo(object.getCompositeKey()) == 0))
+			                .collect(Collectors.toList());
 				
-		        if(addMeteredPoint != null && !addMeteredPoint.isEmpty()) {
-		        	error = service.insertMeteredPointShipper(selection, addMeteredPoint);
-		        }
-		        if(deleteMeteredPoint != null && !deleteMeteredPoint.isEmpty()) {
-		        	error = service.deleteMeteredPointShipper(deleteMeteredPoint);
-		        }
-			}else {
-				error = service.updateDateMeteredPointShipper(selection);
+			        if(addMeteredPoint != null && !addMeteredPoint.isEmpty()) {
+			        	error = service.insertMeteredPointShipper(selection, addMeteredPoint);
+			        }
+			        if(deleteMeteredPoint != null && !deleteMeteredPoint.isEmpty()) {
+			        	error = service.deleteMeteredPointShipper(deleteMeteredPoint);
+			        }
+				}
+			}else if(renderedEndDateEdit && !renderedStartDateEdit){
+				error = service.updateDateMeteredPointShipper(selection, copySelectionTableAddEdit);
 			}
+			meteredPointId = copySelectionTableAddEdit.stream().map(MeteredPointShipperBean::getMeteringPoint).collect(Collectors.toList());
 			switch (error) {
 			case "0":
-				String[] par2 = {selection.getShipper(), msgs.getString("metPointShipper_msg") };
+				String[] par2 = {selection.getShipper() + "-" + meteredPointId, msgs.getString("metPointShipper_msg") };
 				String msg = getMessageResourceString("updating_ok", par2);
 				getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.INFO,updateMsgOk, msg, Calendar.getInstance().getTime()));
 				log.error(errorMsg);
 				RequestContext context = RequestContext.getCurrentInstance();
 				context.execute("PF('dlgNewContractNomPoint').hide();");
+				onSearch();
 				break;
 			case "1":
+				errorMsg = msgs.getString("metPointShipper_error_update"); 
+				getMessages().addMessage(Constants.head_menu[0], new MessageBean(Constants.ERROR, updateMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
+				log.error(errorMsg);
+				break;
+			default:
 				errorMsg = msgs.getString("metPointShipper_error_update"); 
 				getMessages().addMessage(Constants.head_menu[0], new MessageBean(Constants.ERROR, updateMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
 				log.error(errorMsg);

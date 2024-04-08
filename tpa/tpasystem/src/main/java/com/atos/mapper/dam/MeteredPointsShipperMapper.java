@@ -22,6 +22,8 @@ public interface MeteredPointsShipperMapper {
 	
 	public List<MeteredPointShipperBean> selectMetPointCustomerGroup (MeteredPointShipperBean item);
 	
+	public MeteredPointShipperBean selectMetPointByDatesAndUserGroup(MeteredPointShipperBean item);
+	
 	public int insertMeteredPointShipper(MeteredPointShipperBean item);
 	
 	public int deleteMeteredPointShipper(MeteredPointShipperBean item);

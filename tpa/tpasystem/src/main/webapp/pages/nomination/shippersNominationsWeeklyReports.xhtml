@@ -13,7 +13,7 @@
 		<p:breadCrumb id="path_page" style="margin-bottom:3px">
 			<p:menuitem value="#{msg['menu_home']}" icon="ui-icon fa fa-home" style="bottom: -3px;left: 3px" url="/home.xhtml" />
 			<p:menuitem value="#{msg['menu_nominations']}" url="#" />
-			<p:menuitem value="#{msg['menu_Nominations_Shippers_Report']}" url="/pages/nomination/shippersNominationsReports.xhtml" />
+			<p:menuitem value="#{msg['menu_Nominations_Week_Shippers_Report']}" url="/pages/nomination/shippersNominationsWeeklyReports.xhtml" />
 		</p:breadCrumb>
 	</ui:define>
 	<ui:define name="content">
@@ -39,21 +39,21 @@
 									</p:row>
 									<p:row>					
 										<p:column>
-											<p:selectOneMenu id="idShipper"  style="width:100px"   value="#{shippersNominationsReportsView.filters.shipper_id}" >
+											<p:selectOneMenu id="idShipper"  style="width:100px"   value="#{shippersNominationsWeeklyReportsView.filters.shipper_id}" >
 									       		<f:selectItem itemLabel="" itemValue="" />        							
-		        								<f:selectItems value="#{shippersNominationsReportsView.idsShipper.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+		        								<f:selectItems value="#{shippersNominationsWeeklyReportsView.idsShipper.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
 							           		</p:selectOneMenu>									
 										</p:column>
 									<p:column>
 										<p:calendar required="true" id="startDate" showOn="button" navigator="true" size="10" mask="true"
-													value="#{shippersNominationsReportsView.filters.start_date}" pattern="dd/MM/yyyy"
+													value="#{shippersNominationsWeeklyReportsView.filters.start_date}" pattern="dd/MM/yyyy"
 													requiredMessage="#{msg['shipperNomReport_startDate']}: #{msg['empty_field']}"
 													validatorMessage="#{msg['shipperNomReport_startDate']}: #{msg['lenght_field']}">
 										</p:calendar>
 									</p:column>
 									<p:column>
 										<p:calendar required="true" id="endDate" showOn="button" navigator="true" size="10" mask="true"
-													value="#{shippersNominationsReportsView.filters.end_date}" pattern="dd/MM/yyyy"
+													value="#{shippersNominationsWeeklyReportsView.filters.end_date}" pattern="dd/MM/yyyy"
 													requiredMessage="#{msg['shipperNomReport_endDate']}: #{msg['empty_field']}"
 													validatorMessage="#{msg['shipperNomReport_endDate']}: #{msg['lenght_field']}">
 										</p:calendar>
@@ -64,7 +64,7 @@
 								<p:panelGrid columns="2" style="float:right;top:0px">
 									<shiro:hasPermission name="#{changeSystemView.system}.NOMINATION.SHIPPER.REPORT.QUERY">									
 										<p:commandButton id="btnSearch" value="#{msg['search']}" icon="ui-icon fa fa-search" 
-											actionListener="#{shippersNominationsReportsView.onSearch}"
+											actionListener="#{shippersNominationsWeeklyReportsView.onSearch}"
 											onstart="PF('cargando').show()"
 											oncomplete="PF('cargando').hide()" 
 											update="msgs,:#{p:component('shipperNomReport1')}"/>
@@ -75,7 +75,7 @@
 																	
 									<shiro:hasPermission name="#{changeSystemView.system}.NOMINATION.SHIPPER.REPORT.QUERY">	
 										 <p:commandButton value="#{msg['clear']}"
-											actionListener="#{shippersNominationsReportsView.onClear}"
+											actionListener="#{shippersNominationsWeeklyReportsView.onClear}"
 											onstart="PF('limpiando').show()"
 											oncomplete="PF('limpiando').hide()" 
 											process="@this"
@@ -88,10 +88,10 @@
 		
 						<p:layoutUnit id="shipperNominationsReportsLayout" position="center" resizable="false" closable="false" collapsible="false" style="border: 0;">
 		
-							<p:dataTable widgetVar="w_shipperNomReport1"  id="shipperNomReport1" var="shipperNomReport" value="#{shippersNominationsReportsView.items}"
+							<p:dataTable widgetVar="w_shipperNomReport1"  id="shipperNomReport1" var="shipperNomReport" value="#{shippersNominationsWeeklyReportsView.items}"
 								reflow="true" style="margin-bottom:20px;border-collapse:collapse"
 								scrollable="true" scrollHeight="100%"
-								paginator="true" rows="15" rowsPerPageTemplate="5,10,15,20,25, #{shippersNominationsReportsView.itemsSize}">
+								paginator="true" rows="15" rowsPerPageTemplate="5,10,15,20,25, #{shippersNominationsWeeklyReportsView.itemsSize}">
 		
 			  						<f:facet name="header"> 
 										<p:outputPanel style="height:25px">
@@ -100,7 +100,7 @@
 						        			<h:commandLink style="float:right">
 										       <p:graphicImage name="/images/excel.png" width="24"/>
 										       <p:dataExporter type="xlsx" target="shipperNomReport1" fileName="shipperNomReport1Report" 
-										       			postProcessor="#{shippersNominationsReportsView.postProcessXLS}"/>
+										       			postProcessor="#{shippersNominationsWeeklyReportsView.postProcessXLS}"/>
 										       <p:spacer width="10" height="10"/>
 											</h:commandLink>
 										</p:outputPanel>        										          
@@ -114,7 +114,7 @@
 							       <p:column style="width:130px" headerText="#{msg['shipperNomReport_detail']}" >
 							       		<p:commandLink value="#{msg['shipperNomReport_detail']}" onstart="PF('cargando').show()"
 											oncomplete="PF('cargando').hide()">
-						                    <pe:selectDetailLevel level="2" listener="#{shippersNominationsReportsView.onRowSelect(shipperNomReport)}"/>  
+						                    <pe:selectDetailLevel level="2" listener="#{shippersNominationsWeeklyReportsView.onRowSelect(shipperNomReport)}"/>  
 						                </p:commandLink> 
 							       </p:column>
 	
@@ -172,7 +172,6 @@
 					       <p:column headerText="#{msg['shipperNomReport_area']}" >
 					       		<h:outputText value="#{det.area_code}" />
 					       </p:column>
-
 					       <p:column headerText="#{msg['shipperNomReport_contracted']}" >
 					       		<h:outputText value="#{det.contracted_energy}" >
 					       			<f:convertNumber groupingUsed="true"  minFractionDigits="3" maxFractionDigits="3" />
@@ -217,7 +216,7 @@
 									</p:row>
 									<p:row>
 										<p:column>
-											<h:outputText value="#{shippersNominationsReportsView.selected.gas_day}" >
+											<h:outputText value="#{shippersNominationsWeeklyReportsView.selected.gas_day}" >
 							          			<f:convertDateTime pattern="dd/MM/yyyy" />
 							          		</h:outputText>					
 										</p:column>
@@ -227,7 +226,7 @@
 								<p:panelGrid columns="3" style="float:right;top:0px">
 										<h:outputText/> 
 								        <p:commandButton value="Back" icon="ui-icon fa fa-arrow-left"
-								        	actionListener="#{shippersNominationsReportsView.onSearch}"
+								        	actionListener="#{shippersNominationsWeeklyReportsView.onSearch}"
 								        	onstart="PF('cargando').show()"
 											oncomplete="PF('cargando').hide()" >  
 								            <pe:selectDetailLevel level="1"/>  
@@ -246,22 +245,22 @@
 								
 									<p:tabView scrollable="true" >
 										<p:tab title="#{msg['nom_points_concepts']}">
-											<ui:include src="/pages/nomination/shipper_report_daily/east.xhtml" />
+											<ui:include src="/pages/nomination/shipper_report_weekly/east.xhtml" />
 										</p:tab>
-										<p:tab title="#{msg['nom_park_unpark']}">
-											<ui:include src="/pages/nomination/shipper_report_daily/east_park.xhtml" />
-										</p:tab>
+										<!-- <p:tab title="#{msg['nom_park_unpark']}">
+											<ui:include src="/pages/nomination/shipper_report_weekly/east_park.xhtml" />
+										</p:tab> -->
 									</p:tabView>
 								</p:tab>
 								<p:tab title="#{msg['nom_west']}" rendered="#{changeSystemView.isOnshore()}">
 								
 									<p:tabView scrollable="true" >
 										<p:tab title="#{msg['nom_points_concepts']}">
-											<ui:include src="/pages/nomination/shipper_report_daily/west.xhtml" />
+											<ui:include src="/pages/nomination/shipper_report_weekly/west.xhtml" />
 										</p:tab>
-										<p:tab title="#{msg['nom_park_unpark']}">
-											<ui:include src="/pages/nomination/shipper_report_daily/west_park.xhtml" />
-										</p:tab>
+										<!-- <p:tab title="#{msg['nom_park_unpark']}">
+											<ui:include src="/pages/nomination/shipper_report_weekly/west_park.xhtml" />
+										</p:tab> -->
 									</p:tabView>
 		
 		
@@ -270,11 +269,11 @@
 								
 									<p:tabView scrollable="true" >
 										<p:tab title="#{msg['nom_points_concepts']}">
-											<ui:include src="/pages/nomination/shipper_report_daily/mix.xhtml" />
+											<ui:include src="/pages/nomination/shipper_report_weekly/mix.xhtml" />
 										</p:tab>
-										<p:tab title="#{msg['nom_park_unpark']}">
-											<ui:include src="/pages/nomination/shipper_report_daily/mix_park.xhtml" />
-										</p:tab>
+										<!-- <p:tab title="#{msg['nom_park_unpark']}">
+											<ui:include src="/pages/nomination/shipper_report_weekly/mix_park.xhtml" />
+										</p:tab> -->
 									</p:tabView>
 		
 								</p:tab>

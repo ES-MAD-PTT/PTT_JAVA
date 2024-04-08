@@ -650,9 +650,7 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 				// Aqui guardamos en listIdnContractNomPointDelete los Idn_nomination_point que existian en listIdnContractNomPointPrevious 
 				//pero no existen ahora en listIdnContractNomPoint para borrarlos de BBDD
 				for (BigDecimal idnContractNomPointPrevious : listIdnContractNomPointPrevious) {
-				    if (!listIdnContractNomPoint.contains(idnContractNomPointPrevious)) {
-				        listIdnContractNomPointDelete.add(idnContractNomPointPrevious);
-				    }
+				        listIdnContractNomPointDelete.add(idnContractNomPointPrevious);				    
 				}
 				
 				//Aqui guardamos el Idn_contract_point en nuestra lista listIdnContractNomPointDeleteIdnContractPoint idn_contract_nom_point
@@ -663,28 +661,13 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 				    }
 				}
 				
-				//Borramos los Idn_nomination_point nuevos en BBDD
+				//Borramos los Idn_nomination_point BBDD
 				if(listIdnContractNomPointDeleteIdnContractPoint != null) {
 					for (BigDecimal elemento : listIdnContractNomPointDeleteIdnContractPoint) {
 			            newContractNomPoint.setIdn_contract_nom_point(elemento);
 			            error = service.deleteContractNomPoint(newContractNomPoint);
 			        }
 				}
-				
-				// Crear una copia de listIdnContractNomPoint para evitar la ConcurrentModificationException
-				List<BigDecimal> tempListIdnContractNomPoint = new ArrayList<>(listIdnContractNomPoint);
-
-				for (BigDecimal idnContractNomPointPrevious : listIdnContractNomPointPrevious) {
-				    if (tempListIdnContractNomPoint.contains(idnContractNomPointPrevious)) {
-				        tempListIdnContractNomPoint.remove(idnContractNomPointPrevious);
-				    }
-				}
-				
-				// Borrar todos los elementos de listIdnContractNomPoint
-				listIdnContractNomPoint.clear();
-
-				// Asignar los valores de tempListIdnContractNomPoint a listIdnContractNomPoint
-				listIdnContractNomPoint.addAll(tempListIdnContractNomPoint);
 				
 				//Insertamos los Idn_nomination_point nuevos en BBDD
 				if(listIdnContractNomPoint != null) {
@@ -696,7 +679,6 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 				}
 				
 				listIdnContractNomPoint.clear();
-				tempListIdnContractNomPoint.clear();
 				listIdnContractNomPointPrevious.clear();
 				listIdnContractNomPointDelete.clear();
 			}else {

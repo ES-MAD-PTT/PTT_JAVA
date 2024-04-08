@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import com.atos.beans.ComboFilterNS;
 import com.atos.beans.nominations.ShippersNominationReportsDailyBean;
+import com.atos.beans.nominations.ShippersNominationReportsWeeklyBean;
 import com.atos.beans.nominations.ShippersNominationsReportsBean;
 import com.atos.filters.nominations.ShippersNominationsReportsFilter;
 import com.atos.mapper.nominations.NominationMapper;
@@ -53,7 +54,7 @@ public class ShippersNominationsWeeklyReportsServiceImpl implements ShippersNomi
 	}
 
 	@Override
-	public List<ShippersNominationReportsDailyBean> selectShipperNomReportsDailyDetail(ShippersNominationsReportsBean bean) {
+	public List<ShippersNominationReportsWeeklyBean> selectShipperNomReportsDailyDetail(ShippersNominationsReportsBean bean) {
 		return mapper.selectShipperNomReportsDailyDetail(bean);
 	}
 

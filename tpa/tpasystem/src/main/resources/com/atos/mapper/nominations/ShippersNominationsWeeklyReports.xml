@@ -691,7 +691,7 @@ SELECT ndq.gas_day, n.idn_contract, ne.zone_code AS "zone_code",
  
     </select>
  
-     <select id="selectShipperNomReportsParkUnpark" parameterType="com.atos.beans.nominations.ShippersNominationsReportsBean" resultType="com.atos.beans.nominations.ShippersNominationReportsDailyBean">
+     <select id="selectShipperNomReportsParkUnpark" parameterType="com.atos.beans.nominations.ShippersNominationsReportsBean" resultType="com.atos.beans.nominations.ShippersNominationReportsWeeklyBean">
  	
  SELECT ndq.gas_day, n.idn_contract, c.contract_code, n.idn_nomination,
        ne.zone_code AS "zone_code",

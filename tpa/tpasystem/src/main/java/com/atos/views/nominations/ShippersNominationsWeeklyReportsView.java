@@ -30,6 +30,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import com.atos.beans.MessageBean;
 import com.atos.beans.nominations.ShippersNominationReportsDailyBean;
+import com.atos.beans.nominations.ShippersNominationReportsWeeklyBean;
 import com.atos.beans.nominations.ShippersNominationsReportsBean;
 import com.atos.filters.nominations.ShippersNominationsReportsFilter;
 import com.atos.services.nominations.ShippersNominationsWeeklyReportsService;
@@ -52,7 +53,7 @@ public class ShippersNominationsWeeklyReportsView extends CommonView implements 
 	private ShippersNominationsReportsBean selected;
 	
 	// Detail tabs
-	private List<ShippersNominationReportsDailyBean> east_tab, west_tab, mix_tab;
+	private List<ShippersNominationReportsWeeklyBean> east_tab, west_tab, mix_tab;
 
 	private boolean showHideDaysEast1 = true; 
 	private String widthEast1 = "4300px"; 
@@ -109,15 +110,15 @@ public class ShippersNominationsWeeklyReportsView extends CommonView implements 
 		this.selected = selected;
 	}
 
-	public List<ShippersNominationReportsDailyBean> getEast_tab() {
+	public List<ShippersNominationReportsWeeklyBean> getEast_tab() {
 		return east_tab;
 	}
 
-	public List<ShippersNominationReportsDailyBean> getWest_tab() {
+	public List<ShippersNominationReportsWeeklyBean> getWest_tab() {
 		return west_tab;
 	}
 
-	public List<ShippersNominationReportsDailyBean> getMix_tab() {
+	public List<ShippersNominationReportsWeeklyBean> getMix_tab() {
 		return mix_tab;
 	}
 
@@ -327,16 +328,16 @@ public class ShippersNominationsWeeklyReportsView extends CommonView implements 
 		
 		bean.setIdn_zone(map.get(Constants.EAST));
 		east_tab  = service.selectShipperNomReportsDailyDetail(bean);
-		east_tab_park = service.selectShipperNomReportsParkUnpark(bean);
+//		east_tab_park = service.selectShipperNomReportsParkUnpark(bean);
 
 		bean.setIdn_zone(map.get(Constants.WEST));
 		west_tab  = service.selectShipperNomReportsDailyDetail(bean);
-		west_tab_park = service.selectShipperNomReportsParkUnpark(bean);
+//		west_tab_park = service.selectShipperNomReportsParkUnpark(bean);
 
 		
 		bean.setIdn_zone(map.get(Constants.MIX));
 		mix_tab  = service.selectShipperNomReportsDailyDetail(bean);
-		mix_tab_park = service.selectShipperNomReportsParkUnpark(bean);
+//		mix_tab_park = service.selectShipperNomReportsParkUnpark(bean);
 		
     }
 	

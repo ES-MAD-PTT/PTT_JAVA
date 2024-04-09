@@ -1,9 +1,14 @@
 package com.atos.views.nominations;
 
 import java.awt.Color;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
@@ -19,7 +24,11 @@ import javax.faces.context.FacesContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.DataFormat;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFColor;
@@ -35,6 +44,7 @@ import com.atos.beans.nominations.ShippersNominationsReportsBean;
 import com.atos.filters.nominations.ShippersNominationsReportsFilter;
 import com.atos.services.nominations.ShippersNominationsWeeklyReportsService;
 import com.atos.utils.Constants;
+import com.atos.utils.POIXSSFExcelUtils;
 import com.atos.views.CommonView;
 import com.atos.views.MessagesView;
 
@@ -494,5 +504,83 @@ public class ShippersNominationsWeeklyReportsView extends CommonView implements 
 		 }
 		 return widthEastWest2; 
 	 }
+	 
+	//**************************************Excel*************************************************************************
+		
+		public void downloadFile() {
+			File file = loadRequest();
+			POIXSSFExcelUtils.downloadFile(file);
+		}
+		
+		private File loadRequest() {
+			ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication().getResourceBundle(FacesContext.getCurrentInstance(),"msg");
+			File file = null;
+			try {
+				Row row = null;
+				Cell cell = null;
+				int rowNum = 0;
+				XSSFWorkbook workBook = new XSSFWorkbook();
+				XSSFSheet sheet = workBook.createSheet("Data");
+				Font contentFontBold = POIXSSFExcelUtils.createFont(workBook, IndexedColors.BLACK.index, (short)11, true);
+				Font contentFont = POIXSSFExcelUtils.createFont(workBook, IndexedColors.BLACK.index, (short)11, false);
+				CellStyle cellStyleTableBlueCenter = POIXSSFExcelUtils.createStyle(workBook, contentFontBold, CellStyle.ALIGN_CENTER, IndexedColors.PALE_BLUE.index, 
+						true, IndexedColors.GREY_80_PERCENT.index, CellStyle.BORDER_THIN, true, workBook.getCreationHelper().createDataFormat().getFormat("dd-MMM-yyyy"));
+				CellStyle cellStyleTableGreyCenter = POIXSSFExcelUtils.createStyle(workBook, contentFontBold, CellStyle.ALIGN_CENTER, IndexedColors.GREY_25_PERCENT.index, 
+						true, IndexedColors.GREY_80_PERCENT.index, CellStyle.BORDER_THIN, true, workBook.getCreationHelper().createDataFormat().getFormat("dd-MMM-yyyy"));
+				CellStyle cellStyleTableFormatNumber = POIXSSFExcelUtils.createStyle(workBook, contentFont, CellStyle.ALIGN_RIGHT, IndexedColors.WHITE.index, 
+						true, IndexedColors.GREY_80_PERCENT.index, CellStyle.BORDER_THIN, true, workBook.getCreationHelper().createDataFormat().getFormat("#,##0.00"));
+				CellStyle cellStyleTableFormatDate = POIXSSFExcelUtils.createStyle(workBook, contentFont, CellStyle.ALIGN_LEFT, IndexedColors.WHITE.index, 
+						true, IndexedColors.GREY_80_PERCENT.index, CellStyle.BORDER_THIN, true, workBook.getCreationHelper().createDataFormat().getFormat("dd-MM-yyyy"));
+				CellStyle cellNormalStyle = POIXSSFExcelUtils.createStyle(workBook, contentFont, CellStyle.ALIGN_LEFT, IndexedColors.WHITE.index, 
+						true, IndexedColors.GREY_80_PERCENT.index, CellStyle.BORDER_THIN, true, workBook.getCreationHelper().createDataFormat().getFormat("#,##0.00"));
+				
+				List<String> headerTable1 = Arrays.asList(msgs.getString("shipperNomReport_gasDay"), msgs.getString("shipperNomReport_shipper"), 
+						msgs.getString("shipperNomReport_shipperName"),msgs.getString("shipperNomReport_contracted"),msgs.getString("shipperNomReport_energy"),
+						msgs.getString("shipperNomReport_overusage"), msgs.getString("shipperNomReport_imbalance"));
+				List<String> headerTable2 = Arrays.asList(msgs.getString("shipperNomReport_gasDay"), msgs.getString("shipperNomReport_shipper"), 
+						msgs.getString("shipperNomReport_shipperName"), msgs.getString("shipperNomReport_area"), 
+						msgs.getString("shipperNomReport_contracted"), msgs.getString("shipperNomReport_energy"), msgs.getString("shipperNomReport_overusage"));
+				
+				POIXSSFExcelUtils.createSimpleHeaderTable(sheet, row, cell, rowNum, 0, headerTable1, cellStyleTableBlueCenter);
+				rowNum ++;
+				if(items != null && !items.isEmpty()) {
+					for(int i = 0; i < items.size(); i++) {
+						row = sheet.createRow(rowNum);
+						Object[] properties1 = {
+								items.get(i).getGas_day(),items.get(i).getUser_group_id(), items.get(i).getUser_group_name(), items.get(i).getContracted_energy(), 
+								items.get(i).getNominated_energy(), items.get(i).getOverusage(), items.get(i).getImbalance()
+					    };
+					
+						POIXSSFExcelUtils.createCellsTable(row, cell, 0, cellStyleTableFormatDate, cellStyleTableFormatNumber, cellNormalStyle, properties1);
+						rowNum++;
+						//Creamos la cabecera de los detalles con sus detalles
+						POIXSSFExcelUtils.createSimpleHeaderTable(sheet, row, cell, rowNum, 1, headerTable2, cellStyleTableGreyCenter);
+						rowNum++;
+						
+						for(int m = 0; m < items.get(i).getDetails().size(); m++) {
+							row = sheet.createRow(rowNum);
+							Object[] properties2 = {
+									items.get(i).getDetails().get(m).getGas_day(), items.get(i).getDetails().get(m).getUser_group_id(), 
+									items.get(i).getDetails().get(m).getUser_group_name(), items.get(i).getDetails().get(m).getArea_code(), items.get(i).getDetails().get(m).getContracted_energy(),
+									items.get(i).getDetails().get(m).getNominated_energy(), items.get(i).getDetails().get(m).getOverusage()
+							    };
+							POIXSSFExcelUtils.createCellsTable(row, cell, 1, cellStyleTableFormatDate, cellStyleTableFormatNumber, cellNormalStyle, properties2);
+							rowNum++;
+							}
+					}	
+				}
+
+				FileOutputStream outFile = new FileOutputStream("NominationsShipperReportWeekly.xlsx");
+				workBook.write(outFile);
+				outFile.close();
+				file = new File("NominationsShipperReportWeekly.xlsx");
+
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			return file;
+		}
 	
 }

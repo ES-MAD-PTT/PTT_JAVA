@@ -50,6 +50,7 @@ public class MeteredPointShipperView  extends CommonView implements Serializable
 	
 	private List<MeteredPointShipperBean> items;
 	private MeteredPointShipperBean selection;
+	private MeteredPointShipperBean copySelection;
 	private List<MeteredPointShipperBean> selectionTableAddEdit;
 	List<MeteredPointShipperBean> copySelectionTableAddEdit;
 	private List<MeteredPointShipperBean> allDataTableAddEdit;
@@ -199,10 +200,9 @@ public class MeteredPointShipperView  extends CommonView implements Serializable
 	}
 	
 	public void prepareEdit(MeteredPointShipperBean item) {
-		//MeteredPointShipperBean idMetPointShipper = service.selectMetPointByDatesAndUserGroup(item);
 		edit = true;
 		selection = item;
-		//selection.setIdnMeterdPointShipper(idMetPointShipper.getIdnMeterdPointShipper());
+		copySelection = new MeteredPointShipperBean(selection);
 		selection.setIdnSystem(getChangeSystemView().getIdn_active());
 		selection.setUserName(getUser().getUsername());
 		selectionTableAddEdit = new ArrayList<MeteredPointShipperBean>();
@@ -273,6 +273,12 @@ public class MeteredPointShipperView  extends CommonView implements Serializable
 			log.error(errorMsg);
 			return;
 		}
+		if(selection.getStartDate() != null && selection.getEndDate() != null && selection.getStartDate().after(selection.getEndDate())) {
+			errorMsg = msgs.getString("metPointShipper_endDateAfterStartDate"); 
+			getMessages().addMessage(Constants.head_menu[0], new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
+			log.error(errorMsg);
+			return;
+		}
 		//Si no hay nada seleccionado en la tabla se saca mensaje
 		if(selectionTableAddEdit == null || selectionTableAddEdit.isEmpty()) {
 			errorMsg = msgs.getString("metPointShipper_need_meteredPointID"); 
@@ -283,6 +289,12 @@ public class MeteredPointShipperView  extends CommonView implements Serializable
 		//Si ya existen registro de metered point form shipper se saca mensaje
 		MeteredPointsShipperFilter filter = new MeteredPointsShipperFilter(selection.getIdnShipper(), selection.getStartDate(), selection.getEndDate());
 		List<MeteredPointShipperBean> metPointShipper = service.selectMeteredPointShipper(filter);
+		if(edit) {
+			metPointShipper.removeIf(item -> item.getIdnShipper().compareTo(copySelection.getIdnShipper()) == 0 &&
+					item.getShipper().equals(copySelection.getShipper()) &&
+					item.getStartDate().equals(copySelection.getStartDate()) &&
+					item.getEndDate().equals(copySelection.getEndDate()));
+		}
 		if(metPointShipper != null && !metPointShipper.isEmpty() && metPointShipper.size() > 0) {
 			errorMsg = msgs.getString("metPointShipper_exist_meteredPoint_thoseDates"); 
 			getMessages().addMessage(Constants.head_menu[0], new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
@@ -305,7 +317,8 @@ public class MeteredPointShipperView  extends CommonView implements Serializable
 			meteredPointId = selectionTableAddEdit.stream().map(MeteredPointShipperBean::getMeteringPoint).collect(Collectors.toList());
 			switch (error) {
 			case "0":
-				String[] par2 = {selection.getShipper() + "-" + meteredPointId, msgs.getString("metPointShipper_msg") };
+				String shipper = getShippers().get(selection.getIdnShipper()).toString();
+				String[] par2 = {shipper + "-" + meteredPointId, msgs.getString("metPointShipper_msg") };
 				String msg = getMessageResourceString("inserting_ok", par2);
 				getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.INFO,summaryMsgOk, msg, Calendar.getInstance().getTime()));
 				log.error(errorMsg);
@@ -367,6 +380,14 @@ public class MeteredPointShipperView  extends CommonView implements Serializable
 				break;
 			}
 		}
+	}
+	
+	public void cancel() {
+		selection = new MeteredPointShipperBean();
+		selectionTableAddEdit = new ArrayList<MeteredPointShipperBean>();
+		allDataTableAddEdit = new ArrayList<MeteredPointShipperBean>();
+		copySelectionTableAddEdit = new ArrayList<MeteredPointShipperBean>();
+		onSearch();
 	}
 	
 	public void chargeAddEditTable() {

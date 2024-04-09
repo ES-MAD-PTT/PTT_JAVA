@@ -175,7 +175,7 @@
 		</h:form>
 
 		<p:dialog widgetVar="dlgNewContractNomPoint" resizable="false"
-			closable="true" modal="true" appendTo="@(body)"
+			modal="true" appendTo="@(body)"
 			header="#{selection.idnShipper == null ? msg['metPointShipper_new'] : msg['metPointShipper_edit']}" width="70%">
 			<h:form id="formNewEntity">
 				<ui:param name="selection"
@@ -323,7 +323,8 @@
 						oncomplete="PF('cargando').hide()" />
 					<p:commandButton value="#{msg['cancel']}"
 						styleClass="ui-confirmdialog-no" icon="ui-icon-close"
-						update="formNewEntity" process="@this"
+						update=":#{p:component('contractNomPoints1')},:formNewEntity" process="@this"
+						action="#{meteredPointShipperView.cancel}"
 						oncomplete="PF('dlgNewContractNomPoint').hide()" />
 				</p:panelGrid>
 			</h:form>

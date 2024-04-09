@@ -38,6 +38,14 @@ public class MeteredPointShipperBean implements Serializable {
 		this.customerType = customerType;
 		this.group = group;
 	}
+	
+	public MeteredPointShipperBean(MeteredPointShipperBean item) {
+		this.idnShipper = item.idnShipper;
+		this.shipper = item.shipper;
+		this.startDate = item.startDate;
+		this.endDate = item.endDate;
+	}
+	
 	public String getShipper() {
 		return shipper;
 	}

@@ -280,6 +280,15 @@ public class MeteredPointShipperView  extends CommonView implements Serializable
 			log.error(errorMsg);
 			return;
 		}		
+		//Si ya existen registro de metered point form shipper se saca mensaje
+		MeteredPointsShipperFilter filter = new MeteredPointsShipperFilter(selection.getIdnShipper(), selection.getStartDate(), selection.getEndDate());
+		List<MeteredPointShipperBean> metPointShipper = service.selectMeteredPointShipper(filter);
+		if(metPointShipper != null && !metPointShipper.isEmpty() && metPointShipper.size() > 0) {
+			errorMsg = msgs.getString("metPointShipper_exist_meteredPoint_thoseDates"); 
+			getMessages().addMessage(Constants.head_menu[0], new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
+			log.error(errorMsg);
+			return;
+		}
 		List<String> meteredPointId = new ArrayList<String>();
 		if(!edit) {
 			//Lo que tenemos seleccionado ya existe en base de datos sacamos mensaje
@@ -288,15 +297,6 @@ public class MeteredPointShipperView  extends CommonView implements Serializable
 	                .anyMatch(item -> item.getIdnMeteringPoint().equals(selection.getIdnMeteringPoint()));
 			if(exist) {
 				errorMsg = msgs.getString("metPointShipper_alreadySaved_meteredPoint"); 
-				getMessages().addMessage(Constants.head_menu[0], new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
-				log.error(errorMsg);
-				return;
-			}
-			//Si ya existen registro de metered point form shipper se saca mensaje
-			MeteredPointsShipperFilter filter = new MeteredPointsShipperFilter(selection.getIdnShipper(), selection.getStartDate(), selection.getEndDate());
-			List<MeteredPointShipperBean> metPointShipper = service.selectMeteredPointShipper(filter);
-			if(metPointShipper != null && !metPointShipper.isEmpty() && metPointShipper.size() > 0) {
-				errorMsg = msgs.getString("metPointShipper_exist_meteredPoint_thoseDates"); 
 				getMessages().addMessage(Constants.head_menu[0], new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
 				log.error(errorMsg);
 				return;

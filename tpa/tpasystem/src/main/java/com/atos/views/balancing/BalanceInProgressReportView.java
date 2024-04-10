@@ -299,7 +299,7 @@ public class BalanceInProgressReportView extends CommonView {
     	int initialRowToProcess;
     	int[] aiPercentageCells;		// Para mostrar 2 decimales en las cantidades.
     	if(getChangeSystemView().isOnshore()){
-    		initialRowToProcess = 5;
+    		initialRowToProcess = 3;
     		aiPercentageCells = new int[] {39, 49, 50, 51};
     	} else {	// offshore
     		initialRowToProcess = 4;

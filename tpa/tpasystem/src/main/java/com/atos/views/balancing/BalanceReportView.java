@@ -29,7 +29,6 @@ import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.primefaces.context.RequestContext;
 
 import com.atos.beans.MessageBean;
 import com.atos.beans.balancing.BalanceReportBean;
@@ -287,7 +286,7 @@ public class BalanceReportView extends CommonView {
     	int initialRowToProcess;
     	int[] aiPercentageCells;		// Para mostrar 2 decimales en las cantidades.
     	if(getChangeSystemView().isOnshore()){
-    		initialRowToProcess = 5;
+    		initialRowToProcess = 3;
     		aiPercentageCells = new int[] {39, 52, 53, 54};
     	} else {	// offshore
     		initialRowToProcess = 4;

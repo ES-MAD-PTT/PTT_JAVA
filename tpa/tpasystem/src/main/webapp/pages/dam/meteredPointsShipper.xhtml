@@ -241,7 +241,8 @@
 							</p:column>
 							<p:column>
 								<p:selectOneMenu id="newMeteredPointsId" style="width:100px"
-									value="#{selection.idnMeteringPoint}" disabled="#{meteredPointShipperView.disabledEdit}">
+									value="#{selection.idnMeteringPoint}" disabled="#{meteredPointShipperView.disabledEdit}"
+									filter="true" filterMatchMode="contains">
 									<f:selectItem itemLabel="" itemValue="" />
 									<f:selectItems
 										value="#{meteredPointShipperView.meteredPoints.entrySet()}"
@@ -257,7 +258,8 @@
 							</p:column>
 							<p:column>
 								<p:selectOneMenu id="newCustomerTypesId" style="width:100px"
-									value="#{selection.idnCustomerType}" disabled="#{meteredPointShipperView.disabledEdit}">
+									value="#{selection.idnCustomerType}" disabled="#{meteredPointShipperView.disabledEdit}"
+									filter="true" filterMatchMode="contains">
 									<f:selectItem itemLabel="" itemValue="" />
 									<f:selectItems
 										value="#{meteredPointShipperView.customerTypes.entrySet()}"
@@ -272,7 +274,8 @@
 							</p:column>
 							<p:column>
 								<p:selectOneMenu id="newGroupsId" style="width:100px"
-									value="#{selection.idnGroup}" disabled="#{meteredPointShipperView.disabledEdit}">
+									value="#{selection.idnGroup}" disabled="#{meteredPointShipperView.disabledEdit}"
+									filter="true" filterMatchMode="contains">
 									<f:selectItem itemLabel="" itemValue="" />
 									<f:selectItems
 										value="#{meteredPointShipperView.groups.entrySet()}"

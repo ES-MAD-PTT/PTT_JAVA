@@ -304,7 +304,7 @@ public class BalanceIntradayReportView extends CommonView {
     	int initialRowToProcess;
     	int[] aiPercentageCells;		// Para mostrar 2 decimales en las cantidades.
     	if(getChangeSystemView().isOnshore()){
-    		initialRowToProcess = 5;
+    		initialRowToProcess = 3;
     		aiPercentageCells = new int[] {39, 51, 52, 53};
     	} else {	// offshore
     		initialRowToProcess = 4;

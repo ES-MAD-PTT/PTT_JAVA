@@ -5,8 +5,6 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Date;
 
-import com.atos.filters.booking.CRManagementFilter;
-
 public class MeteringManagementFilter implements Serializable {
 
 	/**
@@ -20,6 +18,7 @@ public class MeteringManagementFilter implements Serializable {
 	private BigDecimal[] areaIds;
 	private BigDecimal[] systemPointId;
 	private BigDecimal meteringInputId;
+	private BigDecimal idnShipper;
 
 	private BigDecimal idn_user;
 	private String type_code;
@@ -55,6 +54,7 @@ public class MeteringManagementFilter implements Serializable {
 		}
 		this.idn_user = _filter.getIdn_user();
 		this.type_code = _filter.getType_code();
+		this.idnShipper = _filter.getIdnShipper();
 	}
 	
 	public Date getGasDayFrom() {
@@ -63,6 +63,14 @@ public class MeteringManagementFilter implements Serializable {
 
 	public void setGasDayFrom(Date gasDayFrom) {
 		this.gasDayFrom = gasDayFrom;
+	}
+
+	public BigDecimal getIdnShipper() {
+		return idnShipper;
+	}
+
+	public void setIdnShipper(BigDecimal idnShipper) {
+		this.idnShipper = idnShipper;
 	}
 
 	public Date getGasDayTo() {

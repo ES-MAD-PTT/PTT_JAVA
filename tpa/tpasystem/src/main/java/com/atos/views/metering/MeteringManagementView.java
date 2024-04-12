@@ -36,6 +36,7 @@ import org.primefaces.model.UploadedFile;
 
 import com.atos.beans.FileBean;
 import com.atos.beans.MessageBean;
+import com.atos.beans.UserBean;
 import com.atos.beans.metering.MeasureGasQualityParamBean;
 import com.atos.beans.metering.MeasurementBean;
 import com.atos.beans.metering.PointDto;
@@ -419,6 +420,10 @@ public class MeteringManagementView extends CommonView {
 	private void initFiltersCombos(){
 		
     	filters = new MeteringManagementFilter();
+    	UserBean urerBean = super.getUser();
+    	if(isShipper()) {
+    		filters.setIdnShipper(urerBean.getIdn_user_group());
+    	}
 
     	// Primer dia de balance abierto.
     	openPeriodFistDay = service.selectOpenPeriodFirstDay();
@@ -455,8 +460,8 @@ public class MeteringManagementView extends CommonView {
     	codesCombo = service.selectMeteringInputCodes(filters);
     	// El valor del filtro por defecto de inputCodes es nulo, asi que no se actualiza.
     	
-		filters.setIdn_user(super.getUser().getIdn_user());
-		filters.setType_code(super.getUser().getUser_type());
+		filters.setIdn_user(urerBean.getIdn_user());
+		filters.setType_code(urerBean.getUser_type());
     	
     	// Se da valor inicial al filtro "previo" para luego poder saber si los filtros han ido cambiando.
     	prevFilters = new MeteringManagementFilter(filters);

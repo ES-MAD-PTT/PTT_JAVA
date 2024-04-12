@@ -86,80 +86,96 @@
 		En BD estan configuradas como conceptos EAST y WEST. Se muestra el punto si es de entrada o salida de un area seleccionada en el combo.
 		Ejemplos: puntos 'RA6_EAST', 'RA6_WEST'-->
      <select id="selectMeteringSystemPoints" resultType="com.atos.beans.ComboFilterNS">
-		 SELECT 	idn_system_point AS key,
-		       		point_code       AS value
-		 FROM (
-		       SELECT tsp.idn_system_point,
-		              tsp.point_code      
-		         FROM tpa_tsystem_point tsp
-		        WHERE tsp.idn_system_point_group =
-		              (SELECT tspgr.idn_system_point_group FROM tpa_tsystem_point_group tspgr WHERE tspgr.group_code = 'METERED') 
-		              <choose> 
-		                <when test="areaIds != null and areaIds.length > 0"> 
-		                  <foreach item="item" index="index"  collection="areaIds" open="and tsp.idn_area in (" separator="," close=")">
-		                    #{item} 
-		                  </foreach>
-		                </when> 
-		                <otherwise>
-		                  AND tsp.idn_area IN (-1) 
-		                </otherwise>
-		              </choose>
-		      UNION
-		       SELECT sp_met.idn_system_point,
-		              sp_met.point_code      
-		         FROM tpa_tnom_concept_metering ncm,
-		              tpa_tsystem_point         sp_met,
-		              tpa_tsystem_point_connect spc
-		        WHERE spc.idn_nomination_concept = ncm.idn_nomination_concept
-		          AND sp_met.idn_system_point = ncm.idn_system_point
-		          AND sp_met.idn_system_point_group =
-		              (SELECT tspgr.idn_system_point_group FROM tpa_tsystem_point_group tspgr WHERE tspgr.group_code = 'METERED')
-		              <choose> 
-		                <when test = "areaIds != null and areaIds.length > 0"> 
-		                  AND
-		                  (
-		                  <foreach item="item" index="index"  collection="areaIds" open=" spc.idn_area_from in (" separator="," close=")">
-		                    #{item} 
-		                  </foreach>
-		                  OR
-		                  <foreach item="item" index="index"  collection="areaIds" open=" spc.idn_area_to in (" separator="," close=")">
-		                    #{item} 
-		                  </foreach>
-		                  )
-		                </when> 
-		                <otherwise>
-		                  AND (-1) IN (spc.idn_area_to, spc.idn_area_from)
-		                </otherwise>
-		              </choose>    
-			  UNION
-		       SELECT sp_met.idn_system_point,
-		              sp_met.point_code      
-		         FROM tpa_tsystem_point         sp_met,
-		              tpa_tsystem_point_connect spc,
-					  tpa_tsystem_point_type    spt
-		        WHERE spt.type_code = 'CONNECTION'
-		          AND sp_met.idn_system_point = spc.idn_system_point
-		          AND sp_met.idn_system_point_group =
-		              (SELECT tspgr.idn_system_point_group FROM tpa_tsystem_point_group tspgr WHERE tspgr.group_code = 'CONNECTION')
-		              <choose> 
-		                <when test = "areaIds != null and areaIds.length > 0"> 
-		                  AND
-		                  (
-		                  <foreach item="item" index="index"  collection="areaIds" open=" spc.idn_area_from in (" separator="," close=")">
-		                    #{item} 
-		                  </foreach>
-		                  OR
-		                  <foreach item="item" index="index"  collection="areaIds" open=" spc.idn_area_to in (" separator="," close=")">
-		                    #{item} 
-		                  </foreach>
-		                  )
-		                </when> 
-		                <otherwise>
-		                  AND (-1) IN (spc.idn_area_to, spc.idn_area_from)
-		                </otherwise>
-		              </choose>  					  
-		)
-		ORDER BY upper(point_code) asc
+		select 
+			<if test="idnShipper == null or idnShipper == ''">
+			idn_system_point AS key,
+			       point_code       AS value
+			</if>
+			<if test="idnShipper != null and idnShipper != ''"> 
+				sp.idn_system_point AS key,
+			       sp.point_code       AS value
+				from tpa_tshipper_met_point p,
+				     tpa_tsystem_point      sp
+				where p.idn_user_group = #{idnShipper}
+				and  p.idn_met_point = sp.idn_system_point
+				  and sysdate between p.active_date_from and p.active_date_to
+				  and idn_met_point in (SELECT   idn_system_point  
+			</if>            
+           FROM (
+           SELECT tsp.idn_system_point,
+                  tsp.point_code      
+		             FROM tpa_tsystem_point tsp
+		            WHERE tsp.idn_system_point_group =
+		                  (SELECT tspgr.idn_system_point_group FROM tpa_tsystem_point_group tspgr WHERE tspgr.group_code = 'METERED') 
+		                  <choose> 
+		                    <when test="areaIds != null and areaIds.length > 0"> 
+		                      <foreach item="item" index="index"  collection="areaIds" open="and tsp.idn_area in (" separator="," close=")">
+		                        #{item} 
+		                      </foreach>
+		                    </when> 
+		                    <otherwise>
+		                      AND tsp.idn_area IN (-1) 
+		                    </otherwise>
+		                  </choose>
+		          UNION
+		           SELECT sp_met.idn_system_point,
+		                  sp_met.point_code      
+		             FROM tpa_tnom_concept_metering ncm,
+		                  tpa_tsystem_point         sp_met,
+		                  tpa_tsystem_point_connect spc
+		            WHERE spc.idn_nomination_concept = ncm.idn_nomination_concept
+		              AND sp_met.idn_system_point = ncm.idn_system_point
+		              AND sp_met.idn_system_point_group =
+		                  (SELECT tspgr.idn_system_point_group FROM tpa_tsystem_point_group tspgr WHERE tspgr.group_code = 'METERED')
+		                  <choose> 
+		                    <when test = "areaIds != null and areaIds.length > 0"> 
+		                      AND
+		                      (
+		                      <foreach item="item" index="index"  collection="areaIds" open=" spc.idn_area_from in (" separator="," close=")">
+		                        #{item} 
+		                      </foreach>
+		                      OR
+		                      <foreach item="item" index="index"  collection="areaIds" open=" spc.idn_area_to in (" separator="," close=")">
+		                        #{item} 
+		                      </foreach>
+		                      )
+		                    </when> 
+		                    <otherwise>
+		                      AND (-1) IN (spc.idn_area_to, spc.idn_area_from)
+		                    </otherwise>
+		                  </choose>   
+		        UNION
+		           SELECT sp_met.idn_system_point,
+		                  sp_met.point_code      
+		             FROM tpa_tsystem_point         sp_met,
+		                  tpa_tsystem_point_connect spc,
+		            tpa_tsystem_point_type    spt
+		            WHERE spt.type_code = 'CONNECTION'
+		              AND sp_met.idn_system_point = spc.idn_system_point
+		              AND sp_met.idn_system_point_group =
+		                  (SELECT tspgr.idn_system_point_group FROM tpa_tsystem_point_group tspgr WHERE tspgr.group_code = 'CONNECTION')
+		                  <choose> 
+		                    <when test = "areaIds != null and areaIds.length > 0"> 
+		                      AND
+		                      (
+		                      <foreach item="item" index="index"  collection="areaIds" open=" spc.idn_area_from in (" separator="," close=")">
+		                        #{item} 
+		                      </foreach>
+		                      OR
+		                      <foreach item="item" index="index"  collection="areaIds" open=" spc.idn_area_to in (" separator="," close=")">
+		                        #{item} 
+		                      </foreach>
+		                      )
+		                    </when> 
+		                    <otherwise>
+		                      AND (-1) IN (spc.idn_area_to, spc.idn_area_from)
+		                    </otherwise>
+		                  </choose>             
+		    )
+		    <if test="idnShipper != null and idnShipper != ''"> 
+		    )
+		    </if>
+				
     </select>
     
      <select id="selectMeteringInputCodes" resultType="com.atos.beans.ComboFilterNS">

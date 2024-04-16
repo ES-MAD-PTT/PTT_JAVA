@@ -1,6 +1,5 @@
 package com.atos.services.quality;
 
-import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,8 +12,6 @@ import java.util.ResourceBundle;
 
 import javax.faces.context.FacesContext;
 
-import org.primefaces.model.DefaultStreamedContent;
-import org.primefaces.model.StreamedContent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +27,6 @@ import com.atos.beans.quality.OffSpecIncidentBean;
 import com.atos.beans.quality.OffSpecResponseBean;
 import com.atos.beans.quality.OffSpecStatusBean;
 import com.atos.beans.quality.OffSpecStatusRuleBean;
-import com.atos.beans.scadaAlarms.EmergencyDiffDayDetailsBean;
 import com.atos.exceptions.ValidationException;
 import com.atos.filters.quality.OffSpecGasReportManagementFilter;
 import com.atos.mapper.NotificationMapper;
@@ -318,44 +314,71 @@ public class OffSpecGasReportManagementServiceImpl implements OffSpecGasReportMa
     		throw new Exception("Error inserting into Off Specification Event Log table.");   		
     	}
 
-		if(OffSpecStatusRuleBean.askOtherShippersYes.equalsIgnoreCase(_incid.getChosenNextStatusRule().getAskOtherShippers())) {
-
-			BigDecimal origShipperId = _incid.getNewOriginatorShipperId();
-			// Si no se ha rellenado el shipper en la ultima pantalla, se toma el que hubiera antes.
-			if( origShipperId == null)
-				origShipperId = _incid.getOriginatorShipperId();
-			
-			if(origShipperId == null)
-				throw new Exception("It's not possible to disclose the off-spec event without be known the originator shipper.");
-			
-			List<BigDecimal> allShipperIds = getAllShipperIdsForInsert();
-			for(BigDecimal bdShipperId :allShipperIds){
-						
-				if((origShipperId != null) && (bdShipperId.compareTo(origShipperId) == 0))
-					continue;
-				
-				discloseIncident(_incid, bdShipperId, _user);
-			}			
-		}
+		/*
+		 * if(OffSpecStatusRuleBean.askOtherShippersYes.equalsIgnoreCase(_incid.
+		 * getChosenNextStatusRule().getAskOtherShippers())) {
+		 * 
+		 * BigDecimal origShipperId = _incid.getNewOriginatorShipperId(); // Si no se ha
+		 * rellenado el shipper en la ultima pantalla, se toma el que hubiera antes. if(
+		 * origShipperId == null) origShipperId = _incid.getOriginatorShipperId();
+		 * 
+		 * if(origShipperId == null) throw new
+		 * Exception("It's not possible to disclose the off-spec event without be known the originator shipper."
+		 * );
+		 * 
+		 * //List<BigDecimal> allShipperIds = getAllShipperIdsForInsert();
+		 * //for(BigDecimal bdShipperId :allShipperIds){ for(BigDecimal bdShipperId :
+		 * _incid.getMultiShippers()) {
+		 * 
+		 * if((origShipperId != null) && (bdShipperId.compareTo(origShipperId) == 0))
+		 * continue;
+		 * 
+		 * discloseIncident(_incid, bdShipperId, _user); } }
+		 */
 			
 		// Si hubiera algun error al actualizar las tablas, el bean quedaria con los datos "new" para que el usuario siga trabajando con ellos.
     }
-	
-	private void discloseIncident(OffSpecIncidentBean _incid, BigDecimal _receiverShipperId, UserBean _user) throws Exception {
-		
-		OffSpecResponseBean osResponse  = new OffSpecResponseBean();
+    
+    @Override
+    public Integer saveAction(OffSpecIncidentBean _incid, UserBean _user) throws Exception {
+    	//saveIncident(_incid, _user);
+    	int res = 1;
+		for(int i = 0; i < _incid.getMultiShippers().size(); i++) {
+			Object idnShipperObject = _incid.getMultiShippers().get(i);
+			BigDecimal idnShipper = new BigDecimal(String.valueOf(idnShipperObject));
+			
+			OffSpecResponseBean osResponse  = new OffSpecResponseBean();
 
-		osResponse.setIncidentId(_incid.getIncidentId());
-		osResponse.setGroupId(_receiverShipperId);
-		osResponse.setIsResponded(OffSpecResponseBean.isRespondedNo);
-		osResponse.setUserId(_user.getIdn_user());
-		
-		// Se inserta un registro en la tabla de respuestas para el disclose.
-		int res = osgrmMapper.insertOffSpecResponse(osResponse);
-		if(res!=1){
-    		throw new Exception("Error inserting into Off Specification Event Response table.");   		
-    	}
-	}
+			osResponse.setIncidentId(_incid.getIncidentId());
+			osResponse.setGroupId(idnShipper);
+			osResponse.setIsResponded(OffSpecResponseBean.isRespondedNo);
+			osResponse.setUserId(_user.getIdn_user());
+			
+			// Se inserta un registro en la tabla de respuestas para el disclose.
+			res = osgrmMapper.insertOffSpecResponse(osResponse);
+			if(res!=1){
+	    		throw new Exception("Error inserting into Off Specification Event Response table.");   		
+	    	}
+		}	
+		return res;
+    }
+	
+	/*
+	 * private void discloseIncident(OffSpecIncidentBean _incid, BigDecimal
+	 * _receiverShipperId, UserBean _user) throws Exception {
+	 * 
+	 * OffSpecResponseBean osResponse = new OffSpecResponseBean();
+	 * 
+	 * osResponse.setIncidentId(_incid.getIncidentId());
+	 * osResponse.setGroupId(_receiverShipperId);
+	 * osResponse.setIsResponded(OffSpecResponseBean.isRespondedNo);
+	 * osResponse.setUserId(_user.getIdn_user());
+	 * 
+	 * // Se inserta un registro en la tabla de respuestas para el disclose. int res
+	 * = osgrmMapper.insertOffSpecResponse(osResponse); if(res!=1){ throw new
+	 * Exception("Error inserting into Off Specification Event Response table."); }
+	 * }
+	 */
 	
 	private void cleanIncident(OffSpecIncidentBean _incid) throws Exception {
 		// Una vez actualizadas las tablas, se podrian actualizar los datos fijos del bean, con los nuevos.

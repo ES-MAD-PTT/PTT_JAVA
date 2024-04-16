@@ -182,7 +182,7 @@
 					           <p:cellEditor>
 					               <f:facet name="output"><h:outputText value="#{meteredPoint.id}" title="#{meteredPoint.id}" /></f:facet>
 					               <f:facet name="input">
-					               			<p:inputText value="#{meteredPoint.id}" style="width:100%" label="#{msg['meteredPoint_ID']}" disabled="#{meteredPointView.disabledField(meteredPoint)}"
+					               			<p:inputText value="#{meteredPoint.id}" style="width:100%" label="#{msg['meteredPoint_ID']}" disabled="true"
 					               				 required="true"  
 					               				 requiredMessage="#{msg['meteredPoint_ID']}: #{msg['empty_field']}"  maxlength="20"
 					               				 validatorMessage="#{msg['meteredPoint_ID']}: #{msg['lenght_field']} 20">
@@ -283,7 +283,7 @@
 					          <p:cellEditor>
 					               <f:facet name="output"><h:outputText value="#{meteredPoint.customerType}" /></f:facet>
 					               <f:facet name="input">			               					              
-						               <p:selectOneMenu id="customerType" style="width:75%"  value="#{meteredPoint.idn_customer_type}" required="true" disabled="#{meteredPointView.disabledField(meteredPoint)}">
+						               <p:selectOneMenu id="customerType" style="width:75%"  value="#{meteredPoint.idn_customer_type}" required="true" disabled="true">
 								               		<f:selectItems value="#{meteredPointView.getCustomerTypes(meteredPoint).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" >						               			
 								               		</f:selectItems>
 						               </p:selectOneMenu>
@@ -296,7 +296,7 @@
 					               <f:facet name="output"><h:outputText value="#{meteredPoint.nominationPoint}" /></f:facet>
 					               <f:facet name="input">
 					               		<p:selectOneMenu id="nominationPoint" style="width:75%"   value="#{meteredPoint.idn_system_point_nomination}"
-					               				 required="true" disabled="#{meteredPointView.disabledField(meteredPoint)}"
+					               				 required="true" disabled="true"
 					               				 requiredMessage="#{msg['meteredPoint_Nomination_Point']}: #{msg['empty_field']}">
 					               			<!--<f:selectItem  itemValue="#{-1}" itemLabel="" />  -->	
 							               	<!-- offshore 	
@@ -312,7 +312,7 @@
 					               <f:facet name="output"><h:outputText value="#{meteredPoint.contractPoint}" /></f:facet>
 					               <f:facet name="input">
 					               <p:selectOneMenu id="contractPoint" style="width:75%"   value="#{meteredPoint.idn_system_point_contract}"
-					               				 required="true" disabled="#{meteredPointView.disabledField(meteredPoint)}"
+					               				 required="true" disabled="true"
 					               				 requiredMessage="#{msg['meteredPoint_Group_ID']}: #{msg['empty_field']}">
 							               		<!--offshore
 							               		<f:selectItems value="#{meteredPointView.getContractPoints(meteredPoint).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />-->
@@ -330,7 +330,7 @@
 					      	 	 	<f:facet name="output"><h:outputText value="#{meteredPoint.qualityPoint}" /></f:facet>
 					      	 	 	<f:facet name="input">
 										<p:selectOneMenu id="qualityPoint"  style="width:75%"  value="#{meteredPoint.idn_system_point_quality}" 
-												  disabled="#{meteredPointView.disabledField(meteredPoint)}" 
+												  disabled="true" 
 												requiredMessage="#{msg['meteredPoint_Quality_Point']}: #{msg['empty_field']}">
 									    		<!--offshore
 									    		<f:selectItems value="#{meteredPointView.qualityPoint.entrySet()}"  var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" /> -->
@@ -421,7 +421,7 @@
 					          <p:cellEditor>
 					               <f:facet name="output"><h:outputText value="#{meteredPoint.subarea}" /></f:facet>
 					               <f:facet name="input">
-					               <p:selectOneMenu id="subarea" style="width:75%" value="#{meteredPoint.idn_subarea}"  disabled="#{meteredPointView.disabledField(meteredPoint)}">
+					               <p:selectOneMenu id="subarea" style="width:75%" value="#{meteredPoint.idn_subarea}"  disabled="true">
 							               		<f:selectItems value="#{meteredPointView.getSubAreasNomination(meteredPoint).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" >		</f:selectItems>
 					               </p:selectOneMenu>
 					              </f:facet>
@@ -856,7 +856,7 @@
 												requiredMessage="#{msg['meteredPoint_ID']}: #{msg['empty_field']}" valueChangeListener="#{meteredPointView.selectMeteredPointID}">
 									<f:selectItem itemValue="" itemLabel=""/>
 							    	<f:selectItems value="#{meteredPointView.meteringPointIds.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
-							    	<p:ajax onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()" update="meteringID,name, pointType,latitude, longitud, customerType,nominationPoint,qualityPoint"/>	
+							    	<p:ajax onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()" update="meteringID, name, pointType,latitude, longitud, customerType, nominationPoint, qualityPoint"/>	
 
 					            </p:selectOneMenu>
 								<p:message for="id" />
@@ -987,7 +987,7 @@
 							<p:column>
 								<p:selectOneMenu id="contractPoint"  style="width:90px"  value="#{meteredPointView.newPeriodMeteredPoint.idn_system_point_contract}" 
 										required="true"  requiredMessage="#{msg['meteredPoint_Group_ID']}: #{msg['empty_field']}">
-										<f:selectItem  itemValue="#{null}" itemLabel="" />
+										<!-- <f:selectItem  itemValue="#{null}" itemLabel="" /> -->
 							    		<!--offshore  
 							    		<f:selectItems value="#{meteredPointView.getContractPoints(meteredPointView.newPeriodMeteredPoint).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />-->
 							    		<f:selectItems value="#{meteredPointView.getContractPointsSystem(meteredPointView.newPeriodMeteredPoint).entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />

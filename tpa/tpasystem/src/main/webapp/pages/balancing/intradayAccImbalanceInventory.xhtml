@@ -95,7 +95,10 @@
 									oncomplete="PF('cargando').hide()" 
 									update="msgs,:#{p:component('intradayAccImbInv1')}"/> 
 							</shiro:hasPermission>
-
+								
+								<p:commandButton id="timestampDisplay" type="button" value="#{msg['met_man_shippers_timestamp_display']}" icon="fa fa-fw fa-edit" style="float:left;"
+        							onclick="PF('dlgTimestampDisplay').show();"/>
+								
 						</p:panelGrid>
 					</p:panelGrid>
 
@@ -299,6 +302,53 @@
 						</p:column>
 					</p:row>  -->
 				</p:panelGrid>
+			</shiro:hasPermission>
+		</h:form> 	    
+	</p:dialog> 
+	
+	<p:dialog header="#{msg['met_man_shippers_timestamp_display']}" widgetVar="dlgTimestampDisplay" modal="true" appendTo="@(body)" minHeight="150">
+		<h:form id="timestampDisplay" style="width:100%;height:98%;border-collapse:collapse">
+
+			<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.INTRADAY.ACCIMBALANCEINVENTORY.QUERY">
+				<p:growl id="msgs" showDetail="true" life="10000" globalOnly="true" />
+				<p:panelGrid>
+							<p:row>
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['intradayAccImbInv_gasDay']}" />
+								</p:column>
+								
+								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['intradayAccImbInv_timestamp']}" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<p:calendar id="gasDay" size="6" pattern="dd/MM/yyyy" mask="true" value="#{intradayAccImbInvView.filters.gasDay}"
+										showOn="button" readonlyInput="true" navigator="true" maxdate="#{(intradayAccImbInvView.sysdate).getTime()}">
+										<p:ajax event="dateSelect" update="timestampId"></p:ajax>
+										<p:ajax event="change" update="timestampId"></p:ajax>
+									</p:calendar>
+								</p:column>
+								
+								<p:column>
+									<p:selectOneMenu id="timestampId" style="width:70px" value="#{intradayAccImbInvView.filters.timestampVar}" >
+ 								   		<f:selectItem itemLabel="" itemValue="" />
+      									<f:selectItems value="#{intradayAccImbInvView.timestampIds.entrySet()}" var="entry" 
+      											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+					           		</p:selectOneMenu>
+								</p:column>
+							</p:row>
+						</p:panelGrid>
+						<p:separator/>
+						<p:panelGrid>
+							<p:row>
+								<p:column>
+									<p:commandButton value="#{msg['save']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" validateClient="true"/>
+					        		<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close"/>	
+								</p:column>					
+							</p:row>
+						</p:panelGrid>
+						
 			</shiro:hasPermission>
 		</h:form> 	    
 	</p:dialog> 

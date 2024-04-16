@@ -25,8 +25,8 @@ public class OffSpecIncidentBean extends UserAudBean implements Serializable {
 	 */
 	private static final long serialVersionUID = 5715428377766750639L;
 	
-	private static final String oncompleteString = "PF('nextStatusDlg').show()";
-	private static final String updateString = ":nextStatusFormId:nextStatusPanelGridId";
+	private static final String oncompleteString = "#{OSGRManagementView.onChangeStatus}"; //"PF('nextStatusDlg').show()";
+	private static final String updateString = "incidents1"; //":nextStatusFormId:nextStatusPanelGridId";
 	// Comando para que al pulsar el boton "NextStatus" se guarde:
 	// - La instancia que se ha pulsado, como selected en la vista.
 	// - el id del nuevo estado para poder identificar la regla de cambio de estado a aplicar.
@@ -83,7 +83,15 @@ public class OffSpecIncidentBean extends UserAudBean implements Serializable {
 	// Este modelo de menu se usa para pintar el boton de cambio de estado en la tabla de la pantalla,
 	// de forma independiente para cada incidencia.
 	// En este model no se pueden incluir submenus, porque no estan soportados dentro del <p:menuButton>.
-    private MenuModel model;	
+    private MenuModel model;
+    
+    
+    
+    private String action;
+    private String nofifiedToShippers;
+    private String instructedFlowToShipper;
+    private String backToNormal;
+    private List<BigDecimal> multiShippers = new ArrayList<BigDecimal>();
     
     //CH706
     private String operatorComments; // en realidad es Transporter Response comment
@@ -131,6 +139,46 @@ public class OffSpecIncidentBean extends UserAudBean implements Serializable {
 
 	public void setIncidentId(BigDecimal incidentId) {
 		this.incidentId = incidentId;
+	}
+
+	public String getAction() {
+		return action;
+	}
+
+	public void setAction(String action) {
+		this.action = action;
+	}
+
+	public String getNofifiedToShippers() {
+		return nofifiedToShippers;
+	}
+
+	public void setNofifiedToShippers(String nofifiedToShippers) {
+		this.nofifiedToShippers = nofifiedToShippers;
+	}
+
+	public List<BigDecimal> getMultiShippers() {
+		return multiShippers;
+	}
+
+	public void setMultiShippers(List<BigDecimal> multiShippers) {
+		this.multiShippers = multiShippers;
+	}
+
+	public String getInstructedFlowToShipper() {
+		return instructedFlowToShipper;
+	}
+
+	public void setInstructedFlowToShipper(String instructedFlowToShipper) {
+		this.instructedFlowToShipper = instructedFlowToShipper;
+	}
+
+	public String getBackToNormal() {
+		return backToNormal;
+	}
+
+	public void setBackToNormal(String backToNormal) {
+		this.backToNormal = backToNormal;
 	}
 
 	public BigDecimal getIncidentTypeId() {

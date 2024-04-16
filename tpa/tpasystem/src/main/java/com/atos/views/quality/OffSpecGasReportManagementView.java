@@ -24,27 +24,26 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
+import org.primefaces.event.FileUploadEvent;
 import org.primefaces.event.RowEditEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
+import org.primefaces.model.UploadedFile;
 
 import com.atos.beans.ComboFilterNS;
+import com.atos.beans.FileBean;
 import com.atos.beans.MessageBean;
-
 import com.atos.beans.quality.OffSpecGasQualityParameterBean;
 import com.atos.beans.quality.OffSpecIncidentBean;
 import com.atos.beans.quality.OffSpecResponseBean;
 import com.atos.beans.quality.OffSpecStatusBean;
 import com.atos.beans.quality.OffSpecStatusRuleBean;
-import com.atos.beans.scadaAlarms.EmergencyDiffDayBean;
 import com.atos.exceptions.ValidationException;
 import com.atos.filters.quality.OffSpecGasReportManagementFilter;
 import com.atos.services.MailService;
 import com.atos.services.quality.OffSpecGasReportManagementService;
 import com.atos.utils.Constants;
 import com.atos.views.CommonView;
-
-import net.sf.ehcache.config.Searchable;
 
 @ManagedBean(name="OSGRManagementView")
 @ViewScoped
@@ -77,6 +76,14 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 	// Para que el usuario se pueda descargar los diagramas de flujos.
 	private StreamedContent scEventFlowDiagFile;
 	private StreamedContent scRequestFlowDiagFile;
+	
+	private UploadedFile file;
+	private List<FileBean> files;
+	private FileBean uploadFile = null;
+	private Map<BigDecimal, String> chargeActions;
+	private OffSpecStatusBean idnStatusUnsolved;
+	private DefaultStreamedContent scFile;
+	
 	
 	private static final Logger log = LogManager.getLogger("com.atos.views.quality.OffSpecGasReportManagementView");
 	
@@ -120,12 +127,36 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 		this.items = items;
 	}
 
+	public DefaultStreamedContent getScFile() {
+		return scFile;
+	}
+
+	public void setScFile(DefaultStreamedContent scFile) {
+		this.scFile = scFile;
+	}
+
 	public OffSpecIncidentBean getSelected() {
 		return selected;
 	}
 
 	public void setSelected(OffSpecIncidentBean selected) {
 		this.selected = selected;
+	}
+
+	public UploadedFile getFile() {
+		return file;
+	}
+
+	public void setFile(UploadedFile file) {
+		this.file = file;
+	}
+
+	public List<FileBean> getFiles() {
+		return files;
+	}
+
+	public void setFiles(List<FileBean> files) {
+		this.files = files;
 	}
 
 	public OffSpecIncidentBean getNewRequest() {
@@ -172,6 +203,27 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 		return getUser().isUser_type(Constants.OPERATOR);
 	}
 
+	public Map<BigDecimal, String> getChargeActions() {
+		if(chargeActions == null) {
+			chargeActions = new HashMap<BigDecimal, String>();
+			chargeActions.put(new BigDecimal(1), "Notification");
+			chargeActions.put(new BigDecimal(2), "Instructed Flow");
+			chargeActions.put(new BigDecimal(3), "Back to normal");
+			if(isShipper()) {
+				chargeActions.put(new BigDecimal(4), "Fix OSG-Originator-solo para shipper que crea el evento");
+			}
+		}
+		return chargeActions;
+	}
+
+	public void setChargeActions(Map<BigDecimal, String> chargeActions) {
+		this.chargeActions = chargeActions;
+	}
+
+	public Boolean disabledAction(OffSpecIncidentBean item) {
+			return idnStatusUnsolved != null && item.getStatusId().compareTo(idnStatusUnsolved.getStatusId()) == 0 ? false : true;
+	}
+
 	@PostConstruct
     public void init() {
 		
@@ -186,6 +238,7 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 		hmAllStatus = linkAllStatus(allStatus, allStatusRules);
 		hmAllStatusRules = linkAllStatusRules(allStatusRules);
 		allQualityParameters = service.selectGasQualityParameters();
+		idnStatusUnsolved = allStatus.stream().filter(item -> item.getStatusCode().equals("EV.UNSOLVED")).findFirst().orElse(null);
 		
    		filters = initFilter();
 		
@@ -226,6 +279,7 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 	
 	private OffSpecIncidentBean initNewIncident() {
 		OffSpecIncidentBean tmpInc = new OffSpecIncidentBean();
+		files = new ArrayList<FileBean>();
 		
 		// Se hace una copia de la lista inicial de parametros de calidad de gas.
 		List<OffSpecGasQualityParameterBean> tmpList = new ArrayList<OffSpecGasQualityParameterBean>();
@@ -240,6 +294,11 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 		tmpTomorrow.set(Calendar.MILLISECOND, 0);
 		tmpTomorrow.add(Calendar.DAY_OF_MONTH, 1);
 		tmpInc.setStartDate(tmpTomorrow.getTime());
+		if(isShipper()) {
+			Map<BigDecimal, Object> shippers = getShipperIds();
+			tmpInc.setOriginatorShipperId(getUser().getIdn_user_group());
+			tmpInc.setOriginatorShipperCode(shippers.get(getUser().getIdn_user_group()).toString());
+		}
 		
 		return tmpInc;
 	}
@@ -475,6 +534,39 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 		}
 	}
 	
+	public void updateSelected(OffSpecIncidentBean item) {
+		selected.setIncidentId(item.getIncidentId());
+		selected.setNewStatusId(item.getStatusId());
+	}
+	
+	public void onChangeAction() {
+		ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication().getResourceBundle(FacesContext.getCurrentInstance(),"msg");
+    	String summaryMsg = null;
+    	String errorMsg = null;
+		try {
+			int res = service.saveAction(selected, getUser());
+			if(res != 1) {
+				summaryMsg = msgs.getString("saving_data_error");
+	    		errorMsg = msgs.getString("osgr_man_errorChangeAction");
+	    		getMessages().addMessage(Constants.head_menu[6],
+						new MessageBean(Constants.ERROR, summaryMsg, errorMsg, Calendar.getInstance().getTime()));
+		    	return;
+			}else {
+				summaryMsg = msgs.getString("osgr_man_updatedSuccessfully");
+				String[] params = { selected.getIncidentCode() };
+				String msg = super.getMessageResourceString("osgr_man_changeActionOK", params);
+				getMessages().addMessage(Constants.head_menu[3], new MessageBean(Constants.INFO, summaryMsg, msg, new Date()));
+				return;
+			}
+		} catch (Exception e) {
+			summaryMsg = msgs.getString("saving_data_error");
+    		errorMsg = e.getMessage();
+    		getMessages().addMessage(Constants.head_menu[6],
+					new MessageBean(Constants.ERROR, summaryMsg, errorMsg, Calendar.getInstance().getTime()));
+	    	return;
+		}
+	}
+	
     public void onChangeStatus() {
     	// Utilizo un ResourceBundle local por si el scope fuera Session o Application. En estos casos no se actualizaria el idioma.
     	ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication().getResourceBundle(FacesContext.getCurrentInstance(),"msg");
@@ -585,6 +677,12 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
     	ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication().getResourceBundle(FacesContext.getCurrentInstance(),"msg");
     	String summaryMsg = null;
     	String errorMsg = null;
+    	if(newEvent.getStartDate() != null && newEvent.getEndDate() != null && newEvent.getEndDate().compareTo(newEvent.getStartDate()) < 0) {
+    		summaryMsg = msgs.getString("validation_error");
+			errorMsg = msgs.getString("osgr_man_endDateEqualsOrLaaterStartDate"); 
+			getMessages().addMessage(Constants.head_menu[0], new MessageBean(Constants.ERROR, summaryMsg, errorMsg, Calendar.getInstance().getTime()));
+			return;
+		}
 
     	try {
     		newEvent.setIncidentTypeDesc(strEventFlowTypeDesc);
@@ -731,4 +829,18 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 			getMessages().addMessage(Constants.head_menu[6],
 					new MessageBean(Constants.INFO, "Mail values", "Shipper"+values.get("1")+",Fecha:"+values.get("2")+",Zona:"+values.get("3")+". Destinatario:"+to, Calendar.getInstance().getTime()));
 		}
+	 
+	 public void handleFileUpload(FileUploadEvent event) {
+		file = event.getFile();
+		if(file!=null){
+			uploadFile = new FileBean(file.getFileName(), file.getContentType(), file.getContents());
+			files.add(uploadFile);
+		}
+        
+		if(file==null || uploadFile==null){
+			getMessages().addMessage(Constants.head_menu[6],new MessageBean(Constants.ERROR,"Error saving file","The file should be selected", Calendar.getInstance().getTime()));
+			return;
+		}
+
+    }
 }

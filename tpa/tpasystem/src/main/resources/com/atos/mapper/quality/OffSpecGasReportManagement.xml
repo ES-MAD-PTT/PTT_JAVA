@@ -98,6 +98,7 @@
 	
 	<select id="selectStatusIds" parameterType="com.atos.filters.quality.OffSpecGasReportManagementFilter" resultType="com.atos.beans.quality.OffSpecStatusBean">
 		select tsta.idn_offspec_status as statusId, 
+			tsta.STATUS_CODE as statusCode,
 	       tsta.status_desc as statusDesc,
 	       tsta.idn_offspec_status_flow as incidentTypeId,
 	       tflow.flow_desc as incidentTypeDesc,

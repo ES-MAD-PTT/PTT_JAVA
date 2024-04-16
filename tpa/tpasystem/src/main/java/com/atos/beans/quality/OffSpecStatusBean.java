@@ -13,6 +13,7 @@ public class OffSpecStatusBean implements Serializable, Comparable<OffSpecStatus
 	private static final long serialVersionUID = -440409295342451290L;
 
 	private BigDecimal statusId;
+	private String statusCode;
 	private String statusDesc;
 	private BigDecimal incidentTypeId;		// Se guardan este par de campos, porque la incidencia podria cambiar 
 	private String incidentTypeDesc;		// podria cambiar de tipo, al cambiar de estado.
@@ -24,6 +25,7 @@ public class OffSpecStatusBean implements Serializable, Comparable<OffSpecStatus
 	
 	public OffSpecStatusBean() {
 		this.statusId = null;
+		this.statusCode = null;
 		this.statusDesc = null;
 		this.incidentTypeId = null;
 		this.incidentTypeDesc = null;
@@ -37,6 +39,14 @@ public class OffSpecStatusBean implements Serializable, Comparable<OffSpecStatus
 
 	public void setStatusId(BigDecimal statusId) {
 		this.statusId = statusId;
+	}
+
+	public String getStatusCode() {
+		return statusCode;
+	}
+
+	public void setStatusCode(String statusCode) {
+		this.statusCode = statusCode;
 	}
 
 	public String getStatusDesc() {

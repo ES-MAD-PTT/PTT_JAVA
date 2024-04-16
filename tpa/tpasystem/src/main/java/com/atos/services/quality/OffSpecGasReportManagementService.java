@@ -6,8 +6,6 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
-import org.primefaces.model.StreamedContent;
-
 import com.atos.beans.ComboFilterNS;
 import com.atos.beans.LanguageBean;
 import com.atos.beans.UserBean;
@@ -40,6 +38,8 @@ public interface OffSpecGasReportManagementService extends Serializable {
 	public void getFileResponse(OffSpecResponseBean incident) throws Exception;
 	public void getFile(OffSpecIncidentBean incident) throws Exception;
 	public String getZoneCode(OffSpecIncidentBean incident);
+	
+	public Integer saveAction(OffSpecIncidentBean _incid, UserBean _user) throws Exception;
 	
 	//CH706
 	public String updateTransporterComments(OffSpecResponseBean response) throws Exception;

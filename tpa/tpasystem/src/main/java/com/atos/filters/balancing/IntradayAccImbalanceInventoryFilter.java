@@ -2,7 +2,9 @@ package com.atos.filters.balancing;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class IntradayAccImbalanceInventoryFilter implements Serializable{
 	
@@ -13,6 +15,7 @@ public class IntradayAccImbalanceInventoryFilter implements Serializable{
 	private String strLastVersion; 	// "Y"/"N" Esta variable corresponde al valor del booleano. Para filtrar en base de datos.
 	private BigDecimal systemId;
 	private String timestampVar;
+	private List<String> timestampVarList = new ArrayList<>();
 	
 	public IntradayAccImbalanceInventoryFilter() {
 		this.gasDay = null;	
@@ -20,6 +23,18 @@ public class IntradayAccImbalanceInventoryFilter implements Serializable{
 		this.strLastVersion = null;
 		this.systemId = null;
 		this.timestampVar = null;
+		this.timestampVarList = null;
+	}
+
+	public IntradayAccImbalanceInventoryFilter(Date gasDay, boolean lastVersion, String strLastVersion,
+			BigDecimal systemId, String timestampVar, List<String> timestampVarList) {
+		super();
+		this.gasDay = gasDay;
+		this.lastVersion = lastVersion;
+		this.strLastVersion = strLastVersion;
+		this.systemId = systemId;
+		this.timestampVar = timestampVar;
+		this.timestampVarList = timestampVarList;
 	}
 
 	public Date getGasDay() {
@@ -56,6 +71,14 @@ public class IntradayAccImbalanceInventoryFilter implements Serializable{
 
 	public void setTimestampVar(String timestampVar) {
 		this.timestampVar = timestampVar;
+	}
+
+	public List<String> getTimestampVarList() {
+		return timestampVarList;
+	}
+
+	public void setTimestampVarList(List<String> timestampVarList) {
+		this.timestampVarList = timestampVarList;
 	}
 
 }

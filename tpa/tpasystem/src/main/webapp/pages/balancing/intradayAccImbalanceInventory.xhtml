@@ -318,6 +318,10 @@
 								</p:column>
 								
 								<p:column  style="font-weight: bold;">
+									<h:outputText value="#{msg['intradayAccImbInv_last_version']}" />
+								</p:column>
+								
+								<p:column  style="font-weight: bold;">
 									<h:outputText value="#{msg['intradayAccImbInv_timestamp']}" />
 								</p:column>
 							</p:row>
@@ -330,13 +334,34 @@
 									</p:calendar>
 								</p:column>
 								
-								<p:column>
+								<p:column style="text-align:center">
+									<p:selectBooleanCheckbox id="lastVersionCheckbox" value="#{intradayAccImbInvView.filters.lastVersion}" >
+ 										<p:ajax event="change" listener="#{intradayAccImbInvView.updateTimestamp}" update=":#{p:component('timestampId')}"/>
+									</p:selectBooleanCheckbox>						
+								</p:column>
+								
+								<!-- <p:column>
 									<p:selectOneMenu id="timestampId" style="width:70px" value="#{intradayAccImbInvView.filters.timestampVar}" >
  								   		<f:selectItem itemLabel="" itemValue="" />
       									<f:selectItems value="#{intradayAccImbInvView.timestampIds.entrySet()}" var="entry" 
       											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
 					           		</p:selectOneMenu>
+								</p:column> -->
+								
+								<p:column>
+									<p:selectCheckboxMenu id="timestampId" value="#{intradayAccImbInvView.filters.timestampVarList}" label="Please select..."
+							                              filter="true" filterMatchMode="startsWith" panelStyle="width:250px">
+							            <f:selectItems value="#{intradayAccImbInvView.timestampIds.entrySet()}" var="entry" 
+								                       itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+							        </p:selectCheckboxMenu>
+									
+								   <!--  <p:selectManyMenu id="timestampId" style="width:70px" value="#{intradayAccImbInvView.filters.timestampVarList}" multiple="true">
+								        <f:selectItems value="#{intradayAccImbInvView.timestampIds.entrySet()}" var="entry" 
+								                       itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+								    </p:selectManyMenu> -->
 								</p:column>
+
+								
 							</p:row>
 						</p:panelGrid>
 						<p:separator/>

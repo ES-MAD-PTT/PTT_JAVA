@@ -22,6 +22,9 @@ import com.atos.beans.LanguageBean;
 import com.atos.beans.NotificationBean;
 import com.atos.beans.SystemParameterBean;
 import com.atos.beans.UserBean;
+import com.atos.beans.quality.OffSpecActionBean;
+import com.atos.beans.quality.OffSpecFileAttachBean;
+import com.atos.beans.quality.OffSpecFileBean;
 import com.atos.beans.quality.OffSpecGasQualityParameterBean;
 import com.atos.beans.quality.OffSpecIncidentBean;
 import com.atos.beans.quality.OffSpecResponseBean;
@@ -662,10 +665,12 @@ public class OffSpecGasReportManagementServiceImpl implements OffSpecGasReportMa
 	
 		_incid.setIncidentCode(getNewIncidentCode(_user, _lang));
 		_incid.setUserId(_user.getIdn_user());
-		_incid.setGroupId(_user.getIdn_user_group());
+		_incid.setOriginatorShipperId(_user.getIdn_user_group());
+		_incid.setOriginatorShipperCode(_user.getUser_group_id());
+		//_incid.setGroupId(_user.getIdn_user_group());
 
 		// Para reutilizar la query de mybatis, se rellenan los campos new.
-		_incid.setNewComments(_incid.getComments());
+		//_incid.setNewComments(_incid.getComments());
 		
 		// Se inserta la cabecera de la incidencia off-spec.
 		int res = osgrmMapper.insertOffSpecIncident(_incid);
@@ -688,7 +693,12 @@ public class OffSpecGasReportManagementServiceImpl implements OffSpecGasReportMa
 			}
 		}
 		
-		// Si hubiera algun error al actulizar las tablas, el bean quedaria con los datos en el objeto newIncident para que el usuario siga trabajando con ellos.
+		//Insertamos los ficheros
+		for(OffSpecFileBean item : _incid.getFiles()) {
+			osgrmMapper.insertFileNewEvent(item);
+			OffSpecFileAttachBean fileAttach = new OffSpecFileAttachBean(_incid.getIncidentId(), item.getIdnOffspecFile(), _user.getUsername());
+			osgrmMapper.insertFileAttachNewEvent(fileAttach);
+		}
     }
 	
 	private String getNewIncidentCode(UserBean _user, LanguageBean _lang) throws Exception {
@@ -764,5 +774,10 @@ public class OffSpecGasReportManagementServiceImpl implements OffSpecGasReportMa
 	
 	public String getZoneCode(OffSpecIncidentBean incident) {
 		return osgrmMapper.getZoneCode(incident);
+	}
+
+	@Override
+	public List<OffSpecActionBean> selectAllActions(Boolean isShipper) {
+		return osgrmMapper.selectAllActions(isShipper);
 	}
 }

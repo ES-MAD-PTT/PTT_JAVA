@@ -13,6 +13,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
@@ -24,6 +25,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
+import org.primefaces.context.RequestContext;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.event.RowEditEvent;
 import org.primefaces.model.DefaultStreamedContent;
@@ -33,6 +35,8 @@ import org.primefaces.model.UploadedFile;
 import com.atos.beans.ComboFilterNS;
 import com.atos.beans.FileBean;
 import com.atos.beans.MessageBean;
+import com.atos.beans.quality.OffSpecActionBean;
+import com.atos.beans.quality.OffSpecFileBean;
 import com.atos.beans.quality.OffSpecGasQualityParameterBean;
 import com.atos.beans.quality.OffSpecIncidentBean;
 import com.atos.beans.quality.OffSpecResponseBean;
@@ -79,8 +83,9 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 	
 	private UploadedFile file;
 	private List<FileBean> files;
-	private FileBean uploadFile = null;
-	private Map<BigDecimal, String> chargeActions;
+	private OffSpecFileBean uploadFile = null;
+	private Map<BigDecimal, Object> chargeActions;
+	private List<OffSpecActionBean> allActions;
 	private OffSpecStatusBean idnStatusUnsolved;
 	private DefaultStreamedContent scFile;
 	
@@ -203,20 +208,17 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 		return getUser().isUser_type(Constants.OPERATOR);
 	}
 
-	public Map<BigDecimal, String> getChargeActions() {
+	public Map<BigDecimal, Object> getChargeActions() {
 		if(chargeActions == null) {
-			chargeActions = new HashMap<BigDecimal, String>();
-			chargeActions.put(new BigDecimal(1), "Notification");
-			chargeActions.put(new BigDecimal(2), "Instructed Flow");
-			chargeActions.put(new BigDecimal(3), "Back to normal");
-			if(isShipper()) {
-				chargeActions.put(new BigDecimal(4), "Fix OSG-Originator-solo para shipper que crea el evento");
-			}
+			chargeActions = new HashMap<BigDecimal, Object>();
+			allActions = service.selectAllActions(isShipper() ? true : false);
+			chargeActions = allActions.stream().collect(
+					Collectors.toMap(OffSpecActionBean::getIdnOffspecAction, OffSpecActionBean::getActionDesc, (e1, e2) -> e1, LinkedHashMap::new));
 		}
 		return chargeActions;
 	}
 
-	public void setChargeActions(Map<BigDecimal, String> chargeActions) {
+	public void setChargeActions(Map<BigDecimal, Object> chargeActions) {
 		this.chargeActions = chargeActions;
 	}
 
@@ -296,8 +298,8 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 		tmpInc.setStartDate(tmpTomorrow.getTime());
 		if(isShipper()) {
 			Map<BigDecimal, Object> shippers = getShipperIds();
-			tmpInc.setOriginatorShipperId(getUser().getIdn_user_group());
-			tmpInc.setOriginatorShipperCode(shippers.get(getUser().getIdn_user_group()).toString());
+			tmpInc.setGroupId(getUser().getIdn_user_group());
+			tmpInc.setGroupCode(shippers.get(getUser().getIdn_user_group()).toString());
 		}
 		
 		return tmpInc;
@@ -535,6 +537,8 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 	}
 	
 	public void updateSelected(OffSpecIncidentBean item) {
+		selected = new OffSpecIncidentBean();
+		files = new ArrayList<FileBean>();
 		selected.setIncidentId(item.getIncidentId());
 		selected.setNewStatusId(item.getStatusId());
 	}
@@ -567,7 +571,8 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 		}
 	}
 	
-    public void onChangeStatus() {
+    public void onChangeStatus(OffSpecIncidentBean _incident, BigDecimal _chosenNextStatusId) {
+    	setChosenNextStatusRule(_incident, _chosenNextStatusId);
     	// Utilizo un ResourceBundle local por si el scope fuera Session o Application. En estos casos no se actualizaria el idioma.
     	ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication().getResourceBundle(FacesContext.getCurrentInstance(),"msg");
     	String summaryMsg = null;
@@ -686,6 +691,12 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 
     	try {
     		newEvent.setIncidentTypeDesc(strEventFlowTypeDesc);
+    		//Cargamos los comentarios en sus respectivos campos dependiendo si es operator o shipper
+    		if(isShipper()) {
+    			newEvent.setCommentsShipper(newEvent.getComments());
+    		}else {
+    			newEvent.setCommentsOperator(newEvent.getComments());
+    		}
     		service.createEvent(newEvent, getUser(), getLanguage());
     		// Se envian notificaciones fuera de la transaccion que guarda los datos en BD. Si fallara
     		// la notificacion solo se muestra mensaje al usuario.
@@ -717,7 +728,8 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
     	getMessages().addMessage(Constants.head_menu[6],
 				new MessageBean(Constants.INFO, summaryMsg, okMsg, Calendar.getInstance().getTime()));
     	log.info(okMsg);    	
-
+    	RequestContext context = RequestContext.getCurrentInstance();
+		context.execute("PF('newEventDlg').hide();");
     	// Se actualiza la vista.
     	items = service.search(filters, getUser()); 
         updateIncidentInfo(hmAllStatus, items);
@@ -814,27 +826,41 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 		}
 	 
 	 public void sendMail(OffSpecIncidentBean selected, String type, BigDecimal to) {
-			HashMap<String,String> values = new HashMap<String,String>();
+		HashMap<String,String> values = new HashMap<String,String>();
 
-			values.put("1", selected.getOriginatorShipperCode());
-			DateFormat df = new SimpleDateFormat("dd/MM/yyyy");
-			String dateString = df.format(selected.getStartDate());
-			values.put("2", dateString);
-			selected.setIdn_pipeline_system(getChangeSystemView().getIdn_active());
-			String zone = service.getZoneCode(selected);
-			values.put("3", zone);
-			
-			mailService.sendEmail(type, values, getChangeSystemView().getIdn_active(), to);
-			//Para comprobar los valores que se pasan en el email
-			getMessages().addMessage(Constants.head_menu[6],
-					new MessageBean(Constants.INFO, "Mail values", "Shipper"+values.get("1")+",Fecha:"+values.get("2")+",Zona:"+values.get("3")+". Destinatario:"+to, Calendar.getInstance().getTime()));
-		}
+		values.put("1", selected.getOriginatorShipperCode());
+		DateFormat df = new SimpleDateFormat("dd/MM/yyyy");
+		String dateString = df.format(selected.getStartDate());
+		values.put("2", dateString);
+		selected.setIdn_pipeline_system(getChangeSystemView().getIdn_active());
+		String zone = service.getZoneCode(selected);
+		values.put("3", zone);
+		
+		mailService.sendEmail(type, values, getChangeSystemView().getIdn_active(), to);
+		//Para comprobar los valores que se pasan en el email
+		getMessages().addMessage(Constants.head_menu[6],
+				new MessageBean(Constants.INFO, "Mail values", "Shipper"+values.get("1")+",Fecha:"+values.get("2")+",Zona:"+values.get("3")+". Destinatario:"+to, Calendar.getInstance().getTime()));
+	}
+	 
+	 public void handleFileUploadNewEvent(FileUploadEvent event) {
+		 file = event.getFile();
+			if(file!=null){
+				//uploadFile = new FileBean(file.getFileName(), file.getContentType(), file.getContents());
+				uploadFile = new OffSpecFileBean(file.getFileName(), file.getContents(), getUser().getUsername());
+				newEvent.getFiles().add(uploadFile);
+			}
+	        
+			if(file==null || uploadFile==null){
+				getMessages().addMessage(Constants.head_menu[6],new MessageBean(Constants.ERROR,"Error saving file","The file should be selected", Calendar.getInstance().getTime()));
+				return;
+			}
+	 }
 	 
 	 public void handleFileUpload(FileUploadEvent event) {
 		file = event.getFile();
 		if(file!=null){
-			uploadFile = new FileBean(file.getFileName(), file.getContentType(), file.getContents());
-			files.add(uploadFile);
+			//uploadFile = new FileBean(file.getFileName(), file.getContentType(), file.getContents());
+		//	files.add(uploadFile);
 		}
         
 		if(file==null || uploadFile==null){

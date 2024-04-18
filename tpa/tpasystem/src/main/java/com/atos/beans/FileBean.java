@@ -12,6 +12,7 @@ public class FileBean implements Serializable{
 	private String contentType;
 	private byte[] contents;
 
+	public FileBean() {}
 	
 	public FileBean(String fileName, String contentType, byte[] contents) {
 		super();

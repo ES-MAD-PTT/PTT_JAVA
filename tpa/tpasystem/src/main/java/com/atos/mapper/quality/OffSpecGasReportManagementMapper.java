@@ -5,13 +5,17 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ibatis.annotations.Param;
+
 import com.atos.beans.ComboFilterNS;
+import com.atos.beans.quality.OffSpecActionBean;
+import com.atos.beans.quality.OffSpecFileAttachBean;
+import com.atos.beans.quality.OffSpecFileBean;
 import com.atos.beans.quality.OffSpecGasQualityParameterBean;
 import com.atos.beans.quality.OffSpecIncidentBean;
 import com.atos.beans.quality.OffSpecResponseBean;
 import com.atos.beans.quality.OffSpecStatusBean;
 import com.atos.beans.quality.OffSpecStatusRuleBean;
-import com.atos.beans.scadaAlarms.EmergencyDiffDayBean;
 import com.atos.filters.quality.OffSpecGasReportManagementFilter;
 
 public interface OffSpecGasReportManagementMapper extends Serializable {
@@ -22,6 +26,7 @@ public interface OffSpecGasReportManagementMapper extends Serializable {
 	public String selectPointCodeFromId(BigDecimal pointId);
 	public List<ComboFilterNS> selectQualityPointsForInsert(BigDecimal systemId);
 	public List<ComboFilterNS> selectShipperId();
+	public List<OffSpecActionBean> selectAllActions(@Param("isShipper") Boolean isShipper);
 	public List<ComboFilterNS> selectShipperIdForInsert();
 	public List<BigDecimal> selectGroupIdFromGroupCode(String groupCode);
 	public List<OffSpecStatusBean> selectStatusIds(OffSpecGasReportManagementFilter filter);
@@ -40,6 +45,8 @@ public interface OffSpecGasReportManagementMapper extends Serializable {
 	public int insertOffSpecIncidentLog(OffSpecIncidentBean osi);
 	public int insertGasQualityParameter(OffSpecGasQualityParameterBean osgqp);
 	public int insertOffSpecResponse(OffSpecResponseBean osr);
+	public int insertFileNewEvent(OffSpecFileBean file);
+	public int insertFileAttachNewEvent(OffSpecFileAttachBean fileAttach);
 	
 	public OffSpecResponseBean selectResponseFile(OffSpecResponseBean bean);
 	//CH706

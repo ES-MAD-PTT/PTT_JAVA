@@ -30,7 +30,7 @@ public class OffSpecIncidentBean extends UserAudBean implements Serializable {
 	// Comando para que al pulsar el boton "NextStatus" se guarde:
 	// - La instancia que se ha pulsado, como selected en la vista.
 	// - el id del nuevo estado para poder identificar la regla de cambio de estado a aplicar.
-	private static final String commandStringStart = "#{OSGRManagementView.setChosenNextStatusRule(incident,'";
+	private static final String commandStringStart = "#{OSGRManagementView.onChangeStatus(incident,'"; //"#{OSGRManagementView.setChosenNextStatusRule(incident,'";
 	private static final String commandStringEnd = "')}";
 	
 	private BigDecimal incidentId;
@@ -41,6 +41,7 @@ public class OffSpecIncidentBean extends UserAudBean implements Serializable {
 	private BigDecimal qualityPointId;
 	private String qualityPointCode;
 	private BigDecimal groupId;			// Del usuario que esta haciendo el cambio. Para el insert en tabla off_spec_log.
+	private String groupCode;
 	private BigDecimal originatorShipperId;
 	private String originatorShipperCode;
 	private Date startDate;
@@ -91,7 +92,10 @@ public class OffSpecIncidentBean extends UserAudBean implements Serializable {
     private String nofifiedToShippers;
     private String instructedFlowToShipper;
     private String backToNormal;
+    private String commentsShipper;
+    private String commentsOperator;
     private List<BigDecimal> multiShippers = new ArrayList<BigDecimal>();
+    private List<OffSpecFileBean> files = new ArrayList<OffSpecFileBean>();
     
     //CH706
     private String operatorComments; // en realidad es Transporter Response comment
@@ -139,6 +143,30 @@ public class OffSpecIncidentBean extends UserAudBean implements Serializable {
 
 	public void setIncidentId(BigDecimal incidentId) {
 		this.incidentId = incidentId;
+	}
+
+	public List<OffSpecFileBean> getFiles() {
+		return files;
+	}
+
+	public void setFiles(List<OffSpecFileBean> files) {
+		this.files = files;
+	}
+
+	public String getCommentsShipper() {
+		return commentsShipper;
+	}
+
+	public void setCommentsShipper(String commentsShipper) {
+		this.commentsShipper = commentsShipper;
+	}
+
+	public String getCommentsOperator() {
+		return commentsOperator;
+	}
+
+	public void setCommentsOperator(String commentsOperator) {
+		this.commentsOperator = commentsOperator;
 	}
 
 	public String getAction() {
@@ -235,6 +263,14 @@ public class OffSpecIncidentBean extends UserAudBean implements Serializable {
 
 	public void setGroupId(BigDecimal groupId) {
 		this.groupId = groupId;
+	}
+
+	public String getGroupCode() {
+		return groupCode;
+	}
+
+	public void setGroupCode(String groupCode) {
+		this.groupCode = groupCode;
 	}
 
 	public BigDecimal getOriginatorShipperId() {
@@ -540,7 +576,7 @@ public class OffSpecIncidentBean extends UserAudBean implements Serializable {
 			(this.originatorShipperId!=null && this.originatorShipperId.compareTo(_user.getIdn_user_group()) == 0) ) {
 			for(OffSpecStatusBean nextStatus: this.getStatus().getNextStatusSet()){
 				tmpItem = new DefaultMenuItem(nextStatus.getStatusDesc());
-				tmpItem.setOncomplete(oncompleteString);
+				//tmpItem.setOncomplete(oncompleteString);
 				tmpItem.setUpdate(updateString);
 				tmpItem.setCommand(commandStringStart + nextStatus.getStatusId() + commandStringEnd);
 				tmpModel.addElement(tmpItem);

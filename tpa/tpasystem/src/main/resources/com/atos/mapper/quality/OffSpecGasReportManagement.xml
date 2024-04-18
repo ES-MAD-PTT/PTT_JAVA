@@ -10,6 +10,16 @@
 		order by upper(tfl.flow_desc) asc
     </select>
     
+    <select id="selectAllActions" resultType="com.atos.beans.quality.OffSpecActionBean">
+    	select a.idn_offspec_action as idnOffspecAction, 
+    		  a.ACTION_CODE asactionCode,
+		      a.action_desc as actionDesc
+		from tpa_toffspec_action a
+		<if test="isShipper == false">
+			where a.action_code != 'FIX_ORIG_SHIP'
+		</if>
+    </select>
+    
     <select id="selectIncidentTypeIdFromCode" parameterType="java.lang.String" resultType="java.math.BigDecimal">
 		select tfl.idn_offspec_status_flow
 		from tpa_toffspec_status_flow tfl
@@ -646,30 +656,22 @@ AND sr.ask_other_shippers = 'Y'
 	<insert id="insertOffSpecIncident" useGeneratedKeys="true" keyProperty="incidentId" keyColumn="idn_offspec" parameterType="com.atos.beans.quality.OffSpecIncidentBean">
 		insert into tpa_toffspec (idn_offspec, 
 									offspec_code,
-			  						<if test="originatorShipperId != null">
 									idn_user_group,
-									</if>
 									idn_system_point,
 									start_date,
-								  	<if test="endDate != null">
 								  	end_date,
-								  	</if>
 									idn_offspec_status,
-	                                        aud_ins_user,
-	                                        aud_last_user)
+	                                aud_ins_user,
+	                                aud_last_user)
 		values (tpa_soffspec.nextval, 
 				#{incidentCode}, 
-			  	<if test="originatorShipperId != null and originatorShipperId != ''">
 				#{originatorShipperId},
-				</if>
 				#{qualityPointId}, 
 				#{startDate}, 
-			  	<if test="endDate != null">
 			  	#{endDate},
-			  	</if>
 				#{statusId},
-	      #{username},
-	      #{username})
+			    #{username},
+			    #{username})
 	</insert>
 	
 	<update id="updateOffSpecIncident" parameterType="com.atos.beans.quality.OffSpecIncidentBean">
@@ -692,38 +694,22 @@ AND sr.ask_other_shippers = 'Y'
 	<insert id="insertOffSpecIncidentLog" useGeneratedKeys="true" keyProperty="incidentVersionId" keyColumn="idn_offspec_log" parameterType="com.atos.beans.quality.OffSpecIncidentBean">
 		insert into tpa_toffspec_log (idn_offspec_log,
 	                                        aud_ins_user,
-	                                        aud_last_user
-		                              ,idn_offspec
-		                              ,idn_user_group
-		                              ,idn_offspec_status
-			  						  <if test="newComments != null and newComments != ''">
-		                              ,user_comments
-		                              </if>
-		                              ,idn_user
-			  						  <if test="newFileName != null and newFileName != ''">		                              
-		                              ,file_name
-		                              </if>
-		  							  <if test="newBinaryData != null">
-		                              ,attached_file
-		                              </if>
-		                              )
+	                                        aud_last_user,
+	                                        idn_offspec,
+	                                        idn_user_group,
+	                                        idn_offspec_status,
+	                                        idn_user,
+	                                        user_comments,
+	                                        OPERATOR_COMMENTS)
 		values (tpa_soffspec_log.nextval,
 	      #{username},
-	      #{username}
-				,#{incidentId}
-				,#{groupId}
-				,#{newStatusId}
-			  	<if test="newComments != null and newComments != ''">
-				,#{newComments}
-				</if>
-				,#{userId}
-			  	<if test="newFileName != null and newFileName != ''">				
-				,#{newFileName}
-				</if>
-				<if test="newBinaryData != null">
-				,#{newBinaryData}
-				</if>				
-				)
+	      #{username},
+	      #{incidentId},
+	      #{groupId},
+	      #{newStatusId},
+	      #{userId},
+	      #{commentsShipper},
+	      #{commentsOperator})
 	</insert>
 
 	<insert id="insertGasQualityParameter" useGeneratedKeys="true" keyProperty="incidentGasParamId" keyColumn="idn_offspec_gasq" parameterType="com.atos.beans.quality.OffSpecGasQualityParameterBean">
@@ -907,4 +893,43 @@ WHERE qpa.idn_area = a.IDN_AREA
 
    AND qpa.idn_quality_point = #{qualityPointId}
 	</select>
+	
+	<insert id="insertFileNewEvent" useGeneratedKeys="true" keyProperty="idnOffspecFile" keyColumn="idn_offspec_file" parameterType="com.atos.beans.quality.OffSpecFileBean">
+		insert into tpa_toffspec_file(
+			idn_offspec_file, 
+			file_name, 
+			binary_data, 
+			aud_ins_date, 
+			aud_last_date, 
+			aud_ins_user, 
+			aud_last_user)
+		values(
+			tpa_soffspec_file.nextval, 
+			#{fileName}, 
+			#{finaryData}, 
+			sysdate, 
+			sysdate, 
+			#{userName},
+			#{userName})
+	</insert>
+	
+	<insert id="insertFileAttachNewEvent" parameterType="com.atos.beans.quality.OffSpecFileAttachBean">
+		insert into tpa_toffspec_file_attach(
+			idn_toffspec_file_attach,
+            idn_offspec,
+            idn_offspec_file,
+            aud_ins_date,
+            aud_last_date,
+            aud_ins_user,
+            aud_last_user)
+		values(
+			tpa_soffspec_file_attach.nextval, 
+			#{idnOffspec}, 
+			#{idnOffspecFile}, 
+			sysdate, 
+			sysdate, 
+			#{userName},
+			#{userName})
+	</insert>
+	
 </mapper>

@@ -9,6 +9,7 @@ import java.util.Map;
 import com.atos.beans.ComboFilterNS;
 import com.atos.beans.LanguageBean;
 import com.atos.beans.UserBean;
+import com.atos.beans.quality.OffSpecActionBean;
 import com.atos.beans.quality.OffSpecGasQualityParameterBean;
 import com.atos.beans.quality.OffSpecIncidentBean;
 import com.atos.beans.quality.OffSpecResponseBean;
@@ -23,6 +24,7 @@ public interface OffSpecGasReportManagementService extends Serializable {
 	public Map<BigDecimal, Object> selectQualityPointsForInsert(BigDecimal systemId);
 	public Map<BigDecimal, Object> selectShipperId();
 	public Map<BigDecimal, Object> selectShipperIdForInsert();
+	public List<OffSpecActionBean> selectAllActions(Boolean isShipper);
 	public List<OffSpecStatusBean> selectStatusIds(OffSpecGasReportManagementFilter filter);
 	public List<OffSpecStatusRuleBean> selectStatusRules(String userId);
 	public List<OffSpecGasQualityParameterBean> selectGasQualityParameters();

@@ -1,8 +1,10 @@
 package com.atos.views.quality;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.net.URLConnection;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -36,6 +38,7 @@ import com.atos.beans.ComboFilterNS;
 import com.atos.beans.FileBean;
 import com.atos.beans.MessageBean;
 import com.atos.beans.quality.OffSpecActionBean;
+import com.atos.beans.quality.OffSpecActionFileBean;
 import com.atos.beans.quality.OffSpecFileBean;
 import com.atos.beans.quality.OffSpecGasQualityParameterBean;
 import com.atos.beans.quality.OffSpecIncidentBean;
@@ -83,9 +86,9 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 	
 	private UploadedFile file;
 	private List<FileBean> files;
-	private OffSpecFileBean uploadFile = null;
 	private Map<BigDecimal, Object> chargeActions;
 	private List<OffSpecActionBean> allActions;
+	private Map<BigDecimal, OffSpecActionBean> mapAllActions;
 	private OffSpecStatusBean idnStatusUnsolved;
 	private DefaultStreamedContent scFile;
 	
@@ -214,6 +217,7 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 			allActions = service.selectAllActions(isShipper() ? true : false);
 			chargeActions = allActions.stream().collect(
 					Collectors.toMap(OffSpecActionBean::getIdnOffspecAction, OffSpecActionBean::getActionDesc, (e1, e2) -> e1, LinkedHashMap::new));
+			mapAllActions = allActions.stream().collect(Collectors.toMap(OffSpecActionBean::getIdnOffspecAction, action -> action));
 		}
 		return chargeActions;
 	}
@@ -222,8 +226,8 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 		this.chargeActions = chargeActions;
 	}
 
-	public Boolean disabledAction(OffSpecIncidentBean item) {
-			return idnStatusUnsolved != null && item.getStatusId().compareTo(idnStatusUnsolved.getStatusId()) == 0 ? false : true;
+	public Boolean renderedAction(OffSpecIncidentBean item) {
+			return idnStatusUnsolved != null && item.getStatusId().compareTo(idnStatusUnsolved.getStatusId()) == 0 ? true : false;
 	}
 
 	@PostConstruct
@@ -538,29 +542,31 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 	
 	public void updateSelected(OffSpecIncidentBean item) {
 		selected = new OffSpecIncidentBean();
-		files = new ArrayList<FileBean>();
+		selected.setFilesAction(new ArrayList<OffSpecActionFileBean>());
 		selected.setIncidentId(item.getIncidentId());
 		selected.setNewStatusId(item.getStatusId());
+		selected.setIdnAction(item.getIdnAction());
 	}
 	
 	public void onChangeAction() {
 		ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication().getResourceBundle(FacesContext.getCurrentInstance(),"msg");
     	String summaryMsg = null;
     	String errorMsg = null;
+    	if(selected.getFilesAction().size() < 1) {
+    		summaryMsg = msgs.getString("saving_data_error");
+    		errorMsg = msgs.getString("osrg_man_mandatoryOneFile");
+    		getMessages().addMessage(Constants.head_menu[6],
+					new MessageBean(Constants.ERROR, summaryMsg, errorMsg, Calendar.getInstance().getTime()));
+	    	return;
+    	}
 		try {
-			int res = service.saveAction(selected, getUser());
+			int res = service.saveAction(selected, getUser(), isShipper());
 			if(res != 1) {
 				summaryMsg = msgs.getString("saving_data_error");
 	    		errorMsg = msgs.getString("osgr_man_errorChangeAction");
 	    		getMessages().addMessage(Constants.head_menu[6],
 						new MessageBean(Constants.ERROR, summaryMsg, errorMsg, Calendar.getInstance().getTime()));
 		    	return;
-			}else {
-				summaryMsg = msgs.getString("osgr_man_updatedSuccessfully");
-				String[] params = { selected.getIncidentCode() };
-				String msg = super.getMessageResourceString("osgr_man_changeActionOK", params);
-				getMessages().addMessage(Constants.head_menu[3], new MessageBean(Constants.INFO, summaryMsg, msg, new Date()));
-				return;
 			}
 		} catch (Exception e) {
 			summaryMsg = msgs.getString("saving_data_error");
@@ -569,6 +575,12 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 					new MessageBean(Constants.ERROR, summaryMsg, errorMsg, Calendar.getInstance().getTime()));
 	    	return;
 		}
+		summaryMsg = msgs.getString("osgr_man_updatedSuccessfully");
+		String[] params = { selected.getIncidentCode() };
+		String msg = super.getMessageResourceString("osgr_man_changeActionOK", params);
+		getMessages().addMessage(Constants.head_menu[3], new MessageBean(Constants.INFO, summaryMsg, msg, new Date()));
+		RequestContext context = RequestContext.getCurrentInstance();
+		context.execute("PF('nextStatusDlg').hide();");
 	}
 	
     public void onChangeStatus(OffSpecIncidentBean _incident, BigDecimal _chosenNextStatusId) {
@@ -844,29 +856,87 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 	 
 	 public void handleFileUploadNewEvent(FileUploadEvent event) {
 		 file = event.getFile();
-			if(file!=null){
-				//uploadFile = new FileBean(file.getFileName(), file.getContentType(), file.getContents());
+		 OffSpecFileBean uploadFile = null;
+			if(file != null){
 				uploadFile = new OffSpecFileBean(file.getFileName(), file.getContents(), getUser().getUsername());
 				newEvent.getFiles().add(uploadFile);
 			}
-	        
-			if(file==null || uploadFile==null){
+			if(file == null || uploadFile == null){
 				getMessages().addMessage(Constants.head_menu[6],new MessageBean(Constants.ERROR,"Error saving file","The file should be selected", Calendar.getInstance().getTime()));
 				return;
 			}
 	 }
 	 
-	 public void handleFileUpload(FileUploadEvent event) {
+	 public void handleFileUploadAction(FileUploadEvent event) {
 		file = event.getFile();
-		if(file!=null){
-			//uploadFile = new FileBean(file.getFileName(), file.getContentType(), file.getContents());
-		//	files.add(uploadFile);
+		OffSpecActionFileBean uploadFile = null;
+		if(file != null){
+			uploadFile = new OffSpecActionFileBean(selected.getIncidentId(), file.getFileName(), file.getContents(), getUser().getUsername());
+			selected.getFilesAction().add(uploadFile);
 		}
-        
-		if(file==null || uploadFile==null){
+		if(file == null || uploadFile == null){
 			getMessages().addMessage(Constants.head_menu[6],new MessageBean(Constants.ERROR,"Error saving file","The file should be selected", Calendar.getInstance().getTime()));
 			return;
 		}
 
     }
+	 
+	 public void selectFiles(OffSpecIncidentBean item) {
+		 selected = new OffSpecIncidentBean();
+		 selected = item;
+		 selected.getFiles().addAll(service.selectFiles(item));
+	 }
+	 
+	 public void selectActionFiles() {
+		 if(selected != null) {
+			 selected.getFilesAction().addAll(service.selectActionFiles(selected));
+		 }else {
+			 selected.setFilesAction(new ArrayList<OffSpecActionFileBean>());
+		 }
+	 }
+	 
+	 public void selectComments(OffSpecIncidentBean item, String user) {
+		 selected = new OffSpecIncidentBean();
+		 selected = item;
+		 selected.setCommentsUser(user);
+		 selected.setComments(service.selectCommentsShipperOperator(item));
+	 }
+	 
+	 public void downloadFile(OffSpecFileBean file) throws Exception {
+			ByteArrayInputStream bais = new ByteArrayInputStream(file.getBinaryData());
+			scFile = new DefaultStreamedContent(bais);
+			scFile.setName(file.getFileName());
+			scFile.setContentType(URLConnection.guessContentTypeFromStream(bais));
+	 }
+	 
+	 public void downloadActionFile(OffSpecActionFileBean file) throws Exception {
+			ByteArrayInputStream bais = new ByteArrayInputStream(file.getBinaryData());
+			scFile = new DefaultStreamedContent(bais);
+			scFile.setName(file.getFileName());
+			scFile.setContentType(URLConnection.guessContentTypeFromStream(bais));
+	 }
+	 
+	 public String notifiedYesNo(OffSpecIncidentBean item, String nameColumn) {
+		 String value = "";
+		 if(item != null && mapAllActions != null && !mapAllActions.isEmpty()) {
+			 value = item.getIdnAction() == null ? "NO" : 
+				 mapAllActions.get(item.getIdnAction()).getActionCode().equals(nameColumn) ? "YES" : "NO";
+		 }
+		 return value;
+	 }
+	 
+	 public boolean renderedFileAndComments(OffSpecIncidentBean item, String user) {
+		 boolean value = false;
+		 if(isShipper()) {
+			 BigDecimal id = getUser().getIdn_user_group();
+			 if(item.getOriginatorShipperId().compareTo(id) == 0 && user.equals(getUser().getUser_type())) {
+				 value = true;
+			 }
+		 }else {
+			 if(user.equals(getUser().getUser_type())) {
+				 value = true;
+			 }
+		 }
+		 return value;
+	 }
 }

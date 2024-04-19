@@ -12,7 +12,7 @@
     
     <select id="selectAllActions" resultType="com.atos.beans.quality.OffSpecActionBean">
     	select a.idn_offspec_action as idnOffspecAction, 
-    		  a.ACTION_CODE asactionCode,
+    		  a.ACTION_CODE as actionCode,
 		      a.action_desc as actionDesc
 		from tpa_toffspec_action a
 		<if test="isShipper == false">
@@ -251,10 +251,13 @@ AND sr.ask_other_shippers = 'Y'
         <result property="statusId" column="idn_offspec_status"/>        
         <result property="statusDesc" column="status_desc"/> 
         <result property="initialComments" column="initial_comments"/>  
+        <result property="idnFirstUser" column="idn_first_user"/>
         <result property="firstUserCode" column="first_user"/>
         <result property="comments" column="user_comments"/>        
         <result property="fileName" column="file_name"/>       
         <result property="operatorComments" column="operator_comments"/>
+        <result property="idnAction" column="idnAction"/>
+        <result property="action" column="action"/>
         <association property="gasParams" select="selectGasQualityParametersFromIncidentId" column="idn_offspec"/>
     </resultMap>
         
@@ -287,76 +290,10 @@ AND sr.ask_other_shippers = 'Y'
             and sp.idn_area = a.idn_area
             and a.idn_zone = z.idn_zone
             and z.idn_pipeline_system = #{systemId})
-		select * from
-		(select tospec.idn_offspec,
-		       tstatus.idn_offspec_status_flow,
-		       tflow.flow_desc,
-		       tospec.offspec_code,
-		       tlogmax.idn_offspec_log,
-		       tsp.idn_system_point,
-		       tsp.point_code,
-			   tospec.idn_user_group,
-		       tgr.user_group_id,
-		       tospec.start_date,
-		       tospec.end_date,
-		       tospec.aud_last_date,
-		       tstatus.idn_offspec_status,
-		       tstatus.status_desc,
-		       tlogmin.user_comments  as initial_comments,
-               (select u.user_id from tpa_tuser u where u.idn_user = tlogmin.idn_user) as first_user,
-		       tlogmax.user_comments,
-		       tlogmax.file_name
-		from tpa_toffspec tospec,
-		     tpa_tuser_group tgr,
-		     tpa_tsystem_point tsp,
-		     tpa_toffspec_status tstatus,
-		     tpa_toffspec_status_flow tflow,
-		     tpa_toffspec_log tlogmax,
-		     tpa_toffspec_log tlogmin,
-           pipeline_points pp
-		where tgr.idn_user_group (+)= tospec.idn_user_group
-			  <if test="incidentCode != null and incidentCode != ''">
-			  and tospec.offspec_code like #{incidentCode}
-			  </if>
-			  <if test="qualityPointId != null">
-          	  and tospec.idn_system_point=#{qualityPointId}
-			  </if>
-			  <if test="shipperId != null">
-          	  and nvl(tospec.idn_user_group,tlogmax.idn_user_group)=#{shipperId}
-			  </if>
-			  <choose>
-				<when test="statusId != null and statusId.length > 0">
-					<foreach item="item" index="index" collection="statusId"
-			             open="and tospec.idn_offspec_status in (" separator="," close=")">
-			        		#{item}
-			    	</foreach>
-				</when>
-				<otherwise>
-					and tospec.idn_offspec_status in (-1)
-				</otherwise>
-			  </choose>
-	 		  <if test="startDate != null">
-			  and nvl(tospec.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))>= #{startDate}
-			  </if>
-			  <if test="endDate != null">
-			  and #{endDate} >= tospec.start_date 
-			  </if>
-		      and tsp.idn_system_point = tospec.idn_system_point
-            and tsp.idn_system_point = pp.idn_quality_point
-		      and tstatus.idn_offspec_status = tospec.idn_offspec_status
-		      and tflow.idn_offspec_status_flow = tstatus.idn_offspec_status_flow
-		      and tlogmax.idn_offspec = tospec.idn_offspec
-		      and tlogmax.insert_date = (select max(tlog3.insert_date)
-		                                   from tpa_toffspec_log tlog3
-                                        where tlog3.idn_offspec = tlogmax.idn_offspec)
-              and tlogmin.idn_offspec = tospec.idn_offspec
-              and tlogmin.insert_date = (select min(tlog4.insert_date)
-		                                   from tpa_toffspec_log tlog4
-                                        where tlog4.idn_offspec = tlogmin.idn_offspec)
-		union
-	    select tospec.idn_offspec,
-	       tstatus.idn_offspec_status_flow,
-	       tflow.flow_desc,
+    select * from
+    (select tospec.idn_offspec,
+           tstatus.idn_offspec_status_flow,
+           tflow.flow_desc,
            tospec.offspec_code,
            tlogmax.idn_offspec_log,
            tsp.idn_system_point,
@@ -367,67 +304,145 @@ AND sr.ask_other_shippers = 'Y'
            tospec.end_date,
            tospec.aud_last_date,
            tstatus.idn_offspec_status,
+           ac.action_desc,     
            tstatus.status_desc,
-	       tlogmin.user_comments  as initial_comments,
+           tlogmin.user_comments  as initial_comments,
+           tlogmin.idn_user as idn_first_user,
            (select u.user_id from tpa_tuser u where u.idn_user = tlogmin.idn_user) as first_user,
-           tlogmax.user_comments,
-           tlogmax.file_name
-	    from tpa_toffspec tospec,
-	         tpa_tuser_group tgr,
-	         tpa_tsystem_point tsp,
-	         tpa_toffspec_status tstatus,
-	         tpa_toffspec_status_flow tflow,
-	         tpa_toffspec_log tlogmax,
-	         tpa_toffspec_log tlogmin,
-	         tpa_toffspec_response tores,
-             pipeline_points pp
-	    where tgr.idn_user_group (+)= tospec.idn_user_group
-	        <if test="incidentCode != null and incidentCode != ''">
-	        and tospec.offspec_code like #{incidentCode}
-	        </if>
-	        <if test="qualityPointId != null">
-	        and tospec.idn_system_point=#{qualityPointId}
-	        </if>
-	        <if test="shipperId != null">
-	        and tores.idn_user_group=#{shipperId}
-	        </if>
-	        <if test="shipperId == null">
-	        and tores.idn_user_group=-1
-	        </if>
-	        <choose>
-	        <when test="statusId != null and statusId.length > 0">
-	          	<foreach item="item" index="index" collection="statusId"
-	                   open="and tospec.idn_offspec_status in (" separator="," close=")">
-	                  #{item}
-	        	</foreach>
-	        </when>
-	        <otherwise>
-	        and tospec.idn_offspec_status in (-1)
-	        </otherwise>
-	        </choose>
-	        <if test="startDate != null">
-	        and nvl(tospec.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))>= #{startDate}
-	        </if>
-	        <if test="endDate != null">
-	        and #{endDate} >= tospec.start_date 
-	        </if>
-	        and tsp.idn_system_point = tospec.idn_system_point
-            and tsp.idn_system_point = pp.idn_quality_point
-	        and tstatus.idn_offspec_status = tospec.idn_offspec_status
-	        and tflow.idn_offspec_status_flow = tstatus.idn_offspec_status_flow
-	        and tlogmax.idn_offspec = tospec.idn_offspec
-		    and tlogmax.insert_date = (select max(tlog3.insert_date)
-		                                  from tpa_toffspec_log tlog3
+           tospec.idn_offspec_action as idnAction,
+               (select a.action_desc 
+                       from tpa_toffspec_action a
+                       where a.idn_offspec_action = tospec.idn_offspec_action) as action
+    from tpa_toffspec tospec,
+         tpa_tuser_group tgr,
+         tpa_tsystem_point tsp,
+         tpa_toffspec_status tstatus,
+         tpa_toffspec_status_flow tflow,
+         tpa_toffspec_log tlogmax,
+         tpa_toffspec_log tlogmin,
+         tpa_toffspec_action ac,
+           pipeline_points pp
+    where tgr.idn_user_group (+)= tospec.idn_user_group
+        <if test="incidentCode != null and incidentCode != ''">
+        and tospec.offspec_code like #{incidentCode}
+        </if>
+        <if test="qualityPointId != null">
+              and tospec.idn_system_point=#{qualityPointId}
+        </if>
+        <if test="shipperId != null">
+              and nvl(tospec.idn_user_group,tlogmax.idn_user_group)=#{shipperId}
+        </if>
+        <choose>
+        <when test="statusId != null and statusId.length > 0">
+          <foreach item="item" index="index" collection="statusId"
+                   open="and tospec.idn_offspec_status in (" separator="," close=")">
+                  #{item}
+            </foreach>
+        </when>
+        <otherwise>
+          and tospec.idn_offspec_status in (-1)
+        </otherwise>
+        </choose>
+        <if test="startDate != null">
+        and nvl(tospec.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))>= #{startDate}
+        </if>
+        <if test="endDate != null">
+        and #{endDate} >= tospec.start_date 
+        </if>
+          and tsp.idn_system_point = tospec.idn_system_point
+          and tsp.idn_system_point = pp.idn_quality_point
+          and tstatus.idn_offspec_status = tospec.idn_offspec_status
+          and tflow.idn_offspec_status_flow = tstatus.idn_offspec_status_flow
+          and tlogmax.idn_offspec = tospec.idn_offspec
+          and tlogmax.insert_date = (select max(tlog3.insert_date)
+                                       from tpa_toffspec_log tlog3
+                                        where tlog3.idn_offspec = tlogmax.idn_offspec)
+          and tlogmin.idn_offspec = tospec.idn_offspec
+          and tlogmin.insert_date = (select min(tlog4.insert_date)
+                                       from tpa_toffspec_log tlog4
+                                        where tlog4.idn_offspec = tlogmin.idn_offspec)      
+          and ac.idn_offspec_action(+) = tospec.idn_offspec_action                            
+    union
+      select tospec.idn_offspec,
+         tstatus.idn_offspec_status_flow,
+         tflow.flow_desc,
+           tospec.offspec_code,
+           tlogmax.idn_offspec_log,
+           tsp.idn_system_point,
+           tsp.point_code,
+           tospec.idn_user_group,
+           tgr.user_group_id,
+           tospec.start_date,
+           tospec.end_date,
+           tospec.aud_last_date,
+           tstatus.idn_offspec_status,
+           ac.action_desc,     
+           tstatus.status_desc,
+           tlogmin.user_comments  as initial_comments,
+           tlogmin.idn_user as idn_first_user,
+           (select u.user_id from tpa_tuser u where u.idn_user = tlogmin.idn_user) as first_user,
+           tospec.idn_offspec_action as idnAction,
+           (select a.action_desc 
+                       from tpa_toffspec_action a
+                       where a.idn_offspec_action = tospec.idn_offspec_action) as action
+      from tpa_toffspec tospec,
+           tpa_tuser_group tgr,
+           tpa_tsystem_point tsp,
+           tpa_toffspec_status tstatus,
+           tpa_toffspec_status_flow tflow,
+           tpa_toffspec_log tlogmax,
+           tpa_toffspec_log tlogmin,
+           tpa_toffspec_response tores,
+           tpa_toffspec_action ac,
+           pipeline_points pp
+      where tgr.idn_user_group (+)= tospec.idn_user_group
+          <if test="incidentCode != null and incidentCode != ''">
+          and tospec.offspec_code like #{incidentCode}
+          </if>
+          <if test="qualityPointId != null">
+          and tospec.idn_system_point=#{qualityPointId}
+          </if>
+          <if test="shipperId != null">
+          and tores.idn_user_group=#{shipperId}
+          </if>
+          <if test="shipperId == null">
+          and tores.idn_user_group=-1
+          </if>
+          <choose>
+          <when test="statusId != null and statusId.length > 0">
+              <foreach item="item" index="index" collection="statusId"
+                     open="and tospec.idn_offspec_status in (" separator="," close=")">
+                    #{item}
+            </foreach>
+          </when>
+          <otherwise>
+          and tospec.idn_offspec_status in (-1)
+          </otherwise>
+          </choose>
+          <if test="startDate != null">
+          and nvl(tospec.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))>= #{startDate}
+          </if>
+          <if test="endDate != null">
+          and #{endDate} >= tospec.start_date 
+          </if>
+          and tsp.idn_system_point = tospec.idn_system_point
+          and tsp.idn_system_point = pp.idn_quality_point
+          and tstatus.idn_offspec_status = tospec.idn_offspec_status
+          and tflow.idn_offspec_status_flow = tstatus.idn_offspec_status_flow
+          and tlogmax.idn_offspec = tospec.idn_offspec
+          and tlogmax.insert_date = (select max(tlog3.insert_date)
+                                      from tpa_toffspec_log tlog3
                                        where tlog3.idn_offspec = tlogmax.idn_offspec)
-           	and tlogmin.idn_offspec = tospec.idn_offspec
-           	and tlogmin.insert_date = (select min(tlog4.insert_date)
-		                                  from tpa_toffspec_log tlog4
+          and tlogmin.idn_offspec = tospec.idn_offspec
+          and tlogmin.insert_date = (select min(tlog4.insert_date)
+                                      from tpa_toffspec_log tlog4
                                        where tlog4.idn_offspec = tlogmin.idn_offspec)
-	        and tores.idn_offspec=tospec.idn_offspec
-			and tores.idn_offspec_response = (select max(tres2.idn_offspec_response) from tpa_toffspec_response tres2
-											where tres2.idn_offspec=tores.idn_offspec
-											and tres2.idn_user_group=tores.idn_user_group)) t   
-	    order by t.point_code asc, t.user_group_id asc, t.start_date desc
+          and tores.idn_offspec=tospec.idn_offspec
+          and tores.idn_offspec_response = (select max(tres2.idn_offspec_response) from tpa_toffspec_response tres2
+                      where tres2.idn_offspec=tores.idn_offspec
+                      and tres2.idn_user_group=tores.idn_user_group)
+          and ac.idn_offspec_action(+) = tospec.idn_offspec_action) t   
+      order by t.point_code asc, t.user_group_id asc, t.start_date desc
     </select>
 
 	<!-- Solo se consultan incidencias que tenga registro en la tabla de respuestas -->
@@ -932,4 +947,64 @@ WHERE qpa.idn_area = a.IDN_AREA
 			#{userName})
 	</insert>
 	
+	<insert id="insertFileAction" parameterType="com.atos.beans.quality.OffSpecActionFileBean">
+		insert into TPA_TOFFSPEC_ACTION_FILE(
+			idn_offspec_action_file, 
+			idn_offspec, 
+			file_name, 
+			binary_data, 
+			aud_ins_date, 
+			aud_last_date, 
+			aud_ins_user, 
+			aud_last_user)
+		values(
+			TPA_SOFFSPEC_ACTION_FILE.nextval, 
+			#{idnOffspec}, 
+			#{fileName}, 
+			#{binaryData}, 
+			sysdate, 
+			sysdate, 
+			#{userName},
+			#{userName})
+		
+	</insert>
+	
+	<select id="selectFiles" resultType="com.atos.beans.quality.OffSpecFileBean">
+		select f.IDN_OFFSPEC_FILE as idnOffspecFile,
+				f.file_name as fileName, 
+				f.binary_data as binaryData
+			from tpa_toffspec_file_attach a,
+			tpa_toffspec_file f
+			where a.idn_offspec_file = f.idn_offspec_file
+			and a.idn_offspec = #{incidentId}
+	</select>
+	
+	<select id="selectActionFiles" resultType="com.atos.beans.quality.OffSpecActionFileBean">
+		select f.file_name as fileName, f.binary_data as binaryData 
+			from TPA_TOFFSPEC_ACTION_FILE f
+			where f.idn_offspec = #{incidentId}
+	</select>
+	
+	<select id="selectCommentsShipperOperator" resultType="java.lang.String">
+		select 
+			<if test="commentsUser != null and commentsUser == 'SHIPPER'">
+				ol.user_comments as comments
+			</if>
+			<if test="commentsUser != null and commentsUser == 'OPERATOR'">
+				ol.OPERATOR_COMMENTS as comments
+			</if>
+			from   tpa_toffspec o ,
+			       tpa_toffspec_log ol
+			where o.idn_offspec = ol.idn_offspec      
+			  and ol.insert_date = (select max(tlog3.insert_date)
+					                    from tpa_toffspec_log tlog3
+			                        where tlog3.idn_offspec = ol.idn_offspec) 
+			  and o.idn_offspec = #{incidentId}  
+	</select>
+	
+	<update id="updateActionOffspec" parameterType="com.atos.beans.quality.OffSpecIncidentBean">
+		update tpa_toffspec o 
+			set o.idn_offspec_action = #{idnAction}
+			where o.idn_offspec = #{incidentId}
+	</update>
 </mapper>

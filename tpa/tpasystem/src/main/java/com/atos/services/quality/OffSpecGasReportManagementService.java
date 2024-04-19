@@ -10,6 +10,8 @@ import com.atos.beans.ComboFilterNS;
 import com.atos.beans.LanguageBean;
 import com.atos.beans.UserBean;
 import com.atos.beans.quality.OffSpecActionBean;
+import com.atos.beans.quality.OffSpecActionFileBean;
+import com.atos.beans.quality.OffSpecFileBean;
 import com.atos.beans.quality.OffSpecGasQualityParameterBean;
 import com.atos.beans.quality.OffSpecIncidentBean;
 import com.atos.beans.quality.OffSpecResponseBean;
@@ -29,6 +31,9 @@ public interface OffSpecGasReportManagementService extends Serializable {
 	public List<OffSpecStatusRuleBean> selectStatusRules(String userId);
 	public List<OffSpecGasQualityParameterBean> selectGasQualityParameters();
 	public List<OffSpecIncidentBean> search(OffSpecGasReportManagementFilter filter, UserBean _user);
+	public List<OffSpecFileBean> selectFiles(OffSpecIncidentBean item);
+	public List<OffSpecActionFileBean> selectActionFiles(OffSpecIncidentBean item);
+	public String selectCommentsShipperOperator(OffSpecIncidentBean item);
 	public void changeStatus(OffSpecIncidentBean incident, UserBean _user, LanguageBean _lang) throws Exception;
 	public void sendNewStatusNotification(OffSpecIncidentBean _incid, UserBean _user, LanguageBean _lang, BigDecimal _systemId) throws Exception;
 	public void createRequest(OffSpecIncidentBean _incid, UserBean _user, LanguageBean _lang) throws Exception;
@@ -41,7 +46,7 @@ public interface OffSpecGasReportManagementService extends Serializable {
 	public void getFile(OffSpecIncidentBean incident) throws Exception;
 	public String getZoneCode(OffSpecIncidentBean incident);
 	
-	public Integer saveAction(OffSpecIncidentBean _incid, UserBean _user) throws Exception;
+	public Integer saveAction(OffSpecIncidentBean _incid, UserBean _user, boolean isShipper) throws Exception;
 	
 	//CH706
 	public String updateTransporterComments(OffSpecResponseBean response) throws Exception;

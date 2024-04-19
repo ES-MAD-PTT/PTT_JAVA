@@ -19,6 +19,7 @@ public interface RenominationIntradayMapper extends Serializable{
 	public List<RenominationIntradayBean> selectRenominationIntradayCab(RenominationIntradayFilter filter);
 	public List<RenominationIntradayDetBean> selectRenominationIntradayDet(RenominationIntradayFilter filter);
 	public List<RenominationIntradayDialogDetBean> selectRenominationIntradayDialog(RenominationIntradayDialogBean bean);
+	public List<RenominationIntradayDialogDetBean> selectRenominationIntradayWeeklyDialog(RenominationIntradayDialogBean bean);
 	public List<ComboFilterNS> selectShipperId();
 	public Date getSysdate();
 	public IdEventBean getIdEvent(IdEventBean bean);

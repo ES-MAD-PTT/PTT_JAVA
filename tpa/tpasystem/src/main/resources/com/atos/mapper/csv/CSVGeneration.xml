@@ -772,4 +772,135 @@ ORDER BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 14, 20
 
 </select>
 
+<select id="getCountCSVContractQuery" resultType="java.math.BigDecimal" parameterType="java.util.HashMap">
+
+WITH 
+  w_cabecera AS
+    (SELECT tcreq.idn_contract_request,
+            tcreq.request_code,
+            tcreq.arriving_date,
+            tuser_group.idn_user_group,
+            tuser_group.user_group_id,
+            tuser_group.user_group_name,
+            toper.idn_operation,
+            toper.operation_desc,
+            tcreq.idn_contract,
+            tcreq.contract_code,
+            tcreq.status,
+            tcreq.start_date,
+            tcreq.end_date,
+            tcreq.shipper_warnings,
+            toperf.file_name,
+            tcreq.response_date,
+            tcreq.operator_comments,
+            csha.shadow_time,
+            csha.shadow_period
+       FROM (SELECT tcreq2.*, tcontr2.contract_code
+               FROM tpa_tcontract_request tcreq2,
+                    tpa_tcontract         tcontr2
+              WHERE tcontr2.idn_contract(+) = tcreq2.idn_contract
+                AND NVL(tcontr2.is_grandfathering(+), 'N') = 'N'
+                AND tcreq2.idn_pipeline_system = #{idn_system}
+                AND tcontr2.idn_pipeline_system(+) = tcreq2.idn_pipeline_system) tcreq
+      INNER JOIN tpa_tuser_group tuser_group
+         ON tcreq.idn_user_group = tuser_group.idn_user_group       
+      INNER JOIN tpa_toperation  toper
+         ON tcreq.idn_operation = toper.idn_operation
+      INNER JOIN tpa_toperation_file  toperf
+         ON tcreq.idn_operation_file = toperf.idn_operation_file
+       LEFT JOIN tpa_tcontract_shadow csha
+         ON tcreq.idn_contract = csha.idn_contract
+      WHERE tcreq.is_capacity_release = 'N'
+        AND tcreq.status = 'COMPLETED'
+           
+          <if test = "startDate != null" >
+             AND trunc(tcreq.end_date) >= #{startDate} 
+           </if>
+           <if test = "endDate != null" >
+             AND #{endDate} >= trunc(tcreq.start_date)
+           </if>
+    ),
+  w_quality AS
+    (SELECT cab.idn_contract_request,
+            cp.idn_system_point,
+            gqp.parameter_code,
+            MAX(cpg.min_value) AS min_value,
+            MIN(cpg.max_value) AS max_value
+       FROM w_cabecera               cab,
+            tpa_tcontract_agreement  ca,
+            tpa_tcontract_point      cp,
+            tpa_tcontract_point_gasq cpg,
+            tpa_tgas_quality_param   gqp
+      WHERE cab.idn_contract_request = ca.idn_contract_request
+        AND ca.idn_contract_agreement = cp.idn_contract_agreement
+        AND cp.idn_contract_point = cpg.idn_contract_point
+        AND cpg.idn_gas_quality_param = gqp.idn_gas_quality_param
+      GROUP BY cab.idn_contract_request, cp.idn_system_point, gqp.parameter_code
+    ),
+  w_quality_pivot AS 
+    (SELECT *
+       FROM w_quality
+      PIVOT (MAX(min_value) AS MIN, MIN(max_value) AS MAX FOR parameter_code IN('HV' AS hv,
+                                                                                'WI' AS wi,
+                                                                                'C2' AS c2,
+                                                                                'CO2' AS co2,
+                                                                                'O2' AS o2,
+                                                                                'N2' AS n2,
+                                                                                'H2S' AS h2s,
+                                                                                'S' AS s,
+                                                                                'Hg' AS hg,
+                                                                                'H2O' AS h2o,
+                                                                                'HCDewPoint' AS hcdewpoint,
+                                                                                'Pressure' AS press,
+                                                                                'Temperature' AS temp))
+    ),
+  w_system_points AS 
+    (SELECT cab.idn_contract_request,
+            cp.idn_system_point,
+            sp.point_code,
+            a.area_code,
+            z.zone_code,
+            xls.subarea,
+            xls.block_valve,
+            cp.is_new_connection,
+            cp.metering_point,
+            ct.type_code AS customer_type,
+            MIN(ca.start_date) AS from_date,
+            MAX(ca.end_date) AS to_date
+       FROM w_cabecera               cab
+      INNER JOIN tpa_tcontract_agreement  ca
+         ON cab.idn_contract_request = ca.idn_contract_request
+      INNER JOIN tpa_tcontract_point cp
+         ON ca.idn_contract_agreement = cp.idn_contract_agreement
+      INNER JOIN tpa_tsystem_point sp
+         ON cp.idn_system_point = sp.idn_system_point
+      INNER JOIN tpa_varea_tpa a
+         ON sp.idn_area = a.idn_area
+      INNER JOIN tpa_vzone_tpa z
+         ON a.idn_zone = z.idn_zone
+      INNER JOIN tpa_tsystem_point_type spt
+         ON sp.idn_system_point_type = spt.idn_system_point_type
+        AND spt.type_code IN ('ENTRY', 'EXIT')
+       LEFT JOIN tpa_tcontract_xls_headr xls
+         ON cab.idn_contract_request = xls.idn_contract_request
+        AND sp.idn_system_point = xls.idn_system_point
+       LEFT JOIN tpa_tcustomer_type ct
+         ON xls.idn_customer_type = ct.idn_customer_type
+      GROUP BY cab.idn_contract_request, cp.idn_system_point, sp.point_code, a.area_code, z.zone_code,
+               xls.subarea, xls.block_valve, cp.is_new_connection, cp.metering_point, ct.type_code
+    )
+SELECT count(*)
+  FROM w_cabecera cab
+INNER JOIN w_system_points sp
+    ON cab.idn_contract_request = sp.idn_contract_request
+INNER JOIN tpa_vcontract_request_capacity cap
+    ON cab.idn_contract_request = cap.idn_contract_request
+   AND sp.idn_system_point = cap.idn_system_point
+  LEFT JOIN w_quality_pivot qua
+    ON cab.idn_contract_request = qua.idn_contract_request
+   AND sp.idn_system_point = qua.idn_system_point
+
+
+</select>
+
 </mapper>

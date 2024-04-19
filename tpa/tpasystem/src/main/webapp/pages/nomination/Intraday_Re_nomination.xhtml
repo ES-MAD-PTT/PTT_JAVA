@@ -230,10 +230,11 @@
 				           		</p:selectOneMenu>
 							</p:column>
 							<p:column>
-								<p:selectOneMenu id="hour" style="width:100px" value="#{renominationIntradayView.newReIntraday.hour}" >
+								<p:selectOneMenu id="hour" style="width:100px" value="#{renominationIntradayView.newReIntraday.hour}">
 								   		<f:selectItem itemLabel="" itemValue="" />
      									<f:selectItems value="#{renominationIntradayView.hours.entrySet()}" var="entry" 
      											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+										<p:ajax event="change" listener="#{renominationIntradayView.reloadDetail}" update="renominationIntradayTable"/>     											
 				           		</p:selectOneMenu>
 							</p:column>
 						</p:row>

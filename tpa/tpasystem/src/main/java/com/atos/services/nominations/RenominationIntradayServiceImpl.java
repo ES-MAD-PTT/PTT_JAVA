@@ -1,6 +1,7 @@
 package com.atos.services.nominations;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -128,8 +129,12 @@ public class RenominationIntradayServiceImpl implements RenominationIntradayServ
 		cal.setTime(today);
 		int hour = cal.get(Calendar.HOUR_OF_DAY) +1;
 		if(hour<24) {
-			for(int i=hour;i<24;i++) {
-				map.put(new BigDecimal(i), (new BigDecimal(i)).toPlainString());
+			for(int i=hour;i<25;i++) {
+				if(i!=24) {
+					map.put(new BigDecimal(i), (new BigDecimal(i)).toPlainString());
+				} else {
+					map.put(new BigDecimal(0), "Gas Day + 1 / Hour 0");
+				}
 			}
 		}
 		
@@ -171,12 +176,30 @@ public class RenominationIntradayServiceImpl implements RenominationIntradayServ
 
 	@Override
 	public RenominationIntradayDialogBean getNewReIntraday(RenominationIntradayDialogBean newReIntraday) {
-		
-		List<RenominationIntradayDialogDetBean> list = renomIntradayMapper.selectRenominationIntradayDialog(newReIntraday);
+		List<RenominationIntradayDialogDetBean> list = new ArrayList<RenominationIntradayDialogDetBean>();
+		if(newReIntraday.getHour()!=null && newReIntraday.getHour().intValue()==0) {
+			//Date temp_gas_day = newReIntraday.getGas_day();
+			Calendar cal = Calendar.getInstance();
+			cal.add(Calendar.DAY_OF_MONTH, 1);
+			newReIntraday.setGas_day(DateUtil.adjustDate(cal.getTime()));
+			list = renomIntradayMapper.selectRenominationIntradayDialog(newReIntraday);
+			if(list.size()==0) {
+				list = renomIntradayMapper.selectRenominationIntradayWeeklyDialog(newReIntraday);	
+			}
+			//newReIntraday.setGas_day(temp_gas_day);
+		} else {
+			//Date temp_gas_day = newReIntraday.getGas_day();
+			newReIntraday.setGas_day(DateUtil.getToday());
+			list = renomIntradayMapper.selectRenominationIntradayDialog(newReIntraday);
+			if(list.size()==0) {
+				list = renomIntradayMapper.selectRenominationIntradayWeeklyDialog(newReIntraday);	
+			}
+			//newReIntraday.setGas_day(temp_gas_day);
+		}
+		newReIntraday.setDetail(new ArrayList<RenominationIntradayDialogDetBean>());
 		for(int i=0;i<list.size();i++) {
 			newReIntraday.getDetail().add(list.get(i));
 		}
-		
 		return newReIntraday;
 		
 	}
@@ -195,8 +218,9 @@ public class RenominationIntradayServiceImpl implements RenominationIntradayServ
 		id = this.getId();
 		bean.setIntraday_renom_code(id.getP_id());
 		Calendar cal = Calendar.getInstance();
-		
-		bean.setGas_day(DateUtil.adjustDate(cal.getTime()));
+		if(bean.getGas_day()==null) {
+			bean.setGas_day(DateUtil.adjustDate(cal.getTime()));
+		}
 
 		String resHeader = this.insertHeader(bean);
 		if(!resHeader.equals("0")) {
@@ -218,5 +242,7 @@ public class RenominationIntradayServiceImpl implements RenominationIntradayServ
 		return "0";
 
 	}
+	
+	
 	
 }

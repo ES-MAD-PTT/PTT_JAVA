@@ -1,7 +1,10 @@
 package com.atos.mapper.csv;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
+
+import org.apache.ibatis.session.RowBounds;
 
 import com.atos.beans.csv.AllocationReportCSVBean;
 import com.atos.beans.csv.ContractQueryCSVBean;
@@ -19,6 +22,8 @@ public interface CSVMapper {
 
 	public List<WeeklyNominationCSVBean> getCSVWeeklyNomination(HashMap<String,Object> map);
 
-	public List<ContractQueryCSVBean> getCSVContractQuery(HashMap<String,Object> map);
+	public List<ContractQueryCSVBean> getCSVContractQuery(HashMap<String,Object> map, RowBounds rowBound);
 
+	public List<BigDecimal> getCountCSVContractQuery(HashMap<String,Object> map);
+	
 }

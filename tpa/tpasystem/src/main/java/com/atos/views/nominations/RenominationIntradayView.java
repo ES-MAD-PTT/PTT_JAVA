@@ -15,6 +15,7 @@ import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
+import javax.faces.event.ValueChangeEvent;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -219,6 +220,15 @@ public class RenominationIntradayView extends CommonView implements Serializable
 						messages.addMessage(Constants.head_menu[4],new MessageBean(Constants.ERROR,"Error updating","Energy and Volume are required", Calendar.getInstance().getTime()));
 						return;
 					}
+				/*	if(newReIntraday.getHour().equals(BigDecimal.valueOf(0))) {
+						Calendar cal = Calendar.getInstance();
+						cal.setTime(det.getGas_day());
+						cal.add(Calendar.DAY_OF_MONTH, 1);
+						det.setGas_day(cal.getTime());
+						newReIntraday.setHour(BigDecimal.valueOf(0));
+						newReIntraday.setGas_day(cal.getTime());
+					}*/
+
 				}
 			}
 			newReIntraday.setUsername(getUser().getUsername());
@@ -336,4 +346,8 @@ public class RenominationIntradayView extends CommonView implements Serializable
 					new MessageBean(Constants.INFO, "Mail values", texto, Calendar.getInstance().getTime())); 
 		}
 
+	public void reloadDetail() {
+		this.newReIntraday.setIdn_system(getChangeSystemView().getIdn_active());
+		this.newReIntraday = service.getNewReIntraday(this.newReIntraday);		
+	}
 }

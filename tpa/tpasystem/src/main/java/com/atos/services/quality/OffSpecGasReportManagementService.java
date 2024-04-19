@@ -26,7 +26,7 @@ public interface OffSpecGasReportManagementService extends Serializable {
 	public Map<BigDecimal, Object> selectQualityPointsForInsert(BigDecimal systemId);
 	public Map<BigDecimal, Object> selectShipperId();
 	public Map<BigDecimal, Object> selectShipperIdForInsert();
-	public List<OffSpecActionBean> selectAllActions(Boolean isShipper);
+	public List<OffSpecActionBean> selectAllActions();
 	public List<OffSpecStatusBean> selectStatusIds(OffSpecGasReportManagementFilter filter);
 	public List<OffSpecStatusRuleBean> selectStatusRules(String userId);
 	public List<OffSpecGasQualityParameterBean> selectGasQualityParameters();

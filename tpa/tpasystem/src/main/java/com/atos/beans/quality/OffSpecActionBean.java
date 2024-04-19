@@ -15,8 +15,13 @@ public class OffSpecActionBean implements Serializable {
 	private String actionCode;
 	private String actionDesc;
 	
+	public OffSpecActionBean() {}
 	
-	
+	public OffSpecActionBean(BigDecimal idnOffspecAction, String actionCode, String actionDesc) {
+		this.idnOffspecAction = idnOffspecAction;
+		this.actionCode = actionCode;
+		this.actionDesc = actionDesc;
+	}
 	public BigDecimal getIdnOffspecAction() {
 		return idnOffspecAction;
 	}

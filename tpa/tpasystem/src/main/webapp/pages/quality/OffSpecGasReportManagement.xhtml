@@ -257,7 +257,7 @@
 				       		<p:commandButton icon="ui-icon fa fa-envelope-o" update=":shipperResponsesFormId"
 								onstart="PF('cargando').show()"	oncomplete="PF('cargando').hide(),PF('shipperResponsesDlg').show()"
  					       			rendered="#{incident.discloseResponses.size()!=0}">
-								<f:setPropertyActionListener value="#{incident}" target="#{OSGRManagementView.selected}" />
+ 					       		<f:setPropertyActionListener value="#{incident}" target="#{OSGRManagementView.selected}" />
 							</p:commandButton>
 				       	</p:column>
 				       	<p:column headerText="#{msg['osgr_man_shipperIfAnswer']}" style="width: 70px;text-align:center;">

@@ -214,9 +214,16 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 	public Map<BigDecimal, Object> getChargeActions() {
 		if(chargeActions == null) {
 			chargeActions = new HashMap<BigDecimal, Object>();
-			allActions = service.selectAllActions(isShipper() ? true : false);
-			chargeActions = allActions.stream().collect(
-					Collectors.toMap(OffSpecActionBean::getIdnOffspecAction, OffSpecActionBean::getActionDesc, (e1, e2) -> e1, LinkedHashMap::new));
+			allActions = service.selectAllActions();
+			allActions.forEach(item -> {
+				if(item.getActionCode().equals("FIX_ORIG_SHIP")) {
+					if(isShipper()) {
+						chargeActions.put(item.getIdnOffspecAction(), item.getActionDesc());
+					}
+				}else {
+					chargeActions.put(item.getIdnOffspecAction(), item.getActionDesc());
+				}
+			});
 			mapAllActions = allActions.stream().collect(Collectors.toMap(OffSpecActionBean::getIdnOffspecAction, action -> action));
 		}
 		return chargeActions;
@@ -885,8 +892,8 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 	 
 	 public void selectFiles(OffSpecIncidentBean item) {
 		 selected = new OffSpecIncidentBean();
-		 selected.setFiles(new ArrayList<OffSpecFileBean>());
 		 selected = item;
+		 selected.setFiles(new ArrayList<OffSpecFileBean>());
 		 selected.getFiles().addAll(service.selectFiles(selected));
 	 }
 	 
@@ -929,18 +936,14 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 		 return value;
 	 }
 	 
-	 public boolean renderedFileAndComments(OffSpecIncidentBean item, String user) {
-		 boolean value = false;
-		 if(isShipper()) {
-			 BigDecimal id = getUser().getIdn_user_group();
-			 if(item.getOriginatorShipperId().compareTo(id) == 0 && user.equals(getUser().getUser_type())) {
-				 value = true;
-			 }
-		 }else {
-			 if(user.equals(getUser().getUser_type())) {
-				 value = true;
-			 }
-		 }
-		 return value;
-	 }
+//	 public void prepareOpenResponse(OffSpecIncidentBean item) {
+//		 selected = new OffSpecIncidentBean();
+//		 selected = item;
+//		 Map<String, BigDecimal> params = new HashMap<String, BigDecimal>();
+//		if(isShipper()) { 
+//			params.put("shipperId", filters.getShipperId());
+//		}
+//		params.put("incidentId", selected.getIncidentId());
+//		selected.setDiscloseResponses(service.selectDiscloseResponsesFromIncidentId(params));
+//	 }
 }

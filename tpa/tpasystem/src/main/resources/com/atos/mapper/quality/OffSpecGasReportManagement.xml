@@ -15,9 +15,6 @@
     		  a.ACTION_CODE as actionCode,
 		      a.action_desc as actionDesc
 		from tpa_toffspec_action a
-		<if test="isShipper == false">
-			where a.action_code != 'FIX_ORIG_SHIP'
-		</if>
     </select>
     
     <select id="selectIncidentTypeIdFromCode" parameterType="java.lang.String" resultType="java.math.BigDecimal">

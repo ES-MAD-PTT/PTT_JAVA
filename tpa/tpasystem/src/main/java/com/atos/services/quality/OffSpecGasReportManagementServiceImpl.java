@@ -789,8 +789,8 @@ public class OffSpecGasReportManagementServiceImpl implements OffSpecGasReportMa
 	}
 
 	@Override
-	public List<OffSpecActionBean> selectAllActions(Boolean isShipper) {
-		return osgrmMapper.selectAllActions(isShipper);
+	public List<OffSpecActionBean> selectAllActions() {
+		return osgrmMapper.selectAllActions();
 	}
 
 	@Override

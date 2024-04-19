@@ -581,6 +581,8 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 		getMessages().addMessage(Constants.head_menu[3], new MessageBean(Constants.INFO, summaryMsg, msg, new Date()));
 		RequestContext context = RequestContext.getCurrentInstance();
 		context.execute("PF('nextStatusDlg').hide();");
+		items = service.search(filters, getUser());
+        updateIncidentInfo(hmAllStatus, items);
 	}
 	
     public void onChangeStatus(OffSpecIncidentBean _incident, BigDecimal _chosenNextStatusId) {
@@ -883,12 +885,14 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 	 
 	 public void selectFiles(OffSpecIncidentBean item) {
 		 selected = new OffSpecIncidentBean();
+		 selected.setFiles(new ArrayList<OffSpecFileBean>());
 		 selected = item;
-		 selected.getFiles().addAll(service.selectFiles(item));
+		 selected.getFiles().addAll(service.selectFiles(selected));
 	 }
 	 
 	 public void selectActionFiles() {
 		 if(selected != null) {
+			 selected.setFilesAction(new ArrayList<OffSpecActionFileBean>());
 			 selected.getFilesAction().addAll(service.selectActionFiles(selected));
 		 }else {
 			 selected.setFilesAction(new ArrayList<OffSpecActionFileBean>());

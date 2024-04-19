@@ -14,15 +14,15 @@ public class OffSpecFileBean implements Serializable {
 
 	private BigDecimal idnOffspecFile;
 	private String fileName;
-	private byte[] finaryData;
+	private byte[] binaryData;
 	private String userName;
 	
 	public OffSpecFileBean() {}
 	
 	
-	public OffSpecFileBean(String fileName, byte[] finaryData, String userName) {
+	public OffSpecFileBean(String fileName, byte[] binaryData, String userName) {
 		this.fileName = fileName;
-		this.finaryData = finaryData;
+		this.binaryData = binaryData;
 		this.userName = userName;
 	}
 	
@@ -39,11 +39,11 @@ public class OffSpecFileBean implements Serializable {
 	public void setFileName(String fileName) {
 		this.fileName = fileName;
 	}
-	public byte[] getFinaryData() {
-		return finaryData;
+	public byte[] getBinaryData() {
+		return binaryData;
 	}
-	public void setFinaryData(byte[] finaryData) {
-		this.finaryData = finaryData;
+	public void setBinaryData(byte[] binaryData) {
+		this.binaryData = binaryData;
 	}
 	public String getUserName() {
 		return userName;
@@ -53,14 +53,14 @@ public class OffSpecFileBean implements Serializable {
 	}
 	@Override
 	public String toString() {
-		return "OffSpecFileBean [idnOffspecFile=" + idnOffspecFile + ", fileName=" + fileName + ", finaryData="
-				+ Arrays.toString(finaryData) + "]";
+		return "OffSpecFileBean [idnOffspecFile=" + idnOffspecFile + ", fileName=" + fileName + ", binaryData="
+				+ Arrays.toString(binaryData) + "]";
 	}
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + Arrays.hashCode(finaryData);
+		result = prime * result + Arrays.hashCode(binaryData);
 		result = prime * result + Objects.hash(fileName, idnOffspecFile);
 		return result;
 	}
@@ -73,7 +73,7 @@ public class OffSpecFileBean implements Serializable {
 		if (getClass() != obj.getClass())
 			return false;
 		OffSpecFileBean other = (OffSpecFileBean) obj;
-		return Objects.equals(fileName, other.fileName) && Arrays.equals(finaryData, other.finaryData)
+		return Objects.equals(fileName, other.fileName) && Arrays.equals(binaryData, other.binaryData)
 				&& Objects.equals(idnOffspecFile, other.idnOffspecFile);
 	}
 	

@@ -23,6 +23,7 @@ import com.atos.beans.NotificationBean;
 import com.atos.beans.SystemParameterBean;
 import com.atos.beans.UserBean;
 import com.atos.beans.quality.OffSpecActionBean;
+import com.atos.beans.quality.OffSpecActionFileBean;
 import com.atos.beans.quality.OffSpecFileAttachBean;
 import com.atos.beans.quality.OffSpecFileBean;
 import com.atos.beans.quality.OffSpecGasQualityParameterBean;
@@ -343,7 +344,7 @@ public class OffSpecGasReportManagementServiceImpl implements OffSpecGasReportMa
     }
     
     @Override
-    public Integer saveAction(OffSpecIncidentBean _incid, UserBean _user) throws Exception {
+    public Integer saveAction(OffSpecIncidentBean _incid, UserBean _user, boolean isShipper) throws Exception {
     	//saveIncident(_incid, _user);
     	int res = 1;
 		for(int i = 0; i < _incid.getMultiShippers().size(); i++) {
@@ -351,7 +352,12 @@ public class OffSpecGasReportManagementServiceImpl implements OffSpecGasReportMa
 			BigDecimal idnShipper = new BigDecimal(String.valueOf(idnShipperObject));
 			
 			OffSpecResponseBean osResponse  = new OffSpecResponseBean();
-
+			//Cargamos los comentarios en sus respectivos campos dependiendo si es operator o shipper
+    		if(isShipper) {
+    			osResponse.setUserComments(_incid.getNewComments());
+    		}else {
+    			osResponse.setOperatorComments(_incid.getNewComments());
+    		}
 			osResponse.setIncidentId(_incid.getIncidentId());
 			osResponse.setGroupId(idnShipper);
 			osResponse.setIsResponded(OffSpecResponseBean.isRespondedNo);
@@ -362,7 +368,15 @@ public class OffSpecGasReportManagementServiceImpl implements OffSpecGasReportMa
 			if(res!=1){
 	    		throw new Exception("Error inserting into Off Specification Event Response table.");   		
 	    	}
+			res = osgrmMapper.updateActionOffspec(_incid);
+			if(res!=1){
+	    		throw new Exception("Error when changing action in " + _incid.getIncidentCode());   		
+	    	}
 		}	
+		//Insertamos los ficheros
+		for(OffSpecActionFileBean item : _incid.getFilesAction()) {
+			osgrmMapper.insertFileAction(item);
+		}
 		return res;
     }
 	
@@ -613,9 +627,7 @@ public class OffSpecGasReportManagementServiceImpl implements OffSpecGasReportMa
 		tmpYesterday.set(Calendar.MINUTE, 0);
 		tmpYesterday.set(Calendar.SECOND, 0);
 		tmpYesterday.set(Calendar.MILLISECOND, 0);
-		tmpYesterday.add(Calendar.DAY_OF_MONTH, -1);
-    	if(_incid.getStartDate().before(tmpYesterday.getTime()))
-    		throw new ValidationException(msgs.getString("osgr_man_start_date_future_error"));    		
+		tmpYesterday.add(Calendar.DAY_OF_MONTH, -1);   		
 		
     	boolean foundValue = false;
     	for(OffSpecGasQualityParameterBean param :_incid.getGasParams()) {
@@ -779,5 +791,20 @@ public class OffSpecGasReportManagementServiceImpl implements OffSpecGasReportMa
 	@Override
 	public List<OffSpecActionBean> selectAllActions(Boolean isShipper) {
 		return osgrmMapper.selectAllActions(isShipper);
+	}
+
+	@Override
+	public List<OffSpecFileBean> selectFiles(OffSpecIncidentBean item) {
+		return osgrmMapper.selectFiles(item);
+	}
+
+	@Override
+	public String selectCommentsShipperOperator(OffSpecIncidentBean item) {
+		return osgrmMapper.selectCommentsShipperOperator(item);
+	}
+
+	@Override
+	public List<OffSpecActionFileBean> selectActionFiles(OffSpecIncidentBean item) {
+		return osgrmMapper.selectActionFiles(item);
 	}
 }

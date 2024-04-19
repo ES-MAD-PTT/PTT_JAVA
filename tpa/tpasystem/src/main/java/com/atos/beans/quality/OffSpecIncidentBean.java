@@ -47,6 +47,7 @@ public class OffSpecIncidentBean extends UserAudBean implements Serializable {
 	private Date startDate;
 	private Date endDate;
 	private BigDecimal userId; 					// Para guardar el id de usuario en cada una de las versiones, en la tabla de log.
+	private BigDecimal idnFirstUser;
 	private String firstUserCode; 			// usuario que ha reportado la incidencia.
 	private Date lastModifiedDate;
 	private BigDecimal statusId;
@@ -88,14 +89,14 @@ public class OffSpecIncidentBean extends UserAudBean implements Serializable {
     
     
     
+    private BigDecimal idnAction;
     private String action;
-    private String nofifiedToShippers;
-    private String instructedFlowToShipper;
-    private String backToNormal;
     private String commentsShipper;
     private String commentsOperator;
+    private String commentsUser;
     private List<BigDecimal> multiShippers = new ArrayList<BigDecimal>();
     private List<OffSpecFileBean> files = new ArrayList<OffSpecFileBean>();
+    private List<OffSpecActionFileBean> filesAction = new ArrayList<OffSpecActionFileBean>();
     
     //CH706
     private String operatorComments; // en realidad es Transporter Response comment
@@ -169,6 +170,22 @@ public class OffSpecIncidentBean extends UserAudBean implements Serializable {
 		this.commentsOperator = commentsOperator;
 	}
 
+	public List<OffSpecActionFileBean> getFilesAction() {
+		return filesAction;
+	}
+
+	public void setFilesAction(List<OffSpecActionFileBean> filesAction) {
+		this.filesAction = filesAction;
+	}
+
+	public String getCommentsUser() {
+		return commentsUser;
+	}
+
+	public void setCommentsUser(String commentsUser) {
+		this.commentsUser = commentsUser;
+	}
+
 	public String getAction() {
 		return action;
 	}
@@ -177,12 +194,12 @@ public class OffSpecIncidentBean extends UserAudBean implements Serializable {
 		this.action = action;
 	}
 
-	public String getNofifiedToShippers() {
-		return nofifiedToShippers;
+	public BigDecimal getIdnAction() {
+		return idnAction;
 	}
 
-	public void setNofifiedToShippers(String nofifiedToShippers) {
-		this.nofifiedToShippers = nofifiedToShippers;
+	public void setIdnAction(BigDecimal idnAction) {
+		this.idnAction = idnAction;
 	}
 
 	public List<BigDecimal> getMultiShippers() {
@@ -191,22 +208,6 @@ public class OffSpecIncidentBean extends UserAudBean implements Serializable {
 
 	public void setMultiShippers(List<BigDecimal> multiShippers) {
 		this.multiShippers = multiShippers;
-	}
-
-	public String getInstructedFlowToShipper() {
-		return instructedFlowToShipper;
-	}
-
-	public void setInstructedFlowToShipper(String instructedFlowToShipper) {
-		this.instructedFlowToShipper = instructedFlowToShipper;
-	}
-
-	public String getBackToNormal() {
-		return backToNormal;
-	}
-
-	public void setBackToNormal(String backToNormal) {
-		this.backToNormal = backToNormal;
 	}
 
 	public BigDecimal getIncidentTypeId() {
@@ -319,6 +320,14 @@ public class OffSpecIncidentBean extends UserAudBean implements Serializable {
 
 	public void setFirstUserCode(String firstUserCode) {
 		this.firstUserCode = firstUserCode;
+	}
+
+	public BigDecimal getIdnFirstUser() {
+		return idnFirstUser;
+	}
+
+	public void setIdnFirstUser(BigDecimal idnFirstUser) {
+		this.idnFirstUser = idnFirstUser;
 	}
 
 	public Date getLastModifiedDate() {

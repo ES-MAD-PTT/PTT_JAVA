@@ -9,6 +9,7 @@ import org.apache.ibatis.annotations.Param;
 
 import com.atos.beans.ComboFilterNS;
 import com.atos.beans.quality.OffSpecActionBean;
+import com.atos.beans.quality.OffSpecActionFileBean;
 import com.atos.beans.quality.OffSpecFileAttachBean;
 import com.atos.beans.quality.OffSpecFileBean;
 import com.atos.beans.quality.OffSpecGasQualityParameterBean;
@@ -37,6 +38,9 @@ public interface OffSpecGasReportManagementMapper extends Serializable {
 	public List<OffSpecIncidentBean> selectIncidents(OffSpecGasReportManagementFilter filter);
 	public List<OffSpecIncidentBean> selectIncidentsToRespond(OffSpecGasReportManagementFilter filter);
 	public List<OffSpecGasQualityParameterBean> selectGasQualityParameters();
+	public List<OffSpecFileBean> selectFiles(OffSpecIncidentBean item);
+	public List<OffSpecActionFileBean> selectActionFiles(OffSpecIncidentBean item);
+	public String selectCommentsShipperOperator(OffSpecIncidentBean item);
 	// En params, se esperan los siguientes datos para filtrar: incidentId y shipperId.
 	public List<OffSpecResponseBean> selectDiscloseResponsesFromIncidentId(Map<String, BigDecimal> params);
 	public List<OffSpecIncidentBean> getFileByOffSpecLogId(BigDecimal logId);
@@ -47,6 +51,8 @@ public interface OffSpecGasReportManagementMapper extends Serializable {
 	public int insertOffSpecResponse(OffSpecResponseBean osr);
 	public int insertFileNewEvent(OffSpecFileBean file);
 	public int insertFileAttachNewEvent(OffSpecFileAttachBean fileAttach);
+	public int insertFileAction(OffSpecActionFileBean fileAction);
+	public int updateActionOffspec(OffSpecIncidentBean item);
 	
 	public OffSpecResponseBean selectResponseFile(OffSpecResponseBean bean);
 	//CH706

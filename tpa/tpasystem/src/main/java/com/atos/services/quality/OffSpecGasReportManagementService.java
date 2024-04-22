@@ -31,7 +31,7 @@ public interface OffSpecGasReportManagementService extends Serializable {
 	public List<OffSpecStatusRuleBean> selectStatusRules(String userId);
 	public List<OffSpecGasQualityParameterBean> selectGasQualityParameters();
 	public List<OffSpecIncidentBean> search(OffSpecGasReportManagementFilter filter, UserBean _user);
-	public List<OffSpecFileBean> selectFiles(OffSpecIncidentBean item);
+	public List<OffSpecFileBean> selectFiles(OffSpecIncidentBean item, String userGroupType);
 	public List<OffSpecActionFileBean> selectActionFiles(OffSpecIncidentBean item);
 	public String selectCommentsShipperOperator(OffSpecIncidentBean item);
 	public void changeStatus(OffSpecIncidentBean incident, UserBean _user, LanguageBean _lang) throws Exception;

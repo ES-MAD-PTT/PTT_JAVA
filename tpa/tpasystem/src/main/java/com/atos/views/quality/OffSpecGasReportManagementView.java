@@ -553,15 +553,21 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 		selected.setIncidentId(item.getIncidentId());
 		selected.setNewStatusId(item.getStatusId());
 		selected.setIdnAction(item.getIdnAction());
+		selected.setIncidentCode(item.getIncidentCode());
 	}
 	
 	public void onChangeAction() {
 		ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication().getResourceBundle(FacesContext.getCurrentInstance(),"msg");
-    	String summaryMsg = null;
+    	String summaryMsg = msgs.getString("saving_data_error");
     	String errorMsg = null;
-    	if(selected.getFilesAction().size() < 1) {
-    		summaryMsg = msgs.getString("saving_data_error");
+    	if(selected != null && selected.getFilesAction().size() < 1) {
     		errorMsg = msgs.getString("osrg_man_mandatoryOneFile");
+    		getMessages().addMessage(Constants.head_menu[6],
+					new MessageBean(Constants.ERROR, summaryMsg, errorMsg, Calendar.getInstance().getTime()));
+	    	return;
+    	}
+    	if(selected != null && selected.getMultiShippers().size() < 1) {
+    		errorMsg = msgs.getString("osrg_man_mandatoryOneShipper");
     		getMessages().addMessage(Constants.head_menu[6],
 					new MessageBean(Constants.ERROR, summaryMsg, errorMsg, Calendar.getInstance().getTime()));
 	    	return;
@@ -569,14 +575,12 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 		try {
 			int res = service.saveAction(selected, getUser(), isShipper());
 			if(res != 1) {
-				summaryMsg = msgs.getString("saving_data_error");
 	    		errorMsg = msgs.getString("osgr_man_errorChangeAction");
 	    		getMessages().addMessage(Constants.head_menu[6],
 						new MessageBean(Constants.ERROR, summaryMsg, errorMsg, Calendar.getInstance().getTime()));
 		    	return;
 			}
 		} catch (Exception e) {
-			summaryMsg = msgs.getString("saving_data_error");
     		errorMsg = e.getMessage();
     		getMessages().addMessage(Constants.head_menu[6],
 					new MessageBean(Constants.ERROR, summaryMsg, errorMsg, Calendar.getInstance().getTime()));
@@ -890,11 +894,11 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 
     }
 	 
-	 public void selectFiles(OffSpecIncidentBean item) {
+	 public void selectFiles(OffSpecIncidentBean item, String userGroupType) {
 		 selected = new OffSpecIncidentBean();
 		 selected = item;
 		 selected.setFiles(new ArrayList<OffSpecFileBean>());
-		 selected.getFiles().addAll(service.selectFiles(selected));
+		 selected.getFiles().addAll(service.selectFiles(selected, userGroupType));
 	 }
 	 
 	 public void selectActionFiles() {
@@ -936,14 +940,35 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 		 return value;
 	 }
 	 
-//	 public void prepareOpenResponse(OffSpecIncidentBean item) {
-//		 selected = new OffSpecIncidentBean();
-//		 selected = item;
-//		 Map<String, BigDecimal> params = new HashMap<String, BigDecimal>();
-//		if(isShipper()) { 
-//			params.put("shipperId", filters.getShipperId());
-//		}
-//		params.put("incidentId", selected.getIncidentId());
-//		selected.setDiscloseResponses(service.selectDiscloseResponsesFromIncidentId(params));
-//	 }
+	 public String answerShipperYesNo(OffSpecIncidentBean item) {
+		 String value = "";
+		 if(item != null && item.getDiscloseResponses() != null && !item.getDiscloseResponses().isEmpty()) {
+			 value = item.getDiscloseResponses().stream()
+					 .anyMatch(obj -> "Y".equalsIgnoreCase(obj.getIsResponded())) ? "YES" : "NO";
+		 }
+		 return value;
+	 }
+	 
+	 public String answerOperatorYesNo(OffSpecIncidentBean item) {
+		 String value = "";
+		 if(item != null && item.getDiscloseResponses() != null && !item.getDiscloseResponses().isEmpty()) {
+			 value = item.getDiscloseResponses().stream()
+					 .anyMatch(obj -> obj.getOperatorComments() != null && !obj.getOperatorComments().isEmpty()) ? "YES" : "NO";
+		 }
+		 return value;
+	 }
+	 
+	 public boolean renderedAsnwer(OffSpecIncidentBean item, String nameColumn) {
+		 boolean value = false;
+		 if(isShipper()) {
+			 if(item != null && item.getOriginatorShipperId().compareTo(getUser().getIdn_user_group()) == 0) {
+				 value = nameColumn.equals("SHIPPER_ANSWER") || nameColumn.equals("SHIPPER_IF_ANSWER") ? false : true;
+			 }else {
+				 value = nameColumn.equals("SHIPPER_ANSWER") ? true : false;
+			 }
+		 }else {
+			 value = true;
+		 }
+		 return value;
+	 }
 }

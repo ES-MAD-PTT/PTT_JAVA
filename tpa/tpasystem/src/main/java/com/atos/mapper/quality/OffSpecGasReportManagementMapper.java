@@ -5,6 +5,8 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ibatis.annotations.Param;
+
 import com.atos.beans.ComboFilterNS;
 import com.atos.beans.quality.OffSpecActionBean;
 import com.atos.beans.quality.OffSpecActionFileBean;
@@ -36,8 +38,8 @@ public interface OffSpecGasReportManagementMapper extends Serializable {
 	public List<OffSpecIncidentBean> selectIncidents(OffSpecGasReportManagementFilter filter);
 	public List<OffSpecIncidentBean> selectIncidentsToRespond(OffSpecGasReportManagementFilter filter);
 	public List<OffSpecGasQualityParameterBean> selectGasQualityParameters();
-	public List<OffSpecFileBean> selectFiles(OffSpecIncidentBean item);
 	public List<OffSpecActionFileBean> selectActionFiles(OffSpecIncidentBean item);
+	public List<OffSpecFileBean> selectFiles(@Param("incidentId") BigDecimal incidentId, @Param("userGroupType") String userGroupType);
 	public String selectCommentsShipperOperator(OffSpecIncidentBean item);
 	// En params, se esperan los siguientes datos para filtrar: incidentId y shipperId.
 	public List<OffSpecResponseBean> selectDiscloseResponsesFromIncidentId(Map<String, BigDecimal> params);

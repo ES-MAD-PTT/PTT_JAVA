@@ -256,29 +256,28 @@
 				       	<p:column headerText="#{msg['osgr_man_shipperAnswer']}" style="width: 70px;text-align:center;">
 				       		<p:commandButton icon="ui-icon fa fa-envelope-o" update=":shipperResponsesFormId"
 								onstart="PF('cargando').show()"	oncomplete="PF('cargando').hide(),PF('shipperResponsesDlg').show()"
- 					       			rendered="#{incident.discloseResponses.size()!=0}">
+								rendered="#{incident.discloseResponses.size() != 0 and OSGRManagementView.renderedAsnwer(incident, 'SHIPPER_ANSWER')}">
  					       		<f:setPropertyActionListener value="#{incident}" target="#{OSGRManagementView.selected}" />
 							</p:commandButton>
 				       	</p:column>
 				       	<p:column headerText="#{msg['osgr_man_shipperIfAnswer']}" style="width: 70px;text-align:center;">
-				       		<p:commandButton icon="ui-icon fa fa-envelope-o" update=":shipperResponsesFormId"
-								onstart="PF('cargando').show()"	oncomplete="PF('cargando').hide(),PF('shipperResponsesDlg').show()"
- 					       			rendered="#{incident.discloseResponses.size()!=0}">
-								<f:setPropertyActionListener value="#{incident}" target="#{OSGRManagementView.selected}" />
-							</p:commandButton>
+				       		<h:outputText value="#{OSGRManagementView.answerShipperYesNo(incident)}" rendered="#{OSGRManagementView.renderedAsnwer(incident, 'SHIPPER_IF_ANSWER')}"/>
 				       	</p:column>
 				       	<p:column headerText="#{msg['osgr_man_originattorAnswer']}" style="width: 70px;text-align:center;">
 				       		<p:commandButton icon="ui-icon fa fa-envelope-o" update=":shipperResponsesFormId"
 								onstart="PF('cargando').show()"	oncomplete="PF('cargando').hide(),PF('shipperResponsesDlg').show()"
- 					       			rendered="#{incident.discloseResponses.size()!=0}">
+								rendered="#{incident.discloseResponses.size() != 0 and OSGRManagementView.renderedAsnwer(incident, 'ORIGINATOR_ANSWER')}">
 								<f:setPropertyActionListener value="#{incident}" target="#{OSGRManagementView.selected}" />
 							</p:commandButton>
+				       	</p:column>
+				       	<p:column headerText="#{msg['osgr_man_originarIfAnswer']}" style="width: 70px;text-align:center;">
+				       		<h:outputText value="#{OSGRManagementView.answerOperatorYesNo(incident)}" rendered="#{OSGRManagementView.renderedAsnwer(incident, 'ORIGINATOR_IF_ANSWER')}"/>
 				       	</p:column>
 				       	
 						<p:column headerText="#{msg['osgr_man_attachedFileOperator']}" style="width: 90px;text-align:center;">
 	 					    <p:commandButton icon="ui-icon fa fa-file-text-o" update="filesFormId" 
 								onstart="PF('cargando').show()"	oncomplete="PF('cargando').hide(),PF('filesDlg').show()" 
-								actionListener="#{OSGRManagementView.selectFiles(incident)}"
+								actionListener="#{OSGRManagementView.selectFiles(incident, 'OPERATOR')}"
 								rendered="#{OSGRManagementView.isOperator or incident.idnFirstUser eq OSGRManagementView.user.idn_user}">
 							</p:commandButton>
 				       	</p:column>
@@ -286,7 +285,7 @@
 				       	<p:column headerText="#{msg['osgr_man_attachedFileShipper']}" style="width: 90px;text-align:center;">
 	 					    <p:commandButton icon="ui-icon fa fa-file-text-o" update="filesFormId"
 								onstart="PF('cargando').show()"	oncomplete="PF('cargando').hide(),PF('filesDlg').show()" 
-								actionListener="#{OSGRManagementView.selectFiles(incident)}"
+								actionListener="#{OSGRManagementView.selectFiles(incident, 'SHIPPER')}"
 								rendered="#{OSGRManagementView.isOperator or incident.idnFirstUser eq OSGRManagementView.user.idn_user}">
 							</p:commandButton>
 				       	</p:column>
@@ -852,139 +851,12 @@
 		       			<p:column>
 							<p:commandButton value="#{msg['save']}" style="float: right; vertical-align: bottom" 
 								actionListener="#{OSGRManagementView.onChangeAction}" 
-								update="#{p:component('incidents1')},nextStatusFormId" ajax="false"/>
+								update="#{p:component('incidents1')},nextStatusFormId"/>
 						</p:column>
 					</p:row>
 				</p:panelGrid>
 			</h:form> 	    
 		</p:dialog>
-
-<!--  		<p:dialog header="#{msg['osgr_man_status_change']}" widgetVar="nextStatusDlg" modal="true" appendTo="@(body)" minWidth="750" minHeight="500"> -->
-<!-- 			<h:form id="nextStatusFormId" style="width:100%;height:98%;border-collapse:collapse" enctype="multipart/form-data"> -->
-<!-- 				<p:growl id="msgs" showDetail="true" life="10000" globalOnly="true" /> -->
-				
-<!-- 				Se definen estas variables para ahorrar llamadas a la vista java y mejorar el rendimiento. -->
-<!-- 				<c:set var="incid" value="#{OSGRManagementView.selected}" scope="request" /> -->
-<!-- 				<c:set var="statusRule" value="#{OSGRManagementView.selected.chosenNextStatusRule}" scope="request" /> -->
-<!-- 				<c:set var="noneIsVisible" value="#{OSGRManagementView.selected.chosenNextStatusRule.noneIsVisible()}" scope="request" /> -->
-
-<!-- 				<p:panelGrid id="nextStatusPanelGridId"> -->
-
-<!-- 				    <f:facet name="header"> -->
-<!-- 				    	<p:row> -->
-<!-- 					    	<p:column colspan="2"> -->
-<!-- 								<h:outputText value="#{msg['osgr_man_from']}"/> -->
-<!-- 								<p:spacer width="20" height="10"/> -->
-<!-- 								<h:outputText value="&quot;#{statusRule.getCurrentStatusDesc()}&quot;"/> -->
-<!-- 								<p:spacer width="20" height="10"/> -->
-<!-- 								<h:outputText value="#{msg['osgr_man_to']}"/> -->
-<!-- 								<p:spacer width="20" height="10"/> -->
-<!-- 								<h:outputText value="&quot;#{statusRule.getNextStatusDesc()}&quot;"/> -->
-<!-- 							</p:column> -->
-<!-- 						</p:row> -->
-<!-- 				    </f:facet> -->
-
-<!-- 					<p:row> -->
-<!-- 						<p:column><br/></p:column> -->
-<!-- 						<p:column><br/></p:column> -->
-<!-- 					</p:row> -->
-
-<!-- 					<p:row> -->
-<!-- 						<p:column  style="font-weight: bold;"  rendered="#{statusRule.shipperIsVisible()}"> -->
-<!-- 							<h:outputText value="#{msg['osgr_man_shipper']}" /> -->
-<!-- 						</p:column> -->
-<!-- 						<p:column rendered="#{statusRule.shipperIsVisible()}"> -->
-<!-- 							<h:outputText value="#{incid.originatorShipperCode}" rendered="#{! statusRule.shipperIsEditable()}" /> -->
-<!-- 							<p:selectOneMenu id="newShipperId" style="width:100px" rendered="#{statusRule.shipperIsEditable()}" disabled="#{not OSGRManagementView.isOperator}"  -->
-<!-- 										value="#{incid.newOriginatorShipperId}" > -->
-<!-- 								<f:selectItem itemLabel="#{OSGRManagementView.filters.shipperCode}" itemValue="#{OSGRManagementView.filters.shipperId}" /> -->
-<!-- 								<f:selectItems value="#{OSGRManagementView.shipperIdsForInsert.entrySet()}" var="entry"  -->
-<!-- 	   											itemValue="#{entry.key}" itemLabel="#{entry.value}" /> -->
-<!-- 			           		</p:selectOneMenu> -->
-<!-- 						</p:column> -->
-<!-- 					</p:row> -->
-
-<!-- 					<p:row> -->
-<!-- 						<p:column  style="font-weight: bold;" rendered="#{statusRule.commentIsVisible()}"> -->
-<!-- 							<h:outputText value="#{msg['osgr_man_comments']}" /> -->
-<!-- 						</p:column> -->
-<!-- 						<p:column rendered="#{statusRule.commentIsVisible()}"> -->
-<!-- 							<h:outputText value="#{incid.comments}" rendered="#{! statusRule.commentIsEditable()}" /> -->
-<!-- 	 						<p:inputTextarea id="inputTxtNewCommentId" rows="10" cols="80" value="#{incid.newComments}"  -->
-<!-- 	 							autoResize="false" maxlength="1020" style="float: left; " rendered="#{statusRule.commentIsEditable()}"> -->
-<!-- 	 							<f:validateLength maximum="1020" /> -->
-<!-- 							</p:inputTextarea> -->
-<!-- 						</p:column> -->
-<!-- 					</p:row> -->
-
-<!-- 					<p:row> -->
-<!-- 						<p:column  style="font-weight: bold;" rendered="#{statusRule.fileIsVisible()}"> -->
-<!-- 							<h:outputText value="#{msg['osgr_man_attached_file']}" /> -->
-<!-- 						</p:column> -->
-<!-- 						<p:column rendered="#{statusRule.fileIsVisible()}"> -->
-<!-- 							Caso no editable - Solo descarga fichero. -->
-<!-- 	 					    <p:commandButton ajax="false" actionListener="#{OSGRManagementView.getFile(incid)}" rendered="#{! statusRule.fileIsEditable()}" -->
-<!-- 						    	oncomplete="PrimeFaces.monitorDownload(start, stop);" icon="ui-icon fa fa-save" title="#{incid.fileName}" > -->
-<!-- 						        <p:fileDownload value="#{incid.scFile}"/> -->
-<!-- 						    </p:commandButton> -->
-<!-- 						    <p:spacer width="10" rendered="#{! statusRule.fileIsEditable()}" /> -->
-<!-- 							<h:outputText value="#{incid.fileName}" title="#{incid.fileName}" rendered="#{! statusRule.fileIsEditable()}" /> -->
-							
-<!-- 							Caso editable - Solo upload fichero. -->
-<!-- 				       		No se limita el tipo de fichero ni el tamaño. -->
-<!-- 	 						<p:fileUpload id="newFileUpload" value="#{incid.newUlFile}" style="width:100%" rendered="#{statusRule.fileIsEditable()}" -->
-<!-- 	 							mode="simple" skinSimple="true" label="#{msg['choose_a_file']}" />  -->
-<!-- 						</p:column> -->
-<!-- 					</p:row> -->
-
-<!-- 					<p:row> -->
-<!-- 						<p:column  style="font-weight: bold;" rendered="#{statusRule.endDateIsVisible()}"> -->
-<!-- 							<h:outputText value="#{msg['osgr_man_end_date']}" /> -->
-<!-- 						</p:column> -->
-<!-- 						<p:column rendered="#{statusRule.endDateIsVisible()}"> -->
-<!-- 		               		<h:outputText value="#{incid.endDate}" rendered="#{! statusRule.endDateIsEditable()}" > -->
-<!-- 		              				<f:convertDateTime pattern="dd/MM/yyyy HH:mm" /> -->
-<!-- 		              		</h:outputText> -->
-<!-- 							<p:calendar id="newEndDateId" size="12" pattern="dd/MM/yyyy HH:mm" value="#{incid.newEndDate}" -->
-<!-- 								mask="true" showButtonPanel="true" showOn="button" navigator="true" rendered="#{statusRule.endDateIsEditable()}"  -->
-<!-- 								mindate="#{incid.startDate}"> -->
-<!-- 							</p:calendar> -->
-<!-- 						</p:column> -->
-<!-- 					</p:row> -->
-
-<!-- 					Si ningun campo es visible, se muestra la pantalla de confirmacion. -->
-<!-- 					<p:row rendered="#{noneIsVisible}"> -->
-<!-- 						<p:column colspan="2"> -->
-<!-- 							<h:outputText value="#{msg['osgr_man_are_you_sure']}" />			 -->
-<!-- 						</p:column > -->
-<!-- 					</p:row> -->
-					
-<!-- 					<p:row rendered="#{!noneIsVisible}">					 -->
-<!-- 				       	<p:column/> -->
-<!-- 		       			<p:column> -->
-<!-- 							<p:commandButton value="#{msg['save']}" style="float: right; vertical-align: bottom"  -->
-<!-- 								actionListener="#{OSGRManagementView.onChangeStatus}"  -->
-<!-- 								update="#{p:component('incidents1')},nextStatusFormId" -->
-<!-- 	 			       			oncomplete="PF('nextStatusDlg').hide()" ajax="false"/> -->
-<!-- 						</p:column> -->
-<!-- 					</p:row> -->
-					
-<!-- 					Si ningun campo es visible, se muestra la pantalla de confirmacion. -->
-<!--  					<p:row rendered="#{noneIsVisible}"> -->
-<!-- 						<p:column> -->
-<!-- 							<p:commandButton value="#{msg['yes']}" style="float: right;"  -->
-<!-- 								actionListener="#{OSGRManagementView.onChangeStatus}"  -->
-<!-- 								update="#{p:component('incidents1')},nextStatusFormId" -->
-<!-- 	 			       			oncomplete="PF('nextStatusDlg').hide()" ajax="false"/> -->
-<!-- 						</p:column> -->
-<!-- 						<p:column> -->
-<!-- 							<p:commandButton value="#{msg['no']}"  -->
-<!-- 	 			       			oncomplete="PF('nextStatusDlg').hide()" ajax="false"/> -->
-<!-- 						</p:column> -->
-<!--  					</p:row> -->
-<!-- 				</p:panelGrid> -->
-<!-- 			</h:form> 	     -->
-<!-- 		</p:dialog> -->
 
 	</ui:define>
 	

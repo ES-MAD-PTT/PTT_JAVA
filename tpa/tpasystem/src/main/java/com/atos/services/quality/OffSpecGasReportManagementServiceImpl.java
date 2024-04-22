@@ -311,6 +311,8 @@ public class OffSpecGasReportManagementServiceImpl implements OffSpecGasReportMa
     	}      		
 		
 		_incid.setUserId(_user.getIdn_user());
+		_incid.setCommentsShipper(_incid.getInitialComments());
+		_incid.setCommentsOperator(_incid.getOperatorComments());
 		
 		// Se inserta una nueva version en la tabla de detalle (log).
 		res = osgrmMapper.insertOffSpecIncidentLog(_incid);
@@ -794,8 +796,8 @@ public class OffSpecGasReportManagementServiceImpl implements OffSpecGasReportMa
 	}
 
 	@Override
-	public List<OffSpecFileBean> selectFiles(OffSpecIncidentBean item) {
-		return osgrmMapper.selectFiles(item);
+	public List<OffSpecFileBean> selectFiles(OffSpecIncidentBean item, String userGroupType) {
+		return osgrmMapper.selectFiles(item.getIncidentId(), userGroupType);
 	}
 
 	@Override

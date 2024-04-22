@@ -43,6 +43,8 @@ public class NominationConceptView  extends CommonView implements Serializable {
 	private static final long serialVersionUID = 4826249901263281893L;
 	
 	private NominationConceptFilter filters;
+	
+	private NominationConceptFilter filtersNew;
 
 	private List<NominationConceptBean> items;
 	
@@ -71,6 +73,14 @@ public class NominationConceptView  extends CommonView implements Serializable {
 		this.filters = filters;
 	}
 	
+	public NominationConceptFilter getFiltersNew() {
+		return filtersNew;
+	}
+
+	public void setFiltersNew(NominationConceptFilter filtersNew) {
+		this.filtersNew = filtersNew;
+	}
+
 	public List<NominationConceptBean> getItems() {
 		return items;
 	}
@@ -89,6 +99,7 @@ public class NominationConceptView  extends CommonView implements Serializable {
     public void init() {
 		
 		filters = initFiltersCombos();
+		filtersNew = initFiltersCombos();
         
 	}
 
@@ -256,6 +267,7 @@ public class NominationConceptView  extends CommonView implements Serializable {
 
 	public void onClear(){
 		filters = initFiltersCombos();
+		filtersNew = initFiltersCombos();
 	  	
         if (items != null) {
             items.clear();
@@ -269,5 +281,52 @@ public class NominationConceptView  extends CommonView implements Serializable {
 		}else{
 			return 0;
 		}
+	}
+    
+    public void handleDialogClose() {
+        
+    }
+
+    
+    public void cancel() {
+		filtersNew = new NominationConceptFilter();		
+
+	}
+    
+    public void save() {
+
+		String errorMsg = null;
+    	ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication().getResourceBundle(FacesContext.getCurrentInstance(),"msg");
+    	
+    	
+    	String[] params = {msgs.getString("contractNomPoint") };
+    	String summaryMsgOk = CommonView.getMessageResourceString("insert_ok", params);
+    	String summaryMsgNotOk= CommonView.getMessageResourceString("insert_noOk", params);
+
+		if (filtersNew.getNomConcept() != null) {
+			
+		}
+		
+		if (filtersNew.getNomConceptType() != null) {
+					
+		}
+
+		String error = "0";
+		try {
+			
+//			error = service.insertConceptNom(filtersNew);			
+			
+		} catch (Exception e) {
+			log.catching(e);
+			// we assign the return message
+			error = e.getMessage();
+		}		
+
+		// clean the formu new after save
+	
+		filtersNew = new NominationConceptFilter();
+		
+		onSearch();
+
 	}
 }

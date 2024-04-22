@@ -30,7 +30,7 @@
 	</select>
 	
 	<select id="selectShippers" resultType="com.atos.beans.ComboFilterNS">
-		select ug.idn_user_group as key, ug.user_group_id as value
+		select ug.idn_user_group as key, ug.short_name as value
 		from TPA_TUSER_GROUP ug 
 		where ug.idn_user_group_type in 
   		(select idn_user_group_type 
@@ -47,7 +47,8 @@
         <result property="unitDesc" column="unit_desc"/> 
         <result property="isWarned" column="is_warned"/> 
         <result property="idShipper" column="idn_user_group"/> 
-        <result property="nameShipper" column="user_group_id"/> 
+        <result property="nameShipper" column="user_group_id"/>
+        <result property="shortName" column="short_name"/> 
     </resultMap>
     
     <select id="selectQualityPublicationShipper" resultMap="QualityPublicationShipper">
@@ -210,7 +211,8 @@ wi_hv_prorrated_values AS
        unit_desc AS unit_desc,
      user_group_name AS user_group_name,
      ug.idn_user_group AS idn_user_group,
-     ug.user_group_id AS user_group_id
+     ug.user_group_id AS user_group_id,
+     ug.short_name AS short_name
   FROM best_gas_q_values bgqv, tpa_tcontract c, tpa_tuser_group ug
  WHERE parameter_code IN ('HV', 'CO2') 
   AND c.idn_contract = bgqv.idn_contract
@@ -224,7 +226,8 @@ wi_hv_prorrated_values AS
           unit_desc,
       user_group_name,
       ug.idn_user_group,
-      ug.user_group_id
+      ug.user_group_id,
+      ug.short_name
 
 UNION ALL
 
@@ -243,7 +246,8 @@ SELECT gas_day AS start_date,
        unit_desc AS unit_desc,
      user_group_name AS user_group_name,
      ug.idn_user_group AS idn_user_group,
-     ug.user_group_id AS user_group_id
+     ug.user_group_id AS user_group_id,
+     ug.short_name AS short_name
   FROM wi_calculation_values cv, tpa_tcontract c, tpa_tuser_group ug
   WHERE c.idn_contract = cv.idn_contract
    AND  c.idn_user_group = ug.idn_user_group
@@ -256,7 +260,7 @@ SELECT gas_day AS start_date,
           unit_desc,
       user_group_name,
       ug.idn_user_group,
-      ug.user_group_id ),
+      ug.user_group_id, ug.short_name ),
           
 zone_gasq_limit AS        
 (SELECT zgq.idn_area_gas_quality,
@@ -305,6 +309,7 @@ SELECT pv.start_date AS start_date,
        pv.user_group_name AS user_group_name,
        pv.idn_user_group AS idn_user_group, 
        pv.user_group_id AS user_group_id,
+       pv.short_name AS short_name,
        CASE WHEN  pv.val >= nvl(zgql.min_value,0) AND pv.val <![CDATA[ <= ]]> nvl(zgql.max_value,0) THEN 'N'
             ELSE 'Y'              
         END AS is_warned       

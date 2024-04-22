@@ -3,6 +3,7 @@ package com.atos.beans.nominations;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
+
 import com.atos.utils.Constants;
 
 public class NominationHeaderBean implements Serializable{
@@ -21,6 +22,7 @@ public class NominationHeaderBean implements Serializable{
 	private BigDecimal idn_user_group;
 	private String user_group_id;
 	private String user_group_name;
+	private String short_name;
 	private BigDecimal idn_shipper_file;
 	private String shipper_file_name;
 	private BigDecimal idn_operator_file;
@@ -45,6 +47,7 @@ public class NominationHeaderBean implements Serializable{
 		this.idn_user_group = null;
 		this.user_group_id = null;
 		this.user_group_name = null;
+		this.short_name = null;
 		this.idn_shipper_file = null;
 		this.shipper_file_name = null;
 		this.idn_operator_file = null;
@@ -121,6 +124,14 @@ public class NominationHeaderBean implements Serializable{
 
 	public void setUser_group_id(String user_group_id) {
 		this.user_group_id = user_group_id;
+	}
+
+	public String getShort_name() {
+		return short_name;
+	}
+
+	public void setShort_name(String short_name) {
+		this.short_name = short_name;
 	}
 
 	public String getUser_group_name() {
@@ -415,12 +426,13 @@ public class NominationHeaderBean implements Serializable{
 		return "NominationHeaderBean [idn_nomination=" + idn_nomination + ", nomination_code=" + nomination_code
 				+ ", start_date=" + start_date + ", nomination_version=" + nomination_version + ", idn_contract="
 				+ idn_contract + ", contract_code=" + contract_code + ", idn_user_group=" + idn_user_group
-				+ ", user_group_id=" + user_group_id + ", user_group_name=" + user_group_name + ", idn_shipper_file="
-				+ idn_shipper_file + ", shipper_file_name=" + shipper_file_name + ", idn_operator_file="
-				+ idn_operator_file + ", operator_file_name=" + operator_file_name + ", is_valid=" + is_valid
-				+ ", is_responsed=" + is_responsed + ", shipper_comments=" + shipper_comments + ", operator_comments="
-				+ operator_comments + ", submission_comments=" + submission_comments + ", is_renomination="
-				+ is_renomination + ", aud_ins_date=" + aud_ins_date + ", idn_zone=" + idn_zone + "]";
+				+ ", user_group_id=" + user_group_id + ", user_group_name=" + user_group_name + ", short_name="
+				+ short_name + ", idn_shipper_file=" + idn_shipper_file + ", shipper_file_name=" + shipper_file_name
+				+ ", idn_operator_file=" + idn_operator_file + ", operator_file_name=" + operator_file_name
+				+ ", is_valid=" + is_valid + ", is_responsed=" + is_responsed + ", shipper_comments=" + shipper_comments
+				+ ", operator_comments=" + operator_comments + ", submission_comments=" + submission_comments
+				+ ", is_renomination=" + is_renomination + ", aud_ins_date=" + aud_ins_date + ", idn_zone=" + idn_zone
+				+ "]";
 	}
 
     

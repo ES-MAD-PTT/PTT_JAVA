@@ -8,7 +8,8 @@
         <id column="idn_shipper" property="idn_shipper"  />
 		<result property="idn_user_group" column="idn_user_group"/>
         <result property="id" column="user_group_id"/>   
-        <result property="companyName" column="user_group_name"/>   
+        <result property="companyName" column="user_group_name"/>
+        <result property="shortName" column="short_name"/>     
         <result property="address" column="address"/>   
         <result property="creditRating" column="credit_rating"/>   
         <result property="eRCLicenseID" column="erc_license_id"/>   
@@ -25,6 +26,7 @@
 	 		   tuser.idn_user_group as idn_user_group,
 		       tuser.user_group_id as user_group_id,
 		       tuser.user_group_name as user_group_name,
+		       tuser.short_name as short_name,
 		       tuser.address as address,
 		       tshipper.credit_rating as credit_rating,
 		       tshipper.erc_license_id as erc_license_id,
@@ -57,7 +59,7 @@
     </select>
     
      <select id="selectShipperId" resultType="com.atos.beans.ComboFilter">
-		SELECT tuser.user_group_id as key, tuser.user_group_id as value
+		SELECT tuser.user_group_id as key, tuser.short_name as value
 		FROM tpa_tuser_group tuser
 		WHERE tuser.idn_user_group_type = (SELECT idn_user_group_type FROM tpa_tuser_group_type WHERE type_code = 'SHIPPER')
     </select>
@@ -101,12 +103,13 @@
 
 	<insert id="insertUserGroup" useGeneratedKeys="true" keyProperty="idn_user_group" keyColumn="idn_user_group" parameterType="com.atos.beans.dam.ShipperBean">
 		INSERT INTO tpa_tuser_group
-		      (idn_user_group, user_group_id, idn_user_group_type, start_date, end_date, 
+		      (idn_user_group, user_group_id,short_name, idn_user_group_type, start_date, end_date, 
 		      user_group_name, address, phone, fax,
 		      aud_ins_user,aud_last_user)
 		   VALUES
 		      (tpa_suser_group.nextval,
 		       #{id},
+		       #{shortName},
 		       (SELECT t.idn_user_group_type FROM tpa_tuser_group_type t WHERE t.type_code = 'SHIPPER'),
 		       #{startDate},
 		       #{endDate},

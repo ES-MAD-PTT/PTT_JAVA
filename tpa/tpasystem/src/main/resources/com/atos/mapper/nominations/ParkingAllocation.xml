@@ -33,6 +33,7 @@ private BigDecimal idn_zone;
 		       z.zone_code,
 		       z.idn_zone,
 		       ug.user_group_id as shipper_code,
+		       ug.short_name as short_name,
 		       (SELECT c.contract_code
 		          FROM tpa_tcontract c
 		         WHERE c.idn_contract = n.idn_contract
@@ -110,6 +111,7 @@ private BigDecimal idn_zone;
 		          z.zone_code,
 		          z.idn_zone,
 		          ug.user_group_id,
+		          ug.short_name,
 		          n.idn_user_group,
 		          n.idn_contract,
 		          n.nomination_code,

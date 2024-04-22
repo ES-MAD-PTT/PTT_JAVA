@@ -39,7 +39,7 @@
 									<h:outputText value="#{msg['qua_pub_date_to']}" />
 								</p:column>
 								<p:column  style="font-weight: bold;">
-									<h:outputText value="#{msg['qua_pub_shipper']}" />
+									<h:outputText value="#{msg['qua_pub_shipper_short_name']}" />
 								</p:column>
 							</p:row>
 							<p:row>
@@ -139,6 +139,10 @@
 					       
 					       <p:column headerText="#{msg['qua_pub_shipper']}" style="width: 100px;" sortBy="#{qualityPubShipper.nameShipper}">
 					       		<h:outputText value="#{qualityPubShipper.nameShipper}" />
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['qua_pub_shipper_short_name']}" style="width: 100px;" sortBy="#{qualityPubShipper.shortName}">
+					       		<h:outputText value="#{qualityPubShipper.shortName}" />
 					       </p:column>
 
 					       <p:column headerText="#{msg['qua_pub_parameter']}" style="width: 100px;" sortBy="#{qualityPubShipper.parameterCode}">

@@ -4,7 +4,7 @@
 <mapper namespace="com.atos.mapper.forecasting.QueryShipperForecastingMapper">
  
      <select id="selectShipper" parameterType="com.atos.filters.forecasting.QueryShipperForecastingFileFilter" resultType="com.atos.beans.ComboFilterNS">
-		SELECT a.idn_user_group as key, a.user_group_id as value
+		SELECT a.idn_user_group as key, a.short_name as value
 		  FROM tpa_tuser_group a,
 		       tpa_tuser_group_type b,
 		       (SELECT ugt.type_code,
@@ -46,6 +46,7 @@
        f.idn_operation,
        f.idn_user_group,
        ug.user_group_id,
+       ug.short_name,
        f.start_date,
        f.end_date,
        f.idn_shipper_file,

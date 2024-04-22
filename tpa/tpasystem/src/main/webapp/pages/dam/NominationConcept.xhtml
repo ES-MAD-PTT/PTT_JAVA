@@ -95,6 +95,11 @@
 								<p:outputPanel style="height:25px">
 									<p:commandButton id="toggler" type="button" value="Columns" style="float:right" icon="ui-icon-calculator" />
 									<p:columnToggler datasource="nomConcept1" trigger="toggler" style="width:200px"/>
+									<!-- <shiro:hasPermission name="#{changeSystemView.system}.DAM.NOMINATION_CONCEPT.ADD"> -->
+		        						<p:commandButton id="new" type="button" value="New" icon="ui-icon fa fa-save" style="float:right;"
+		        							onclick="PF('dlgNewConcetNom').show();"
+		        						/>
+	        						<!-- </shiro:hasPermission> -->
 				        			<h:commandLink style="float:right">
 								       <p:graphicImage name="/images/excel.png" width="24"/>
 								       <p:dataExporter type="xlsx" target="nomConcept1" fileName="nomConcept1Report" 
@@ -118,7 +123,61 @@
 				   </p:dataTable>
 				</p:layoutUnit>
 			</p:layout>
-		</h:form> 
+		</h:form>
+		<p:dialog header="New" widgetVar="dlgNewConcetNom" modal="true" appendTo="@(body)" minHeight="150">
+		<h:form id="newConcetNom" style="width:100%;height:98%;border-collapse:collapse">
+
+			<!-- <shiro:hasPermission name="#{changeSystemView.system}.BALANCING.INTRADAY.ACCIMBALANCEINVENTORY.QUERY"> -->
+				<p:growl id="msgs" showDetail="true" life="10000" globalOnly="true" />
+				<p:panelGrid>
+					<p:row>
+						<p:column  style="font-weight: bold;">
+							<h:outputText value="#{msg['nominationConcept_Cod']}" />
+						</p:column>
+						<p:column  style="font-weight: bold;">
+							<h:outputText value="#{msg['nominationConcept_Name']}" />
+						</p:column>
+					</p:row>
+					<p:row>					
+						<p:column>
+							<p:selectOneMenu id="nomConceptId" style="width:100px" value="#{NominationConceptView.filtersNew.nomConcept}" 
+								rendered="#{!NominationConceptView.isShipper}"  required="true" requiredMessage="#{msg['nominationConcept_Cod']}: #{msg['empty_field']}">
+							   		<f:selectItem itemLabel="" itemValue="" />
+    									<f:selectItems value="#{NominationConceptView.nomConcept.entrySet()}" var="entry" 
+    											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+			           		</p:selectOneMenu>
+			           		<p:message for="nomConceptId" />
+							<!-- <h:outputText value="#{NominationConceptView.user.user_group_id}" style="float:left" rendered="#{AllocationQueryView.isShipper()}"/> -->
+						</p:column>
+						<p:column>
+							<p:selectOneMenu id="nomConceptType" style="width:100px" value="#{NominationConceptView.filtersNew.nomConceptType}" 
+								rendered="#{!NominationConceptView.isShipper}" required="true" requiredMessage="#{msg['nominationConcept_Name']}: #{msg['empty_field']}">
+							   		<f:selectItem itemLabel="" itemValue="" />
+    									<f:selectItems value="#{NominationConceptView.nomConceptType.entrySet()}" var="entry" 
+    											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+			           		</p:selectOneMenu>
+			           		<p:message for="nomConceptType" />	
+							<!-- <h:outputText value="#{NominationConceptView.user.user_group_id}" style="float:left" rendered="#{AllocationQueryView.isShipper()}"/> -->
+						</p:column>
+					</p:row>
+				</p:panelGrid>
+				<p:separator/>
+				<p:panelGrid>
+					<p:row>
+						<p:column>
+							<!-- <p:commandButton value="#{msg['save']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" validateClient="true"/> -->
+							<p:commandButton value="#{msg['save']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" validateClient="true"
+								action="#{NominationConceptView.save}" update=":#{p:component('nomConcept1')},:newConcetNom"
+								onstart="PF('cargando').show()"
+								oncomplete="PF('dlgNewConcetNom').hide(),PF('cargando').hide()" />
+			        		<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close"/>	
+						</p:column>					
+					</p:row>
+				</p:panelGrid>
+						
+			<!-- </shiro:hasPermission> -->
+		</h:form> 	    
+	</p:dialog> 
 	</ui:define>
 	</ui:composition>
 	

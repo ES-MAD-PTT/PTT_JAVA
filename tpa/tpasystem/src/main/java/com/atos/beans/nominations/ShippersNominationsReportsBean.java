@@ -11,6 +11,7 @@ public class ShippersNominationsReportsBean implements Serializable {
 	private Date gas_day;
 	private String user_group_id;
 	private String user_group_name;
+	private String shortName;
 	private BigDecimal idn_user_group;
 	private String area_code;
 	private BigDecimal contracted_energy;
@@ -28,6 +29,7 @@ public class ShippersNominationsReportsBean implements Serializable {
 		this.gas_day = null;
 		this.user_group_id = null;
 		this.user_group_name = null;
+		this.shortName = null;
 		this.idn_user_group = null;
 		this.area_code = null;
 		this.contracted_energy = null;
@@ -41,13 +43,14 @@ public class ShippersNominationsReportsBean implements Serializable {
 		this.details = null;
 	}
 	
-	public ShippersNominationsReportsBean(Date gas_day, String user_group_id, String user_group_name, BigDecimal idn_user_group, String area_code,
+	public ShippersNominationsReportsBean(Date gas_day, String user_group_id, String user_group_name, String shortName, BigDecimal idn_user_group, String area_code,
 			BigDecimal contracted_energy, BigDecimal nominated_energy, BigDecimal overusage, BigDecimal imbalance,
 			BigDecimal tolerancia_permitida, String is_warning, BigDecimal idn_system, BigDecimal idn_zone) {
 		super();
 		this.gas_day = gas_day;
 		this.user_group_id = user_group_id;
 		this.user_group_name = user_group_name;
+		this.shortName = shortName;
 		this.idn_user_group = idn_user_group;
 		this.area_code = area_code;
 		this.contracted_energy = contracted_energy;
@@ -82,6 +85,14 @@ public class ShippersNominationsReportsBean implements Serializable {
 
 	public void setUser_group_name(String user_group_name) {
 		this.user_group_name = user_group_name;
+	}
+
+	public String getShortName() {
+		return shortName;
+	}
+
+	public void setShortName(String shortName) {
+		this.shortName = shortName;
 	}
 
 	public BigDecimal getIdn_user_group() {
@@ -271,35 +282,12 @@ public class ShippersNominationsReportsBean implements Serializable {
 
 	@Override
 	public String toString() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("ShippersNominationsReportsBean [gas_day=");
-		builder.append(gas_day);
-		builder.append(", user_group_id=");
-		builder.append(user_group_id);
-		builder.append(", user_group_name=");
-		builder.append(user_group_name);
-		builder.append(", idn_user_group=");
-		builder.append(idn_user_group);
-		builder.append(", area_code=");
-		builder.append(area_code);
-		builder.append(", contracted_energy=");
-		builder.append(contracted_energy);
-		builder.append(", nominated_energy=");
-		builder.append(nominated_energy);
-		builder.append(", overusage=");
-		builder.append(overusage);
-		builder.append(", imbalance=");
-		builder.append(imbalance);
-		builder.append(", tolerancia_permitida=");
-		builder.append(tolerancia_permitida);
-		builder.append(", is_warning=");
-		builder.append(is_warning);
-		builder.append(", idn_system=");
-		builder.append(idn_system);
-		builder.append(", idn_zone=");
-		builder.append(idn_zone);
-		builder.append("]");
-		return builder.toString();
+		return "ShippersNominationsReportsBean [gas_day=" + gas_day + ", user_group_id=" + user_group_id
+				+ ", user_group_name=" + user_group_name + ", shortName=" + shortName + ", idn_user_group="
+				+ idn_user_group + ", area_code=" + area_code + ", contracted_energy=" + contracted_energy
+				+ ", nominated_energy=" + nominated_energy + ", overusage=" + overusage + ", imbalance=" + imbalance
+				+ ", tolerancia_permitida=" + tolerancia_permitida + ", is_warning=" + is_warning + ", idn_system="
+				+ idn_system + ", idn_zone=" + idn_zone + ", details=" + details + "]";
 	}
 
 

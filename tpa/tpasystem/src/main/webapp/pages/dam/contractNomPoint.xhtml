@@ -236,7 +236,7 @@
 							</p:column>
 							<p:column>
 								<p:selectOneMenu id="new_contract_id" style="width:100px" value="#{contractNomPointView.newContractNomPoint.idn_contract}" 
-									required="true" requiredMessage="#{msg['contractNomPoint_id_contract']}: #{msg['empty_field']}"> >
+									required="true" requiredMessage="#{msg['contractNomPoint_id_contract']}: #{msg['empty_field']}"> 
 									<f:selectItem itemLabel="" itemValue="" />
 									<f:selectItems value="#{contractNomPointView.contractForm.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
 									<p:ajax event="change" update="new_contract_point"/>

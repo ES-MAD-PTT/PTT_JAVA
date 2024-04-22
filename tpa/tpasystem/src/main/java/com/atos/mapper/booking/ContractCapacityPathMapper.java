@@ -56,6 +56,8 @@ public interface ContractCapacityPathMapper extends Serializable {
 	
 	public List<String> getShipperCode(ContractCapacityPathFilter filters);
 	
+	public List<String> getShipperShortName(ContractCapacityPathFilter filters);
+	
 	public List<String> getContractCode(ContractCapacityPathFilter filters);
 	
 	public List<String> getAreaCode(BigDecimal idn_area);

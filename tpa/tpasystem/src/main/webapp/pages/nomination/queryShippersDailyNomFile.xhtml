@@ -29,7 +29,7 @@
 						<p:panelGrid id="filters">
 							<p:row>
 								<p:column  style="font-weight: bold;">
-									<h:outputText value="#{msg['nom_shipper_code']}" />
+									<h:outputText value="#{msg['day_nom_shipper_short_name']}" />
 								</p:column>
 								<p:column  style="font-weight: bold;">
 									<h:outputText value="#{msg['gas_day']}" />
@@ -109,6 +109,10 @@
 					        </f:facet>
 					       <p:column headerText="#{msg['nom_shipper_code']}" sortBy="#{queryNom.user_group_id}" filterMatchMode="contains" filterBy="#{queryNom.user_group_id}">
 					       		<h:outputText value="#{queryNom.user_group_id}" />
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['day_nom_shipper_short_name']}" sortBy="#{queryNom.short_name}" filterMatchMode="contains" filterBy="#{queryNom.short_name}">
+					       		<h:outputText value="#{queryNom.short_name}" />
 					       </p:column>
 					 
 					       <p:column headerText="#{msg['contract_code']}" sortBy="#{queryNom.contract_code}" filterMatchMode="contains" filterBy="#{queryNom.contract_code}">

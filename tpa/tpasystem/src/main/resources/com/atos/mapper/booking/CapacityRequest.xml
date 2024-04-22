@@ -11,6 +11,7 @@
         <result property="shipperId" column="idn_user_group"/> 
         <result property="shipperCode" column="user_group_id"/>
         <result property="shipperName" column="user_group_name"/>
+        <result property="shortName" column="short_name"/>
         <result property="contractTypeId" column="idn_operation"/> 
         <result property="contractTypeCode" column="operation_desc"/>   
         <result property="contractId" column="idn_contract"/>
@@ -38,6 +39,7 @@
 				       t1.idn_user_group as idn_user_group,
 				       t1.user_group_id as user_group_id,
 				       t1.user_group_name as user_group_name,
+				       t1.short_name as short_name,
 				       t1.idn_operation as idn_operation,
 				       t1.operation_desc as operation_desc,
 				       t2.idn_contract as idn_contract,
@@ -59,6 +61,7 @@
 				                       tuser_group.idn_user_group as idn_user_group,
 				                       tuser_group.user_group_id as user_group_id,
 				                       tuser_group.user_group_name as user_group_name,
+				                       tuser_group.short_name as short_name,
 				                       toper.idn_operation as idn_operation,
 				                       toper.operation_desc as operation_desc,
 				                       tcreq.idn_contract as idn_contract,
@@ -235,6 +238,7 @@
 			       t1.request_code as request_code,
 			       t1.arriving_date as arriving_date,
 			       t1.idn_user_group as idn_user_group,
+			       t1.short_name as short_name,
 			       t1.user_group_id as user_group_id,
 			       t1.user_group_name as user_group_name,
 			       t1.idn_operation as idn_operation,
@@ -258,6 +262,7 @@
 			                       tuser_group.idn_user_group as idn_user_group,
 			                       tuser_group.user_group_id as user_group_id,
 			                       tuser_group.user_group_id as user_group_name,
+			                       tuser_group.short_name as short_name,
 			                       toper.idn_operation as idn_operation,
 			                       toper.operation_desc as operation_desc,
 			                       tcreq.idn_contract as idn_contract,
@@ -416,7 +421,7 @@
     
     
      <select id="selectShipperId" resultType="com.atos.beans.ComboFilterNS">
-		select tgr.idn_user_group as key, tgr.user_group_id as value
+		select tgr.idn_user_group as key, tgr.short_name as value
 		from tpa_tuser_group tgr
 		where tgr.idn_user_group_type = (select idn_user_group_type from tpa_tuser_group_type where type_code = 'SHIPPER')
 			  and trunc(sysdate) between tgr.start_date and nvl(tgr.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))

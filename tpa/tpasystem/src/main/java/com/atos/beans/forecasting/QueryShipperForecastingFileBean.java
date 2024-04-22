@@ -16,6 +16,7 @@ public class QueryShipperForecastingFileBean implements Serializable{
 	private BigDecimal idn_operation;
 	private BigDecimal idn_user_group;
 	private String user_group_id;
+	private String short_name;
 	private String term_code;
 	private Date start_date;
 	private Date end_date;
@@ -34,6 +35,7 @@ public class QueryShipperForecastingFileBean implements Serializable{
 		this.idn_operation = null;
 		this.idn_user_group = null;
 		this.user_group_id = null;
+		this.short_name = null;
 		this.term_code = null;
 		this.start_date = null;
 		this.end_date = null;
@@ -74,6 +76,12 @@ public class QueryShipperForecastingFileBean implements Serializable{
 	}
 	public void setUser_group_id(String user_group_id) {
 		this.user_group_id = user_group_id;
+	}
+	public String getShort_name() {
+		return short_name;
+	}
+	public void setShort_name(String short_name) {
+		this.short_name = short_name;
 	}
 	public String getTerm_code() {
 		return term_code;
@@ -220,12 +228,13 @@ public class QueryShipperForecastingFileBean implements Serializable{
 	}
 	@Override
 	public String toString() {
-		return "QueryShipperForecastingFileBean [idn_operation=" + idn_operation + ", idn_user_group=" + idn_user_group
-				+ ", user_group_id=" + user_group_id + ", term_code=" + term_code + ", start_date=" + start_date
-				+ ", end_date=" + end_date + ", idn_shipper_file=" + idn_shipper_file + ", shipper_file_name="
-				+ shipper_file_name + ", idn_operator_file=" + idn_operator_file + ", operator_file_name="
-				+ operator_file_name + ", shipper_file_date=" + shipper_file_date + ", operator_file_date="
-				+ operator_file_date + "]";
+		return "QueryShipperForecastingFileBean [idn_forecasting=" + idn_forecasting + ", forecasting_code="
+				+ forecasting_code + ", idn_operation=" + idn_operation + ", idn_user_group=" + idn_user_group
+				+ ", user_group_id=" + user_group_id + ", short_name=" + short_name + ", term_code=" + term_code
+				+ ", start_date=" + start_date + ", end_date=" + end_date + ", idn_shipper_file=" + idn_shipper_file
+				+ ", shipper_file_name=" + shipper_file_name + ", idn_operator_file=" + idn_operator_file
+				+ ", operator_file_name=" + operator_file_name + ", shipper_file_date=" + shipper_file_date
+				+ ", operator_file_date=" + operator_file_date + "]";
 	}
 
 }

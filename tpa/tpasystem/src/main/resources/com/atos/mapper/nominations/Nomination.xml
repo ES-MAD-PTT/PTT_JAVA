@@ -5,7 +5,7 @@
 
 
      <select id="selectShipperIdNominations" parameterType="com.atos.filters.nominations.NominationFilter" resultType="com.atos.beans.ComboFilterNS">
-		SELECT a.idn_user_group as key, a.user_group_id as value
+		SELECT a.idn_user_group as key, a.short_name as value
 		  FROM tpa_tuser_group a,
 		       tpa_tuser_group_type b,
 		       (SELECT ugt.type_code,
@@ -77,7 +77,8 @@
 		c.contract_code,		
 		ug.idn_user_group,		
 		ug.user_group_id,	
-		ug.user_group_name,	
+		ug.user_group_name,
+		ug.short_name,	
 		n.is_responsed,		
 		n.shipper_comments,		
 		n.operator_comments,		

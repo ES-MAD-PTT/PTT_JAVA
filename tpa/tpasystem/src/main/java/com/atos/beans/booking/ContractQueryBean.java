@@ -1,6 +1,7 @@
 package com.atos.beans.booking;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -11,8 +12,6 @@ import org.primefaces.model.DualListModel;
 import org.primefaces.model.StreamedContent;
 
 import com.atos.beans.UserAudBean;
-
-import java.math.BigDecimal;
 
 public class ContractQueryBean extends UserAudBean implements Serializable{
 		
@@ -27,6 +26,7 @@ public class ContractQueryBean extends UserAudBean implements Serializable{
 	private BigDecimal shipperId;
 	private String shipperCode;
 	private String shipperName;
+	private String shortName;
 	private BigDecimal contractTypeId;
 	private String contractTypeCode;
 	private BigDecimal contractId;
@@ -65,6 +65,7 @@ public class ContractQueryBean extends UserAudBean implements Serializable{
 		this.shipperId = null;
 		this.shipperCode = null;
 		this.shipperName = null;
+		this.shortName = null;
 		this.contractTypeId = null;
 		this.contractTypeCode = null;
 		this.contractId = null;
@@ -139,6 +140,13 @@ public class ContractQueryBean extends UserAudBean implements Serializable{
 		this.shipperName = shipperName;
 	}
 
+	public String getShortName() {
+		return shortName;
+	}
+
+	public void setShortName(String shortName) {
+		this.shortName = shortName;
+	}
 
 	public BigDecimal getContractTypeId() {
 		return contractTypeId;
@@ -347,17 +355,18 @@ public class ContractQueryBean extends UserAudBean implements Serializable{
 	public String toString() {
 		return "ContractQueryBean [id=" + id + ", requestCode=" + requestCode + ", submittedTimestamp="
 				+ submittedTimestamp + ", shipperId=" + shipperId + ", shipperCode=" + shipperCode + ", shipperName="
-				+ shipperName + ", contractTypeId=" + contractTypeId + ", contractTypeCode=" + contractTypeCode
-				+ ", contractId=" + contractId + ", contractCode=" + contractCode + ", status=" + status
-				+ ", contractStartDate=" + contractStartDate + ", contractEndDate=" + contractEndDate
-				+ ", idnOperationFile=" + idnOperationFile + ", xlsFile=" + xlsFile + ", xlsFileName=" + xlsFileName
-				+ ", submissionComments=" + submissionComments + ", hmRequestedPoints=" + hmRequestedPoints
-				+ ", requestedPointCodes=" + requestedPointCodes + ", rejectedPointCodes=" + rejectedPointCodes
-				+ ", dualListPointCodes=" + dualListPointCodes + ", managementComments=" + managementComments
-				+ ", shadowTime=" + shadowTime + ", shadowPeriod=" + shadowPeriod + ", signedContTemplDocxScFile="
-				+ signedContTemplDocxScFile + ", signedContTemplDocxFileName=" + signedContTemplDocxFileName
-				+ ", acceptanceTimestamp=" + acceptanceTimestamp + ", tmContractAgreements=" + tmContractAgreements
-				+ ", additionalDocs=" + additionalDocs + ", idn_system=" + idn_system + "]";
+				+ shipperName + ", shortName=" + shortName + ", contractTypeId=" + contractTypeId
+				+ ", contractTypeCode=" + contractTypeCode + ", contractId=" + contractId + ", contractCode="
+				+ contractCode + ", status=" + status + ", contractStartDate=" + contractStartDate
+				+ ", contractEndDate=" + contractEndDate + ", idnOperationFile=" + idnOperationFile + ", xlsFile="
+				+ xlsFile + ", xlsFileName=" + xlsFileName + ", submissionComments=" + submissionComments
+				+ ", hmRequestedPoints=" + hmRequestedPoints + ", requestedPointCodes=" + requestedPointCodes
+				+ ", rejectedPointCodes=" + rejectedPointCodes + ", dualListPointCodes=" + dualListPointCodes
+				+ ", managementComments=" + managementComments + ", shadowTime=" + shadowTime + ", shadowPeriod="
+				+ shadowPeriod + ", signedContTemplDocxScFile=" + signedContTemplDocxScFile
+				+ ", signedContTemplDocxFileName=" + signedContTemplDocxFileName + ", acceptanceTimestamp="
+				+ acceptanceTimestamp + ", tmContractAgreements=" + tmContractAgreements + ", additionalDocs="
+				+ additionalDocs + ", idn_system=" + idn_system + "]";
 	}
 
 		

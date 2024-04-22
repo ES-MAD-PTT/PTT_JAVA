@@ -304,6 +304,7 @@ AND sr.ask_other_shippers = 'Y'
            ac.action_desc,     
            tstatus.status_desc,
            tlogmin.user_comments  as initial_comments,
+           tlogmin.operator_comments as operator_comments,
            tlogmin.idn_user as idn_first_user,
            (select u.user_id from tpa_tuser u where u.idn_user = tlogmin.idn_user) as first_user,
            tospec.idn_offspec_action as idnAction,
@@ -376,6 +377,7 @@ AND sr.ask_other_shippers = 'Y'
            ac.action_desc,     
            tstatus.status_desc,
            tlogmin.user_comments  as initial_comments,
+           tlogmin.operator_comments as operator_comments,
            tlogmin.idn_user as idn_first_user,
            (select u.user_id from tpa_tuser u where u.idn_user = tlogmin.idn_user) as first_user,
            tospec.idn_offspec_action as idnAction,
@@ -968,12 +970,16 @@ WHERE qpa.idn_area = a.IDN_AREA
 	
 	<select id="selectFiles" resultType="com.atos.beans.quality.OffSpecFileBean">
 		select f.IDN_OFFSPEC_FILE as idnOffspecFile,
-				f.file_name as fileName, 
-				f.binary_data as binaryData
-			from tpa_toffspec_file_attach a,
-			tpa_toffspec_file f
-			where a.idn_offspec_file = f.idn_offspec_file
-			and a.idn_offspec = #{incidentId}
+		        f.file_name as fileName, 
+		        f.binary_data as binaryData
+	      from tpa_toffspec_file_attach a,
+		      tpa_toffspec_file f, tpa_tuser_group ug, tpa_toffspec o, tpa_tuser_group_type ut
+		      where a.idn_offspec_file = f.idn_offspec_file
+		      and a.idn_offspec = o.idn_offspec
+		      and o.idn_user_group = ug.idn_user_group
+		      and ug.idn_user_group_type = ut.idn_user_group_type
+		      and ut.type_code = #{userGroupType}
+		      and a.idn_offspec = #{incidentId}
 	</select>
 	
 	<select id="selectActionFiles" resultType="com.atos.beans.quality.OffSpecActionFileBean">

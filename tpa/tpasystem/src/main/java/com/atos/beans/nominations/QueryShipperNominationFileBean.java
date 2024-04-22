@@ -17,6 +17,7 @@ public class QueryShipperNominationFileBean implements Serializable{
 	private BigDecimal idn_operation;
 	private BigDecimal idn_user_group;
 	private String user_group_id;
+	private String short_name;
 	private BigDecimal idn_contract;
 	private String contract_code;
 	private String is_contracted;
@@ -67,6 +68,12 @@ public class QueryShipperNominationFileBean implements Serializable{
 	}
 	public void setUser_group_id(String user_group_id) {
 		this.user_group_id = user_group_id;
+	}
+	public String getShort_name() {
+		return short_name;
+	}
+	public void setShort_name(String short_name) {
+		this.short_name = short_name;
 	}
 	public BigDecimal getIdn_contract() {
 		return idn_contract;
@@ -305,13 +312,14 @@ public class QueryShipperNominationFileBean implements Serializable{
 	public String toString() {
 		return "QueryShipperNominationFileBean [idn_nomination=" + idn_nomination + ", nomination_code="
 				+ nomination_code + ", nomination_version=" + nomination_version + ", idn_operation=" + idn_operation
-				+ ", idn_user_group=" + idn_user_group + ", user_group_id=" + user_group_id + ", idn_contract="
-				+ idn_contract + ", contract_code=" + contract_code + ", is_contracted=" + is_contracted
-				+ ", start_date=" + start_date + ", end_date=" + end_date + ", is_renomination=" + is_renomination
-				+ ", is_valid=" + is_valid + ", is_responsed=" + is_responsed + ", feasibility_date=" + feasibility_date
-				+ ", operator_comments=" + operator_comments + ", is_matched=" + is_matched + ", matching_date="
-				+ matching_date + ", submission_comments=" + submission_comments + ", idn_operator_file="
-				+ idn_operator_file + ", operator_file_name=" + operator_file_name + "]";
+				+ ", idn_user_group=" + idn_user_group + ", user_group_id=" + user_group_id + ", short_name="
+				+ short_name + ", idn_contract=" + idn_contract + ", contract_code=" + contract_code
+				+ ", is_contracted=" + is_contracted + ", start_date=" + start_date + ", end_date=" + end_date
+				+ ", is_renomination=" + is_renomination + ", is_valid=" + is_valid + ", is_responsed=" + is_responsed
+				+ ", feasibility_date=" + feasibility_date + ", operator_comments=" + operator_comments
+				+ ", is_matched=" + is_matched + ", matching_date=" + matching_date + ", submission_comments="
+				+ submission_comments + ", idn_operator_file=" + idn_operator_file + ", operator_file_name="
+				+ operator_file_name + "]";
 	}
 
 

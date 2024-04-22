@@ -12,6 +12,7 @@
 		<id column="idn_nom_template_contract"
 			property="idn_nom_template_contract" />
 		<id column="user_group_id" property="shipperGroupId" />
+		<id column="short_name" property="short_name" />
 		<id column="CONTRACT_CODE" property="contractId" />
 		<id column="operation_desc" property="operation_desc" />
 		<id column="document_name" property="document_name" />
@@ -23,7 +24,7 @@
 
 	<select id="search" resultMap="UploadNomTemplateShipperBean"
 		parameterType="com.atos.filters.nominations.UploadNomTemplateShipperFilter">
-		SELECT ug.user_group_id, c.contract_code,
+		SELECT ug.user_group_id, c.contract_code, ug.short_Name,
 		tc.idn_nom_template_contract, tc.document_name, tc.binary_data,
 		o.operation_desc, tc.comments
 		FROM TPA_TNOM_TEMPLATE_CONTRACT tc, TPA_TUSER_GROUP ug, TPA_TOPERATION o,
@@ -43,7 +44,7 @@
 
 	<select id="selectShipperId"
 		resultType="com.atos.beans.ComboFilterNS">
-		select ug.idn_user_group as key, ug.user_group_id as value
+		select ug.idn_user_group as key, ug.short_name as value
 		from TPA_TUSER_GROUP ug
 		where ug.idn_user_group_type in
 		(select

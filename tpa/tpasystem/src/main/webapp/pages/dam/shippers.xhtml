@@ -30,7 +30,7 @@
 						<p:panelGrid id="filters">
 							<p:row>
 								<p:column  style="font-weight: bold;">
-									<h:outputText value="#{msg['shipper_id']}" />
+									<h:outputText value="#{msg['short_Name']}" />
 								</p:column>
 								<p:column  style="font-weight: bold;">
 									<h:outputText value="#{msg['shipper_Name']}" />
@@ -134,6 +134,20 @@
 					               			 style="width:100%" label="#{msg['shipper_Name']}"
 					               				requiredMessage="#{msg['shipper_Name']}: #{msg['empty_field']}" validatorMessage="#{msg['shipper_Company_Name']}: #{msg['lenght_field']} 120">
 					               				<f:validateLength maximum="120"/>
+					               				<f:validateRequired/>
+					               			</p:inputText>	
+					               	</f:facet>
+					           </p:cellEditor>
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['short_Name']}" style="width: 150px;" sortBy="#{shipper.shortName}" filterMatchMode="contains" filterBy="#{shipper.shortName}">
+					           <p:cellEditor>
+					               <f:facet name="output"><h:outputText value="#{shipper.shortName}" /></f:facet>
+					               <f:facet name="input">
+					               			<p:inputText value="#{shipper.shortName}" required="true" disabled="#{shipperView.disabledField(shipper)}" maxlength="120"
+					               			 style="width:100%" label="#{msg['shipper_Name']}"
+					               				requiredMessage="#{msg['shipper_Name']}: #{msg['empty_field']}" validatorMessage="#{msg['short_Name']}: #{msg['lenght_field']} 50">
+					               				<f:validateLength maximum="50"/>
 					               				<f:validateRequired/>
 					               			</p:inputText>	
 					               	</f:facet>
@@ -311,6 +325,19 @@
 									<f:validateLength maximum="120"/>
 								</p:inputText>
 								<p:message for="companyName" />
+							</p:column>
+						</p:row>
+						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['short_Name']}" />
+							</p:column>
+							<p:column>
+								<p:inputText required="true" id="shortName" value="#{shipperView.newShipper.shortName}" maxlength="120" 
+									requiredMessage="#{msg['short_Name']}: #{msg['empty_field']}" 
+									validatorMessage="#{msg['short_Name']}: #{msg['lenght_field']} 50">
+									<f:validateLength maximum="50"/>
+								</p:inputText>
+								<p:message for="shortName" />
 							</p:column>
 						</p:row>
 						<p:row>

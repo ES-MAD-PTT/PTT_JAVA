@@ -30,7 +30,7 @@
 						<p:panelGrid>
 							<p:row>
 								<p:column style="font-weight: bold;">
-									<h:outputText value="#{msg['upload_template_shipper_code']}"
+									<h:outputText value="#{msg['upload_template_shipper_short_name']}"
 										rendered="#{!uploadNomTemplateShipperView.isShipper}" />
 								</p:column>
 								<p:column style="font-weight: bold;">
@@ -123,6 +123,14 @@
 							filterMatchMode="contains"
 							filterBy="#{templateForShipper.shipperGroupId}">
 							<h:outputText value="#{templateForShipper.shipperGroupId}">
+							</h:outputText>
+						</p:column>
+						<p:column headerText="#{msg['upload_template_shipper_short_name']}"
+							style="width: 80px;"
+							sortBy="#{templateForShipper.short_name}"
+							filterMatchMode="contains"
+							filterBy="#{templateForShipper.short_name}">
+							<h:outputText value="#{templateForShipper.short_name}">
 							</h:outputText>
 						</p:column>
 						<p:column headerText="#{msg['upload_template_contract_code']}"

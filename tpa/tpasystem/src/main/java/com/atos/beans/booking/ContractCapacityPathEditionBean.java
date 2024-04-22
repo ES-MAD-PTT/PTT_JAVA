@@ -17,6 +17,7 @@ public class ContractCapacityPathEditionBean extends UserAudBean implements Seri
 	
 	private BigDecimal idn_shipper;
 	private String shipper_code;
+	private String shortName;
 	private String type_contract;
 	private BigDecimal idn_booking;
 	private String contract_code;
@@ -44,6 +45,12 @@ public class ContractCapacityPathEditionBean extends UserAudBean implements Seri
 	}
 	public void setShipper_code(String shipper_code) {
 		this.shipper_code = shipper_code;
+	}
+	public String getShortName() {
+		return shortName;
+	}
+	public void setShortName(String shortName) {
+		this.shortName = shortName;
 	}
 	public String getType_contract() {
 		return type_contract;
@@ -140,7 +147,9 @@ public class ContractCapacityPathEditionBean extends UserAudBean implements Seri
 		StringBuilder builder = new StringBuilder();
 		builder.append("ContractCapacityPathEditionBean [idn_shipper=");
 		builder.append(idn_shipper);
-		builder.append(", shipper_code=");
+		builder.append(", shipper_short_Name=");
+		builder.append(shortName);
+		builder.append(", shipper_code=");		
 		builder.append(shipper_code);
 		builder.append(", type_contract=");
 		builder.append(type_contract);

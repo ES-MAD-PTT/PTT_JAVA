@@ -15,6 +15,7 @@
 		<result property="idn_user_group" column="idn_user_group"/>
 		<result property="user_group_id" column="user_group_id"/> 
 		<result property="user_group_name" column="user_group_name"/>
+		<result property="shortName" column="short_name"/>
 		<result property="parameterCode1" column="parameterCode1"/>
 		<result property="parameterCode2" column="parameterCode2"/>
 		<association property="details" select="getMaxMin"
@@ -50,7 +51,7 @@
    
    <select id="selectShippersIds" resultType="com.atos.beans.ComboFilterNS">
 		
-	SELECT tuser.idn_user_group as key, tuser.user_group_id as value
+	SELECT tuser.idn_user_group as key, tuser.short_name as value
     FROM tpa_tuser_group tuser
     WHERE tuser.idn_user_group_type = (SELECT idn_user_group_type 
 	         FROM tpa_tuser_group_type 
@@ -67,6 +68,7 @@
           ug.idn_user_group idn_user_group,
           ug.user_group_id user_group_id,
           ug.user_group_name user_group_name,
+          ug.short_name short_name,
           #{parameterCode1} as parameterCode1,
           #{parameterCode2} as parametercode2
      FROM TPA_Varea_TPA a,

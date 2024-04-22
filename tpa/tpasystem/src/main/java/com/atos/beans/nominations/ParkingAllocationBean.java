@@ -14,6 +14,7 @@ public class ParkingAllocationBean implements Serializable{
 	private String zone_code;
 	private BigDecimal idn_shipper;
 	private String shipper_code;
+	private String short_name;
 	private String contract_code;
 	private String nomination_code;
 	private BigDecimal nomination_version;
@@ -79,6 +80,12 @@ public class ParkingAllocationBean implements Serializable{
 	}
 	public void setPark_allocated(BigDecimal park_allocated) {
 		this.park_allocated = park_allocated;
+	}
+	public String getShort_name() {
+		return short_name;
+	}
+	public void setShort_name(String short_name) {
+		this.short_name = short_name;
 	}
 	@Override
 	public int hashCode() {
@@ -183,8 +190,8 @@ public class ParkingAllocationBean implements Serializable{
 	@Override
 	public String toString() {
 		return "ParkingAllocationBean [idn_zone=" + idn_zone + ", zone_code=" + zone_code + ", idn_shipper="
-				+ idn_shipper + ", shipper_code=" + shipper_code + ", contract_code=" + contract_code
-				+ ", nomination_code=" + nomination_code + ", nomination_version=" + nomination_version
+				+ idn_shipper + ", shipper_code=" + shipper_code + ", short_name=" + short_name + ", contract_code="
+				+ contract_code + ", nomination_code=" + nomination_code + ", nomination_version=" + nomination_version
 				+ ", unpark_nominated=" + unpark_nominated + ", park_nominated=" + park_nominated + ", park_allocated="
 				+ park_allocated + "]";
 	}

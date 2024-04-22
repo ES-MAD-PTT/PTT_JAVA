@@ -3,6 +3,7 @@ package com.atos.beans.dam;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.Objects;
 
 import org.primefaces.model.DualListModel;
 
@@ -17,6 +18,7 @@ public class ShipperBean extends UserAudBean implements Serializable {
 	private BigDecimal idn_shipper;
 	private String id;
 	private String companyName;
+	private String shortName;
 	// Cada DualList tiene listas de puntos como estas.
 	//private List<ComboFilterNS> availableContractPoints = new ArrayList<ComboFilterNS>();
 	//private List<ComboFilterNS> contractPoints = new ArrayList<ComboFilterNS>();
@@ -71,7 +73,15 @@ public class ShipperBean extends UserAudBean implements Serializable {
 	public void setCompanyName(String companyName) {
 		this.companyName = companyName;
 	}
-	
+
+	public String getShortName() {
+		return shortName;
+	}
+
+	public void setShortName(String shortName) {
+		this.shortName = shortName;
+	}
+
 	public DualListModel<ComboFilterNS> getdLContractPoints() {
 		return dLContractPoints;
 	}
@@ -170,25 +180,9 @@ public class ShipperBean extends UserAudBean implements Serializable {
 
 	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((address == null) ? 0 : address.hashCode());
-		result = prime * result + ((bankAccount == null) ? 0 : bankAccount.hashCode());
-		result = prime * result + ((companyName == null) ? 0 : companyName.hashCode());
-		result = prime * result + ((creditRating == null) ? 0 : creditRating.hashCode());
-		result = prime * result + ((dLContractPoints == null) ? 0 : dLContractPoints.hashCode());
-		result = prime * result + ((dLPrevContractPoints == null) ? 0 : dLPrevContractPoints.hashCode());
-		result = prime * result + ((eRCLicenseID == null) ? 0 : eRCLicenseID.hashCode());
-		result = prime * result + (editing ? 1231 : 1237);
-		result = prime * result + ((endDate == null) ? 0 : endDate.hashCode());
-		result = prime * result + ((fax == null) ? 0 : fax.hashCode());
-		result = prime * result + ((id == null) ? 0 : id.hashCode());
-		result = prime * result + ((idn_shipper == null) ? 0 : idn_shipper.hashCode());
-		result = prime * result + ((idn_user_group == null) ? 0 : idn_user_group.hashCode());
-		result = prime * result + ((sapId == null) ? 0 : sapId.hashCode());
-		result = prime * result + ((startDate == null) ? 0 : startDate.hashCode());
-		result = prime * result + ((telephone == null) ? 0 : telephone.hashCode());
-		return result;
+		return Objects.hash(address, bankAccount, companyName, creditRating, dLContractPoints, dLPrevContractPoints,
+				eRCLicenseID, editing, endDate, fax, id, idn_shipper, idn_user_group, sapId, shortName, startDate,
+				telephone);
 	}
 
 	@Override
@@ -200,94 +194,26 @@ public class ShipperBean extends UserAudBean implements Serializable {
 		if (getClass() != obj.getClass())
 			return false;
 		ShipperBean other = (ShipperBean) obj;
-		if (address == null) {
-			if (other.address != null)
-				return false;
-		} else if (!address.equals(other.address))
-			return false;
-		if (bankAccount == null) {
-			if (other.bankAccount != null)
-				return false;
-		} else if (!bankAccount.equals(other.bankAccount))
-			return false;
-		if (companyName == null) {
-			if (other.companyName != null)
-				return false;
-		} else if (!companyName.equals(other.companyName))
-			return false;
-		if (creditRating == null) {
-			if (other.creditRating != null)
-				return false;
-		} else if (!creditRating.equals(other.creditRating))
-			return false;
-		if (dLContractPoints == null) {
-			if (other.dLContractPoints != null)
-				return false;
-		} else if (!dLContractPoints.equals(other.dLContractPoints))
-			return false;
-		if (dLPrevContractPoints == null) {
-			if (other.dLPrevContractPoints != null)
-				return false;
-		} else if (!dLPrevContractPoints.equals(other.dLPrevContractPoints))
-			return false;
-		if (eRCLicenseID == null) {
-			if (other.eRCLicenseID != null)
-				return false;
-		} else if (!eRCLicenseID.equals(other.eRCLicenseID))
-			return false;
-		if (editing != other.editing)
-			return false;
-		if (endDate == null) {
-			if (other.endDate != null)
-				return false;
-		} else if (!endDate.equals(other.endDate))
-			return false;
-		if (fax == null) {
-			if (other.fax != null)
-				return false;
-		} else if (!fax.equals(other.fax))
-			return false;
-		if (id == null) {
-			if (other.id != null)
-				return false;
-		} else if (!id.equals(other.id))
-			return false;
-		if (idn_shipper == null) {
-			if (other.idn_shipper != null)
-				return false;
-		} else if (!idn_shipper.equals(other.idn_shipper))
-			return false;
-		if (idn_user_group == null) {
-			if (other.idn_user_group != null)
-				return false;
-		} else if (!idn_user_group.equals(other.idn_user_group))
-			return false;
-		if (sapId == null) {
-			if (other.sapId != null)
-				return false;
-		} else if (!sapId.equals(other.sapId))
-			return false;
-		if (startDate == null) {
-			if (other.startDate != null)
-				return false;
-		} else if (!startDate.equals(other.startDate))
-			return false;
-		if (telephone == null) {
-			if (other.telephone != null)
-				return false;
-		} else if (!telephone.equals(other.telephone))
-			return false;
-		return true;
+		return Objects.equals(address, other.address) && Objects.equals(bankAccount, other.bankAccount)
+				&& Objects.equals(companyName, other.companyName) && Objects.equals(creditRating, other.creditRating)
+				&& Objects.equals(dLContractPoints, other.dLContractPoints)
+				&& Objects.equals(dLPrevContractPoints, other.dLPrevContractPoints)
+				&& Objects.equals(eRCLicenseID, other.eRCLicenseID) && editing == other.editing
+				&& Objects.equals(endDate, other.endDate) && Objects.equals(fax, other.fax)
+				&& Objects.equals(id, other.id) && Objects.equals(idn_shipper, other.idn_shipper)
+				&& Objects.equals(idn_user_group, other.idn_user_group) && Objects.equals(sapId, other.sapId)
+				&& Objects.equals(shortName, other.shortName) && Objects.equals(startDate, other.startDate)
+				&& Objects.equals(telephone, other.telephone);
 	}
 
 	@Override
 	public String toString() {
 		return "ShipperBean [idn_user_group=" + idn_user_group + ", idn_shipper=" + idn_shipper + ", id=" + id
-				+ ", companyName=" + companyName + ", dLContractPoints=" + dLContractPoints + ", dLPrevContractPoints="
-				+ dLPrevContractPoints + ", editing=" + editing + ", address=" + address + ", creditRating="
-				+ creditRating + ", eRCLicenseID=" + eRCLicenseID + ", telephone=" + telephone + ", fax=" + fax
-				+ ", sapId=" + sapId + ", bankAccount=" + bankAccount + ", startDate=" + startDate + ", endDate="
-				+ endDate + "]";
+				+ ", companyName=" + companyName + ", shortName=" + shortName + ", dLContractPoints=" + dLContractPoints
+				+ ", dLPrevContractPoints=" + dLPrevContractPoints + ", editing=" + editing + ", address=" + address
+				+ ", creditRating=" + creditRating + ", eRCLicenseID=" + eRCLicenseID + ", telephone=" + telephone
+				+ ", fax=" + fax + ", sapId=" + sapId + ", bankAccount=" + bankAccount + ", startDate=" + startDate
+				+ ", endDate=" + endDate + "]";
 	}
 
 

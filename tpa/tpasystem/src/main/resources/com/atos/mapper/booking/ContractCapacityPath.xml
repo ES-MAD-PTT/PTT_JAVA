@@ -377,7 +377,7 @@ WHERE  tuser_group.idn_user_group = r.idn_user_group
 </select>
 
 <select id="selectShippersCombo"  parameterType="com.atos.filters.booking.ContractCapacityPathFilter" resultType="com.atos.beans.ComboFilterNS">
-	SELECT tuser.idn_user_group as key, tuser.user_group_id as value
+	SELECT tuser.idn_user_group as key, tuser.short_name as value
 	FROM tpa_tuser_group tuser
 	WHERE tuser.idn_user_group_type = (SELECT idn_user_group_type 
 									   FROM tpa_tuser_group_type 
@@ -452,6 +452,14 @@ ORDER BY x.start_date, is_entry_area DESC, a.idn_area
 <select id="getShipperCode" resultType="java.lang.String" parameterType="com.atos.filters.booking.ContractCapacityPathFilter">
 
 select tuser.user_group_id from tpa_tuser_group tuser where tuser.idn_user_group = #{idn_shipper}
+AND nvl(tuser.end_date,to_date('9999/12/31','yyyy/mm/dd'))>=  #{start_date}
+AND #{end_date} >= tuser.start_date 
+
+</select>
+
+<select id="getShipperShortName" resultType="java.lang.String" parameterType="com.atos.filters.booking.ContractCapacityPathFilter">
+
+select tuser.short_name from tpa_tuser_group tuser where tuser.idn_user_group = #{idn_shipper}
 AND nvl(tuser.end_date,to_date('9999/12/31','yyyy/mm/dd'))>=  #{start_date}
 AND #{end_date} >= tuser.start_date 
 

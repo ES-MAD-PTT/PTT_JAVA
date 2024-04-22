@@ -19,6 +19,7 @@ public class QualityPublicationShipperBean implements Serializable {
 	private String isWarned;
 	private BigDecimal idShipper;	
 	private String nameShipper;	
+	private String shortName;	
 	
 	public QualityPublicationShipperBean() {
 		super();
@@ -31,6 +32,7 @@ public class QualityPublicationShipperBean implements Serializable {
 		this.isWarned = null;
 		this.idShipper = null;
 		this.nameShipper = null;
+		this.shortName = null;
 	}
 
 	public String getNameShipper() {
@@ -105,11 +107,20 @@ public class QualityPublicationShipperBean implements Serializable {
 		this.idShipper = idShipper;
 	}
 
+	public String getShortName() {
+		return shortName;
+	}
+
+	public void setShortName(String shortName) {
+		this.shortName = shortName;
+	}
+
 	@Override
 	public String toString() {
 		return "QualityPublicationShipperBean [areaId=" + areaId + ", areaCode=" + areaCode + ", nominationDate="
 				+ nominationDate + ", parameterCode=" + parameterCode + ", value=" + value + ", unitDesc=" + unitDesc
-				+ ", isWarned=" + isWarned + ", idShipper=" + idShipper + ", nameShipper=" + nameShipper + "]";
+				+ ", isWarned=" + isWarned + ", idShipper=" + idShipper + ", nameShipper=" + nameShipper
+				+ ", shortName=" + shortName + "]";
 	}
 	
 }

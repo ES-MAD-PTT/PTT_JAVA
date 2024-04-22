@@ -21,6 +21,7 @@ public class RenominationIntradayBean extends UserAudBean implements Serializabl
 	private BigDecimal idn_user_group;
 	private String user_group_code;
 	private String user_group_name;
+	private String shortName;
 	private String status;
 	
 	private List<RenominationIntradayDetBean> detail = null;
@@ -80,29 +81,18 @@ public class RenominationIntradayBean extends UserAudBean implements Serializabl
 	public void setDetail(List<RenominationIntradayDetBean> detail) {
 		this.detail = detail;
 	}
+	public String getShortName() {
+		return shortName;
+	}
+	public void setShortName(String shortName) {
+		this.shortName = shortName;
+	}
 	@Override
 	public String toString() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("RenominationIntradayBean [idn_intraday_renom_cab=");
-		builder.append(idn_intraday_renom_cab);
-		builder.append(", intraday_renom_code=");
-		builder.append(intraday_renom_code);
-		builder.append(", gas_day=");
-		builder.append(gas_day);
-		builder.append(", hour=");
-		builder.append(hour);
-		builder.append(", idn_user_group=");
-		builder.append(idn_user_group);
-		builder.append(", user_group_code=");
-		builder.append(user_group_code);
-		builder.append(", user_group_name=");
-		builder.append(user_group_name);
-		builder.append(", status=");
-		builder.append(status);
-		builder.append(", detail=");
-		builder.append(detail);
-		builder.append("]");
-		return builder.toString();
+		return "RenominationIntradayBean [idn_intraday_renom_cab=" + idn_intraday_renom_cab + ", intraday_renom_code="
+				+ intraday_renom_code + ", gas_day=" + gas_day + ", hour=" + hour + ", idn_user_group=" + idn_user_group
+				+ ", user_group_code=" + user_group_code + ", user_group_name=" + user_group_name + ", shortName="
+				+ shortName + ", status=" + status + ", detail=" + detail + "]";
 	}
 	
 

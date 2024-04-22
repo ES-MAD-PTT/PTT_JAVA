@@ -33,7 +33,7 @@
 							
 								<p:panelGrid>
 									<p:row>
-											<p:column style="font-weight: bold;"><h:outputText value="#{msg['shipperNomReport_shipper']}" /></p:column>
+											<p:column style="font-weight: bold;"><h:outputText value="#{msg['shipperNomReport_shipper_short_name']}" /></p:column>
 											<p:column style="font-weight: bold;"><h:outputText value="#{msg['shipperNomReport_startDate']}" /></p:column>
 											<p:column style="font-weight: bold;"><h:outputText value="#{msg['shipperNomReport_endDate']}" /></p:column>
 									</p:row>
@@ -133,6 +133,9 @@
 							       </p:column>					       
 							       <p:column headerText="#{msg['shipperNomReport_shipperName']}" style="width: 100px;" sortBy="#{shipperNomReport.user_group_name}">
 							       		<h:outputText value="#{shipperNomReport.user_group_name}" />
+							       </p:column>	
+							       <p:column headerText="#{msg['shipperNomReport_shipper_short_name']}" style="width: 100px;" sortBy="#{shipperNomReport.shortName}">
+							       		<h:outputText value="#{shipperNomReport.shortName}" />
 							       </p:column>					       
 							       <p:column headerText="#{msg['shipperNomReport_contracted']}" style="width: 100px;" sortBy="#{shipperNomReport.contracted_energy}">
 							       		<h:outputText value="#{shipperNomReport.contracted_energy}" >

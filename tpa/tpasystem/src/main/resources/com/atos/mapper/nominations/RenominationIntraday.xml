@@ -5,7 +5,7 @@
 
    <select id="selectShipperId" resultType="com.atos.beans.ComboFilterNS">
 		
-	SELECT tuser.idn_user_group as key, tuser.user_group_id as value
+	SELECT tuser.idn_user_group as key, tuser.short_name as value
     FROM tpa_tuser_group tuser
     WHERE tuser.idn_user_group_type = (SELECT idn_user_group_type 
 	         FROM tpa_tuser_group_type 
@@ -20,6 +20,7 @@
 		<result property="idn_user_group" 	column="idn_user_group"/>
 		<result property="user_group_code" 	column="user_group_code"/>
 		<result property="user_group_name" 	column="user_group_name"/>
+		<result property="shortName" column="short_name"/>
 		<association property="detail" select="com.atos.mapper.nominations.RenominationIntradayMapper.selectRenominationIntradayDet"
 				column="idn_intraday_renom_cab=IDN_INTRADAY_RENOM_CAB}" />
 	</resultMap>
@@ -34,6 +35,7 @@ SELECT rc.idn_intraday_renom_cab,
        rc.idn_user_group,
        nvl(ug.user_group_id, 'All shippers') AS user_group_code,
        nvl(ug.user_group_name, 'All shippers') AS user_group_name,
+       nvl(ug.short_name, 'All shippers') AS short_name,
        rc.status
   FROM tpa_tintraday_renom_cab rc
   LEFT JOIN tpa_tuser_group ug

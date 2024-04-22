@@ -12,6 +12,7 @@ public class UploadNomTemplateShipperBean extends UserAudBean implements Seriali
 
 	private BigDecimal idn_nom_template_contract;
 	private String shipperGroupId;
+	private String short_name;
 	private String contractId;
 	private String operation_desc;
 	private String document_name;
@@ -32,9 +33,20 @@ public class UploadNomTemplateShipperBean extends UserAudBean implements Seriali
 		this.document_name = document_name;
 		this.binary_data = binary_data;
 		this.comments = comments;
+	}	
+
+	public UploadNomTemplateShipperBean(BigDecimal idn_nom_template_contract, String shipperGroupId, String short_name,
+			String contractId, String operation_desc, String document_name, byte[] binary_data, String comments) {
+		super();
+		this.idn_nom_template_contract = idn_nom_template_contract;
+		this.shipperGroupId = shipperGroupId;
+		this.short_name = short_name;
+		this.contractId = contractId;
+		this.operation_desc = operation_desc;
+		this.document_name = document_name;
+		this.binary_data = binary_data;
+		this.comments = comments;
 	}
-	
-	
 
 	public BigDecimal getIdn_nom_template_contract() {
 		return idn_nom_template_contract;
@@ -92,12 +104,20 @@ public class UploadNomTemplateShipperBean extends UserAudBean implements Seriali
 		this.comments = comments;
 	}
 
+	public String getShort_name() {
+		return short_name;
+	}
+
+	public void setShort_name(String short_name) {
+		this.short_name = short_name;
+	}
+
 	@Override
 	public String toString() {
 		return "UploadNomTemplateShipperBean [idn_nom_template_contract=" + idn_nom_template_contract
-				+ ", shipperGroupId=" + shipperGroupId + ", contractId=" + contractId + ", operation_desc="
-				+ operation_desc + ", document_name=" + document_name + ", binary_data=" + Arrays.toString(binary_data)
-				+ ", comments=" + comments + "]";
+				+ ", shipperGroupId=" + shipperGroupId + ", short_name=" + short_name + ", contractId=" + contractId
+				+ ", operation_desc=" + operation_desc + ", document_name=" + document_name + ", binary_data="
+				+ Arrays.toString(binary_data) + ", comments=" + comments + "]";
 	}
 
 }

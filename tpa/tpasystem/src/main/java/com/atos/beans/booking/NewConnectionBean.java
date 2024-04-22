@@ -18,6 +18,7 @@ public class NewConnectionBean implements Serializable {
 	private BigDecimal shipperId;
 	private String shipperCode;
 	private String shipperName;
+	private String shortName;
 	private BigDecimal operationFileId;
 	private String xlsFileName;
 	private StreamedContent xlsFile;
@@ -29,7 +30,8 @@ public class NewConnectionBean implements Serializable {
 		this.submittedTimestamp = null;
 		this.shipperId = null;
 		this.shipperCode = null;
-		this.shipperName = null;		
+		this.shipperName = null;
+		this.shortName = null;
 		this.operationFileId = null;
 		this.xlsFileName = null;
 		this.xlsFile = null;
@@ -76,6 +78,14 @@ public class NewConnectionBean implements Serializable {
 		this.shipperName = shipperName;
 	}
 	
+	public String getShortName() {
+		return shortName;
+	}
+
+	public void setShortName(String shortName) {
+		this.shortName = shortName;
+	}
+
 	public BigDecimal getOperationFileId() {
 		return operationFileId;
 	}
@@ -112,8 +122,8 @@ public class NewConnectionBean implements Serializable {
 	public String toString() {
 		return "NewConnectionBean [capacityRequestId=" + capacityRequestId + ", submittedTimestamp="
 				+ submittedTimestamp + ", shipperId=" + shipperId + ", shipperCode=" + shipperCode + ", shipperName="
-				+ shipperName + ", operationFileId=" + operationFileId + ", xlsFileName=" + xlsFileName + ", xlsFile="
-				+ xlsFile + ", pdfFile=" + pdfFile + "]";
+				+ shipperName + ", shortName=" + shortName + ", operationFileId=" + operationFileId + ", xlsFileName="
+				+ xlsFileName + ", xlsFile=" + xlsFile + ", pdfFile=" + pdfFile + "]";
 	}
 	
 	

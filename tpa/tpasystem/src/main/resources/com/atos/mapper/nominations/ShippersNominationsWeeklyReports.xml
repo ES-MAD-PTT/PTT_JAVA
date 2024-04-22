@@ -7,7 +7,7 @@
 
    <select id="selectShippersIds" resultType="com.atos.beans.ComboFilterNS">
 		
-	SELECT tuser.idn_user_group as key, tuser.user_group_id as value
+	SELECT tuser.idn_user_group as key, tuser.short_name as value
     FROM tpa_tuser_group tuser
     WHERE tuser.idn_user_group_type = (SELECT idn_user_group_type 
 	         FROM tpa_tuser_group_type 
@@ -19,7 +19,8 @@
         <result property="gas_day" column="gas_day" />
 		<result property="user_group_id" column="user_group_id"/>
 		<result property="user_group_name" column="user_group_name"/>
-        <result property="idn_user_group" column="idn_user_group"/>   
+        <result property="idn_user_group" column="idn_user_group"/>
+        <result property="shortName" column="short_name"/>   
         <result property="contracted_energy" column="contracted_energy"/>   
         <result property="nominated_energy" column="nominated_energy"/>  
         <result property="overusage" column="overusage"/>   
@@ -237,7 +238,7 @@
     
   Consulta AS
   (
-  SELECT wc.gas_day, ug.user_group_id, ug.user_group_name, ug.idn_user_group,
+  SELECT wc.gas_day, ug.user_group_id, ug.user_group_name, ug.idn_user_group,  ug.short_name,
          wc.contracted_energy,      
          wn.nom_entry + wn.nom_exit AS nominated_energy,
          greatest((wn.nom_entry + wn.nom_exit)- wc.contracted_energy,0) AS overusage,
@@ -264,7 +265,7 @@
      AND wt.imbalance_type = 'NEGATIVE'
      AND wt.imbalance_type = decode(substr(wn.nom_entry - wn.nom_exit - wn.min_inv - wn.sv,1,1),'-','NEGATIVE','POSITIVE') 
    UNION ALL
-   SELECT wc.gas_day, ug.user_group_id, ug.user_group_name, ug.idn_user_group,
+   SELECT wc.gas_day, ug.user_group_id, ug.user_group_name, ug.idn_user_group,  ug.short_name,
          wc.contracted_energy,      
          wn.nom_entry + wn.nom_exit AS nominated_energy, 
          greatest((wn.nom_entry + wn.nom_exit)- wc.contracted_energy,0) AS overusage,  
@@ -290,7 +291,7 @@
      AND wt.imbalance_type = 'POSITIVE'
      AND wt.imbalance_type = decode(substr(wn.nom_entry - wn.nom_exit - wn.min_inv - wn.sv,1,1),'-','NEGATIVE','POSITIVE')
      )   
-     SELECT gas_day, user_group_id, user_group_name, idn_user_group,
+     SELECT gas_day, user_group_id, user_group_name, idn_user_group, short_name,
          contracted_energy, 
          nominated_energy,
          overusage,

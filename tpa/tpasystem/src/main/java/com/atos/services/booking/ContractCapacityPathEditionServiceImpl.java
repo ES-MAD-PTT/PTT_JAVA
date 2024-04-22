@@ -1,7 +1,6 @@
 package com.atos.services.booking;
 
 import java.math.BigDecimal;
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -11,7 +10,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.TreeMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,16 +18,13 @@ import org.springframework.stereotype.Service;
 import com.atos.beans.ComboFilterNS;
 import com.atos.beans.booking.ContractCapacityConnectionPathsBean;
 import com.atos.beans.booking.ContractCapacityPathAreaValuesBean;
-import com.atos.beans.booking.ContractCapacityPathBean;
 import com.atos.beans.booking.ContractCapacityPathDetailBean;
 import com.atos.beans.booking.ContractCapacityPathEditionBean;
 import com.atos.beans.booking.ContractCapacityPathEditionDatesBean;
 import com.atos.beans.booking.ContractCapacityPathEntryExitBean;
 import com.atos.beans.booking.ContractCapacityPathInsertBean;
 import com.atos.beans.booking.ContractCapacityPathPeriodBean;
-import com.atos.beans.booking.ContractCapacityPathValuesBean;
 import com.atos.filters.booking.ContractCapacityPathFilter;
-import com.atos.filters.tariff.TariffChargeReportFilter;
 import com.atos.mapper.booking.ContractCapacityPathMapper;
 
 @Service("contractCapacityPathEditionService")
@@ -315,6 +310,11 @@ public class ContractCapacityPathEditionServiceImpl implements ContractCapacityP
 		if(list_shipper_code.size()>0) {
 			shipper_code = list_shipper_code.get(0);
 		}
+		List<String> list_shipper_short_name = ccpMapper.getShipperShortName(filters);
+		String shipper_short_name = "";
+		if(list_shipper_short_name.size()>0) {
+			shipper_short_name = list_shipper_short_name.get(0);
+		}
 		List<String> list_contract_code = ccpMapper.getContractCode(filters);
 		String contract_code = "";
 		if(list_contract_code.size()>0) {
@@ -340,6 +340,7 @@ public class ContractCapacityPathEditionServiceImpl implements ContractCapacityP
 			
 			bean.setIdn_shipper(filters.getIdn_shipper());
 			bean.setShipper_code(shipper_code);
+			bean.setShortName(shipper_short_name);
 			bean.setIdn_booking(filters.getIdn_booking());
 			bean.setContract_code(contract_code);
 			bean.setIdn_area_orig(filters.getIdn_area_orig());

@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlRootElement;
+
 import com.atos.beans.UserAudBean;
 
 @XmlRootElement(name = "AreaQualityPerShipperBean")
@@ -21,6 +22,7 @@ public class AreaQualityPerShipperBean extends UserAudBean implements Serializab
 	private BigDecimal idn_user_group;
 	private String user_group_id;
 	private String user_group_name;
+	private String shortName;
 	private String parameterCode1;
 	private String parameterCode2;
 	private BigDecimal wi_min;
@@ -36,9 +38,9 @@ public class AreaQualityPerShipperBean extends UserAudBean implements Serializab
 
 	public AreaQualityPerShipperBean(BigDecimal idn_area, String area_code, String area_desc,
 			BigDecimal idn_area_gas_quality, Date start_date_gas_Quality, BigDecimal idn_user_group,
-			BigDecimal wi_min, BigDecimal wi_max, BigDecimal hv_min, BigDecimal hv_max, String parameterCode1, String parameterCode2,
-			String user_group_id, String user_group_name, List<AreaQualityPerShipperDetailsBean> details,
-			List<AreaQualityPerShipperDetailsBean> details2) {
+			String user_group_id, String user_group_name, String shortName, String parameterCode1,
+			String parameterCode2, BigDecimal wi_min, BigDecimal wi_max, BigDecimal hv_min, BigDecimal hv_max,
+			List<AreaQualityPerShipperDetailsBean> details, List<AreaQualityPerShipperDetailsBean> details2) {
 		super();
 		this.idn_area = idn_area;
 		this.area_code = area_code;
@@ -48,6 +50,7 @@ public class AreaQualityPerShipperBean extends UserAudBean implements Serializab
 		this.idn_user_group = idn_user_group;
 		this.user_group_id = user_group_id;
 		this.user_group_name = user_group_name;
+		this.shortName = shortName;
 		this.parameterCode1 = parameterCode1;
 		this.parameterCode2 = parameterCode2;
 		this.wi_min = wi_min;
@@ -57,6 +60,8 @@ public class AreaQualityPerShipperBean extends UserAudBean implements Serializab
 		this.details = details;
 		this.details2 = details2;
 	}
+
+
 
 	public BigDecimal getIdn_area() {
 		return idn_area;
@@ -112,6 +117,14 @@ public class AreaQualityPerShipperBean extends UserAudBean implements Serializab
 
 	public void setUser_group_id(String user_group_id) {
 		this.user_group_id = user_group_id;
+	}
+
+	public String getShortName() {
+		return shortName;
+	}
+
+	public void setShortName(String shortName) {
+		this.shortName = shortName;
 	}
 
 	public String getUser_group_name() {

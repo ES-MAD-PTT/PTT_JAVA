@@ -17,7 +17,8 @@ public class ReleaseCapacityManagementBean extends UserAudBean implements Serial
 	private BigDecimal capacityRequestId;
 	private String requestCode;
 	private Date submittedTimestamp;
-	private BigDecimal shipperIdFrom; 
+	private BigDecimal shipperIdFrom;
+	private BigDecimal shortName;
 	private String shipperCodeFrom;
 	private BigDecimal contractIdFrom;
 	private String contractCodeFrom;
@@ -44,6 +45,7 @@ public class ReleaseCapacityManagementBean extends UserAudBean implements Serial
 		this.submittedTimestamp = null;
 		this.shipperIdFrom = null; 
 		this.shipperCodeFrom = null;
+		this.shortName = null;
 		this.contractIdFrom = null;
 		this.contractCodeFrom = null;
 		this.detailsFrom = null;
@@ -80,6 +82,14 @@ public class ReleaseCapacityManagementBean extends UserAudBean implements Serial
 
 	public void setShipperIdFrom(BigDecimal shipperIdFrom) {
 		this.shipperIdFrom = shipperIdFrom;
+	}
+
+	public BigDecimal getShortName() {
+		return shortName;
+	}
+
+	public void setShortName(BigDecimal shortName) {
+		this.shortName = shortName;
 	}
 
 	public String getShipperCodeFrom() {
@@ -201,12 +211,12 @@ public class ReleaseCapacityManagementBean extends UserAudBean implements Serial
 	@Override
 	public String toString() {
 		return "ReleaseCapacityManagementBean [capacityRequestId=" + capacityRequestId + ", requestCode=" + requestCode
-				+ ", submittedTimestamp=" + submittedTimestamp + ", shipperIdFrom=" + shipperIdFrom
-				+ ", shipperCodeFrom=" + shipperCodeFrom + ", contractIdFrom=" + contractIdFrom + ", contractCodeFrom="
-				+ contractCodeFrom + ", detailsFrom=" + detailsFrom + ", statusCode=" + statusCode + ", action="
-				+ action + ", shipperIdTo=" + shipperIdTo + ", shipperCodeTo=" + shipperCodeTo + ", contractIdTo="
-				+ contractIdTo + ", contractCodeTo=" + contractCodeTo + ", detailsTo=" + detailsTo + ", idn_system="
-				+ idn_system + ", toOperator=" + toOperator + "]";
+				+ ", submittedTimestamp=" + submittedTimestamp + ", shipperIdFrom=" + shipperIdFrom + ", shortName="
+				+ shortName + ", shipperCodeFrom=" + shipperCodeFrom + ", contractIdFrom=" + contractIdFrom
+				+ ", contractCodeFrom=" + contractCodeFrom + ", detailsFrom=" + detailsFrom + ", statusCode="
+				+ statusCode + ", action=" + action + ", shipperIdTo=" + shipperIdTo + ", shipperCodeTo="
+				+ shipperCodeTo + ", contractIdTo=" + contractIdTo + ", contractCodeTo=" + contractCodeTo
+				+ ", detailsTo=" + detailsTo + ", idn_system=" + idn_system + ", toOperator=" + toOperator + "]";
 	}
 		
 }

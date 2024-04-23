@@ -856,7 +856,7 @@
 						<h:outputText value="#{item.fileName}" />
 					</p:column>
 				</p:dataTable>
-				<p:panelGrid>
+				<p:panelGrid rendered="#{OSGRManagementView.mapAllActions[incid.idnAction].actionCode ne 'FIX_ORIG_SHIP'}">
 					<p:row>
 		       			<p:column>
 							<p:commandButton value="#{msg['save']}" style="float: right; vertical-align: bottom" 
@@ -865,14 +865,14 @@
 						</p:column>
 					</p:row>
 				</p:panelGrid>
-				<p:panelGrid>
+				<p:panelGrid rendered="#{OSGRManagementView.mapAllActions[incid.idnAction].actionCode eq 'FIX_ORIG_SHIP'}">
 					<p:row>
 		       			<p:column>
+		       				<p:commandButton value="#{msg['osrg_man_reject']}" style="float: right; vertical-align: bottom" 
+								actionListener="#{OSGRManagementView.acceptRejectAction('KO')}" 
+								update="#{p:component('incidents1')},nextStatusFormId"/>
 							<p:commandButton value="#{msg['osrg_man_accept']}" style="float: right; vertical-align: bottom" 
 								actionListener="#{OSGRManagementView.acceptRejectAction('OK')}" 
-								update="#{p:component('incidents1')},nextStatusFormId"/>
-							<p:commandButton value="#{msg['osrg_man_reject']}" style="float: right; vertical-align: bottom" 
-								actionListener="#{OSGRManagementView.acceptRejectAction('KO')}" 
 								update="#{p:component('incidents1')},nextStatusFormId"/>
 						</p:column>
 					</p:row>

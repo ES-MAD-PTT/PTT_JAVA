@@ -575,8 +575,8 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 		ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication().getResourceBundle(FacesContext.getCurrentInstance(),"msg");
     	String summaryMsg = msgs.getString("saving_data_error");
     	String errorMsg = null;
-		if(responseValue.equals("OK") && selected != null && selected.getMultiShippers().size() < 1) {
-    		errorMsg = msgs.getString("osrg_man_mandatoryOneShipper");
+    	if(responseValue.equals("OK") && selected != null && selected.getFilesAction().size() < 1) {
+    		errorMsg = msgs.getString("osrg_man_mandatoryOneFile");
     		getMessages().addMessage(Constants.head_menu[6],
 					new MessageBean(Constants.ERROR, summaryMsg, errorMsg, Calendar.getInstance().getTime()));
 	    	return;
@@ -584,12 +584,11 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 		try {
 			if(selected != null) {
 				int res = service.acceptRejectAction(selected, responseValue, getUser());
-				if(res != 1) {
-		    		errorMsg = msgs.getString("osgr_man_errorChangeAction");
-		    		getMessages().addMessage(Constants.head_menu[6],
-							new MessageBean(Constants.ERROR, summaryMsg, errorMsg, Calendar.getInstance().getTime()));
-			    	return;
-				}
+				if(res != 1) { errorMsg = msgs.getString("osgr_man_errorChangeAction");
+					 getMessages().addMessage(Constants.head_menu[6], new
+					 MessageBean(Constants.ERROR, summaryMsg, errorMsg,
+					 Calendar.getInstance().getTime())); return; 
+				} 
 			}
 		} catch (Exception e) {
 			errorMsg = e.getMessage();

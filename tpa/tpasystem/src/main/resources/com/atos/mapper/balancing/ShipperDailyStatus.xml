@@ -27,16 +27,17 @@
     
 	<!-- Para hacer consultas, el shipper no tendria por que estar vigente. -->
     <select id="selectShipperId" resultType="com.atos.beans.ComboFilterNS">
-		select tgr.idn_user_group as key, tgr.user_group_id as value
+		select tgr.idn_user_group as key, tgr.short_name as value
 		from tpa_tuser_group tgr
 		where tgr.idn_user_group_type = (select idn_user_group_type from tpa_tuser_group_type where type_code = 'SHIPPER')
-		order by upper(tgr.user_group_id) asc
+		order by upper(tgr.short_name) asc
     </select>
 	
 	<resultMap type="com.atos.beans.balancing.ShipperDailyStatusBean" id="ShipperDailyStatus">
         <!-- <id property="allocationDataId" column="idn_allocation_data" /> -->
 		<result property="gasDay" column="gas_day"/>
         <result property="shipperCode" column="shipper_code"/>
+        <result property="shortName" column="short_name"/>
         <result property="contractId" column="idn_contract"/>
         <result property="contractCode" column="contract_code"/>
         <result property="isTotal" column="is_total"/>
@@ -114,6 +115,7 @@
 		allocation_zone_concept AS
 		 (SELECT b.gas_day,
 		         (SELECT ug.user_group_id FROM tpa_tuser_group ug WHERE ug.idn_user_group = c.idn_user_group) AS shipper_code,
+		         (SELECT ug.short_name FROM tpa_tuser_group ug WHERE ug.idn_user_group = c.idn_user_group) AS short_name,
 		         c.contract_code,
 		         ad.idn_contract,
 		         (SELECT z.zone_code FROM tpa_tzone z WHERE z.idn_zone = ad.idn_zone) || '#' || nc.concept_code AS aggregation,
@@ -134,6 +136,7 @@
 		SELECT *
 		  FROM (SELECT gas_day,
 		               shipper_code,
+		               short_name,
 		               contract_code,
 		               idn_contract,
 		               'N' AS is_total,
@@ -147,6 +150,7 @@
 		       <!-- Subtotals (aggregations) -->
 		        SELECT gas_day,
 		               shipper_code,
+		               short_name,
 		               'TOTAL' AS contract_code,
 		               NULL AS idn_contract,
 		               'Y' AS is_total,
@@ -156,6 +160,7 @@
 		          FROM allocation_zone_concept
 		         GROUP BY gas_day,
 		                  shipper_code,
+		                  short_name,
 		                  aggregation)
 		pivot (SUM(allocated_value) FOR aggregation IN('EAST#EOTD_Park' AS e_eotd_park,
 		                                          'WEST#EOTD_Park' AS w_eotd_park,

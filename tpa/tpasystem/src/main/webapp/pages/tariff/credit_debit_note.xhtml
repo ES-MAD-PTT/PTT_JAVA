@@ -160,7 +160,13 @@
 							filterMatchMode="contains"
 							filterBy="#{creditDebitNote.shipper}">
 							<h:outputText value="#{creditDebitNote.shipper}"/>								
-						</p:column>						
+						</p:column>
+						<p:column headerText="#{msg['creditDebitNote_Shipper_short_name']}"
+							style="width: 55px; text-align: center;" sortBy="#{creditDebitNote.shortName}"
+							filterMatchMode="contains"
+							filterBy="#{creditDebitNote.shortName}">
+							<h:outputText value="#{creditDebitNote.shortName}"/>								
+						</p:column>							
 						
 						<p:column headerText="#{msg['creditDebitNote_Month_Year']}"
 							style="width: 55px; text-align: center;" sortBy="#{creditDebitNote.monthYear}"

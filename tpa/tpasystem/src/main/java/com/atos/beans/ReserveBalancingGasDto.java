@@ -23,6 +23,8 @@ public class ReserveBalancingGasDto implements Serializable {
 		private BigDecimal idnUserGroup;
 		//@Column(name="USER_GROUP_ID")
 		private String userGroupId;
+		//@Column(name="short_name")
+		private String shortName;
 		//@Column(name="IDN_RESBAL_CONTRACT")
 		private BigDecimal idnResbalContract;
 		//@Column(name="CONTRACT_CODE")
@@ -45,6 +47,7 @@ public class ReserveBalancingGasDto implements Serializable {
 		columToProp.put("IDN_RESBAL_FORECAST_FILE", "idnResbalForecastFile");
 		columToProp.put("IDN_USER_GROUP", "idnUserGroup");
 		columToProp.put("USER_GROUP_ID", "userGroupId");
+		columToProp.put("short_name", "shortName");
 		columToProp.put("IDN_RESBAL_CONTRACT", "idnResbalContract");
 		columToProp.put("CONTRACT_CODE", "contractCode");
 		columToProp.put("MONTH_YEAR", "monthYear");
@@ -73,6 +76,16 @@ public class ReserveBalancingGasDto implements Serializable {
 		public void setUserGroupId(String userGroupId) {
 			this.userGroupId = userGroupId;
 		}
+		public String getShortName() {
+			return shortName;
+		}
+
+
+		public void setShortName(String shortName) {
+			this.shortName = shortName;
+		}
+
+
 		public BigDecimal getIdnResbalContract() {
 			return idnResbalContract;
 		}

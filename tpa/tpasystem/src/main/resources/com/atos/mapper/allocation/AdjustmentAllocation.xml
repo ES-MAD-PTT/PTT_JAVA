@@ -92,6 +92,7 @@
 		SELECT al.gas_day as gasDay,
 		       al.idn_shipper as idnShipper,
 		       (SELECT ug.user_group_id FROM tpa_tuser_group ug WHERE ug.idn_user_group = al.idn_shipper) AS shipperCode,
+		       (SELECT ug.short_name FROM tpa_tuser_group ug WHERE ug.idn_user_group = al.idn_shipper) AS shortName,
 		       al.idn_zone as idnZone,
 		       (SELECT z.zone_code FROM tpa_tzone z WHERE z.idn_zone = al.idn_zone) AS zoneCode,
 		       SUM(al.allocated_value) AS imbalanceStock,
@@ -134,7 +135,7 @@
     </select>
 
     <select id="selectShipperId" resultType="com.atos.beans.ComboFilterNS">
-		select tgr.idn_user_group as key, tgr.user_group_id as value
+		select tgr.idn_user_group as key, tgr.short_name as value
 		from tpa_tuser_group tgr
 		where tgr.idn_user_group_type = (select idn_user_group_type from tpa_tuser_group_type where type_code = 'SHIPPER')
 		order by upper(tgr.user_group_id) asc

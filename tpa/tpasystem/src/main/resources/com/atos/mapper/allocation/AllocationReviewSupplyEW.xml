@@ -60,7 +60,7 @@
     -->
 	<!-- Para hacer consultas, el punto no tendria por que estar vigente. -->
     <select id="selectShipperId" resultType="com.atos.beans.ComboFilterNS">
-		select tgr.idn_user_group as key, tgr.user_group_id as value
+		select tgr.idn_user_group as key, tgr.short_name as value
 		from tpa_tuser_group tgr
 		where tgr.idn_user_group_type = (select idn_user_group_type from tpa_tuser_group_type where type_code = 'SHIPPER')
 		order by upper(tgr.user_group_id) asc
@@ -104,7 +104,8 @@
 		<result property="gasDay" column="gas_day"/>
 		<result property="shipperId" column="idn_user_group"/>
         <result property="shipperCode" column="user_group_id"/>
-        <result property="contractId" column="idn_contract"/> 
+        <result property="contractId" column="idn_contract"/>
+        <result property="shortName" column="short_name"/> 
         <result property="contractCode" column="contract_code"/>   
         <result property="zoneId" column="idn_zone"/>
         <result property="zoneCode" column="zone_code"/>
@@ -187,6 +188,7 @@
 			       tal.gas_day,
 			       tgr.idn_user_group,
 			       tgr.user_group_id,
+			       tgr.short_name,
 			       tcon.idn_contract,
 			       tcon.contract_code,
 		           tdata.idn_zone,

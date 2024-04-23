@@ -7,7 +7,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -30,19 +29,12 @@ import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.primefaces.context.RequestContext;
 
 import com.atos.beans.MessageBean;
-import com.atos.beans.allocation.AllocationBean;
 import com.atos.beans.allocation.AllocationIntradayBean;
 import com.atos.beans.allocation.AllocationIntradayDetailBean;
-import com.atos.beans.allocation.AllocationReportDetailDto;
-import com.atos.beans.allocation.AllocationReportDto;
 import com.atos.exceptions.ValidationException;
-import com.atos.filters.allocation.AllocRepQryFilter;
 import com.atos.filters.allocation.AllocationIntradayFilter;
-import com.atos.filters.allocation.AllocationManagementFilter;
-import com.atos.filters.nominations.IntradayNomSummaryFilter;
 import com.atos.services.allocation.AllocationIntradayService;
 import com.atos.services.allocation.AllocationManagementService;
 import com.atos.utils.Constants;
@@ -302,7 +294,7 @@ public class AllocationIntradayView extends CommonView {
 						cell.setCellValue("");
 					}
 
-					if (j < 7 ) { // Estas
+					if (j < 8 ) { // Estas
 																					// columnas
 																					// deben
 																					// ser

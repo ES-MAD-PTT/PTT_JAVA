@@ -9,6 +9,7 @@
 
 		<result column="idn_tariff_note" property="noteId" />
 		<result column="shipper" property="shipper" />
+		<result property="shortName" column="short_name"/>
 		<result column="idn_user_group" property="shipperId" />
 		<result column="month_year" property="monthYear" />
 		<result column="cndn_id" property="cndnId" />
@@ -44,7 +45,7 @@
 
 	<select id="selectShippersCombo"
 		resultType="com.atos.beans.ComboFilterNS">
-		SELECT tuser.idn_user_group as key, tuser.user_group_id as
+		SELECT tuser.idn_user_group as key, tuser.short_name as
 		value
 		FROM tpa_tuser_group tuser
 		WHERE tuser.idn_user_group_type =
@@ -159,7 +160,7 @@
 	<select id="selectCreditDebitNotes"
 		parameterType="com.atos.filters.tariff.CreditDebitNoteFilter"
 		resultMap="CreditDebitNote">
-		select tuser.idn_user_group idn_user_group, tuser.user_group_id Shipper,
+		select tuser.idn_user_group idn_user_group, tuser.user_group_id Shipper, tuser.short_name short_name,
 		tn.idn_tariff_note idn_tariff_note,
 		to_date('01/' || extract(month from tn.note_date) || '/' || extract (year from tn.note_date), 'DD/MM/YYYY') Month_Year,		
 		tn.tariff_note_code CNDN_ID,

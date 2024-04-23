@@ -184,7 +184,7 @@ public class AllocationReportPerPointView extends CommonView implements Serializ
 
 					// Se borran los valores de la primera columna.
 
-					if (j == 0 || j == 1 || j == 2 || j == 3 || j == 4) { // Estas
+					if (j == 0 || j == 1 || j == 2 || j == 3 || j == 4 || j == 5) { // Estas
 																					// columnas
 																					// deben
 																					// ser

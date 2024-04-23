@@ -25,6 +25,7 @@ public class AllocationBean extends UserAudBean implements Serializable {
 	private Date gasDay;
 	private BigDecimal shipperId;
 	private String shipperCode;
+	private String shortName;
 	private BigDecimal contractId;
 	private String contractCode; 
 	private BigDecimal nomPointId;
@@ -58,6 +59,7 @@ public class AllocationBean extends UserAudBean implements Serializable {
 		this.shipperId = null;
 		this.shipperCode = null;
 		this.contractId = null;
+		this.shortName = null;
 		this.contractCode = null;
 		this.nomPointId = null;
 		this.nomPointCode = null;
@@ -114,6 +116,14 @@ public class AllocationBean extends UserAudBean implements Serializable {
 
 	public void setShipperCode(String shipperCode) {
 		this.shipperCode = shipperCode;
+	}
+
+	public String getShortName() {
+		return shortName;
+	}
+
+	public void setShortName(String shortName) {
+		this.shortName = shortName;
 	}
 
 	public BigDecimal getContractId() {
@@ -401,12 +411,12 @@ public class AllocationBean extends UserAudBean implements Serializable {
 	@Override
 	public String toString() {
 		return "AllocationBean [allocationDataId=" + allocationDataId + ", gasDay=" + gasDay + ", shipperId="
-				+ shipperId + ", shipperCode=" + shipperCode + ", contractId=" + contractId + ", contractCode="
-				+ contractCode + ", nomPointId=" + nomPointId + ", nomPointCode=" + nomPointCode + ", nomPointTypeCode="
-				+ nomPointTypeCode + ", zoneId=" + zoneId + ", zoneCode=" + zoneCode + ", areaId=" + areaId
-				+ ", areaCode=" + areaCode + ", nominationConceptId=" + nominationConceptId + ", nominationConceptDesc="
-				+ nominationConceptDesc + ", bookedCap=" + bookedCap + ", nominatedCap=" + nominatedCap
-				+ ", allocationTPA=" + allocationTPA + ", allocationChanged=" + allocationChanged
+				+ shipperId + ", shipperCode=" + shipperCode + ", shortName=" + shortName + ", contractId=" + contractId
+				+ ", contractCode=" + contractCode + ", nomPointId=" + nomPointId + ", nomPointCode=" + nomPointCode
+				+ ", nomPointTypeCode=" + nomPointTypeCode + ", zoneId=" + zoneId + ", zoneCode=" + zoneCode
+				+ ", areaId=" + areaId + ", areaCode=" + areaCode + ", nominationConceptId=" + nominationConceptId
+				+ ", nominationConceptDesc=" + nominationConceptDesc + ", bookedCap=" + bookedCap + ", nominatedCap="
+				+ nominatedCap + ", allocationTPA=" + allocationTPA + ", allocationChanged=" + allocationChanged
 				+ ", originalAllocationForReview=" + originalAllocationForReview + ", reviewedAllocation="
 				+ reviewedAllocation + ", reviewComments=" + reviewComments + ", allocationDiff=" + allocationDiff
 				+ ", allocationPerc=" + allocationPerc + ", statusCode=" + statusCode + ", reviewId=" + reviewId

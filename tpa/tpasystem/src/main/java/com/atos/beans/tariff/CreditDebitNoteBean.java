@@ -12,6 +12,7 @@ public class CreditDebitNoteBean extends UserAudBean implements Serializable{
 	
 	private BigDecimal noteId;
 	private String shipper;
+	private String shortName;
 	private BigDecimal shipperId;
 	private Date monthYear;
 	private String cndnId;
@@ -30,6 +31,7 @@ public class CreditDebitNoteBean extends UserAudBean implements Serializable{
 		super();
 		this.noteId = null;
 		this.shipper = null;
+		this.shortName = null;
 		this.shipperId = null;
 		this.monthYear = null;
 		this.cndnId = null;
@@ -45,11 +47,12 @@ public class CreditDebitNoteBean extends UserAudBean implements Serializable{
 		this.details = null;
 	}
 	
-	public CreditDebitNoteBean(BigDecimal noteId, String shipper, BigDecimal shipperId, Date monthYear, String cndnId, BigDecimal typeId, String type, String comments, String sent, BigDecimal idn_system, String username,
+	public CreditDebitNoteBean(BigDecimal noteId, String shipper, String shortName,BigDecimal shipperId, Date monthYear, String cndnId, BigDecimal typeId, String type, String comments, String sent, BigDecimal idn_system, String username,
 			boolean updated, boolean newBean, boolean checked, List<CreditDebitNoteDetailBean> details) {
 		super();
 		this.noteId = noteId;
 		this.shipper = shipper;
+		this.shortName = shortName;
 		this.shipperId = shipperId;
 		this.monthYear = monthYear;
 		this.cndnId = cndnId;
@@ -81,6 +84,14 @@ public class CreditDebitNoteBean extends UserAudBean implements Serializable{
 		this.shipper = shipper;
 	}
 	
+	public String getShortName() {
+		return shortName;
+	}
+
+	public void setShortName(String shortName) {
+		this.shortName = shortName;
+	}
+
 	public BigDecimal getShipperId() {
 		return shipperId;
 	}

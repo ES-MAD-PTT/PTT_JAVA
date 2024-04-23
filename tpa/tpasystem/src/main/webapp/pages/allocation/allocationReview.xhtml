@@ -59,7 +59,7 @@
 									<h:outputText value="#{msg['all_rev_gas_day']}" />
 								</p:column>
 								<p:column  style="font-weight: bold;">
-									<h:outputText value="#{msg['all_rev_shipper_code']}" />
+									<h:outputText value="#{msg['all_rev_shipper_short_name']}" />
 								</p:column>
 								<p:column  style="font-weight: bold;">
 									<h:outputText value="#{msg['all_rev_contract_code']}" />
@@ -226,6 +226,11 @@
 					       <p:column headerText="#{msg['all_rev_shipper_code']}" style="width: 100px;" sortBy="#{allocation.shipperCode}" 
 					       		rendered="#{not AllocationReviewView.isShipper}">
 					       		<h:outputText value="#{allocation.shipperCode}" />
+					       </p:column>
+					       
+					       <p:column headerText="#{msg['all_rev_shipper_short_name']}" style="width: 100px;" sortBy="#{allocation.shortName}" 
+					       		rendered="#{not AllocationReviewView.isShipper}">
+					       		<h:outputText value="#{allocation.shortName}" />
 					       </p:column>
 
 					       <p:column headerText="#{msg['all_rev_contract_code']}" style="width: 100px;" sortBy="#{allocation.contractCode}">

@@ -46,7 +46,7 @@
 									<h:outputText value="#{msg['adjust_alloc_end_date']}" />
 								</p:column>
 								<p:column style="font-weight: bold;">
-									<h:outputText value="#{msg['adjust_alloc_shipper']}" />
+									<h:outputText value="#{msg['all_rev_shipper_short_name']}" />
 								</p:column>
 
 								<p:column style="font-weight: bold;">
@@ -170,6 +170,9 @@
 
 					       <p:column headerText="#{msg['adjust_alloc_shipper_code']}">
 					       		<h:outputText value ="#{item.shipperCode}"/>
+					       </p:column>
+					       <p:column headerText="#{msg['all_rev_shipper_short_name']}">
+					       		<h:outputText value ="#{item.shortName}"/>
 					       </p:column>
 					       <p:column headerText="#{msg['adjust_alloc_zone']}" style="width:65px">
 					       		<h:outputText value ="#{item.zoneCode}"/>

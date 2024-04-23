@@ -13,6 +13,7 @@ public class ShipperDailyStatusBean implements Serializable {
 	private SimpleDateFormat sdf;			// Para construir el balanceId.
 	private Date gasDay;
 	private String shipperCode;
+	private String shortName;
 	private BigDecimal contractId;
 	private String contractCode;
 	private String isTotal;
@@ -45,6 +46,7 @@ public class ShipperDailyStatusBean implements Serializable {
 		sdf = new SimpleDateFormat("yyyyMMdd");
 		this.gasDay = null;
 		this.shipperCode = null;
+		this.shortName = null;
 		this.contractId = null;
 		this.contractCode = null;
 		this.isTotal = null;
@@ -106,6 +108,14 @@ public class ShipperDailyStatusBean implements Serializable {
 
 	public void setShipperCode(String shipperCode) {
 		this.shipperCode = shipperCode;
+	}
+
+	public String getShortName() {
+		return shortName;
+	}
+
+	public void setShortName(String shortName) {
+		this.shortName = shortName;
 	}
 
 	public BigDecimal getContractId() {
@@ -264,7 +274,7 @@ public class ShipperDailyStatusBean implements Serializable {
 	public String toCSVHeader() {
 		StringBuilder builder = new StringBuilder();
 		builder.append(
-				"gasDay;shipperCode;contractCode;eEotdPark;wEotdPark;ewEotdPark;eEotdMinInv;wEotdMinInv;ewEotdMinInv;eEotdBalGas;wEotdBalGas;ewEotdBalGas;eImbalanceStock;wImbalanceStock;ewImbalanceStock;eAccImbalanceStock;wAccImbalanceStock;ewAccImbalanceStock");
+				"gasDay;shipperCode;shortName;contractCode;eEotdPark;wEotdPark;ewEotdPark;eEotdMinInv;wEotdMinInv;ewEotdMinInv;eEotdBalGas;wEotdBalGas;ewEotdBalGas;eImbalanceStock;wImbalanceStock;ewImbalanceStock;eAccImbalanceStock;wAccImbalanceStock;ewAccImbalanceStock");
 		return builder.toString();
 	}
 
@@ -274,6 +284,7 @@ public class ShipperDailyStatusBean implements Serializable {
 		StringBuilder builder = new StringBuilder();
 		builder.append((gasDay==null ? "" : sdf.format(gasDay)) +";");
 		builder.append((shipperCode==null ? "" : shipperCode) +";");
+		builder.append((shortName==null ? "" : shortName) +";");
 		builder.append((contractCode==null ? "" : contractCode) +";");
 		builder.append((eEotdPark==null ? "" : eEotdPark.doubleValue()) +";");
 		builder.append((wEotdPark==null ? "" : wEotdPark.doubleValue()) +";");
@@ -297,11 +308,11 @@ public class ShipperDailyStatusBean implements Serializable {
 	@Override
 	public String toString() {
 		return "ShipperDailyStatusBean [sdf=" + sdf + ", gasDay=" + gasDay + ", shipperCode=" + shipperCode
-				+ ", contractId=" + contractId + ", contractCode=" + contractCode + ", isTotal=" + isTotal
-				+ ", eEotdPark=" + eEotdPark + ", wEotdPark=" + wEotdPark + ", ewEotdPark=" + ewEotdPark
-				+ ", eEotdMinInv=" + eEotdMinInv + ", wEotdMinInv=" + wEotdMinInv + ", ewEotdMinInv=" + ewEotdMinInv
-				+ ", eEotdBalGas=" + eEotdBalGas + ", wEotdBalGas=" + wEotdBalGas + ", ewEotdBalGas=" + ewEotdBalGas
-				+ ", eImbalanceStock=" + eImbalanceStock + ", wImbalanceStock=" + wImbalanceStock
+				+ ", shortName=" + shortName + ", contractId=" + contractId + ", contractCode=" + contractCode
+				+ ", isTotal=" + isTotal + ", eEotdPark=" + eEotdPark + ", wEotdPark=" + wEotdPark + ", ewEotdPark="
+				+ ewEotdPark + ", eEotdMinInv=" + eEotdMinInv + ", wEotdMinInv=" + wEotdMinInv + ", ewEotdMinInv="
+				+ ewEotdMinInv + ", eEotdBalGas=" + eEotdBalGas + ", wEotdBalGas=" + wEotdBalGas + ", ewEotdBalGas="
+				+ ewEotdBalGas + ", eImbalanceStock=" + eImbalanceStock + ", wImbalanceStock=" + wImbalanceStock
 				+ ", ewImbalanceStock=" + ewImbalanceStock + ", eAccImbalanceStock=" + eAccImbalanceStock
 				+ ", wAccImbalanceStock=" + wAccImbalanceStock + ", ewAccImbalanceStock=" + ewAccImbalanceStock + "]";
 	}

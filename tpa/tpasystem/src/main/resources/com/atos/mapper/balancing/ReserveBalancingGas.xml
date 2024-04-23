@@ -8,6 +8,7 @@
 		<id column="IDN_RESBAL_FORECAST_FILE" property="idnResbalForecastFile" />
 		<id column="IDN_USER_GROUP" property="idnUserGroup" />
 		<id column="USER_GROUP_ID" property="userGroupId" />
+		<id column="short_name" property="shortName" />
 		<id column="IDN_RESBAL_CONTRACT" property="idnResbalContract" />
 		<id column="CONTRACT_CODE" property="contractCode" />
 		<id column="MONTH_YEAR" property="monthYear" />
@@ -30,6 +31,7 @@
 		SELECT rff.idn_resbal_forecast_file,
 		ug.idn_user_group,
 		ug.user_group_id,
+		ug.short_name,
 		rbc.idn_resbal_contract,
 		rbc.contract_code,
 		rff.gas_month  month_year,
@@ -65,7 +67,7 @@
 		parameterType="BigDecimal">
 		WITH logged_user AS
 		(SELECT ug.idn_user_group,
-		ug.user_group_id,
+		ug.short_name,
 		ugt.type_code
 		FROM tpa_tuser u,
 		tpa_tuser_group ug,
@@ -74,21 +76,21 @@
 		AND u.idn_user_group = ug.idn_user_group
 		AND ug.idn_user_group_type = ugt.idn_user_group_type)
 		SELECT idn_user_group as key,
-		user_group_id as value
+		short_name as value
 		FROM (SELECT lu.idn_user_group,
-		lu.user_group_id
+		lu.short_name
 		FROM logged_user lu
 		WHERE lu.type_code = 'SHIPPER'
 		UNION
 		SELECT ug.idn_user_group,
-		ug.user_group_id
+		ug.short_name
 		FROM tpa_tuser_group ug,
 		tpa_tuser_group_type ugt
 		WHERE ug.idn_user_group_type = ugt.idn_user_group_type
 		AND ugt.type_code = 'SHIPPER'
 		AND EXISTS (SELECT 1 FROM logged_user lu WHERE lu.type_code !=
 		'SHIPPER'))
-		ORDER BY upper(user_group_id)
+		ORDER BY upper(short_name)
 	</select>
 
 	<select id="selectReserveBalId" resultType="com.atos.beans.ComboFilterNS"

@@ -18,6 +18,7 @@ public class AllocationReportDto implements Serializable {
 	protected Date gasDay;
 	protected String shipperCode;
 	protected String shipperName;
+	protected String shortName;
 	protected String contractCode;
 	protected String pointCode;
 	protected String pointTypeCode;
@@ -282,6 +283,14 @@ public class AllocationReportDto implements Serializable {
 		overusage = valor;
 	}
 
+	public String getShortName() {
+		return shortName;
+	}
+
+	public void setShortName(String shortName) {
+		this.shortName = shortName;
+	}
+
 	/**
 	 * devuelve la realacion entre columnas y propiedades.
 	 *
@@ -322,6 +331,8 @@ public class AllocationReportDto implements Serializable {
 		toStr.append(shipperCode);
 		toStr.append(',');
 		toStr.append(shipperName);
+		toStr.append(',');
+		toStr.append(shortName);
 		toStr.append(',');
 		toStr.append(contractCode);
 		toStr.append(',');

@@ -14,6 +14,7 @@ public class AccumulatedImbalanceAllocationBean implements Serializable {
 	private Date gasDay;
 	private BigDecimal idnShipper;
 	private String shipperCode;
+	private String shortName;
 	private BigDecimal idnZone;
 	private String zoneCode;
 	private BigDecimal accImbalanceMonth;
@@ -175,6 +176,14 @@ public class AccumulatedImbalanceAllocationBean implements Serializable {
 		this.finalAccImbalanceStock = finalAccImbalanceStock;
 	}
 
+	public String getShortName() {
+		return shortName;
+	}
+
+	public void setShortName(String shortName) {
+		this.shortName = shortName;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -305,12 +314,13 @@ public class AccumulatedImbalanceAllocationBean implements Serializable {
 	@Override
 	public String toString() {
 		return "AccumulatedImbalanceAllocationBean [gasDay=" + gasDay + ", idnShipper=" + idnShipper + ", shipperCode="
-				+ shipperCode + ", idnZone=" + idnZone + ", zoneCode=" + zoneCode + ", accImbalanceMonth="
-				+ accImbalanceMonth + ", accImbalanceMonthCorrection=" + accImbalanceMonthCorrection + ", isEditable="
-				+ isEditable + ", idn_active_system=" + idn_active_system + ", user=" + user + ", language=" + language
-				+ ", errorDesc=" + errorDesc + ", errorCode=" + errorCode + ", operator_comments=" + operator_comments
-				+ ", idnNominationConcept=" + idnNominationConcept + ", allocatedAdjust=" + allocatedAdjust
-				+ ", pendingAdjust=" + pendingAdjust + ", finalAccImbalanceStock=" + finalAccImbalanceStock + "]";
+				+ shipperCode + ", shortName=" + shortName + ", idnZone=" + idnZone + ", zoneCode=" + zoneCode
+				+ ", accImbalanceMonth=" + accImbalanceMonth + ", accImbalanceMonthCorrection="
+				+ accImbalanceMonthCorrection + ", isEditable=" + isEditable + ", idn_active_system="
+				+ idn_active_system + ", user=" + user + ", language=" + language + ", errorDesc=" + errorDesc
+				+ ", errorCode=" + errorCode + ", operator_comments=" + operator_comments + ", idnNominationConcept="
+				+ idnNominationConcept + ", allocatedAdjust=" + allocatedAdjust + ", pendingAdjust=" + pendingAdjust
+				+ ", finalAccImbalanceStock=" + finalAccImbalanceStock + "]";
 	}
 
 }

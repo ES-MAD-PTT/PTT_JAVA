@@ -11,6 +11,7 @@
 <id column="GAS_DAY" property="gasDay"/>
 <id column="SHIPPER_CODE" property="shipperCode"/>
 <id column="SHIPPER_NAME" property="shipperName"/>
+<id column="short_name" property="shortName"/>
 <id column="CONTRACT_CODE" property="contractCode"/>
 <id column="POINT_CODE" property="pointCode"/>
 <id column="POINT_TYPE_CODE" property="pointTypeCode"/>
@@ -185,6 +186,7 @@ SELECT ad.idn_allocation,
        ad.gas_day,
        ug.user_group_id AS shipper_code,
        ug.user_group_name AS shipper_name,
+       ug.short_name AS short_name,
        c.contract_code,
        sp.point_code,
        (SELECT x.type_code FROM tpa_tsystem_point_type x WHERE x.idn_system_point_type = sp.idn_system_point_type) point_type_code,
@@ -218,6 +220,7 @@ SELECT ad.idn_allocation,
           ad.gas_day,
           ug.user_group_id,
           ug.user_group_name,
+          ug.short_name,
           c.contract_code,
           sp.point_code,
           sp.idn_system_point_type
@@ -230,7 +233,7 @@ SELECT ad.idn_allocation,
 
 
     <select id="selectShipperId" resultType="com.atos.beans.ComboFilterNS">
-		select tgr.idn_user_group as key, tgr.user_group_id as value
+		select tgr.idn_user_group as key, tgr.short_name as value
 		from tpa_tuser_group tgr
 		where tgr.idn_user_group_type = (select idn_user_group_type from tpa_tuser_group_type where type_code = 'SHIPPER')
 		order by upper(tgr.user_group_id) asc

@@ -51,7 +51,7 @@
 							</p:row>
 							<p:row>
 								<p:column style="font-weight: bold;">
-									<h:outputText value="#{msg['res_bal_shipper_id']}" />
+									<h:outputText value="#{msg['res_bal_shipper_short_name']}" />
 								</p:column>
 
 								<p:column style="font-weight: bold;">
@@ -156,13 +156,19 @@
 										update=":msgs,#{p:component('newContractFormId')}"
 										onstart="PF('cargando').show()"	oncomplete="PF('cargando').hide();PF('w_newContractDlg').show();initCal3()" />	    									
 										</shiro:hasPermission>
-	</p:outputPanel>
-	</f:facet>
+							</p:outputPanel>
+							</f:facet>
 
 							<p:column headerText="#{msg['res_bal_shipper_id']}"
 								style="width: 100px;" 
 								rendered="#{not reserveBalancingGasView.isShipper}">
 								<h:outputText value="#{resBalFile.userGroupId}" />
+							</p:column>
+							
+							<p:column headerText="#{msg['res_bal_shipper_short_name']}"
+								style="width: 100px;" 
+								rendered="#{not reserveBalancingGasView.isShipper}">
+								<h:outputText value="#{resBalFile.shortName}" />
 							</p:column>
 
 							<p:column headerText="#{msg['res_bal_contract_id']}"
@@ -204,7 +210,7 @@
 				<p:panelGrid id="newBal" style="width=100%">
 					<p:row>
 						<p:column>
-							<p:outputLabel value="#{msg['bal_rep_shipper']}" />
+							<p:outputLabel value="#{msg['res_bal_shipper_short_name']}" />
 						</p:column>
 						<p:column>
 							<p:selectOneMenu id="newShipperId" 

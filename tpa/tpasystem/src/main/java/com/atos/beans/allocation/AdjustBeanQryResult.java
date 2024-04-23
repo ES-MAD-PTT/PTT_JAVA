@@ -12,6 +12,7 @@ public class AdjustBeanQryResult implements Serializable {
 	private static final long serialVersionUID = -4257893999847915883L;
 	private Date gasDay;
 	private String originShipper;
+	private String shortName;
 	private String originContract;
 	private String originZone;
 	private Double originValue;
@@ -251,6 +252,14 @@ public class AdjustBeanQryResult implements Serializable {
 		comments = valor;
 	}
 
+	public String getShortName() {
+		return shortName;
+	}
+
+	public void setShortName(String shortName) {
+		this.shortName = shortName;
+	}
+
 	/**
 	 * devuelve la realacion entre columnas y propiedades.
 	 *
@@ -281,6 +290,8 @@ public class AdjustBeanQryResult implements Serializable {
 		toStr.append(gasDay);
 		toStr.append(',');
 		toStr.append(originShipper);
+		toStr.append(',');
+		toStr.append(shortName);
 		toStr.append(',');
 		toStr.append(originContract);
 		toStr.append(',');

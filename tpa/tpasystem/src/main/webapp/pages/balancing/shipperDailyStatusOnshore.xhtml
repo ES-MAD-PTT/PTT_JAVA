@@ -30,9 +30,10 @@
 			<p:column rowspan="3" headerText="&lt;br&gt;&lt;br&gt;#{msg['shipp_daily_date']}&lt;br&gt;&lt;br&gt;&lt;br&gt;"	
 				style="min-width: 70px;max-width: 70px;font-size:16px;"/>
 			<p:column colspan="17" headerText="#{msg['shipp_daily_sum_pane']}" style="font-size:15px;"/>
-			</p:row>
+		</p:row>
 		<p:row>
 			<p:column rowspan="2" headerText="#{msg['shipp_daily_shipper']}" style="min-width: 125px;max-width: 125px;font-size:15px;" />
+			<p:column rowspan="2" headerText="#{msg['shipp_daily_shipper_short_name']}" style="min-width: 125px;max-width: 125px;font-size:15px;" />
 			<p:column rowspan="2" headerText="#{msg['shipp_daily_contract']}" style="min-width: 100px;max-width: 100px;font-size:15px;" />
 			<p:column colspan="3" headerText="#{msg['shipp_daily_EOTD_Park']}" style="font-size:15px;"/>
 			<p:column colspan="3" headerText="#{msg['shipp_daily_EOTD_Min_Inventory']}   #{msg['shipp_daily_mmbtud']}" 
@@ -77,6 +78,10 @@
 
        <p:column styleClass="#{shipperDaily.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 125px;max-width: 125px;">
        		<h:outputText value="#{shipperDaily.isTotal eq 'Y'? 'TOTAL: ' : ''}#{shipperDaily.shipperCode}"  />
+       </p:column>
+       
+       <p:column styleClass="#{shipperDaily.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 125px;max-width: 125px;">
+       		<h:outputText value="#{shipperDaily.isTotal eq 'Y'? 'TOTAL: ' : ''}#{shipperDaily.shortName}"  />
        </p:column>
 
        <p:column styleClass="#{shipperDaily.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 100px;max-width: 100px;">

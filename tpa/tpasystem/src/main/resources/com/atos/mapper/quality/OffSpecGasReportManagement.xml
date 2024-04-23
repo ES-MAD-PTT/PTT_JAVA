@@ -123,7 +123,7 @@
 	<select id="selectStatusIdFromStatusCodes" resultType="java.math.BigDecimal">
 	    SELECT DISTINCT r.idn_offspec_status 
 FROM tpa_toffspec_status r, tpa_toffspec_status_rule sr
-WHERE r.idn_offspec_status = sr.next_status 
+WHERE r.idn_offspec_status = sr.current_status 
 AND sr.ask_other_shippers = 'Y'
 	</select>
 	

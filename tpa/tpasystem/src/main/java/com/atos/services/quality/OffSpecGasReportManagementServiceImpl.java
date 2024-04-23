@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -187,6 +188,9 @@ public class OffSpecGasReportManagementServiceImpl implements OffSpecGasReportMa
 			for(OffSpecIncidentBean incid: tmpLIncidents) {
 				params.put("incidentId", incid.getIncidentId());
 				incid.setDiscloseResponses(osgrmMapper.selectDiscloseResponsesFromIncidentId(params));
+				if(incid.getOperatorComments() != null && !incid.getOperatorComments().isEmpty()) {
+					incid.setInitialComments(incid.getOperatorComments());
+				}
 			}
 		
 		return tmpLIncidents;
@@ -808,5 +812,26 @@ public class OffSpecGasReportManagementServiceImpl implements OffSpecGasReportMa
 	@Override
 	public List<OffSpecActionFileBean> selectActionFiles(OffSpecIncidentBean item) {
 		return osgrmMapper.selectActionFiles(item);
+	}
+
+	@Override
+	public Integer acceptRejectAction(OffSpecIncidentBean _incid, String responseValue, UserBean _user) throws Exception {
+		OffSpecResponseBean response = new  OffSpecResponseBean(_incid.getIncidentId(), _incid.getMultiShippers().get(0), OffSpecResponseBean.isRespondedYes, 
+				responseValue, new Date(), _incid.getNewComments(), _user.getIdn_user());
+		
+		// Se inserta un registro en la tabla de respuestas para el disclose.
+		int res = osgrmMapper.insertOffSpecResponse(response);
+		if(res!=1){
+    		throw new Exception("Error inserting into Off Specification Event Response table.");   		
+    	}
+		res = osgrmMapper.updateActionOffspec(_incid);
+		if(res!=1){
+    		throw new Exception("Error when changing action in " + _incid.getIncidentCode());   		
+    	}
+		//Insertamos los ficheros
+		for(OffSpecActionFileBean item : _incid.getFilesAction()) {
+			osgrmMapper.insertFileAction(item);
+		}
+		return res;
 	}
 }

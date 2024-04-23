@@ -29,7 +29,6 @@ import com.atos.beans.MessageBean;
 import com.atos.beans.quality.OffSpecIncidentBean;
 import com.atos.beans.quality.OffSpecResponseBean;
 import com.atos.beans.quality.OffSpecStatusBean;
-import com.atos.beans.scadaAlarms.EmergencyDiffDayBean;
 import com.atos.exceptions.ValidationException;
 import com.atos.filters.quality.OffSpecGasReportManagementFilter;
 import com.atos.services.quality.OffSpecGasReportResponseService;
@@ -132,9 +131,10 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 	//	this.scRequestFlowDiagFile = scRequestFlowDiagFile;
 	//}
 
-	public boolean isDisclosed(BigDecimal _statusId) {
+	public boolean isDisclosed(OffSpecIncidentBean item) {
 		//return (disclosedStatusId.compareTo(_statusId)==0 || disclosedStatusIdNewFlow.compareTo(_statusId)==0);
-		return (disclosedStatusIds.contains(_statusId));
+		boolean distinctShipper = item.getOriginatorShipperId().compareTo(getUser().getIdn_user_group()) != 0;
+		return (distinctShipper && disclosedStatusIds.contains(item.getStatusId()));
 	}
 	
 	@PostConstruct

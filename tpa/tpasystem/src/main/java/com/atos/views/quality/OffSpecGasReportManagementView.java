@@ -37,6 +37,7 @@ import org.primefaces.model.UploadedFile;
 import com.atos.beans.ComboFilterNS;
 import com.atos.beans.FileBean;
 import com.atos.beans.MessageBean;
+import com.atos.beans.UserBean;
 import com.atos.beans.quality.OffSpecActionBean;
 import com.atos.beans.quality.OffSpecActionFileBean;
 import com.atos.beans.quality.OffSpecFileBean;
@@ -181,6 +182,14 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 
 	public void setNewEvent(OffSpecIncidentBean newEvent) {
 		this.newEvent = newEvent;
+	}
+
+	public Map<BigDecimal, OffSpecActionBean> getMapAllActions() {
+		return mapAllActions;
+	}
+
+	public void setMapAllActions(Map<BigDecimal, OffSpecActionBean> mapAllActions) {
+		this.mapAllActions = mapAllActions;
 	}
 
 	public StreamedContent getScEventFlowDiagFile() {
@@ -554,6 +563,48 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 		selected.setNewStatusId(item.getStatusId());
 		selected.setIdnAction(item.getIdnAction());
 		selected.setIncidentCode(item.getIncidentCode());
+		if(mapAllActions.get(selected.getIdnAction()).getActionCode().equals("FIX_ORIG_SHIP")) {
+			UserBean userShipper = getUser();
+			selected.setMultiShippers(new ArrayList<BigDecimal>());
+			selected.getMultiShippers().add(userShipper.getIdn_user_group());
+			selected.setGroupCode(userShipper.getUser_group_id());
+		}
+	}
+	
+	public void acceptRejectAction(String responseValue) {
+		ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication().getResourceBundle(FacesContext.getCurrentInstance(),"msg");
+    	String summaryMsg = msgs.getString("saving_data_error");
+    	String errorMsg = null;
+		if(responseValue.equals("OK") && selected != null && selected.getMultiShippers().size() < 1) {
+    		errorMsg = msgs.getString("osrg_man_mandatoryOneShipper");
+    		getMessages().addMessage(Constants.head_menu[6],
+					new MessageBean(Constants.ERROR, summaryMsg, errorMsg, Calendar.getInstance().getTime()));
+	    	return;
+    	}
+		try {
+			if(selected != null) {
+				int res = service.acceptRejectAction(selected, responseValue, getUser());
+				if(res != 1) {
+		    		errorMsg = msgs.getString("osgr_man_errorChangeAction");
+		    		getMessages().addMessage(Constants.head_menu[6],
+							new MessageBean(Constants.ERROR, summaryMsg, errorMsg, Calendar.getInstance().getTime()));
+			    	return;
+				}
+			}
+		} catch (Exception e) {
+			errorMsg = e.getMessage();
+    		getMessages().addMessage(Constants.head_menu[6],
+					new MessageBean(Constants.ERROR, summaryMsg, errorMsg, Calendar.getInstance().getTime()));
+	    	return;
+		}
+		summaryMsg = msgs.getString("osgr_man_updatedSuccessfully");
+		String[] params = { selected.getIncidentCode() };
+		String msg = super.getMessageResourceString("osgr_man_changeActionOK", params);
+		getMessages().addMessage(Constants.head_menu[3], new MessageBean(Constants.INFO, summaryMsg, msg, new Date()));
+		RequestContext context = RequestContext.getCurrentInstance();
+		context.execute("PF('nextStatusDlg').hide();");
+		items = service.search(filters, getUser());
+        updateIncidentInfo(hmAllStatus, items);
 	}
 	
 	public void onChangeAction() {
@@ -940,20 +991,11 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 		 return value;
 	 }
 	 
-	 public String answerShipperYesNo(OffSpecIncidentBean item) {
+	 public String answerShipperOriginatorYesNo(OffSpecIncidentBean item) {
 		 String value = "";
 		 if(item != null && item.getDiscloseResponses() != null && !item.getDiscloseResponses().isEmpty()) {
 			 value = item.getDiscloseResponses().stream()
 					 .anyMatch(obj -> "Y".equalsIgnoreCase(obj.getIsResponded())) ? "YES" : "NO";
-		 }
-		 return value;
-	 }
-	 
-	 public String answerOperatorYesNo(OffSpecIncidentBean item) {
-		 String value = "";
-		 if(item != null && item.getDiscloseResponses() != null && !item.getDiscloseResponses().isEmpty()) {
-			 value = item.getDiscloseResponses().stream()
-					 .anyMatch(obj -> obj.getOperatorComments() != null && !obj.getOperatorComments().isEmpty()) ? "YES" : "NO";
 		 }
 		 return value;
 	 }

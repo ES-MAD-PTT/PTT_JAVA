@@ -37,6 +37,17 @@ public class OffSpecResponseBean extends UserAudBean implements Serializable {
 	//CH706
 	private String operatorComments; // en realidad es Transporter Response comment
 	
+	public OffSpecResponseBean(BigDecimal incidentId, BigDecimal groupId, String isResponded, String responseValue, Date responseDate,
+			String userComments, BigDecimal userId) {
+		this.incidentId = incidentId;
+		this.groupId = groupId;
+		this.isResponded = isResponded;
+		this.responseValue = responseValue;
+		this.responseDate = responseDate;
+		this.userComments = userComments;
+		this.userId = userId;
+	}
+
 	public OffSpecResponseBean() {
 		this.incidentResponseId = null;
 		this.incidentId = null;

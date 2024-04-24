@@ -230,13 +230,13 @@
 				       	</p:column>
 				       	
 				       	<p:column headerText="#{msg['osgr_man_action']}"  style="width: 145px;">
-				       		<p:selectOneMenu id="group" value="#{incident.idnAction}" 
+				       		<p:selectOneMenu id="actionId" value="#{incident.idnAction}" 
 				       			autoWidth="fasle"  style="width:120px" 
 				       			rendered="#{incident.idnAction == null and OSGRManagementView.renderedAction(incident)}">
 			                    <f:selectItem itemLabel="Select One" itemValue=""/>
 			                    <f:selectItems value="#{OSGRManagementView.chargeActions.entrySet()}" var="entry" 
  											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
- 								<p:ajax oncomplete="PF('nextStatusDlg').show();PF('cargando').hide();" update="nextStatusFormId" onstart="PF('cargando').show()"
+ 								<p:ajax oncomplete="PF('cargando').hide();" update="nextStatusFormId" onstart="PF('cargando').show()"
  									listener="#{OSGRManagementView.updateSelected(incident)}"/>
 			                </p:selectOneMenu>
 			                <h:outputText value="#{incident.action}" rendered="#{incident.idnAction != null}"/>
@@ -250,7 +250,7 @@
 				       	<p:column headerText="#{msg['osgr_man_backToNormal']}" style="width: 120px;text-align:center;">
 				       		<h:outputText value="#{OSGRManagementView.notifiedYesNo(incident, 'BACK_NORMAL')}" />
 				       	</p:column>
-				       	<p:column headerText="#{msg['osgr_man_backToNormal']}" style="width: 120px;text-align:center;" rendered="#{OSGRManagementView.isShipper()}">
+				       	<p:column headerText="#{msg['osgr_man_fixIssueCausingOffspecgas']}" style="width: 120px;text-align:center;" rendered="#{OSGRManagementView.isShipper()}">
 				       		<h:outputText value="#{OSGRManagementView.notifiedYesNo(incident, 'FIX_ORIG_SHIP')}" />
 				       	</p:column>
 				       	<p:column headerText="#{msg['osgr_man_shipperAnswer']}" style="width: 70px;text-align:center;">
@@ -448,9 +448,9 @@
 			       	<p:column headerText="#{msg['osgr_man_fileName']}" style="width: 50px;" sortBy="#{response.fileName}">
 			       		<h:outputText value="#{response.fileName}" rendered="#{OSGRManagementView.showFile(response.fileOnResponse)}"/>
 			       	</p:column>
-			       	<p:column headerText="#{msg['osgr_man_file']}" style="width: 50px;"
+			       	<p:column headerText="#{msg['osgr_man_file']}" style="width: 100px;"
 			       				rendered="#{OSGRManagementView.mapAllActions[incid.idnAction].actionCode eq 'FIX_ORIG_SHIP'}">
-			       		<p:commandButton icon="ui-icon fa fa-envelope-o" update="filesActionFormId" value="#{msg['osrg_man_transporterFiles']}"
+			       		<p:commandButton icon="ui-icon fa fa-envelope-o" update="filesActionFormId" value="#{msg['osrg_man_shipperFiles']}"
 									onstart="PF('cargando').show()"	oncomplete="PF('cargando').hide(),PF('filesActionDlg').show()" style="float:right"
 									actionListener="#{OSGRManagementView.selectActionFiles}"/>
 			       	</p:column>
@@ -803,6 +803,8 @@
 		</p:dialog>
 		
 		<p:dialog id="nextStatusDialogId" header="#{msg['osgr_man_changeAction']}" widgetVar="nextStatusDlg" modal="true" appendTo="@(body)" width="725" >
+			<p:ajax event="close" resetValues="true" update="nextStatusDialogId form" listener="#{OSGRManagementView.closeChangeAction}"
+				oncomplete="PF('cargando').hide();" onstart="PF('cargando').show()"/>
 			<h:form id="nextStatusFormId" enctype="multipart/form-data">
 				<p:growl id="msgs" showDetail="true" life="10000" globalOnly="true" />
 				<c:set var="incid" value="#{OSGRManagementView.selected}" scope="request" />

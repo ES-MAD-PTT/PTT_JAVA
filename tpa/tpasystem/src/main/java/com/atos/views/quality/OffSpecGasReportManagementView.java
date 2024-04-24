@@ -563,12 +563,21 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 		selected.setNewStatusId(item.getStatusId());
 		selected.setIdnAction(item.getIdnAction());
 		selected.setIncidentCode(item.getIncidentCode());
-		if(mapAllActions.get(selected.getIdnAction()).getActionCode().equals("FIX_ORIG_SHIP")) {
+		if(mapAllActions != null && !mapAllActions.isEmpty() && selected.getIdnAction() != null && 
+				mapAllActions.get(selected.getIdnAction()).getActionCode().equals("FIX_ORIG_SHIP")) {
 			UserBean userShipper = getUser();
 			selected.setMultiShippers(new ArrayList<BigDecimal>());
 			selected.getMultiShippers().add(userShipper.getIdn_user_group());
 			selected.setGroupCode(userShipper.getUser_group_id());
 		}
+		RequestContext context = RequestContext.getCurrentInstance();
+		context.execute("PF('nextStatusDlg').show();");
+	}
+	
+	public void closeChangeAction() {
+		selected = new OffSpecIncidentBean();
+		items = service.search(filters, getUser());
+        updateIncidentInfo(hmAllStatus, items);
 	}
 	
 	public void acceptRejectAction(String responseValue) {
@@ -1008,7 +1017,20 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 				 value = nameColumn.equals("SHIPPER_ANSWER") ? true : false;
 			 }
 		 }else {
-			 value = true;
+			 if(mapAllActions != null && !mapAllActions.isEmpty() && item != null && item.getIdnAction() != null) {
+				 if(nameColumn.equals("ORIGINATOR_ANSWER") || nameColumn.equals("ORIGINATOR_IF_ANSWER")) {
+					value = mapAllActions.get(item.getIdnAction()).getActionCode().equals("FIX_ORIG_SHIP") ? true : false;
+				 }else {
+					 value = mapAllActions.get(item.getIdnAction()).getActionCode().equals("FIX_ORIG_SHIP") ? false : true;
+				 }
+			 }
+//			 if((nameColumn.equals("ORIGINATOR_ANSWER") || nameColumn.equals("ORIGINATOR_IF_ANSWER")) && 
+//					 mapAllActions != null && !mapAllActions.isEmpty() && item != null && item.getIdnAction() != null &&
+//					 mapAllActions.get(item.getIdnAction()).getActionCode().equals("FIX_ORIG_SHIP")) {
+//				 value = false;
+//			 }else {
+//				 value = true;
+//			 }
 		 }
 		 return value;
 	 }

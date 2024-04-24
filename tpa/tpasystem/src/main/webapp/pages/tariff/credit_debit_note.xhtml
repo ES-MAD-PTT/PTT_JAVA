@@ -35,7 +35,7 @@
 						<p:panelGrid>
 							<p:row>
 								<p:column style="font-weight: bold;">
-									<h:outputText value="#{msg['creditDebitNote_Shipper']}" />
+									<h:outputText value="#{msg['creditDebitNote_Shipper_short_name']}" />
 								</p:column>
 								<p:column style="font-weight: bold;">
 									<h:outputText value="#{msg['creditDebitNote_Month_Year']}" />
@@ -355,7 +355,7 @@
 						<p:panelGrid>
 							<p:row>
 								<p:column>
-									<h:outputText value="#{msg['creditDebitNote_Shipper']}" />
+									<h:outputText value="#{msg['creditDebitNote_Shipper_short_name']}" />
 								</p:column>
 								<p:column>
 									<p:selectOneMenu id="newShipper" required="true" requiredMessage="The mandatory field #{msg['creditDebitNote_Shipper']} must be informed" style="width:100px"   value="#{creditDebitNoteView.newNote.shipperId}" >

@@ -364,38 +364,39 @@
    
     <select id="selectQualityPointSystem" resultType="com.atos.beans.ComboFilterNS">
   
-		WITH quality_point AS
-			 (SELECT sp.idn_system_point,
-			         sp.point_code
-			    FROM tpa_vsystem_point sp
-			    WHERE sp.IDN_SYSTEM_POINT_TYPE= #{idn_system_point_type}
-			    AND sp.group_code = 'QUALITY'),
-		metered_point AS
-		 (SELECT spp.idn_quality_point
-		    FROM tpa_vsystem_point       sp,
-		         tpa_varea_tpa           a,
-		         tpa_vzone_tpa           z,
-		         tpa_tsystem_point_param spp
-		   WHERE sp.group_code = 'METERED'
-		     AND sp.idn_system_point = spp.idn_system_point
-		     AND sp.idn_area = a.idn_area
-		     AND a.idn_zone = z.idn_zone
-		     AND z.idn_pipeline_system =  #{idn_pipeline_system}
-		     AND spp.version_date = (SELECT MAX(sppx.version_date)
-		                               FROM tpa_tsystem_point_param sppx
-		                              WHERE sppx.idn_system_point = spp.idn_system_point
-		                                AND sppx.start_date = spp.start_date))
-		SELECT qp.idn_system_point AS key,
-		       qp.point_code       AS VALUE
-		FROM quality_point qp
-		WHERE NOT EXISTS (SELECT 1 FROM tpa_tsystem_point_param spp WHERE spp.idn_quality_point = qp.idn_system_point)
-		UNION
-		SELECT qp.idn_system_point AS key,
-		       qp.point_code       AS VALUE
-		  FROM quality_point qp,
-		       metered_point mp
-		 WHERE qp.idn_system_point = mp.idn_quality_point
-		 ORDER BY 2
+WITH quality_point AS
+       (SELECT sp.idn_system_point,
+               sp.point_code
+         FROM tpa_vsystem_point sp
+          WHERE sp.IDN_SYSTEM_POINT_TYPE= #{idn_system_point_type}
+          AND sp.group_code = 'QUALITY'),
+    metered_point AS
+     (SELECT DISTINCT spp.idn_quality_point, z.idn_pipeline_system
+        FROM tpa_vsystem_point       sp,
+             tpa_varea_tpa           a,
+             tpa_vzone_tpa           z,
+             tpa_tsystem_point_param spp
+       WHERE sp.group_code = 'METERED'
+         AND sp.idn_system_point = spp.idn_system_point
+         AND sp.idn_area = a.idn_area
+         AND a.idn_zone = z.idn_zone
+         AND  NVL(spp.end_date, spp.start_date) >= spp.start_date 
+         AND spp.version_date = (SELECT MAX(sppx.version_date)
+                                   FROM tpa_tsystem_point_param sppx
+                                  WHERE sppx.idn_system_point = spp.idn_system_point
+                                    AND sppx.start_date = spp.start_date))
+    SELECT qp.idn_system_point AS key,
+           qp.point_code       AS VALUE
+    FROM quality_point qp
+    WHERE NOT EXISTS (SELECT 1 FROM metered_point mp WHERE mp.idn_quality_point = qp.idn_system_point)
+    UNION
+    SELECT qp.idn_system_point AS key,
+           qp.point_code       AS VALUE
+      FROM quality_point qp,
+           metered_point mp
+     WHERE qp.idn_system_point = mp.idn_quality_point
+       AND mp.idn_pipeline_system = #{idn_pipeline_system}
+     ORDER BY 2
       
     </select>
   

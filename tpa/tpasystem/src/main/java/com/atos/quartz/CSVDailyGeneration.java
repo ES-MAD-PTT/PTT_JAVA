@@ -15,6 +15,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ibatis.session.RowBounds;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -212,37 +213,51 @@ public class CSVDailyGeneration  implements Serializable {
 			map.put("idn_system", list_onshore.get(0));
 		}
 		
-		List<ContractQueryCSVBean> list = csvMapper.getCSVContractQuery(map);
-
-		List<ContractAttachmentBean> l = new ArrayList<ContractAttachmentBean>();
-		BigDecimal idn_contract_request_prev = null;
-		for(int i=0;i<list.size();i++) {
+		List<BigDecimal> l_count = csvMapper.getCountCSVContractQuery(map);
+		int totalCount = 0;
+		if(l_count.size()!=1) {
+			totalCount = 0;
+		} else {
+			totalCount = l_count.get(0).intValue();
+		}
+		int pageSize = 200;
 			
-			if(i==0) {
-				l = contractQueryMapper.selectAdditionalDocs(list.get(i).getIdn_contract_request());
-				idn_contract_request_prev = list.get(i).getIdn_contract_request();
-			} else {
-				if(idn_contract_request_prev.compareTo(list.get(i).getIdn_contract_request())!=0) {
+		int totalPages = (totalCount % pageSize == 0) ? totalCount / pageSize : totalCount / pageSize + 1;
+        System.out.println("[pageSize=" + pageSize + ",totalCount=" + totalCount + ",totalPages=" + totalPages + "]");
+
+		StringBuilder csv = new StringBuilder();
+
+		BigDecimal idn_contract_request_prev = null;
+        for (int currentPage = 0; currentPage < totalPages; currentPage++) {
+			List<ContractQueryCSVBean> list = csvMapper.getCSVContractQuery(map, new RowBounds(currentPage * pageSize, pageSize));
+	
+			List<ContractAttachmentBean> l = new ArrayList<ContractAttachmentBean>();
+			for(int i=0;i<list.size();i++) {
+				
+				if(idn_contract_request_prev==null) {
 					l = contractQueryMapper.selectAdditionalDocs(list.get(i).getIdn_contract_request());
 					idn_contract_request_prev = list.get(i).getIdn_contract_request();
+				} else {
+					if(idn_contract_request_prev.compareTo(list.get(i).getIdn_contract_request())!=0) {
+						l = contractQueryMapper.selectAdditionalDocs(list.get(i).getIdn_contract_request());
+						idn_contract_request_prev = list.get(i).getIdn_contract_request();
+					}
 				}
+				ArrayList<String> fileNames = new ArrayList<String>();
+				for(int j=0;j<l.size();j++) {
+					fileNames.add(l.get(j).getFileName());
+				}
+				list.get(i).setAdditionalDocs(fileNames);
 			}
-			ArrayList<String> fileNames = new ArrayList<String>();
-			for(int j=0;j<l.size();j++) {
-				fileNames.add(l.get(j).getFileName());
+			
+			
+			if(list.size()>0) {
+				csv.append(list.get(0).toCSVHeader()).append("\n");
 			}
-			list.get(i).setAdditionalDocs(fileNames);
-		}
-		
-		StringBuilder csv = new StringBuilder();
-		
-		if(list.size()>0) {
-			csv.append(list.get(0).toCSVHeader()).append("\n");
-		}
-		for(int i=0;i<list.size();i++) {
-			csv.append(list.get(i).toCSV()).append("\n");
-		}
-
+			for(int i=0;i<list.size();i++) {
+				csv.append(list.get(i).toCSV()).append("\n");
+			}
+        }
 		writeFile(csv, "contractQuery", sdf.format(today));
 		
 		log.info("End generation CSV contract query", Calendar.getInstance().getTime());

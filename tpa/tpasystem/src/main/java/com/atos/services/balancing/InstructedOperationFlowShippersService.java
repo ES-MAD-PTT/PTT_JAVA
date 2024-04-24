@@ -24,4 +24,6 @@ public interface InstructedOperationFlowShippersService extends Serializable {
 	public String insertFile(UploadedFile file, InstructedOperationFlowShippersBean item) throws Exception;
 	public String updateFile(UploadedFile file, InstructedOperationFlowShippersBean item) throws Exception;
 	public StreamedContent getFile(BigDecimal idn_intraday_gas_flow_file);
+	
+	public String updatePublished(InstructedOperationFlowShippersBean bean);
 }

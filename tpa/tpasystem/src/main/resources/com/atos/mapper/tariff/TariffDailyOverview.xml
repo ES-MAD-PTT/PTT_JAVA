@@ -330,7 +330,7 @@
 					   AND cdetail.idn_tariff_code_detail IN (SELECT DISTINCT idn_tariff_code_detail 
 					                                          FROM TABLE(pck_tariff_charge.fun_paramet_tariff_code_det(#{idn_tariff_charge},  #{idn_system})))) calc_detail
 	         WHERE csource.IDN_TARIFF_CHARGE = #{idn_tariff_charge}
-			 AND tcharge.idn_tariff_charge = csource.idn_tariff_charge
+			 <!-- AND tcharge.idn_tariff_charge = csource.idn_tariff_charge -->
 			 <if test="idn_contract != null">
 					AND csource.idn_contract = #{idn_contract}
 			</if>

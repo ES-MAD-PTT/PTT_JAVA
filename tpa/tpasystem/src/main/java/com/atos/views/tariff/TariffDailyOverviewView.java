@@ -415,7 +415,7 @@ public class TariffDailyOverviewView extends CommonView implements Serializable 
 		
 		//CH715
 		//if (filters.getIdn_tariff_code()!=null && tariffCode.equals(Constants.OVERUSAGE_CHARGE) ){
-		if (filters.getIdn_tariff_code()!=null && (tariffCode.equals(Constants.OVERUSAGE_CHARGE) || tariffType!=null && tariffCode.equals(Constants.COMMODITY_CHARGE) )){
+		if (filters.getIdn_tariff_code()!=null && (tariffCode.equals(Constants.OVERUSAGE_CHARGE) || (tariffType!=null && tariffCode.equals(Constants.COMMODITY_CHARGE) ))){
 			
 			return "false";
 		}else

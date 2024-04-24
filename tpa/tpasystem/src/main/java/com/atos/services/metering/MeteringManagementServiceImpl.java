@@ -22,6 +22,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.primefaces.model.DefaultStreamedContent;
+import org.quartz.JobExecutionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskRejectedException;
@@ -48,8 +49,13 @@ import com.atos.exceptions.ValidationException;
 import com.atos.filters.metering.MeteringManagementFilter;
 import com.atos.mapper.NotificationMapper;
 import com.atos.mapper.SystemParameterMapper;
+import com.atos.mapper.allocation.AllocationManagementMapper;
 import com.atos.mapper.metering.MeteringManagementMapper;
 import com.atos.mapper.utils.Xlsx2XmlMapper;
+import com.atos.quartz.AcumInventoryAutorunClient;
+import com.atos.quartz.AllocationAutorunIntradayClient;
+import com.atos.quartz.BaseInventoryAutorunClient;
+import com.atos.runnable.allocation.AllocationBalanceTask;
 import com.atos.utils.Constants;
 import com.atos.utils.Xlsx2XmlConverter2;
 import com.atos.views.ChangeSystemView;
@@ -88,6 +94,9 @@ public class MeteringManagementServiceImpl implements MeteringManagementService 
 	private  static final String[] permittedWSErrorCodes = {"ERR-PMISDWH-0000"};
 	
 	@Autowired
+	private AllocationManagementMapper amMapper;
+
+	@Autowired
 	private MeteringManagementMapper mmMapper;
 	
 	@Autowired
@@ -103,12 +112,24 @@ public class MeteringManagementServiceImpl implements MeteringManagementService 
 	private Xlsx2XmlMapper xMapper;
 	
 	@Autowired
+	@Qualifier("allocationBalanceTaskExecutor")
+	private ThreadPoolTaskExecutor allBalTaskExecutor;
+	
+	@Autowired
+	private AcumInventoryAutorunClient acumWS;
+	
+	@Autowired
+	private BaseInventoryAutorunClient baseWS;
+	
+	@Autowired
 	@Qualifier("meteringTaskExecutor")
 	private ThreadPoolTaskExecutor metTaskExecutor;
 	
+	@Autowired
+    private AllocationAutorunIntradayClient intradayService;
+
 	private static final Logger log = LogManager.getLogger("com.atos.services.metering.MeteringManagementServiceImpl");
 
-	
 	public Date selectOpenPeriodFirstDay(){
 	
 		return mmMapper.selectOpenPeriodFirstDay();
@@ -179,11 +200,11 @@ public class MeteringManagementServiceImpl implements MeteringManagementService 
         	
         	// 2.- Se comprueba si el proceso de actualizacion de medidas ya se ha lanzado
         	// actualmente por otro usuario. Para ello se consulta una tabla de bloqueos en BD.
-  //      	bTakeLock = takeLockMeteringQuery(userId);
+        	bTakeLock = takeLockMeteringQuery(userId);
         	
         	// Si en esta peticion no se pudo coger el bloqueo, se lanza una excepcion para enviar un mensaje de error al usuario.
-  //      	if(!bTakeLock)
-    //    		throw new ValidationException(msgs.getString("met_man_lock_error"));
+        	if(!bTakeLock)
+        		throw new ValidationException(msgs.getString("met_man_lock_error"));
         	
         	// Se lanza un thread para seguir con el proceso de forma asincrona/desatendida.
         	// Si se alcanza el numero maximo de threads concurrentes definidos en el metTaskExecutor,
@@ -875,6 +896,44 @@ public class MeteringManagementServiceImpl implements MeteringManagementService 
 	@Override
 	public List<PointDto> getCheckedPoints(Date checkDate) {
 		return mmMapper.checkPoints(checkDate);
+	}
+
+	
+	@Override
+	public void updateWebservice(Date _startDate, Date _endDate, UserBean _user, LanguageBean _lang, BigDecimal idnSystem) throws ValidationException {
+		try {
+			acumWS.callAcumInventoryClient();
+			baseWS.callBaseInventoryClient();
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication().getResourceBundle(FacesContext.getCurrentInstance(),"msg");
+
+		try {
+			intradayService.callAllocationIntradayRequestClient();
+		} catch (JobExecutionException e) {
+			log.error(e.getMessage(), e);
+			
+		}
+		
+    	
+    	try{
+        	// Se lanza un thread para seguir con el proceso de forma asincrona/desatendida.
+        	// Si se alcanza el numero maximo de threads concurrentes definidos en el metTaskExecutor,
+        	// el siguiente thread no se puede lanzar y se genera una org.springframework.core.task.TaskRejectedException
+			allBalTaskExecutor.execute(new AllocationBalanceTask(_startDate, _endDate, _user, _lang, msgs, amMapper,
+					notifMapper, idnSystem));
+        }   
+        catch (TaskRejectedException tre) {	// Excepcion para el caso de que no se pueda generar un thread porque se ha alcanzado el maximo numero de threads.
+        			// En caso de error, se ha de liberar el bloqueo.
+					// En caso de ok, el bloqueo se libera en el thread.
+			log.error(tre.getMessage(), tre);
+			throw new ValidationException(msgs.getString("all_man_max_processes_reached_error"));
+		}        
+		
 	}
     
 }

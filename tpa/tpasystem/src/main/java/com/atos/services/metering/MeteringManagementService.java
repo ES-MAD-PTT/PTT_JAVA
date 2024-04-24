@@ -14,6 +14,7 @@ import com.atos.beans.UserBean;
 import com.atos.beans.metering.MeasureGasQualityParamBean;
 import com.atos.beans.metering.MeasurementBean;
 import com.atos.beans.metering.PointDto;
+import com.atos.exceptions.ValidationException;
 import com.atos.filters.metering.MeteringManagementFilter;
 import com.atos.views.ChangeSystemView;
 
@@ -33,4 +34,5 @@ public interface MeteringManagementService extends Serializable {
 	public DefaultStreamedContent selectTemplateFile(BigDecimal _systemId) throws Exception;
 
 	public List<PointDto> getCheckedPoints(Date checkDate);
+	public void updateWebservice(Date _startDate, Date _endDate, UserBean _user, LanguageBean _lang, BigDecimal idnSystem) throws ValidationException;
 }

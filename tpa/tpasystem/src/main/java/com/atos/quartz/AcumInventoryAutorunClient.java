@@ -67,7 +67,7 @@ public class AcumInventoryAutorunClient  implements Serializable {
 	private static final String strNotifTypeCodeWsAcumInventoryyOK = "ACUM.INVENTORY.WS.FINISH.OK";
 	private static final String strNotifTypeCodeWsAcumInventoryError = "ACUM.INVENTORY.WS.FINISH.ERROR";
 
-	private static final String strNotifOrigin = "BALANCE";
+	private static final String strNotifOrigin = "BALANCING";
 	
 	private  static final String[] permittedWSErrorCodes = {"ERR-PMISDWH-0000"};
 	

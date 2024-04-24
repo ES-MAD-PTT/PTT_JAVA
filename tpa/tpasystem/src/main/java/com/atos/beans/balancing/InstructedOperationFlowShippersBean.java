@@ -31,6 +31,7 @@ public class InstructedOperationFlowShippersBean implements Serializable {
 	private String username;
 	private BigDecimal idn_intraday_gas_flow_file;
 	private String file_name;
+	private String published;	
 	
 	private boolean checkPublicate=true;
 	
@@ -58,13 +59,14 @@ public class InstructedOperationFlowShippersBean implements Serializable {
 		this.idn_intraday_gas_flow_file = null;
 		this.checkPublicate = true;
 		this.file_name = null;
+		this.published= null;
 	}
 
 	public InstructedOperationFlowShippersBean(BigDecimal idn_intraday_gas_flow, Date timestamp, BigDecimal shipperId, String shipperCode,
 			BigDecimal zonetId, String zoneCode, BigDecimal accImabalnce, BigDecimal accImabalnceInventory,
 			BigDecimal accMargin, String flowType, BigDecimal opInsFlowOrderMMBTU, BigDecimal opInsFlowOrderMMSCF,
 			BigDecimal opInsFlowOrder, String resolvedTime, BigDecimal hv, String operatorComments,
-			String shipperComments, Date versionDate, String username, BigDecimal idn_intraday_gas_flow_file, boolean checkPublicate, String file_name) {
+			String shipperComments, Date versionDate, String username, BigDecimal idn_intraday_gas_flow_file, boolean checkPublicate, String file_name, String published) {
 		super();
 		this.idn_intraday_gas_flow = idn_intraday_gas_flow;
 		this.timestamp = timestamp;
@@ -87,6 +89,7 @@ public class InstructedOperationFlowShippersBean implements Serializable {
 		this.idn_intraday_gas_flow_file = idn_intraday_gas_flow_file;
 		this.checkPublicate = checkPublicate;
 		this.file_name = file_name;
+		this.published = published;
 	}
 
 	public BigDecimal getIdn_intraday_gas_flow() {
@@ -257,6 +260,22 @@ public class InstructedOperationFlowShippersBean implements Serializable {
 		this.file_name = file_name;
 	}
 
+	public String getPublished() {
+		return published;
+	}
+
+	public void setPublished(String published) {
+		this.published = published;
+		if(published!=null) {
+			if(published.equals("Y")) {
+				this.checkPublicate = true;
+			} else {
+				this.checkPublicate = false;
+			}
+				
+		}
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
@@ -300,6 +319,8 @@ public class InstructedOperationFlowShippersBean implements Serializable {
 		builder.append(idn_intraday_gas_flow_file);
 		builder.append(", file_name=");
 		builder.append(file_name);
+		builder.append(", published=");
+		builder.append(published);
 		builder.append(", checkPublicate=");
 		builder.append(checkPublicate);
 		builder.append("]");

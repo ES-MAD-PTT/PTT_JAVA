@@ -104,7 +104,7 @@
 							<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.INSTRUCTED_OPERATION_FLOW.PUBLICATION">
 								<p:commandButton value="#{msg['ins_op_flow_shippers_publicate']}" id="btnPublicate"
         							actionListener="#{insOpFlowShippersView.onPublicate}"
-        							disabled="#{insOpFlowShippersView.disabledPublicate()}"
+        							
 									onstart="PF('publicating').show()"
 									oncomplete="PF('publicating').hide()" 
 									process="@this"
@@ -114,7 +114,7 @@
 							<shiro:lacksPermission name="#{changeSystemView.system}.BALANCING.INSTRUCTED_OPERATION_FLOW.PUBLICATION">
 								<p:commandButton value="#{msg['ins_op_flow_shippers_publicate']}" id="btnPublicate"
         							actionListener="#{insOpFlowShippersView.onPublicate}"
-        							disabled="#{insOpFlowShippersView.disabledPublicate()}"
+        							
 									onstart="PF('publicating').show()"
 									rendered="false"
 									oncomplete="PF('publicating').hide()" 
@@ -280,7 +280,7 @@
 							</shiro:hasPermission>
 							<p:column style="width:32px">
 								<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.INSTRUCTED_OPERATION_FLOW.OPER_COM.MOD">
-						           <p:rowEditor rendered="#{insOpFlowShippersView.renderItemEditor(item)}"/>
+						           <p:rowEditor />
 						        </shiro:hasPermission>
 						    </p:column>
 						   

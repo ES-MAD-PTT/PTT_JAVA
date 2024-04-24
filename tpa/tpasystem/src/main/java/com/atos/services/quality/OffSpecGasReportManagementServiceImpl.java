@@ -188,9 +188,6 @@ public class OffSpecGasReportManagementServiceImpl implements OffSpecGasReportMa
 			for(OffSpecIncidentBean incid: tmpLIncidents) {
 				params.put("incidentId", incid.getIncidentId());
 				incid.setDiscloseResponses(osgrmMapper.selectDiscloseResponsesFromIncidentId(params));
-				if(incid.getOperatorComments() != null && !incid.getOperatorComments().isEmpty()) {
-					incid.setInitialComments(incid.getOperatorComments());
-				}
 			}
 		
 		return tmpLIncidents;

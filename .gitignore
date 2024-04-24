@@ -22,3 +22,10 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
+
+tpa/tpasystem/target/*
+tpa/.project
+tpa/tpa-ear/.project
+tpa/tpasystem/.project
+tpa/tpasystem/.settings/*
+tpa/tpasystem/.classpath  

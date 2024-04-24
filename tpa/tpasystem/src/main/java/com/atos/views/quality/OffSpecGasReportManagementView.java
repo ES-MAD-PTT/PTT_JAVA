@@ -1024,13 +1024,6 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 					 value = mapAllActions.get(item.getIdnAction()).getActionCode().equals("FIX_ORIG_SHIP") ? false : true;
 				 }
 			 }
-//			 if((nameColumn.equals("ORIGINATOR_ANSWER") || nameColumn.equals("ORIGINATOR_IF_ANSWER")) && 
-//					 mapAllActions != null && !mapAllActions.isEmpty() && item != null && item.getIdnAction() != null &&
-//					 mapAllActions.get(item.getIdnAction()).getActionCode().equals("FIX_ORIG_SHIP")) {
-//				 value = false;
-//			 }else {
-//				 value = true;
-//			 }
 		 }
 		 return value;
 	 }

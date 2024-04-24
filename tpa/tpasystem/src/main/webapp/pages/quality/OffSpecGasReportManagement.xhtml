@@ -41,7 +41,7 @@
 									<h:outputText value="#{msg['osgr_man_quality_point']}" />
 								</p:column>
 								<p:column  style="font-weight: bold;">
-									<h:outputText value="#{msg['osgr_man_shipper']}" />
+									<h:outputText value="#{msg['osgr_man_shipper_short_name']}" />
 								</p:column>
 								<p:column  style="font-weight: bold;">
 									<h:outputText value="#{msg['cr_man_status']}" />
@@ -196,6 +196,11 @@
 				       	<p:column headerText="#{msg['osgr_man_shipper']}" style="width: 80px;" sortBy="#{incident.originatorShipperCode}"
 				       		rendered="#{OSGRManagementView.hasOperatorManagPermission()}" >
 				       		<h:outputText value="#{incident.originatorShipperCode}" />
+				       	</p:column>
+				       	
+				       	<p:column headerText="#{msg['osgr_man_shipper_short_name']}" style="width: 80px;" sortBy="#{incident.shortName}"
+				       		rendered="#{OSGRManagementView.hasOperatorManagPermission()}" >
+				       		<h:outputText value="#{incident.shortName}" />
 				       	</p:column>
 				       
 				       	<p:column headerText="#{msg['osgr_man_start_date']}" style="width: 120px;" sortBy="#{incident.startDate}">
@@ -508,7 +513,7 @@
 
  	        		<p:row>
 						<p:column styleClass="ui-g-2" style="font-weight: bold;">
-							<h:outputText value="#{msg['osgr_man_shipper']}" />
+							<h:outputText value="#{msg['osgr_man_shipper_short_name']}" />
 						</p:column>
 						<p:column styleClass="ui-g-3">
 							<p:selectOneMenu id="newReqShipperId" style="width:100px" disabled="#{not OSGRManagementView.isOperator}" value="#{newRequest.originatorShipperId}" 
@@ -660,7 +665,7 @@
 
  	        		<p:row>
  	        			<p:column styleClass="ui-g-2" style="font-weight: bold;">
-							<h:outputText value="#{msg['osgr_man_shipper']}" />
+							<h:outputText value="#{msg['osgr_man_shipper_short_name']}" />
 						</p:column>
 						<p:column styleClass="ui-g-3">
 							<p:selectOneMenu id="newReqShipperId" style="width:100px" rendered="#{!OSGRManagementView.isShipper()}" value="#{newEvent.groupId}" 
@@ -811,7 +816,7 @@
 				<p:panelGrid id="nextStatusPanelGridId" style="margin-bottom: 10px;">
 					<p:row>
 						<p:column  style="font-weight: bold;" >
-							<h:outputText value="#{msg['osgr_man_shipper']}" />
+							<h:outputText value="#{msg['osgr_man_shipper_short_name']}" />
 						</p:column>
 						<p:column>
 							<p:selectCheckboxMenu id="newShipperId" dynamic="true" label="Shippers"

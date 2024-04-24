@@ -44,6 +44,7 @@ public class OffSpecIncidentBean extends UserAudBean implements Serializable {
 	private String groupCode;
 	private BigDecimal originatorShipperId;
 	private String originatorShipperCode;
+	private String shortName;
 	private Date startDate;
 	private Date endDate;
 	private BigDecimal userId; 					// Para guardar el id de usuario en cada una de las versiones, en la tabla de log.
@@ -113,6 +114,7 @@ public class OffSpecIncidentBean extends UserAudBean implements Serializable {
 		this.groupId = null;
 		this.originatorShipperId = null;
 		this.originatorShipperCode = null;
+		this.shortName = null;
 		this.startDate = null;
 		this.endDate = null;
 		this.userId = null;
@@ -290,6 +292,14 @@ public class OffSpecIncidentBean extends UserAudBean implements Serializable {
 		this.originatorShipperCode = originatorShipperCode;
 	}
 	
+	public String getShortName() {
+		return shortName;
+	}
+
+	public void setShortName(String shortName) {
+		this.shortName = shortName;
+	}
+
 	public Date getStartDate() {
 		return startDate;
 	}
@@ -543,7 +553,8 @@ public class OffSpecIncidentBean extends UserAudBean implements Serializable {
 				+ ", incidentTypeDesc=" + incidentTypeDesc + ", incidentCode=" + incidentCode + ", incidentVersionId="
 				+ incidentVersionId + ", qualityPointId=" + qualityPointId + ", qualityPointCode=" + qualityPointCode
 				+ ", groupId=" + groupId + ", originatorShipperId=" + originatorShipperId + ", originatorShipperCode="
-				+ originatorShipperCode + ", startDate=" + startDate + ", endDate=" + endDate + ", userId=" + userId
+				+ originatorShipperCode + ", shortName=\"\r\n"
+						+ "				+ shortName + \", startDate=" + startDate + ", endDate=" + endDate + ", userId=" + userId
 				+ ", firstUserCode=" + firstUserCode + ", lastModifiedDate=" + lastModifiedDate + ", statusId="
 				+ statusId + ", statusDesc=" + statusDesc + ", status=" + status + ", chosenNextStatusRule="
 				+ chosenNextStatusRule + ", initialComments=" + initialComments + ", comments=" + comments

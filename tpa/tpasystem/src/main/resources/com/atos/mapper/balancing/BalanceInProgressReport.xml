@@ -6,10 +6,10 @@
 
 	<!-- Para hacer consultas, el shipper no tendria por que estar vigente. -->
     <select id="selectShipperId" resultType="com.atos.beans.ComboFilterNS">
-		select tgr.idn_user_group as key, tgr.user_group_id as value
-		from tpa_tuser_group tgr
-		where tgr.idn_user_group_type = (select idn_user_group_type from tpa_tuser_group_type where type_code = 'SHIPPER')
-		order by upper(tgr.user_group_id) asc
+		select ug.idn_user_group as key, ug.SHORT_NAME as value
+		from tpa_tuser_group ug
+		where ug.idn_user_group_type  = (select idn_user_group_type from tpa_tuser_group_type where type_code = 'SHIPPER')
+		order by upper(ug.SHORT_NAME) ASC
     </select>
     <!--Item 36 filtro para consultar por timestamp -->
 		<select id="selectTimestamp" resultType="com.atos.beans.ComboFilterNS">
@@ -34,6 +34,7 @@
 		<result property="versionDate" column="version_date"/>
         <result property="shipperCode" column="shipper_code"/>
         <result property="shipperName" column="shipper_name"/>
+        <result property="shortName" column="short_name"/>
         <result property="contractId" column="idn_contract"/>
         <result property="contractCode" column="contract_code"/>
         <result property="isTotal" column="is_total"/>
@@ -736,6 +737,7 @@
                  ms.idn_user_group,
                  nvl(ug.user_group_id,'TOTAL') AS shipper_code,
                  nvl(ug.user_group_name,'TOTAL') AS shipper_name,
+                 nvl(ug.short_name,'TOTAL') AS short_name,
                  ms.contract_code,
                  ms.idn_contract,
                  ms.is_total,

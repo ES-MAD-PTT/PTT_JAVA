@@ -152,7 +152,7 @@ public class AllocationReportQryView extends CommonView implements Serializable 
 					cabeceras.add(val);
 				}
 			}
-			cabeceras.add(5, "Nomination Point ID");
+			cabeceras.add(6, "Nomination Point ID");
 			cabeceras.remove(cabeceras.size()-1);
 
 			for (i = 1; i < sheet.getPhysicalNumberOfRows(); i++) {

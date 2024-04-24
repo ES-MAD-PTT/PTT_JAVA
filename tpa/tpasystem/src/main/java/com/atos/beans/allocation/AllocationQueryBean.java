@@ -17,6 +17,7 @@ public class AllocationQueryBean implements Serializable {
 	private Date gasDay;
 	private BigDecimal shipperId;
 	private String shipperCode;
+	private String shortName;
 	private BigDecimal contractId;
 	private String contractCode; 
 	private BigDecimal nomPointId;
@@ -55,6 +56,7 @@ public class AllocationQueryBean implements Serializable {
 		this.shipperCode = null;
 		this.contractId = null;
 		this.contractCode = null;
+		this.shortName = null;
 		this.nomPointId = null;
 		this.nomPointCode = null;
 		this.nomPointTypeCode = null;
@@ -95,6 +97,14 @@ public class AllocationQueryBean implements Serializable {
 
 	public void setShipperCode(String shipperCode) {
 		this.shipperCode = shipperCode;
+	}
+
+	public String getShortName() {
+		return shortName;
+	}
+
+	public void setShortName(String shortName) {
+		this.shortName = shortName;
 	}
 
 	public BigDecimal getContractId() {
@@ -206,10 +216,11 @@ public class AllocationQueryBean implements Serializable {
 	@Override
 	public String toString() {
 		return "AllocationQueryBean [allocationDataId=" + allocationDataId + ", gasDay=" + gasDay + ", shipperId="
-				+ shipperId + ", shipperCode=" + shipperCode + ", contractId=" + contractId + ", contractCode="
-				+ contractCode + ", nomPointId=" + nomPointId + ", nomPointCode=" + nomPointCode + ", nomPointTypeCode="
-				+ nomPointTypeCode + ", bookedCap=" + bookedCap + ", nominatedCap=" + nominatedCap + ", allocationTPA="
-				+ allocationTPA + ", origin=" + origin + ", versionDate=" + versionDate + "]";
+				+ shipperId + ", shipperCode=" + shipperCode + ", shortName=" + shortName + ", contractId=" + contractId
+				+ ", contractCode=" + contractCode + ", nomPointId=" + nomPointId + ", nomPointCode=" + nomPointCode
+				+ ", nomPointTypeCode=" + nomPointTypeCode + ", bookedCap=" + bookedCap + ", nominatedCap="
+				+ nominatedCap + ", allocationTPA=" + allocationTPA + ", origin=" + origin + ", versionDate="
+				+ versionDate + "]";
 	}
 
 

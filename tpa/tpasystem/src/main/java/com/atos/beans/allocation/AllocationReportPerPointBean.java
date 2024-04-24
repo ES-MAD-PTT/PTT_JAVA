@@ -3,8 +3,6 @@ package com.atos.beans.allocation;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 public class AllocationReportPerPointBean implements Serializable {
 	/**
@@ -14,6 +12,7 @@ public class AllocationReportPerPointBean implements Serializable {
 	private Date gasDay;
 	private String shipperCode;
 	private String shipperName;	
+	private String shortName;
 	private String pointCode;
 	private String pointTypeCode;
 	private BigDecimal allocationTPA;
@@ -103,6 +102,14 @@ public class AllocationReportPerPointBean implements Serializable {
 		this.isTotal = isTotal;
 	}
 
+	public String getShortName() {
+		return shortName;
+	}
+
+	public void setShortName(String shortName) {
+		this.shortName = shortName;
+	}
+
 	/**
 	 * devuelve la realacion entre columnas y propiedades.
 	 *
@@ -133,6 +140,8 @@ public class AllocationReportPerPointBean implements Serializable {
 		toStr.append(shipperCode);
 		toStr.append(',');
 		toStr.append(shipperName);
+		toStr.append(',');
+		toStr.append(shortName);
 		toStr.append(',');
 		toStr.append(pointCode);
 		toStr.append(',');

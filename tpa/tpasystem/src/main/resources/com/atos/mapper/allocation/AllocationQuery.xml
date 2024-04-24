@@ -10,7 +10,7 @@
     
 	<!-- Para hacer consultas, el punto no tendria por que estar vigente. -->
     <select id="selectShipperId" resultType="com.atos.beans.ComboFilterNS">
-		select tgr.idn_user_group as key, tgr.user_group_id as value
+		select tgr.idn_user_group as key, tgr.short_name as value
 		from tpa_tuser_group tgr
 		where tgr.idn_user_group_type = (select idn_user_group_type from tpa_tuser_group_type where type_code = 'SHIPPER')
 		order by upper(tgr.user_group_id) asc
@@ -88,6 +88,7 @@
 		<result property="gasDay" column="gas_day"/>
 		<result property="shipperId" column="idn_user_group"/>
         <result property="shipperCode" column="user_group_id"/>
+        <result property="shortName" column="short_name"/>
         <result property="contractId" column="idn_contract"/> 
         <result property="contractCode" column="contract_code"/>   
         <result property="nomPointId" column="idn_system_point"/>
@@ -125,6 +126,7 @@
 			       tal.gas_day,
 			       tgr.idn_user_group,
 			       tgr.user_group_id,
+			       tgr.short_name,
 			       tcon.idn_contract,
 			       tcon.contract_code,
 			       tnomp.idn_system_point,
@@ -178,7 +180,7 @@
 					          FROM tpa_tallocation ax,
                               	   tpa_tallocation_origin ao
 					         WHERE ax.gas_day = tal.gas_day
-                                             AND ax.idn_pipeline_system = tal.idn_pipeline_system   ----- esto es lo que le falta!!!!!
+                                             AND ax.idn_pipeline_system = tal.idn_pipeline_system   <!-- esto es lo que le falta!!!!! -->
 					           AND ax.idn_allocation_type = tal.idn_allocation_type
 	                           AND ax.idn_allocation_origin = ao.idn_allocation_origin
 	                           AND ao.origin_code != 'BALANCE')

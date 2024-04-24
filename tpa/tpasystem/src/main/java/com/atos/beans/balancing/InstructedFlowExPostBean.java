@@ -16,6 +16,7 @@ public class InstructedFlowExPostBean extends UserAudBean implements Serializabl
 	
 	private Date gas_day;
 	private String shipper_code;
+	private String shortName;
 	private String contrac_code;
 	private String concept;
 	private BigDecimal allocated_value;
@@ -29,12 +30,13 @@ public class InstructedFlowExPostBean extends UserAudBean implements Serializabl
 	
 	private BigDecimal idn_system;//offshore
 	
-	public InstructedFlowExPostBean(Date gas_day, String shipper_code, String contrac_code, String concept,
+	public InstructedFlowExPostBean(Date gas_day, String shipper_code, String shortName, String contrac_code, String concept,
 			BigDecimal allocated_value, BigDecimal idn_contract, BigDecimal idn_user_group,
 			BigDecimal idn_nomination_concept, String zone_code, BigDecimal idn_zone) {
 		super();
 		this.gas_day = gas_day;
 		this.shipper_code = shipper_code;
+		this.shortName = shortName;
 		this.contrac_code = contrac_code;
 		this.concept = concept;
 		this.allocated_value = allocated_value;
@@ -57,11 +59,11 @@ public class InstructedFlowExPostBean extends UserAudBean implements Serializabl
 
 	@Override
 	public String toString() {
-		return "InstructedFlowExPostBean [gas_day=" + gas_day + ", shipper_code=" + shipper_code + ", contrac_code="
-				+ contrac_code + ", concept=" + concept + ", allocated_value=" + allocated_value + ", idn_contract="
-				+ idn_contract + ", idn_user_group=" + idn_user_group + ", idn_nomination_concept="
-				+ idn_nomination_concept + ", zone_code=" + zone_code + ", idn_zone=" + idn_zone + ", idn_system="
-				+ idn_system + "]";
+		return "InstructedFlowExPostBean [gas_day=" + gas_day + ", shipper_code=" + shipper_code + ", shortName="
+				+ shortName + ", contrac_code=" + contrac_code + ", concept=" + concept + ", allocated_value="
+				+ allocated_value + ", idn_contract=" + idn_contract + ", idn_user_group=" + idn_user_group
+				+ ", idn_nomination_concept=" + idn_nomination_concept + ", zone_code=" + zone_code + ", idn_zone="
+				+ idn_zone + ", idn_system=" + idn_system + "]";
 	}
 
 
@@ -82,6 +84,16 @@ public class InstructedFlowExPostBean extends UserAudBean implements Serializabl
 
 	public void setShipper_code(String shipper_code) {
 		this.shipper_code = shipper_code;
+	}
+
+
+	public String getShortName() {
+		return shortName;
+	}
+
+
+	public void setShortName(String shortName) {
+		this.shortName = shortName;
 	}
 
 

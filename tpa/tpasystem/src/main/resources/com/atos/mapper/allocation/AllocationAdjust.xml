@@ -6,6 +6,7 @@
 <resultMap type="com.atos.beans.allocation.AdjustBeanQryResult" id="AdjustBeanQryResult">
 <result column="GAS_DAY" property="gasDay"/>
 <result column="ORIGIN_SHIPPER" property="originShipper"/>
+<result column="short_name" property="shortName"/>
 <result column="ORIGIN_CONTRACT" property="originContract"/>
 <result column="ORIGIN_ZONE" property="originZone"/>
 <result column="ORIGIN_VALUE" property="originValue"/>
@@ -143,6 +144,7 @@ SELECT DISTINCT z.idn_zone AS key,
  (SELECT c.idn_contract,
          c.contract_code,
          ug.idn_user_group,
+         ug.short_name,
          ug.user_group_id
     FROM tpa_tcontract   c,
          tpa_tuser_group ug

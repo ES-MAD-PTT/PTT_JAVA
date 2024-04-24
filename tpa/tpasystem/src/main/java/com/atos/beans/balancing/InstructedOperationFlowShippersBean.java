@@ -15,6 +15,7 @@ public class InstructedOperationFlowShippersBean implements Serializable {
 	private Date timestamp;
 	private BigDecimal shipperId;
 	private String shipperCode;
+	private String shortName;
 	private BigDecimal zoneId;
 	private String zoneCode; 
 	private BigDecimal accImbalanceImbalanceInventory;
@@ -42,6 +43,7 @@ public class InstructedOperationFlowShippersBean implements Serializable {
 		this.timestamp = null;
 		this.shipperId = null;
 		this.shipperCode = null;
+		this.shortName = null;
 		this.zoneId = null;
 		this.zoneCode = null;
 		this.accImbalanceImbalanceInventory = null;
@@ -62,7 +64,7 @@ public class InstructedOperationFlowShippersBean implements Serializable {
 		this.published= null;
 	}
 
-	public InstructedOperationFlowShippersBean(BigDecimal idn_intraday_gas_flow, Date timestamp, BigDecimal shipperId, String shipperCode,
+	public InstructedOperationFlowShippersBean(BigDecimal idn_intraday_gas_flow, Date timestamp, BigDecimal shipperId, String shipperCode, String shortName,
 			BigDecimal zonetId, String zoneCode, BigDecimal accImabalnce, BigDecimal accImabalnceInventory,
 			BigDecimal accMargin, String flowType, BigDecimal opInsFlowOrderMMBTU, BigDecimal opInsFlowOrderMMSCF,
 			BigDecimal opInsFlowOrder, String resolvedTime, BigDecimal hv, String operatorComments,
@@ -72,6 +74,7 @@ public class InstructedOperationFlowShippersBean implements Serializable {
 		this.timestamp = timestamp;
 		this.shipperId = shipperId;
 		this.shipperCode = shipperCode;
+		this.shortName = shortName;
 		this.zoneId = zonetId;
 		this.zoneCode = zoneCode;
 		this.accImbalanceImbalanceInventory = accImabalnceInventory;
@@ -122,6 +125,14 @@ public class InstructedOperationFlowShippersBean implements Serializable {
 
 	public void setShipperCode(String shipperCode) {
 		this.shipperCode = shipperCode;
+	}
+
+	public String getShortName() {
+		return shortName;
+	}
+
+	public void setShortName(String shortName) {
+		this.shortName = shortName;
 	}
 
 	public BigDecimal getZoneId() {
@@ -287,6 +298,8 @@ public class InstructedOperationFlowShippersBean implements Serializable {
 		builder.append(shipperId);
 		builder.append(", shipperCode=");
 		builder.append(shipperCode);
+		builder.append(", shortName=");
+		builder.append(shortName);
 		builder.append(", zoneId=");
 		builder.append(zoneId);
 		builder.append(", zoneCode=");

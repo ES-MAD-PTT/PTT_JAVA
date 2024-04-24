@@ -20,6 +20,7 @@ public class AllocationIntradayBean extends UserAudBean implements Serializable 
 	private Date gasDay;
 	private String shipperCode;
 	private String shipperName;
+	private String shortName;
 	private String contractCode;
 	private String pointCode;
 	private String pointTypeCode;
@@ -284,6 +285,14 @@ public class AllocationIntradayBean extends UserAudBean implements Serializable 
 		overusage = valor;
 	}
 
+	public String getShortName() {
+		return shortName;
+	}
+
+	public void setShortName(String shortName) {
+		this.shortName = shortName;
+	}
+
 	/**
 	 * devuelve la realacion entre columnas y propiedades.
 	 *
@@ -297,6 +306,7 @@ public class AllocationIntradayBean extends UserAudBean implements Serializable 
 		columToProp.put("GAS_DAY", "gasDay");
 		columToProp.put("SHIPPER_CODE", "shipperCode");
 		columToProp.put("SHIPPER_NAME", "shipperName");
+		columToProp.put("SHORT_NAME", "shortName");
 		columToProp.put("CONTRACT_CODE", "contractCode");
 		columToProp.put("POINT_CODE", "pointCode");
 		columToProp.put("POINT_TYPE_CODE", "pointTypeCode");
@@ -324,6 +334,8 @@ public class AllocationIntradayBean extends UserAudBean implements Serializable 
 		toStr.append(shipperCode);
 		toStr.append(',');
 		toStr.append(shipperName);
+		toStr.append(',');
+		toStr.append(shortName);
 		toStr.append(',');
 		toStr.append(contractCode);
 		toStr.append(',');

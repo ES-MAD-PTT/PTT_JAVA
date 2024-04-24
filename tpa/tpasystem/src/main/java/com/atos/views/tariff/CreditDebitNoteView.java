@@ -19,9 +19,7 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
-import javax.xml.soap.Detail;
 
-import org.apache.commons.lang3.time.DateUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Cell;
@@ -45,7 +43,6 @@ import com.atos.filters.tariff.CreditDebitNoteFilter;
 import com.atos.filters.tariff.CreditDebitNoteIdnOperTermFilter;
 import com.atos.services.tariff.CreditDebitNoteService;
 import com.atos.utils.Constants;
-import com.atos.utils.POIXSSFExcelUtils;
 import com.atos.views.CommonView;
 
 @ManagedBean(name = "creditDebitNoteView")
@@ -266,6 +263,7 @@ public class CreditDebitNoteView extends CommonView implements Serializable {
 			}
 			
 			cabeceras.add(0, msgs.getString("creditDebitNote_Shipper"));
+			cabeceras.add(0, msgs.getString("creditDebitNote_Shipper_short_name"));
 			cabeceras.add(1, msgs.getString("creditDebitNote_Month_Year"));
 			cabeceras.add(2, msgs.getString("creditDebitNote_CNDN"));
 			cabeceras.add(3, msgs.getString("creditDebitNote_Type_Note"));
@@ -306,6 +304,8 @@ public class CreditDebitNoteView extends CommonView implements Serializable {
 					XSSFRow row2 = sheet1.createRow(idx[1]++);
 					Cell c2 = row2.createCell(idx[0]++);
 					c2.setCellValue(items.get(r).getShipper());
+					c2.setCellStyle(cellStyleText);
+					c2.setCellValue(items.get(r).getShortName());
 					c2.setCellStyle(cellStyleText);
 					c2 = row2.createCell(idx[0]++);
 					c2.setCellValue(sdf.format(items.get(r).getMonthYear()));

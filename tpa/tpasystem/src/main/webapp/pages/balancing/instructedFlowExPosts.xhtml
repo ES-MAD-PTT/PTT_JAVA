@@ -30,7 +30,7 @@
 						<p:panelGrid>
 							<p:row>
 								<p:column  style="font-weight: bold;">
-									<h:outputText value="#{msg['instructedFlowExPost_Shipper']}" />
+									<h:outputText value="#{msg['instructedFlowExPost_Shipper_short_name']}" />
 								</p:column>
 								<p:column  style="font-weight: bold;">
 									<h:outputText value="#{msg['instructedFlowExPost_Contract']}" />
@@ -145,6 +145,10 @@
 					       		<h:outputText value="#{instructedFlowExPost.shipper_code}" />
 					       </p:column>
 					       
+					       <p:column headerText="#{msg['instructedFlowExPost_Shipper_short_name']}" style="width: 100px;" sortBy="#{instructedFlowExPost.shipper_code}" filterMatchMode="contains" filterBy="#{instructedFlowExPost.shipper_code}">
+					       		<h:outputText value="#{instructedFlowExPost.shortName}" />
+					       </p:column>
+					       
 					       <p:column headerText="#{msg['instructedFlowExPost_Contract_Code']}" style="width: 100px;" sortBy="#{instructedFlowExPost.contrac_code}" filterMatchMode="contains" filterBy="#{instructedFlowExPost.contrac_code}">
 					       		<h:outputText value="#{instructedFlowExPost.contrac_code}" />
 					       </p:column>
@@ -194,11 +198,11 @@
 								<p:message for="gasDay" />
 							</p:column>
 							<p:column>
-								<h:outputText value="#{msg['instructedFlowExPost_Shipper_Code']}" />
+								<h:outputText value="#{msg['instructedFlowExPost_Shipper_short_name']}" />
 							</p:column>
 							<p:column>
 								<p:selectOneMenu required="true"  id="shipperCode"  style="width:100px"  value="#{instructedFlowExPostView.newInstructedFlowExPost.idn_user_group}"
-								requiredMessage="The mandatory field #{msg['instructedFlowExPost_Shipper_Code']} must be informed" >
+								requiredMessage="The mandatory field #{msg['instructedFlowExPost_Shipper_short_name']} must be informed" >
 							       		<f:selectItem itemLabel="" itemValue="" />
         								<f:selectItems value="#{instructedFlowExPostView.shippersNew.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
         								<p:ajax update="contractCode"/>

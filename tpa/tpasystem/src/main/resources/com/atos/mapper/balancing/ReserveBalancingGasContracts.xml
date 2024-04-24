@@ -7,14 +7,14 @@
     
 	<!-- Para hacer consultas, el shipper no tendria por que estar vigente. -->
     <select id="selectShipperId" resultType="com.atos.beans.ComboFilterNS">
-		select tgr.idn_user_group as key, tgr.user_group_id as value
+		select tgr.idn_user_group as key, tgr.short_name as value
 		from tpa_tuser_group tgr
 		where tgr.idn_user_group_type = (select idn_user_group_type from tpa_tuser_group_type where type_code = 'SHIPPER')
 		order by upper(tgr.user_group_id) asc
     </select>
     
     <select id="selectValidShipperId" resultType="com.atos.beans.ComboFilterNS">
-		select tgr.idn_user_group as key, tgr.user_group_id as value
+		select tgr.idn_user_group as key, tgr.short_name as value
 		from tpa_tuser_group tgr
 		where tgr.idn_user_group_type = (select idn_user_group_type from tpa_tuser_group_type where type_code = 'SHIPPER')
 			  and trunc(sysdate) between tgr.start_date and nvl(tgr.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
@@ -137,6 +137,7 @@ SELECT SUM(data_found) AS data_found
 		<result property="contractCode" column="contract_code"/>
 		<result property="shipperId" column="idn_user_group"/>
 		<result property="shipperCode" column="user_group_id"/>
+		<result property="shortName" column="short_name"/>
 		<result property="operatorComments" column="operator_comments"/>
 		<result property="fileName" column="file_name"/>
 		<collection property="details" ofType="com.atos.beans.balancing.ReserveBalancingGasContractDetailBean" resultMap="ReserveContractDetails"/>
@@ -162,6 +163,7 @@ SELECT SUM(data_found) AS data_found
 		               trc.contract_code,
 		               trc.idn_user_group,
 		               tgr.user_group_id,
+		               tgr.short_name,
 		               trc.operator_comments,
 		               trc.file_name
 		          from tpa_tresbal_contract trc, tpa_tuser_group tgr

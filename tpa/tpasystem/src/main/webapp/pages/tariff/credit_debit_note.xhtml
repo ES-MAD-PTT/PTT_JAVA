@@ -35,7 +35,7 @@
 						<p:panelGrid>
 							<p:row>
 								<p:column style="font-weight: bold;">
-									<h:outputText value="#{msg['creditDebitNote_Shipper']}" />
+									<h:outputText value="#{msg['creditDebitNote_Shipper_short_name']}" />
 								</p:column>
 								<p:column style="font-weight: bold;">
 									<h:outputText value="#{msg['creditDebitNote_Month_Year']}" />
@@ -160,7 +160,13 @@
 							filterMatchMode="contains"
 							filterBy="#{creditDebitNote.shipper}">
 							<h:outputText value="#{creditDebitNote.shipper}"/>								
-						</p:column>						
+						</p:column>
+						<p:column headerText="#{msg['creditDebitNote_Shipper_short_name']}"
+							style="width: 55px; text-align: center;" sortBy="#{creditDebitNote.shortName}"
+							filterMatchMode="contains"
+							filterBy="#{creditDebitNote.shortName}">
+							<h:outputText value="#{creditDebitNote.shortName}"/>								
+						</p:column>							
 						
 						<p:column headerText="#{msg['creditDebitNote_Month_Year']}"
 							style="width: 55px; text-align: center;" sortBy="#{creditDebitNote.monthYear}"
@@ -349,7 +355,7 @@
 						<p:panelGrid>
 							<p:row>
 								<p:column>
-									<h:outputText value="#{msg['creditDebitNote_Shipper']}" />
+									<h:outputText value="#{msg['creditDebitNote_Shipper_short_name']}" />
 								</p:column>
 								<p:column>
 									<p:selectOneMenu id="newShipper" required="true" requiredMessage="The mandatory field #{msg['creditDebitNote_Shipper']} must be informed" style="width:100px"   value="#{creditDebitNoteView.newNote.shipperId}" >

@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.primefaces.model.DefaultStreamedContent;
@@ -21,6 +22,7 @@ public class ReserveBalancingGasContractBean extends UserAudBean implements Seri
 	private String contractCode;
 	private BigDecimal shipperId;
 	private String shipperCode;
+	private String shortName;
 	private String operatorComments;
 	private String fileName;
 	private BigDecimal idnSystem;
@@ -37,6 +39,7 @@ public class ReserveBalancingGasContractBean extends UserAudBean implements Seri
 		this.contractCode = null;		
 		this.shipperId = null;
 		this.shipperCode = null;
+		this.shortName = null;
 		this.operatorComments = null;
 		this.fileName = null;
 		this.binaryData = null;
@@ -100,6 +103,14 @@ public class ReserveBalancingGasContractBean extends UserAudBean implements Seri
 		this.binaryData = binaryData;
 	}
 
+	public String getShortName() {
+		return shortName;
+	}
+
+	public void setShortName(String shortName) {
+		this.shortName = shortName;
+	}
+
 	public DefaultStreamedContent getScFile() {
 		
 		if( binaryData != null ) {
@@ -128,8 +139,9 @@ public class ReserveBalancingGasContractBean extends UserAudBean implements Seri
 	@Override
 	public String toString() {
 		return "ReserveBalancingGasContractBean [contractId=" + contractId + ", contractCode=" + contractCode
-				+ ", shipperId=" + shipperId + ", shipperCode=" + shipperCode + ", operatorComments=" + operatorComments
-				+ ", fileName=" + fileName + ", scFile=" + scFile + ", details=" + details + "]";
+				+ ", shipperId=" + shipperId + ", shipperCode=" + shipperCode + ", shortName=" + shortName
+				+ ", operatorComments=" + operatorComments + ", fileName=" + fileName + ", idnSystem=" + idnSystem
+				+ ", binaryData=" + Arrays.toString(binaryData) + ", details=" + details + "]";
 	}
 
 	public BigDecimal getIdnSystem() {

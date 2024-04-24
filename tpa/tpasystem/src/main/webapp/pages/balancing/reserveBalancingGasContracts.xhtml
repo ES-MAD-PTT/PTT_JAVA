@@ -30,7 +30,7 @@
 						<p:panelGrid>
 							<p:row>
 								<p:column  style="font-weight: bold;">
-									<h:outputText value="#{msg['res_bal_con_shipper']}" />
+									<h:outputText value="#{msg['res_bal_con_shipper_short_name']}" />
 								</p:column>
 								<p:column  style="font-weight: bold;">
 									<h:outputText value="#{msg['res_bal_con_contract_id']}" />
@@ -164,6 +164,11 @@
 					       		rendered="#{not ResBalGasContractsView.isShipper}">
 					       		<h:outputText value="#{resContract.shipperCode}" />
 							</p:column>
+							
+							<p:column headerText="#{msg['res_bal_con_shipper_short_name']}" style="width: 100px;" sortBy="#{resContract.shortName}" 
+					       		rendered="#{not ResBalGasContractsView.isShipper}">
+					       		<h:outputText value="#{resContract.shortName}" />
+							</p:column>
  							
 							<p:column headerText="#{msg['res_bal_con_general_comments']}" style="width: 200px;" >
 								<h:outputText style="float:left" value="#{resContract.operatorComments}" title="#{resContract.operatorComments}" />
@@ -255,7 +260,7 @@
 					</p:row>
 					<p:row>
 				     	<p:column style="width: 150px;">
-				       		<h:outputText value="#{msg['res_bal_con_shipper']}" />
+				       		<h:outputText value="#{msg['res_bal_con_shipper_short_name']}" />
 				       	</p:column>	
 				       	<p:column>
 		       				<p:selectOneMenu id="newContractShipperId" style="width:100px" value="#{ResBalGasContractsView.newContract.shipperId}" 

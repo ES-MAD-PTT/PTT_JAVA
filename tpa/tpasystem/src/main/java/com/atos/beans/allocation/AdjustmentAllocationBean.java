@@ -14,6 +14,7 @@ public class AdjustmentAllocationBean implements Serializable {
 	private Date gasDay;
 	private BigDecimal idnShipper;
 	private String shipperCode;
+	private String shortName;
 	private BigDecimal idnZone;
 	private String zoneCode;
 	private BigDecimal imbalanceStock;
@@ -53,6 +54,14 @@ public class AdjustmentAllocationBean implements Serializable {
 
 	public void setShipperCode(String shipperCode) {
 		this.shipperCode = shipperCode;
+	}
+
+	public String getShortName() {
+		return shortName;
+	}
+
+	public void setShortName(String shortName) {
+		this.shortName = shortName;
 	}
 
 	public BigDecimal getIdnZone() {
@@ -306,12 +315,13 @@ public class AdjustmentAllocationBean implements Serializable {
 	@Override
 	public String toString() {
 		return "AdjustmentAllocationBean [gasDay=" + gasDay + ", idnShipper=" + idnShipper + ", shipperCode="
-				+ shipperCode + ", idnZone=" + idnZone + ", zoneCode=" + zoneCode + ", imbalanceStock=" + imbalanceStock
-				+ ", allocatedAdjust=" + allocatedAdjust + ", pendingAdjust=" + pendingAdjust + ", finalImbalanceStock="
-				+ finalImbalanceStock + ", isEditable=" + isEditable + ", idn_active_system=" + idn_active_system
-				+ ", user=" + user + ", language=" + language + ", errorDesc=" + errorDesc + ", errorCode=" + errorCode
-				+ ", imbalanceCorrection=" + imbalanceCorrection + ", operator_comments=" + operator_comments
-				+ ", idnNominationConcept=" + idnNominationConcept + "]";
+				+ shipperCode + ", shortName=" + shortName + ", idnZone=" + idnZone + ", zoneCode=" + zoneCode
+				+ ", imbalanceStock=" + imbalanceStock + ", allocatedAdjust=" + allocatedAdjust + ", pendingAdjust="
+				+ pendingAdjust + ", finalImbalanceStock=" + finalImbalanceStock + ", isEditable=" + isEditable
+				+ ", idn_active_system=" + idn_active_system + ", user=" + user + ", language=" + language
+				+ ", errorDesc=" + errorDesc + ", errorCode=" + errorCode + ", imbalanceCorrection="
+				+ imbalanceCorrection + ", operator_comments=" + operator_comments + ", idnNominationConcept="
+				+ idnNominationConcept + "]";
 	}
 
 }

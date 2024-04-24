@@ -6,7 +6,7 @@
 
    <!-- Para hacer consultas, el punto no tendria por que estar vigente. -->
     <select id="selectShipperId" resultType="com.atos.beans.ComboFilterNS">
-		select tgr.idn_user_group as key, tgr.user_group_id as value
+		select tgr.idn_user_group as key, tgr.short_name as value
 		from tpa_tuser_group tgr
 		where tgr.idn_user_group_type = (select idn_user_group_type from tpa_tuser_group_type where type_code = 'SHIPPER')
 		order by upper(tgr.user_group_id) asc
@@ -25,6 +25,7 @@
 		<result property="timestamp" column="version_date"/>
 		<result property="shipperId" column="idn_user_group"/>
         <result property="shipperCode" column="user_group_id"/>
+        <result property="shortName" column="short_name"/>
         <result property="zoneId" column="idn_zone"/> 
         <result property="zoneCode" column="zone_code"/>   
         <result property="accImbalanceImbalanceInventory" column="imbalance_value"/>
@@ -51,6 +52,7 @@
 	   gf.idn_user_group,
        a.version_date,
        ug.user_group_id,
+       ug.short_name,
        z.zone_code, 
        gf.imbalance_value,
        gf.margin_value,

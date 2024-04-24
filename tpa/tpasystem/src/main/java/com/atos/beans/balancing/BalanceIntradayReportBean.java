@@ -17,6 +17,7 @@ public class BalanceIntradayReportBean implements Serializable {
 	private Date versionDate;
 	private String shipperCode;
 	private String shipperName;
+	private String shortName;
 	private BigDecimal contractId;
 	private String contractCode;
 	private String isTotal;
@@ -129,6 +130,7 @@ public class BalanceIntradayReportBean implements Serializable {
 		this.versionDate = null;
 		this.shipperCode = null;
 		this.shipperName = null;
+		this.shortName = null;
 		this.contractId = null;
 		this.contractCode = null;
 		this.isTotal = null;
@@ -284,6 +286,14 @@ public class BalanceIntradayReportBean implements Serializable {
 
 	public void setShipperName(String shipperName) {
 		this.shipperName = shipperName;
+	}
+
+	public String getShortName() {
+		return shortName;
+	}
+
+	public void setShortName(String shortName) {
+		this.shortName = shortName;
 	}
 
 	public BigDecimal getContractId() {
@@ -1073,7 +1083,7 @@ public class BalanceIntradayReportBean implements Serializable {
 	public String toCSVHeader() {
 		StringBuilder builder = new StringBuilder();
 		builder.append(
-				"versionDate;shipperCode;shipperName;contractCode;eTotalEntry;wTotalEntry;ewTotalEntry;eTotalExit;wTotalExit;ewTotalExit;eImbalanceZone;wImbalanceZone;totalImbalanceZone;eInstructedFlow;wInstructedFlow;eShrinkageQuantity;wShrinkageQuantity;ePark;wPark;eUnpark;wUnpark;eSOTDPark;wSOTDPark;eEOTDPark;wEOTDPark;eMinInventory;wMinInventory;eResBalancingGas;wResBalancingGas;eMonthAdjust;wMonthAdjust;eImbalanceStock;wImbalanceStock;totalAIP;totalAIN;imbalancePercentage;eAccImbalanceMonth;wAccImbalanceMonth;eAccImbalance;wAccImbalance;eACCImbInvPtt;wACCImbInvPtt;eUsedCapacity;wUsedCapacity;GSP;BYPASS;LNG;YDN;YTG;ZTK;eFrom;wFrom;eBvw10;wBvw10;eEGAT;eIPP;e_others;wEGAT;wIPP;w_others;ewEGAT;ewIPP;ew_others;eF2g;wF2g;e_east;e_west");
+				"versionDate;shipperCode;shipperName;shortName;contractCode;eTotalEntry;wTotalEntry;ewTotalEntry;eTotalExit;wTotalExit;ewTotalExit;eImbalanceZone;wImbalanceZone;totalImbalanceZone;eInstructedFlow;wInstructedFlow;eShrinkageQuantity;wShrinkageQuantity;ePark;wPark;eUnpark;wUnpark;eSOTDPark;wSOTDPark;eEOTDPark;wEOTDPark;eMinInventory;wMinInventory;eResBalancingGas;wResBalancingGas;eMonthAdjust;wMonthAdjust;eImbalanceStock;wImbalanceStock;totalAIP;totalAIN;imbalancePercentage;eAccImbalanceMonth;wAccImbalanceMonth;eAccImbalance;wAccImbalance;eACCImbInvPtt;wACCImbInvPtt;eUsedCapacity;wUsedCapacity;GSP;BYPASS;LNG;YDN;YTG;ZTK;eFrom;wFrom;eBvw10;wBvw10;eEGAT;eIPP;e_others;wEGAT;wIPP;w_others;ewEGAT;ewIPP;ew_others;eF2g;wF2g;e_east;e_west");
 		return builder.toString();
 	}
 
@@ -1085,6 +1095,7 @@ public class BalanceIntradayReportBean implements Serializable {
 		builder.append((versionDate==null ? "" : sdf.format(versionDate))+";");
 		builder.append((shipperCode==null ? "" : shipperCode) +";");
 		builder.append((shipperName==null ? "" : shipperName) +";");
+		builder.append((shortName==null ? "" : shortName) +";");
 		builder.append((contractCode==null ? "" : contractCode) +";");
 		builder.append((eTotalEntry==null ? "" : eTotalEntry.toPlainString()) +";");
 		builder.append((wTotalEntry==null ? "" : wTotalEntry.toPlainString()) +";");
@@ -1166,6 +1177,8 @@ public class BalanceIntradayReportBean implements Serializable {
 		builder.append(shipperCode);
 		builder.append(", shipperName=");
 		builder.append(shipperName);
+		builder.append(", shortName=");
+		builder.append(shortName);
 		builder.append(", contractId=");
 		builder.append(contractId);
 		builder.append(", contractCode=");

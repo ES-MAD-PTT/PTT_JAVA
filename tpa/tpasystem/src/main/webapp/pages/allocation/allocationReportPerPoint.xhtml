@@ -154,6 +154,13 @@
 								filterMatchMode="contains"
 								filterBy="#{allocReportPoint.shipperName}">
 								<h:outputText value="#{allocReportPoint.shipperName}" />
+							</p:column>	
+							<p:column headerText="#{msg['all_per_point_shipper_short_name']}"
+								styleClass="#{allocReportPoint.isTotal eq 'Y'? 'headerColor' : ''}"
+								style="width: 100px;" sortBy="#{allocReportPoint.shortName}"
+								filterMatchMode="contains"
+								filterBy="#{allocReportPoint.shortName}">
+								<h:outputText value="#{allocReportPoint.shortName}" />
 							</p:column>														
 							<p:column headerText="#{msg['all_per_point_type_point']}"
 								styleClass="#{allocReportPoint.isTotal eq 'Y'? 'headerColor' : ''}"

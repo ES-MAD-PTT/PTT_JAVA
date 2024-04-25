@@ -95,6 +95,7 @@ public class OffSpecIncidentBean extends UserAudBean implements Serializable {
     private String commentsShipper;
     private String commentsOperator;
     private String commentsUser;
+    private String shipper;
     private List<BigDecimal> multiShippers = new ArrayList<BigDecimal>();
     private List<OffSpecFileBean> files = new ArrayList<OffSpecFileBean>();
     private List<OffSpecActionFileBean> filesAction = new ArrayList<OffSpecActionFileBean>();
@@ -162,6 +163,14 @@ public class OffSpecIncidentBean extends UserAudBean implements Serializable {
 
 	public void setCommentsShipper(String commentsShipper) {
 		this.commentsShipper = commentsShipper;
+	}
+
+	public String getShipper() {
+		return shipper;
+	}
+
+	public void setShipper(String shipper) {
+		this.shipper = shipper;
 	}
 
 	public String getCommentsOperator() {

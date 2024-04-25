@@ -124,6 +124,9 @@ public class MeteringManagementServiceImpl implements MeteringManagementService 
 	@Autowired
 	@Qualifier("meteringTaskExecutor")
 	private ThreadPoolTaskExecutor metTaskExecutor;
+	
+	@Autowired
+    private AllocationAutorunIntradayClient intradayService;
 
 	private static final Logger log = LogManager.getLogger("com.atos.services.metering.MeteringManagementServiceImpl");
 
@@ -908,6 +911,14 @@ public class MeteringManagementServiceImpl implements MeteringManagementService 
 		}
 
 		ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication().getResourceBundle(FacesContext.getCurrentInstance(),"msg");
+
+		try {
+			intradayService.callAllocationIntradayRequestClient();
+		} catch (JobExecutionException e) {
+			log.error(e.getMessage(), e);
+			
+		}
+		
     	
     	try{
         	// Se lanza un thread para seguir con el proceso de forma asincrona/desatendida.

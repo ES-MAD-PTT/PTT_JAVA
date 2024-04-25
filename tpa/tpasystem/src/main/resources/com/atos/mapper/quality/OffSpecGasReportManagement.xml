@@ -255,6 +255,7 @@ AND sr.ask_other_shippers = 'Y'
         <result property="operatorComments" column="operator_comments"/>
         <result property="idnAction" column="idnAction"/>
         <result property="action" column="action"/>
+        <result property="shipper" column="shipper"/>
         <association property="gasParams" select="selectGasQualityParametersFromIncidentId" column="idn_offspec"/>
     </resultMap>
         
@@ -307,6 +308,7 @@ AND sr.ask_other_shippers = 'Y'
            tlogmin.operator_comments as operator_comments,
            tlogmin.idn_user as idn_first_user,
            (select u.user_id from tpa_tuser u where u.idn_user = tlogmin.idn_user) as first_user,
+           (select u.USER_GROUP_ID from tpa_tuser_group u where u.IDN_USER_GROUP = tlogmin.IDN_USER_GROUP) as shipper,
            tospec.idn_offspec_action as idnAction,
                (select a.action_desc 
                        from tpa_toffspec_action a
@@ -380,6 +382,7 @@ AND sr.ask_other_shippers = 'Y'
            tlogmin.operator_comments as operator_comments,
            tlogmin.idn_user as idn_first_user,
            (select u.user_id from tpa_tuser u where u.idn_user = tlogmin.idn_user) as first_user,
+           (select u.USER_GROUP_ID from tpa_tuser_group u where u.IDN_USER_GROUP = tlogmin.IDN_USER_GROUP) as shipper,
            tospec.idn_offspec_action as idnAction,
            (select a.action_desc 
                        from tpa_toffspec_action a

@@ -36,7 +36,8 @@
           password="webservice123"
           driverClassName="oracle.jdbc.OracleDriver"
            
-          url="jdbc:oracle:thin:@172.24.59.19:1522/TPA01"
+           url="jdbc:oracle:thin:@143.47.59.1:1521/TPAGNL02_pdb2.sub01161534500.tpagnlvcn.oraclevcn.com"
+          
              />
        <!--    jdbcInterceptors="org.apache.tomcat.jdbc.pool.interceptor.ConnectionState;
 			org.apache.tomcat.jdbc.pool.interceptor.StatementFinalizer;
@@ -47,7 +48,7 @@
            <!-- driverClassName="oracle.jdbc.driver.OracleDriver"
           
           url para la BD de desarrollo 
-            url="jdbc:oracle:thin:@172.24.59.19:1522/TPA01"
+            url="jdbc:oracle:thin:@143.47.59.1:1521/TPAGNL02_pdb2.sub01161534500.tpagnlvcn.oraclevcn.com"
            
            usr para mi BD Local 
             url="jdbc:oracle:thin:@localhost:1522/TPA12"
@@ -57,7 +58,7 @@
             url="jdbc:oracle:thin:@172.24.59.19:1524/TPA03"
             
             usr para la BD de preproduccion
-            url="jdbc:oracle:thin:@10.104.239.112:1521/TPA01"
+            url="jdbc:oracle:thin:@10.10.1.183:1521/TPA01"
 
 			usr para la BD de produccion nodo 1
 			url="jdbc:oracle:thin:@10.104.239.93:1521/TPA01"

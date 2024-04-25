@@ -77,6 +77,16 @@ public class ReleaseCapacitySubmissionServiceImpl implements ReleaseCapacitySubm
 		return map; 		
 	}
 
+	public Map<BigDecimal, Object> selectContractsOperator(BigDecimal idn_system) {	
+		Map<BigDecimal, Object> map = new LinkedHashMap<BigDecimal, Object>();
+		List<ComboFilterNS> list = rcsMapper.selectContractsByOperador(idn_system);
+		for (ComboFilterNS combo : list) {
+			if (combo == null) continue;
+			map.put(combo.getKey(), combo.getValue());
+		}
+		return map; 		
+	}
+
 	
 	public Map<BigDecimal, Object> selectSystemPoints(BigDecimal contractId) {	
 		Map<BigDecimal, Object> map = new LinkedHashMap<BigDecimal, Object>();

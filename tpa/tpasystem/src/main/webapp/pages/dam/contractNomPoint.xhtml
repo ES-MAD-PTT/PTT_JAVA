@@ -420,7 +420,7 @@
 				</p:panelGrid>
 				<p:panelGrid columns="4" style="width:100%">
 					<p:dataTable widgetVar="w_contractNomPoint1"  id="contractNomPoints2" var="contractNomPoint" value="#{contractNomPointView.selecteds}"
-							 reflow="true" editable="true" 
+							 reflow="true" disabledSelection="#{!contractNomPointView.isEndDateBeforeTomorrow()}"
 							 rowSelectMode="checkbox" selection="#{contractNomPointView.selectedsFornNew}" rowKey="#{contractNomPoint.idn_nomination_point}"
 							style="margin-bottom:20px;border-collapse:collapse"
 						    paginator="true" rows="10" 
@@ -434,7 +434,7 @@
 									<p:ajax event="rowEditCancel" listener="#{contractNomPointView.onRowCancel}" update=":form:msgs" onstart="$('.ui-row-editor span.ui-icon-pencil').each(function(){$(this).css('visibility','visible')});"/>
 								 </shiro:hasPermission>
 						  	  
-						  	  <p:column headerText="Select" selectionMode="multiple" style="width:36px;text-align:center"/>
+						  	  <p:column headerText="Select" selectionMode="multiple" style="width:36px;text-align:center"  />
 						  	  
 						  	  <p:column styleClass="" headerText="#{msg['contractNomPoint_contract_point']}" style="width: 130px;text-align:center " sortBy="#{contractNomPoint.shipper}" >
 						       		<h:outputText value="#{contractNomPoint.contract_point}" />

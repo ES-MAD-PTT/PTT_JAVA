@@ -582,14 +582,14 @@ public class ContractNomPointView  extends CommonView implements Serializable {
     	String summaryMsgOk = CommonView.getMessageResourceString("insert_ok", params);
     	String summaryMsgNotOk= CommonView.getMessageResourceString("insert_noOk", params);
 
-		if (newContractNomPoint.getStartDate() != null) {
-			if (newContractNomPoint.getStartDate().before(sysdate.getTime())) {
-				errorMsg = msgs.getString("error_startDate_sysdate"); //error_startDate_sysdate= Start date must be later to sysdate
-				getMessages().addMessage(Constants.head_menu[0], new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
-				log.error(errorMsg);
-				return;
-			}
-		}
+//		if (newContractNomPoint.getStartDate() != null) {
+//			if (newContractNomPoint.getStartDate().before(sysdate.getTime())) {
+//				errorMsg = msgs.getString("error_startDate_sysdate"); //error_startDate_sysdate= Start date must be later to sysdate
+//				getMessages().addMessage(Constants.head_menu[0], new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
+//				log.error(errorMsg);
+//				return;
+//			}
+//		}
 
 		if (newContractNomPoint.getEndDate() != null) {
 			if (newContractNomPoint.getEndDate().before(sysdate.getTime())) {

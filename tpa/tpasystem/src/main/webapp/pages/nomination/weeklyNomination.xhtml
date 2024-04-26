@@ -44,7 +44,7 @@
 								<p:panelGrid id="filters">
 									<p:row>
 										<p:column  style="font-weight: bold;">
-											<h:outputText value="#{msg['nom_shipper_short_name']}" />
+											<h:outputText value="#{msg['day_nom_shipper_code']}" />
 										</p:column>
 										<p:column  style="font-weight: bold;">
 											<h:outputText value="#{msg['gas_week']}" />
@@ -144,16 +144,16 @@
 							       </p:column>
 							       
 							       <p:column headerText="#{msg['day_nom_shipper']}" sortBy="#{queryNom.user_group_id}" filterMatchMode="contains" filterBy="#{queryNom.user_group_id}">
-							           <h:outputText value="#{queryNom.user_group_id}" />
+							           <h:outputText value="#{queryNom.user_group_id}(#{queryNom.short_name})" />
 							       </p:column>
 							       
 							       <p:column headerText="#{msg['day_nom_shipper_name']}" sortBy="#{queryNom.user_group_name}" filterMatchMode="contains" filterBy="#{queryNom.user_group_name}">
 							           <h:outputText value="#{queryNom.user_group_name}" />
 							       </p:column>
 							       
-							       <p:column headerText="#{msg['nom_shipper_short_name']}" sortBy="#{queryNom.short_name}" filterMatchMode="contains" filterBy="#{queryNom.short_name}">
+							       <!-- <p:column headerText="#{msg['nom_shipper_short_name']}" sortBy="#{queryNom.short_name}" filterMatchMode="contains" filterBy="#{queryNom.short_name}">
 							           <h:outputText value="#{queryNom.short_name}" />
-							       </p:column>
+							       </p:column> -->
 
 									<p:column style="width:150px" headerText="#{msg['day_nom_shipper_comment']}" sortBy="#{queryNom.shipper_comments}" filterMatchMode="contains" filterBy="#{queryNom.shipper_comments}">
 						                <p:commandButton icon="fa fa-search-plus"

@@ -29,7 +29,7 @@
 						<p:panelGrid>
 							<p:row>
 								<p:column  style="font-weight: bold;"><h:outputText value="#{msg['areaQualityShipper_Area']}" /></p:column>
-								<p:column  style="font-weight: bold;"><h:outputText value="#{msg['areaQualityShipper_Shipper']}" /></p:column>
+								<p:column  style="font-weight: bold;"><h:outputText value="#{msg['areaQPS_shipper_id']}" /></p:column>
 							</p:row>
 							<p:row>
 							    <p:column>
@@ -112,16 +112,12 @@
 					       </p:column>
 					       
 					       <p:column headerText="#{msg['areaQPS_shipper_id']}"  style="width: 100px;" sortBy="#{areaQualityPS.user_group_id}" filterMatchMode="contains" filterBy="#{areaQualityPS.shipper}">
-					       		<h:outputText value="#{areaQualityPS.user_group_id}" />
+					       		<h:outputText value="#{areaQualityPS.user_group_id}(#{areaQualityPS.shortName})" />
 					       </p:column>
 			
 					        <p:column headerText="#{msg['areaQPS_shipper_name']}"  style="width: 100px;" sortBy="#{areaQualityPS.user_group_name}" filterMatchMode="contains" filterBy="#{areaQualityPS.shipperId}">
 					       		<h:outputText value="#{areaQualityPS.user_group_name}" />
-					       </p:column>
-					       
-					       <p:column headerText="#{msg['areaQualityShipper_Shipper']}"  style="width: 100px;" sortBy="#{areaQualityPS.shortName}" filterMatchMode="contains" filterBy="#{areaQualityPS.shortName}">
-					       		<h:outputText value="#{areaQualityPS.shortName}" />
-					       </p:column>							      					    
+					       </p:column>						      					    
 					       
 					       <p:column headerText="#{msg['areaQPS_start']}"  style="width: 100px;" sortBy="#{areaQualityPS.start_date_gas_Quality}" >
 					          <p:cellEditor>

@@ -377,7 +377,7 @@ WHERE  tuser_group.idn_user_group = r.idn_user_group
 </select>
 
 <select id="selectShippersCombo"  parameterType="com.atos.filters.booking.ContractCapacityPathFilter" resultType="com.atos.beans.ComboFilterNS">
-	SELECT tuser.idn_user_group as key, tuser.short_name as value
+	SELECT tuser.idn_user_group as key, tuser.user_group_id || ' (' || tuser.short_name || ')' AS value
 	FROM tpa_tuser_group tuser
 	WHERE tuser.idn_user_group_type = (SELECT idn_user_group_type 
 									   FROM tpa_tuser_group_type 

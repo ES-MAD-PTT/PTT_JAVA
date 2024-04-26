@@ -104,12 +104,12 @@
 					       </p:column>
 
 					       <p:column headerText="#{msg['nom_shipper_code']}">
-					       		<h:outputText value="#{park.shipper_code}" />
+					       		<h:outputText value="#{park.shipper_code}(#{park.short_name})" />
 					       </p:column>
 					       
-					       <p:column headerText="#{msg['nom_shipper_short_name']}">
+					       <!-- <p:column headerText="#{msg['nom_shipper_short_name']}">
 					       		<h:outputText value="#{park.short_name}" />
-					       </p:column>
+					       </p:column> -->
 
 					       <p:column headerText="#{msg['contract_code']}">
 					           <h:outputText value="#{park.contract_code}" />

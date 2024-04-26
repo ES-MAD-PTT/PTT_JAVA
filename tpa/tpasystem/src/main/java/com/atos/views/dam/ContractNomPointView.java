@@ -590,14 +590,16 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 //				return;
 //			}
 //		}
-
+    	sysdate.add(Calendar.DAY_OF_MONTH, -1);
 		if (newContractNomPoint.getEndDate() != null) {
+			sysdate.add(Calendar.DAY_OF_MONTH, -1);
 			if (newContractNomPoint.getEndDate().before(sysdate.getTime())) {
-				errorMsg = msgs.getString("error_endDate_sysdate"); //error_endDate_sysdate= End Date must be later to sysdate
+				errorMsg = msgs.getString("error_endDate_sysdate_short"); //error_endDate_sysdate_short= End Date must be later or equal to sysdate
 				getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
 				log.error(errorMsg);
 				return;
 			}
+			sysdate = Calendar.getInstance();
 			if (newContractNomPoint.getStartDate().after(newContractNomPoint.getEndDate())) {
 				errorMsg = msgs.getString("error_startEarlierEnd"); //error_startEarlierEnd = Start Date must be earlier or equal to End Date
 				getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));

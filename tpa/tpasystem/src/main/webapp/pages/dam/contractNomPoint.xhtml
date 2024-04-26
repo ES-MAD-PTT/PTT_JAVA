@@ -402,7 +402,7 @@
 							</p:column>
 							<p:column>
 							    <p:selectOneMenu id="new_contract_point" style="width:100px" value="#{contractNomPointView.newContractNomPoint.idn_contract_point}" 
-							        required="true" requiredMessage="#{msg['contractNomPoint_contract_point']}: #{msg['empty_field']}" disabled="#{contractNomPointView.isEndDateBeforeTomorrow()}"> 
+							        required="true" requiredMessage="#{msg['contractNomPoint_contract_point']}: #{msg['empty_field']}" > 
 							        <f:selectItem itemLabel="" itemValue="0" />
 							        <f:selectItems value="#{contractNomPointView.contractNomPointsForm.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
 							        <p:ajax event="change" listener="#{contractNomPointView.contractNomPointsTable}" update="contractNomPoints2" onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()" />                                    
@@ -453,7 +453,7 @@
 							<p:commandButton value="#{msg['save']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" validateClient="true"
 								action="#{contractNomPointView.edit}" update=":#{p:component('contractNomPoints1')},:formEditEntity"
 								onstart="PF('cargando').show()"
-								oncomplete="PF('dlgEditContractNomPoint').hide(),PF('cargando').hide()" disabled="#{contractNomPointView.isEndDateBeforeTomorrow()}"/>
+								oncomplete="PF('dlgEditContractNomPoint').hide(),PF('cargando').hide()"/>
 			        		<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close"
 			        		 	update="formEditEntity" process="@this" actionListener="#{contractNomPointView.cancel}"
 			        			oncomplete="PF('dlgEditContractNomPoint').hide()"/>

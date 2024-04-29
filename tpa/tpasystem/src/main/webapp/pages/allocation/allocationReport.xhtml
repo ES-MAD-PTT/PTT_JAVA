@@ -37,7 +37,7 @@
 									<h:outputText value="#{msg['alloc_report_date_to']}" />
 								</p:column>
 								<p:column  style="font-weight: bold;">
-									<h:outputText value="#{msg['all_rev_shipper_short_name']}" />
+									<h:outputText value="#{msg['all_rev_shipper_code']}" />
 								</p:column>
 								<p:column  style="font-weight: bold;">
 									<h:outputText value="#{msg['all_rev_contract_code']}" />
@@ -196,14 +196,14 @@
 			              		</h:outputText>
 					       </p:column>
 					       <p:column headerText="#{msg['all_rev_shipper_code']}" style="width: 100px;">
-					       		<h:outputText value="#{item.shipperCode}" />
+					       		<h:outputText value="#{item.shipperCode}(#{item.shortName})" />
 					       </p:column>
 					       <p:column headerText="#{msg['all_rev_shipper_name']}" style="width: 100px;">
 					       		<h:outputText value="#{item.shipperName}" />
 					       </p:column>
-					       <p:column headerText="#{msg['all_rev_shipper_short_name']}" style="width: 100px;">
+					       <!-- <p:column headerText="#{msg['all_rev_shipper_short_name']}" style="width: 100px;">
 					       		<h:outputText value="#{item.shortName}" />
-					       </p:column>
+					       </p:column> -->
 					       <p:column headerText="#{msg['all_rev_contract_code']}" style="width: 100px;" >
 					       		<h:outputText value="#{item.contractCode}" />
 					       </p:column>

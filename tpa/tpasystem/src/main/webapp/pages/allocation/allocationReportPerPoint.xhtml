@@ -145,7 +145,7 @@
 								styleClass="#{allocReportPoint.isTotal eq 'Y'? 'headerColor' : ''}"
 								style="width: 100px;" sortBy="#{allocReportPoint.shipperCode}"
 								filterMatchMode="contains"
-								filterBy="#{allocReportPoint.shipperCode}">
+								filterBy="#{allocReportPoint.shipperCode}(#{allocReportPoint.shortName})" />
 								<h:outputText value="#{allocReportPoint.isTotal eq 'Y'? 'Total' : allocReportPoint.shipperCode}"/>
 							</p:column>
 							<p:column headerText="#{msg['all_per_point_shipper_name']}"
@@ -155,13 +155,13 @@
 								filterBy="#{allocReportPoint.shipperName}">
 								<h:outputText value="#{allocReportPoint.shipperName}" />
 							</p:column>	
-							<p:column headerText="#{msg['all_per_point_shipper_short_name']}"
+							<!-- <p:column headerText="#{msg['all_per_point_shipper_short_name']}"
 								styleClass="#{allocReportPoint.isTotal eq 'Y'? 'headerColor' : ''}"
 								style="width: 100px;" sortBy="#{allocReportPoint.shortName}"
 								filterMatchMode="contains"
 								filterBy="#{allocReportPoint.shortName}">
 								<h:outputText value="#{allocReportPoint.shortName}" />
-							</p:column>														
+							</p:column>	 -->													
 							<p:column headerText="#{msg['all_per_point_type_point']}"
 								styleClass="#{allocReportPoint.isTotal eq 'Y'? 'headerColor' : ''}"
 								style="width: 100px;" sortBy="#{allocReportPoint.pointTypeCode}"

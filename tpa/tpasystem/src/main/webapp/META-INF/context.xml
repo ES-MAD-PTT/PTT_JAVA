@@ -57,7 +57,7 @@
             url="jdbc:oracle:thin:@172.24.59.19:1524/TPA03"
             
             usr para la BD de preproduccion
-            url="jdbc:oracle:thin:@10.104.239.112:1521/TPA01"
+            url="jdbc:oracle:thin:@10.10.1.183:1521/TPA01"
 
 			usr para la BD de produccion nodo 1
 			url="jdbc:oracle:thin:@10.104.239.93:1521/TPA01"

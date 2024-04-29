@@ -35,6 +35,20 @@
 		order by tcon.contract_code asc
     </select> 
 
+    <select id="selectContractsByOperador" resultType="com.atos.beans.ComboFilterNS">
+		select tcon.idn_contract as key,
+		       tcon.contract_code as value
+		from tpa_tcontract tcon,
+         	 tpa_voperation op
+		where tcon.end_date > sysdate
+	          and tcon.idn_operation = op.IDN_OPERATION
+	          and op.CATEGORY_CODE = 'CONTRACT'
+	          --and op.TERM_CODE in ('LONG','MEDIUM')
+			  and EXISTS (SELECT 1 FROM tpa_tcontract_consolidate tconso WHERE tcon.idn_contract = tconso.idn_contract)
+			  and tcon.idn_pipeline_system = #{idn_system}
+		order by tcon.contract_code asc
+    </select> 
+
     <select id="selectSystemPointsByContractId" resultType="com.atos.beans.ComboFilterNS">
 	    select distinct vcon.idn_system_point as key,
 						tsysp.point_code as value

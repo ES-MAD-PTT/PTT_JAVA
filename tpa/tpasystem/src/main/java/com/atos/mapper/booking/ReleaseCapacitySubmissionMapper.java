@@ -21,6 +21,7 @@ public interface ReleaseCapacitySubmissionMapper extends Serializable{
 	
 	//public List<ComboFilterNS> selectContractsByShipperId(BigDecimal shipperId);
 	public List<ComboFilterNS> selectContractsByShipperId(@Param("shipperId") BigDecimal shipperId,@Param("idn_system") BigDecimal idn_system);
+	public List<ComboFilterNS> selectContractsByOperador(BigDecimal idn_system);	
 	
 	public List<ComboFilterNS> selectSystemPointsByContractId(BigDecimal contractId);
 	public List<Integer> selectAgreementStartYearsByContractId(BigDecimal contractId);

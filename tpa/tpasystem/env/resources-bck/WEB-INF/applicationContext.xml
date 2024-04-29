@@ -145,7 +145,7 @@
 	<bean id="parameterMap" class="java.util.HashMap">
 	    <constructor-arg>
 	        <map key-type="java.lang.String" value-type="java.lang.String">
-	            <entry key="csv.folder" value="/home/weblogic/csv/"/>
+	            <entry key="csv.folder" value="/home/tpa/csv/"/>
 	         </map>
 	    </constructor-arg>
 	</bean>

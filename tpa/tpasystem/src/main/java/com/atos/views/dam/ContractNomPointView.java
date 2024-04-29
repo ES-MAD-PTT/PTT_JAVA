@@ -793,6 +793,10 @@ public class ContractNomPointView  extends CommonView implements Serializable {
     }
     
     public boolean isStartDateBeforeTomorrow() {
+        if (newContractNomPoint.getIdn_contract_point() == null) {
+            return false; // Si el idn_contract_point es null, entonces la fecha de inicio no puede estar antes de mañana
+        }
+
         Calendar tomorrow = Calendar.getInstance();
         tomorrow.add(Calendar.DAY_OF_MONTH, 1); // Sumar un día al calendario
         
@@ -807,6 +811,7 @@ public class ContractNomPointView  extends CommonView implements Serializable {
         // Comprobar si startDate es antes de mañana
         return startDate != null && startDate.before(tomorrow.getTime());
     }
+
     
     public boolean isEndDateBeforeTomorrow() {
         Calendar tomorrow = Calendar.getInstance();

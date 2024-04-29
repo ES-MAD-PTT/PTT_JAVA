@@ -420,7 +420,7 @@
 				</p:panelGrid>
 				<p:panelGrid columns="4" style="width:100%">
 					<p:dataTable widgetVar="w_contractNomPoint1"  id="contractNomPoints2" var="contractNomPoint" value="#{contractNomPointView.selecteds}"
-							 reflow="true" disabledSelection="#{!contractNomPointView.isEndDateBeforeTomorrow()}"
+							 reflow="true" disabledSelection="#{contractNomPointView.isStartDateBeforeTomorrow()}"
 							 rowSelectMode="checkbox" selection="#{contractNomPointView.selectedsFornNew}" rowKey="#{contractNomPoint.idn_nomination_point}"
 							style="margin-bottom:20px;border-collapse:collapse"
 						    paginator="true" rows="10" 

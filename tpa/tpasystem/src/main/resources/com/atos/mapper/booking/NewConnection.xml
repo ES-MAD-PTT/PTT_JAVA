@@ -5,7 +5,7 @@
 <mapper namespace="com.atos.mapper.booking.NewConnectionMapper">
    
     <select id="selectShipperId" resultType="com.atos.beans.ComboFilterNS">
-		select tgr.idn_user_group as key, tgr.short_name as value
+		select tgr.idn_user_group as key, tgr.user_group_id || ' (' || tgr.short_name || ')' AS value
 		from tpa_tuser_group tgr
 		where tgr.idn_user_group_type = (select idn_user_group_type from tpa_tuser_group_type where type_code = 'SHIPPER')
 			  and trunc(sysdate) between tgr.start_date and nvl(tgr.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))

@@ -37,7 +37,7 @@
 									<h:outputText value="" />
 								</p:column>
 								<p:column  style="font-weight: bold;" >
-									<h:outputText value="#{msg['renom_intraday_shipper_short_name']}"  />
+									<h:outputText value="#{msg['renom_intraday_shipper']}"  />
 								</p:column>
 
 								<p:column  style="font-weight: bold;" >
@@ -128,14 +128,14 @@
 					       		<h:outputText value="#{item.hour}" />
 					       </p:column>
 					       <p:column headerText="#{msg['renom_intraday_group_code']}">
-					           <h:outputText value="#{item.user_group_code}" />
+					           <h:outputText value="#{item.user_group_code}(#{item.shortName})" />
 					       </p:column>
 					       <p:column headerText="#{msg['renom_intraday_group_name']}">
 					           <h:outputText value="#{item.user_group_name}" />
 					       </p:column>
-					       <p:column headerText="#{msg['renom_intraday_shipper_short_name']}">
+					       <!-- <p:column headerText="#{msg['renom_intraday_shipper_short_name']}">
 					           <h:outputText value="#{item.shortName}" />
-					       </p:column>
+					       </p:column> -->
 					       <p:column headerText="#{msg['day_nom_status']}">
 					           <h:outputText value="#{item.status}" />
 					       </p:column>

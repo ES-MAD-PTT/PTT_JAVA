@@ -33,7 +33,7 @@
 									<h:outputText value="#{msg['cr_man_capacity_request_code']}" />
 								</p:column>
 								<p:column  style="font-weight: bold;">
-									<h:outputText value="#{msg['cr_man_shipper_short_name']}" />
+									<h:outputText value="#{msg['cr_man_shipper_id']}" />
 								</p:column>
 								<p:column  style="font-weight: bold;">
 									<h:outputText value="#{msg['cr_man_contract_type']}" />
@@ -156,16 +156,16 @@
 					       </p:column>
 
 					       <p:column headerText="#{msg['cr_man_shipper_id']}" style="width: 100px;" sortBy="#{capRequest.shipperCode}">
-					       		<h:outputText value="#{capRequest.shipperCode}" />
+					       		<h:outputText value="#{capRequest.shipperCode}(#{capRequest.shortName})" />
 					       </p:column>
 					       
 					       <p:column headerText="#{msg['cr_man_shipper_name']}" style="width: 100px;" sortBy="#{capRequest.shipperName}">
 					       		<h:outputText value="#{capRequest.shipperName}" />
 					       </p:column>
 					       
-					       <p:column headerText="#{msg['cr_man_shipper_short_name']}" style="width: 100px;" sortBy="#{capRequest.shortName}">
+					       <!-- <p:column headerText="#{msg['cr_man_shipper_short_name']}" style="width: 100px;" sortBy="#{capRequest.shortName}">
 					       		<h:outputText value="#{capRequest.shortName}" />
-					       </p:column>
+					       </p:column> -->
 
 					       <p:column headerText="#{msg['cr_man_contract_type']}" style="width: 100px;" sortBy="#{capRequest.contractTypeCode}">
 					       		<h:outputText value="#{capRequest.contractTypeCode}" />

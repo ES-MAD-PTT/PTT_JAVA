@@ -30,7 +30,7 @@
 						<p:panelGrid>
 							<p:row>
 								<p:column  style="font-weight: bold;">
-									<h:outputText value="#{msg['new_conn_shipper_short_name']}" />
+									<h:outputText value="#{msg['new_conn_shipper_id']}" />
 								</p:column>
 							</p:row>
 							<p:row>
@@ -97,12 +97,12 @@
 						</p:column>
 
 						<p:column headerText="#{msg['new_conn_shipper_id']}" style="width: 120px;" sortBy="#{newConn.shipperCode}">
-							<h:outputText value="#{newConn.shipperCode}" />
+							<h:outputText value="#{newConn.shipperCode} (#{newConn.shortName})" />
 						</p:column>
 						
-						<p:column headerText="#{msg['new_conn_shipper_short_name']}" style="width: 120px;" sortBy="#{newConn.shortName}">
+						<!-- <p:column headerText="#{msg['new_conn_shipper_short_name']}" style="width: 120px;" sortBy="#{newConn.shortName}">
 							<h:outputText value="#{newConn.shortName}" />
-						</p:column>
+						</p:column> -->
 
 						<p:column headerText="#{msg['new_conn_xlsFile']}" style="width: 150px;" sortBy="#{newConn.xlsFileName}">
 							<p:commandButton ajax="false"

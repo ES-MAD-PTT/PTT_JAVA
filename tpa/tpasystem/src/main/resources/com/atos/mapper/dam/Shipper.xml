@@ -59,9 +59,20 @@
     </select>
     
      <select id="selectShipperId" resultType="com.atos.beans.ComboFilter">
-		SELECT tuser.user_group_id as key, tuser.short_name as value
-		FROM tpa_tuser_group tuser
-		WHERE tuser.idn_user_group_type = (SELECT idn_user_group_type FROM tpa_tuser_group_type WHERE type_code = 'SHIPPER')
+		SELECT
+			tuser.user_group_id AS KEY,
+			tuser.user_group_id || ' (' || tuser.short_name || ')' AS value
+		FROM
+			tpa_tuser_group tuser
+		WHERE
+			tuser.idn_user_group_type = (
+			SELECT
+				idn_user_group_type
+			FROM
+				tpa_tuser_group_type
+			WHERE
+				type_code = 'SHIPPER'
+		    )
     </select>
 
     <select id="selectCompanyName" resultType="java.lang.String">
@@ -83,6 +94,7 @@
 			start_date = #{startDate},
 		    end_date = #{endDate},
 		    user_group_name = #{companyName},
+		    short_name =#{shortName},
 		    address = #{address},
 		    phone = #{telephone},
 		    fax = #{fax},

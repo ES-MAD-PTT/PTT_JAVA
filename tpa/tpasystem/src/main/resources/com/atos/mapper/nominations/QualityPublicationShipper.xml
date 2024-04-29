@@ -30,7 +30,7 @@
 	</select>
 	
 	<select id="selectShippers" resultType="com.atos.beans.ComboFilterNS">
-		select ug.idn_user_group as key, ug.short_name as value
+		select ug.idn_user_group as key, ug.user_group_id || ' (' || ug.short_name || ')' AS value
 		from TPA_TUSER_GROUP ug 
 		where ug.idn_user_group_type in 
   		(select idn_user_group_type 

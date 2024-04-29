@@ -94,6 +94,7 @@
 			start_date = #{startDate},
 		    end_date = #{endDate},
 		    user_group_name = #{companyName},
+		    short_name =#{shortName},
 		    address = #{address},
 		    phone = #{telephone},
 		    fax = #{fax},

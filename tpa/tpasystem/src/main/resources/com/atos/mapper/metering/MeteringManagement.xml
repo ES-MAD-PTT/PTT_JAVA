@@ -98,7 +98,7 @@
 				     tpa_tsystem_point      sp
 				where p.idn_user_group = #{idnShipper}
 				and  p.idn_met_point = sp.idn_system_point
-				  and sysdate between p.active_date_from and p.active_date_to
+				  and TRUNC(sysdate) between p.active_date_from and p.active_date_to
 				  and idn_met_point in (SELECT   idn_system_point  
 			</if>            
            FROM (

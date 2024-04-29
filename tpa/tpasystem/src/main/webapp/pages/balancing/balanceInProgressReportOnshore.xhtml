@@ -40,16 +40,16 @@
 	       	</p:column>
 
 	       <p:column headerText="#{msg['bal_rep_shipper']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" style="min-width: 125px;max-width: 125px;">
-	       		<h:outputText value="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'TOTAL: ' : ''}#{balance.shipperCode}" />
+	       		<h:outputText value="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'TOTAL: ' : ''}#{balance.shipperCode}(#{balance.shortName})" />
 	       </p:column>
 	       
 	        <p:column headerText="#{msg['bal_rep_shipperName']}" id="shipperName" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" style="min-width: 200px;max-width: 200px;">
 	       		<h:outputText value="#{balance.shipperName}" title="#{balance.shipperName}" />
 	       </p:column>
 	       
-	       <p:column headerText="#{msg['bal_rep_shipper_short_name']}" id="shortName" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" style="min-width: 200px;max-width: 200px;">
+	       <!-- <p:column headerText="#{msg['bal_rep_shipper_short_name']}" id="shortName" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" style="min-width: 200px;max-width: 200px;">
 	       		<h:outputText value="#{balance.shortName}" title="#{balance.shortName}" />
-	       </p:column>	       
+	       </p:column>	 -->       
 
 	       <p:column headerText="#{msg['bal_rep_contract']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" style="min-width: 100px;max-width: 100px;">
 	       		<h:outputText value="#{balance.isTotal eq 'Y'? '' : balance.contractCode}" />

@@ -40,16 +40,16 @@
 	       	</p:column>
 
 	       <p:column headerText="#{msg['bal_rep_shipper']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" style="min-width: 125px;max-width: 125px;">
-	       		<h:outputText value="#{balance.flag_nomination eq 1 and balance.isTotal eq 'N'? 'Nomination value' : balance.isTotal eq 'Y' or balance.isTotalAllShippers eq 'Y'? 'TOTAL ' : ''}#{balance.flag_nomination eq 1 and balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'NOMINATION' : ((balance.flag_nomination eq 1 and balance.isTotal eq 'N') or (balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'))? '' : balance.shipperCode}" />
+	       		<h:outputText value="#{balance.flag_nomination eq 1 and balance.isTotal eq 'N'? 'Nomination value' : balance.isTotal eq 'Y' or balance.isTotalAllShippers eq 'Y'? 'TOTAL ' : ''}#{balance.flag_nomination eq 1 and balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'NOMINATION' : ((balance.flag_nomination eq 1 and balance.isTotal eq 'N') or (balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'))? '' : balance.shipperCode}(#{balance.shortName})" />
 	       	</p:column>
 	       
 	        <p:column headerText="#{msg['bal_rep_shipperName']}" id="shipperName" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" style="min-width: 200px;max-width: 200px;">
 	       		<h:outputText value="#{balance.flag_nomination eq 1 and balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'NOMINATION' : balance.shipperName}" title="#{balance.flag_nomination eq 1 and balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'NOMINATION' : balance.shipperName}" />
 	       </p:column>
 	       
-	       <p:column headerText="#{msg['bal_rep_shipper_short_name']}" id="shortName" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" style="min-width: 200px;max-width: 200px;">
+	       <!-- <p:column headerText="#{msg['bal_rep_shipper_short_name']}" id="shortName" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" style="min-width: 200px;max-width: 200px;">
 	       		<h:outputText value="#{balance.flag_nomination eq 1 and balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'NOMINATION' : balance.shortName}" title="#{balance.flag_nomination eq 1 and balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'NOMINATION' : balance.shortName}" />
-	       </p:column>		       
+	       </p:column>	 -->	       
 
 	       <p:column headerText="#{msg['bal_rep_contract']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" style="min-width: 100px;max-width: 100px;">
 	       		<h:outputText value="#{balance.isTotal eq 'Y'? '' : balance.contractCode}" />

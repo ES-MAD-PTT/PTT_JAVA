@@ -389,7 +389,7 @@
 							<p:column>
 								<p:calendar required="true" id="new_fecFin" size="10" pattern="dd/MM/yyyy" mask="true" value="#{contractNomPointView.newContractNomPoint.endDate}"
 									requiredMessage="You need to select a date" 
-									showOn="button" navigator="true" disabled="#{contractNomPointView.isEndDateBeforeTomorrow()}">
+									showOn="button" navigator="true" disabled="#{contractNomPointView.isEndDateBeforeToday()}">
 									<p:ajax event="dateSelect" update="new_fecFin,new_contract_id"></p:ajax>
 									<p:ajax event="change" update="new_fecFin,new_contract_id"></p:ajax>
 								</p:calendar>
@@ -402,7 +402,7 @@
 							</p:column>
 							<p:column>
 							    <p:selectOneMenu id="new_contract_point" style="width:100px" value="#{contractNomPointView.newContractNomPoint.idn_contract_point}" 
-							        required="true" requiredMessage="#{msg['contractNomPoint_contract_point']}: #{msg['empty_field']}" > 
+							        required="true" requiredMessage="#{msg['contractNomPoint_contract_point']}: #{msg['empty_field']}" disabled="#{contractNomPointView.isEndDateBeforeTomorrow()}" > 
 							        <f:selectItem itemLabel="" itemValue="0" />
 							        <f:selectItems value="#{contractNomPointView.contractNomPointsForm.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
 							        <p:ajax event="change" listener="#{contractNomPointView.contractNomPointsTable}" update="contractNomPoints2" onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()" />                                    

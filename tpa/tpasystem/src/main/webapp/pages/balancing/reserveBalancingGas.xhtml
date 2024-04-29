@@ -51,7 +51,7 @@
 							</p:row>
 							<p:row>
 								<p:column style="font-weight: bold;">
-									<h:outputText value="#{msg['res_bal_shipper_short_name']}" />
+									<h:outputText value="#{msg['res_bal_shipper_id']}" />
 								</p:column>
 
 								<p:column style="font-weight: bold;">
@@ -162,14 +162,14 @@
 							<p:column headerText="#{msg['res_bal_shipper_id']}"
 								style="width: 100px;" 
 								rendered="#{not reserveBalancingGasView.isShipper}">
-								<h:outputText value="#{resBalFile.userGroupId}" />
+								<h:outputText value="#{resBalFile.userGroupId}(#{resBalFile.shortName})" />
 							</p:column>
 							
-							<p:column headerText="#{msg['res_bal_shipper_short_name']}"
+							<!-- <p:column headerText="#{msg['res_bal_shipper_short_name']}"
 								style="width: 100px;" 
 								rendered="#{not reserveBalancingGasView.isShipper}">
 								<h:outputText value="#{resBalFile.shortName}" />
-							</p:column>
+							</p:column> -->
 
 							<p:column headerText="#{msg['res_bal_contract_id']}"
 								style="width: 100px;" >

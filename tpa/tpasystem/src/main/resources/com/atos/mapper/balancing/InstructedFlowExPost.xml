@@ -76,7 +76,7 @@
     
     
     <select id="selectShippersComboFilter"  resultType="com.atos.beans.ComboFilterNS">
-		SELECT tuser.idn_user_group as key, tuser.short_name as value
+		SELECT tuser.idn_user_group as key, tuser.user_group_id || ' (' || tuser.short_name || ')' AS value
 		FROM tpa_tuser_group tuser
 		WHERE tuser.idn_user_group_type = (SELECT idn_user_group_type FROM tpa_tuser_group_type WHERE type_code = 'SHIPPER')
 		<!-- id 439163 quitar la restriccion en los filtros
@@ -86,7 +86,7 @@
     
     <select id="selectShippersComboNew"  resultType="com.atos.beans.ComboFilterNS">
     <!-- id 439163 aqui Si aplica la restriccion   and trunc(sysdate) between tuser.start_date and nvl(tuser.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))-->	
-		SELECT tuser.idn_user_group as key, tuser.short_name as value
+		SELECT tuser.idn_user_group as key, tuser.user_group_id || ' (' || tuser.short_name || ')' AS value
 		FROM tpa_tuser_group tuser
 		WHERE tuser.idn_user_group_type = (SELECT idn_user_group_type FROM tpa_tuser_group_type WHERE type_code = 'SHIPPER')
 		and trunc(sysdate) between tuser.start_date and nvl(tuser.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))		
@@ -96,7 +96,7 @@
     
      <select id="selectShippersComboAlone" parameterType="java.math.BigDecimal"  resultType="com.atos.beans.ComboFilterNS">
      <!-- cargamos el filtro solo con el usuario que ha entrado en pantalla, al ser shipper -->
-		SELECT tuser.idn_user_group as key, tuser.short_name as value
+		SELECT tuser.idn_user_group as key, tuser.user_group_id || ' (' || tuser.short_name || ')' AS value
 		FROM tpa_tuser_group tuser
 		WHERE tuser.idn_user_group_type = (SELECT idn_user_group_type FROM tpa_tuser_group_type WHERE type_code = 'SHIPPER')
 		 and trunc(sysdate) between tuser.start_date and nvl(tuser.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))

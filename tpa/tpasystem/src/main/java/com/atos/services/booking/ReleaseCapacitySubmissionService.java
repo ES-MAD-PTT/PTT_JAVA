@@ -13,6 +13,7 @@ public interface ReleaseCapacitySubmissionService extends Serializable {
 
 	public Map<BigDecimal, Object> selectShipperIdByUserId(String userId);
 	public Map<BigDecimal, Object> selectContracts(BigDecimal shipperId, BigDecimal idn_system);
+	public Map<BigDecimal, Object> selectContractsOperator(BigDecimal idn_active);
 	
 	public Date getStartDate(BigDecimal idContract);
 	public Date getEndDate(BigDecimal idContract);

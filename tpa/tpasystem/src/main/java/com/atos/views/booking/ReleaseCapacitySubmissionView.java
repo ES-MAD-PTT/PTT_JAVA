@@ -164,7 +164,11 @@ public class ReleaseCapacitySubmissionView extends CommonView implements Seriali
 	// Para los elementos del combo del filtro de shippers.
 	public Map<BigDecimal, Object> getContractCodes() {
 		
-		return service.selectContracts(getUser().getIdn_user_group(), getChangeSystemView().getIdn_active());
+		if(isShipper()) {
+			return service.selectContracts(getUser().getIdn_user_group(), getChangeSystemView().getIdn_active());
+		} else {
+			return service.selectContractsOperator(getChangeSystemView().getIdn_active());
+		}
 	}	
 	
 	

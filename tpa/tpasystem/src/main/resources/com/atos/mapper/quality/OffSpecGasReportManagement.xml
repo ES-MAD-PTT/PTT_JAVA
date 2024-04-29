@@ -330,7 +330,7 @@ AND sr.ask_other_shippers = 'Y'
               and tospec.idn_system_point=#{qualityPointId}
         </if>
         <if test="shipperId != null">
-              and nvl(tospec.idn_user_group,tlogmax.idn_user_group)=#{shipperId}
+              and tlogmin.idn_user_group = #{shipperId}
         </if>
         <choose>
         <when test="statusId != null and statusId.length > 0">

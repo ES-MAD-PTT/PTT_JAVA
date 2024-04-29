@@ -569,9 +569,11 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 			selected.setMultiShippers(new ArrayList<BigDecimal>());
 			selected.getMultiShippers().add(userShipper.getIdn_user_group());
 			selected.setGroupCode(userShipper.getUser_group_id());
+			onChangeAction();
+		}else {
+			RequestContext context = RequestContext.getCurrentInstance();
+			context.execute("PF('nextStatusDlg').show();");
 		}
-		RequestContext context = RequestContext.getCurrentInstance();
-		context.execute("PF('nextStatusDlg').show();");
 	}
 	
 	public void closeChangeAction() {

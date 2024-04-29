@@ -232,14 +232,14 @@
 				       	<p:column headerText="#{msg['osgr_man_action']}"  style="width: 145px;">
 				       		<p:selectOneMenu id="actionId" value="#{incident.idnAction}" 
 				       			autoWidth="fasle"  style="width:120px" 
-				       			rendered="#{incident.idnAction == null and OSGRManagementView.renderedAction(incident)}">
+				       			rendered="#{!OSGRManagementView.isShipper}">
 			                    <f:selectItem itemLabel="Select One" itemValue=""/>
 			                    <f:selectItems value="#{OSGRManagementView.chargeActions.entrySet()}" var="entry" 
  											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
  								<p:ajax oncomplete="PF('cargando').hide();" update="nextStatusFormId" onstart="PF('cargando').show()"
  									listener="#{OSGRManagementView.updateSelected(incident)}"/>
 			                </p:selectOneMenu>
-			                <h:outputText value="#{incident.action}" rendered="#{incident.idnAction != null}"/>
+			                <h:outputText value="#{incident.action}" rendered="#{OSGRManagementView.isShipper}"/>
 				       	</p:column>
 				       	<p:column headerText="#{msg['osgr_man_notifiedToShippers']}" style="width: 120px;text-align:center;">
 				       		<h:outputText value="#{OSGRManagementView.notifiedYesNo(incident, 'NOTIF')}" />
@@ -250,7 +250,7 @@
 				       	<p:column headerText="#{msg['osgr_man_backToNormal']}" style="width: 120px;text-align:center;">
 				       		<h:outputText value="#{OSGRManagementView.notifiedYesNo(incident, 'BACK_NORMAL')}" />
 				       	</p:column>
-				       	<p:column headerText="#{msg['osgr_man_fixIssueCausingOffspecgas']}" style="width: 120px;text-align:center;" rendered="#{OSGRManagementView.isShipper()}">
+				       	<p:column headerText="#{msg['osgr_man_fixIssueCausingOffspecgas']}" style="width: 120px;text-align:center;">
 				       		<h:outputText value="#{OSGRManagementView.notifiedYesNo(incident, 'FIX_ORIG_SHIP')}" />
 				       	</p:column>
 				       	<p:column headerText="#{msg['osgr_man_shipperAnswer']}" style="width: 70px;text-align:center;">

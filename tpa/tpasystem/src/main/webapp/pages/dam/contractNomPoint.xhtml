@@ -402,7 +402,7 @@
 							</p:column>
 							<p:column>
 							    <p:selectOneMenu id="new_contract_point" style="width:100px" value="#{contractNomPointView.newContractNomPoint.idn_contract_point}" 
-							        required="true" requiredMessage="#{msg['contractNomPoint_contract_point']}: #{msg['empty_field']}" disabled="#{contractNomPointView.isStartDateBeforeTomorrow()}" > 
+							        required="true" requiredMessage="#{msg['contractNomPoint_contract_point']}: #{msg['empty_field']}" disabled="#{contractNomPointView.isStartDateBeforeToday()}" > 
 							        <f:selectItem itemLabel="" itemValue="0" />
 							        <f:selectItems value="#{contractNomPointView.contractNomPointsForm.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
 							        <p:ajax event="change" listener="#{contractNomPointView.contractNomPointsTable}" update="contractNomPoints2" onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()" />                                    
@@ -420,7 +420,7 @@
 				</p:panelGrid>
 				<p:panelGrid columns="4" style="width:100%">
 					<p:dataTable widgetVar="w_contractNomPoint1"  id="contractNomPoints2" var="contractNomPoint" value="#{contractNomPointView.selecteds}"
-							 reflow="true" disabledSelection="#{contractNomPointView.isStartDateBeforeTomorrow()}"
+							 reflow="true" disabledSelection="#{contractNomPointView.isStartDateBeforeToday()}"
 							 rowSelectMode="checkbox" selection="#{contractNomPointView.selectedsFornNew}" rowKey="#{contractNomPoint.idn_nomination_point}"
 							style="margin-bottom:20px;border-collapse:collapse"
 						    paginator="true" rows="10" 
@@ -435,8 +435,8 @@
 								 </shiro:hasPermission>
 						  	  
 						  	  <p:column headerText="Select" selectionMode="multiple" style="width:36px;text-align:center"  />
-						  	  
-						  	  <p:column styleClass="" headerText="#{msg['contractNomPoint_contract_point']}" style="width: 130px;text-align:center " sortBy="#{contractNomPoint.shipper}" >
+						  	  						       
+						       <p:column styleClass="" headerText="#{msg['contractNomPoint_contract_point']}" style="width: 130px;text-align:center " sortBy="#{contractNomPoint.shipper}" >
 						       		<h:outputText value="#{contractNomPoint.contract_point}" />
 						       </p:column>
 						  	  

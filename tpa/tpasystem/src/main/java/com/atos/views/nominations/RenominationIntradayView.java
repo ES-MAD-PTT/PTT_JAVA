@@ -47,6 +47,7 @@ public class RenominationIntradayView extends CommonView implements Serializable
 	
 	// Main
 	private List<RenominationIntradayBean> items;
+	private List<BigDecimal> minutes;
 	
 	private RenominationIntradayDialogBean newReIntraday;
 	
@@ -98,6 +99,14 @@ public class RenominationIntradayView extends CommonView implements Serializable
 		this.newReIntraday = newReIntraday;
 	}
 
+	public List<BigDecimal> getMinutes() {
+		return minutes;
+	}
+
+	public void setMinutes(List<BigDecimal> minutes) {
+		this.minutes = minutes;
+	}
+
 	@PostConstruct
     public void init() {
 		filters = new RenominationIntradayFilter();
@@ -111,6 +120,7 @@ public class RenominationIntradayView extends CommonView implements Serializable
 			this.newReIntraday.setShipperId(getUser().getIdn_user_group());
 		}
 		this.newReIntraday = service.getNewReIntraday(this.newReIntraday);
+		this.minutes = service.getMinutes(this.newReIntraday);
     }
 	
 	public boolean checkFilters() {
@@ -348,6 +358,7 @@ public class RenominationIntradayView extends CommonView implements Serializable
 
 	public void reloadDetail() {
 		this.newReIntraday.setIdn_system(getChangeSystemView().getIdn_active());
+		this.minutes = service.getMinutes(this.newReIntraday);
 		this.newReIntraday = service.getNewReIntraday(this.newReIntraday);		
 	}
 }

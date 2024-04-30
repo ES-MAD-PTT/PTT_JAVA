@@ -29,4 +29,5 @@ public interface RenominationIntradayService extends Serializable{
 	public String reject(RenominationIntradayBean item);
 	public RenominationIntradayDialogBean getNewReIntraday(RenominationIntradayDialogBean newReIntraday);
 	public String save(RenominationIntradayDialogBean bean);
+	public List<BigDecimal> getMinutes(RenominationIntradayDialogBean newReIntraday);
 }

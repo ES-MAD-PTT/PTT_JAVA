@@ -34,6 +34,9 @@ public class OffSpecResponseBean extends UserAudBean implements Serializable {
 	private BigDecimal userId;
 	transient private DefaultStreamedContent scFile;
 	
+	private BigDecimal idnAction;
+	private String action;
+	
 	//CH706
 	private String operatorComments; // en realidad es Transporter Response comment
 	
@@ -87,6 +90,22 @@ public class OffSpecResponseBean extends UserAudBean implements Serializable {
 
 	public void setGroupId(BigDecimal groupId) {
 		this.groupId = groupId;
+	}
+
+	public BigDecimal getIdnAction() {
+		return idnAction;
+	}
+
+	public void setIdnAction(BigDecimal idnAction) {
+		this.idnAction = idnAction;
+	}
+
+	public String getAction() {
+		return action;
+	}
+
+	public void setAction(String action) {
+		this.action = action;
 	}
 
 	public String getGroupCode() {

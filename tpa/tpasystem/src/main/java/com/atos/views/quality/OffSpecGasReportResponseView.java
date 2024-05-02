@@ -4,6 +4,8 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,8 +19,8 @@ import javax.faces.context.FacesContext;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.primefaces.context.RequestContext;
 import org.primefaces.event.FileUploadEvent;
-import org.primefaces.event.RowEditEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import org.primefaces.model.UploadedFile;
@@ -26,11 +28,13 @@ import org.primefaces.model.UploadedFile;
 import com.atos.beans.ComboFilterNS;
 import com.atos.beans.FileBean;
 import com.atos.beans.MessageBean;
+import com.atos.beans.quality.OffSpecActionFileBean;
 import com.atos.beans.quality.OffSpecIncidentBean;
 import com.atos.beans.quality.OffSpecResponseBean;
 import com.atos.beans.quality.OffSpecStatusBean;
 import com.atos.exceptions.ValidationException;
 import com.atos.filters.quality.OffSpecGasReportManagementFilter;
+import com.atos.services.quality.OffSpecGasReportManagementService;
 import com.atos.services.quality.OffSpecGasReportResponseService;
 import com.atos.utils.Constants;
 import com.atos.views.CommonView;
@@ -51,8 +55,12 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 	private List<OffSpecIncidentBean> items;
 	private OffSpecIncidentBean selected;
 	private List<BigDecimal> disclosedStatusIds;
-	//private BigDecimal disclosedStatusId = null;
-	//private BigDecimal disclosedStatusIdNewFlow = null; //Por el cambio de flujo
+
+
+//	private List<OffSpecActionBean> allActions;
+//	private Map<BigDecimal, OffSpecActionBean> mapAllActions;
+	private List<FileBean> files;
+	private Map<BigDecimal, Object> actions;
 	
 	// Para que el usuario se pueda descargar los diagramas de flujos.
 	private StreamedContent scEventFlowDiagFile;
@@ -69,6 +77,13 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 		this.service = service;
 	}
 	
+	@ManagedProperty("#{OSGRManagementService}")
+    transient private OffSpecGasReportManagementService serviceManagement;
+	
+	public void setServiceManagement(OffSpecGasReportManagementService serviceManagement) {
+		this.serviceManagement = serviceManagement;
+	}
+
 	@ManagedProperty("#{messagesView}")
     private MessagesView messages;
 
@@ -119,27 +134,27 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 		this.uploadFile = file;
 	}
 
-	// Se deja comentado por si en el futuro se quisiera dar respuesta a incidencias de tipo Request.
-	//public StreamedContent getScRequestFlowDiagFile() {
-	//    InputStream stream = FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream("/resources/images/qualityRequestFlow.png");
-	//    scRequestFlowDiagFile = new DefaultStreamedContent(stream, "image/png", "qualityRequestFlow.png");
-	//    
-	//	return scRequestFlowDiagFile;
-	//}
-	//
-	//public void setScRequestFlowDiagFile(StreamedContent scRequestFlowDiagFile) {
-	//	this.scRequestFlowDiagFile = scRequestFlowDiagFile;
-	//}
-
-	public boolean isDisclosed(OffSpecIncidentBean item) {
-		//return (disclosedStatusId.compareTo(_statusId)==0 || disclosedStatusIdNewFlow.compareTo(_statusId)==0);
-		boolean distinctShipper = item.getOriginatorShipperId().compareTo(getUser().getIdn_user_group()) != 0;
-		return (distinctShipper && disclosedStatusIds.contains(item.getStatusId()));
+	public Map<BigDecimal, Object> getActions() {
+		return actions;
 	}
+	public void setActions(Map<BigDecimal, Object> actions) {
+		this.actions = actions;
+	}
+//	public boolean isDisclosed(OffSpecIncidentBean item) {
+//		//return (disclosedStatusId.compareTo(_statusId)==0 || disclosedStatusIdNewFlow.compareTo(_statusId)==0);
+//		boolean distinctShipper = item.getOriginatorShipperId().compareTo(getUser().getIdn_user_group()) != 0;
+//		return (distinctShipper && disclosedStatusIds.contains(item.getStatusId()));
+//	}
 	
 	@PostConstruct
     public void init() {
-
+//		if(allActions == null) {
+//			allActions = serviceManagement.selectAllActions();
+//			if(allActions != null && !allActions.isEmpty()) {
+//				mapAllActions = new HashMap<BigDecimal, OffSpecActionBean>();
+//				mapAllActions = allActions.stream().collect(Collectors.toMap(OffSpecActionBean::getIdnOffspecAction, action -> action));
+//			}
+//		}
 		try{
 			disclosedStatusIds = service.getDisclosedStatusIds();
 			//disclosedStatusIdNewFlow = service.getDisclosedStatusIdNewFlow();
@@ -290,30 +305,44 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
         selected = new OffSpecIncidentBean();
 	}
 	
-	public void onRowEdit(RowEditEvent _event) {
+	public void prepareResponse(OffSpecIncidentBean item) {
+		selected = item;
+		actions = new HashMap<BigDecimal, Object>();
+		actions = service.selectShipperAction(selected);
+		if(actions != null && !actions.isEmpty()) {
+			RequestContext context = RequestContext.getCurrentInstance();
+			context.execute("PF('nextStatusDlg').hide();");
+		}else {
+			ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication().getResourceBundle(FacesContext.getCurrentInstance(),"msg");
+			String errorMsg = msgs.getString("osgr_man_noActionEvent");
+			messages.addMessage(Constants.head_menu[6],
+					new MessageBean(Constants.WARNING, "", errorMsg, Calendar.getInstance().getTime()));
+	    	return;
+		}
+	}
+	
+	public void onRowEdit() {
     	// Utilizo un ResourceBundle local por si el scope fuera Session o Application. En estos casos no se actualizaria el idioma.
     	ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication().getResourceBundle(FacesContext.getCurrentInstance(),"msg");
     	String summaryMsg = null;
     	String errorMsg = null;
-
-		OffSpecIncidentBean _incid = (OffSpecIncidentBean) _event.getObject();
-		
-		if(uploadFile!=null && uploadFile.getFileName()!=null) {
-			_incid.getFirstResponse().setFileName(uploadFile.getFileName());
-			_incid.getFirstResponse().setAttachedFile(uploadFile.getContents());
+    	if(selected != null && selected.getIdnAction() == null) {
+			summaryMsg = msgs.getString("saving_data_error");
+			errorMsg = msgs.getString("osgr_man_required_action");
+			messages.addMessage(Constants.head_menu[6],
+					new MessageBean(Constants.WARNING, summaryMsg, errorMsg, Calendar.getInstance().getTime()));
+	    	return;
 		}
-		
-		if(_incid.getFirstResponse().getFileOnResponse().equals("EM")) {
-			if(_incid.getFirstResponse().getAttachedFile()==null) {
-				summaryMsg = msgs.getString("osgr_man_empty_file");
-				messages.addMessage(Constants.head_menu[6],
-					new MessageBean(Constants.ERROR, summaryMsg, summaryMsg, Calendar.getInstance().getTime()));
-    			return;
-			}
-		}
+		if(selected != null && selected.getFilesAction().size() < 1) {
+			summaryMsg = msgs.getString("saving_data_error");
+    		errorMsg = msgs.getString("osrg_man_mandatoryOneFile");
+    		messages.addMessage(Constants.head_menu[6],
+					new MessageBean(Constants.WARNING, summaryMsg, errorMsg, Calendar.getInstance().getTime()));
+	    	return;
+    	}
 		
     	try {
-    		service.saveResponse(_incid, getUser(), disclosedStatusIds);
+    		service.saveResponse(selected, getUser(), disclosedStatusIds);
     	}
 		catch (ValidationException ve) {
 			summaryMsg = msgs.getString("validation_error");
@@ -326,30 +355,29 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 			summaryMsg = msgs.getString("saving_data_error");
         	errorMsg = msgs.getString("update_error") + " " + msgs.getString("osgr_man_Response") + " " + 
         			msgs.getString("related_to") + " " +
-        			msgs.getString("osgr_man_off_specification") + " " + _incid.getIncidentTypeDesc() + " " +
-					msgs.getString("with_id") + " " + _incid.getIncidentCode();
+        			msgs.getString("osgr_man_off_specification") + " " + selected.getIncidentTypeDesc() + " " +
+					msgs.getString("with_id") + " " + selected.getIncidentCode();
         	messages.addMessage(Constants.head_menu[6],
 					new MessageBean(Constants.ERROR, summaryMsg, errorMsg, Calendar.getInstance().getTime()));
 	    	log.error(e.getMessage(), e);
 	    	return;    		
     	}
     	
-    	summaryMsg = msgs.getString("osgr_man_off_specification") + " " + _incid.getIncidentTypeDesc() + " " +
+    	summaryMsg = msgs.getString("osgr_man_off_specification") + " " + selected.getIncidentTypeDesc() + " " +
     					msgs.getString("osgr_man_Response") + " " + msgs.getString("updated");
     	String okMsg = msgs.getString("osgr_man_Response") + " " + 
 		    			msgs.getString("related_to") + " " +
-		    			msgs.getString("osgr_man_off_specification") + " " + _incid.getIncidentTypeDesc() + " " +
+		    			msgs.getString("osgr_man_off_specification") + " " + selected.getIncidentTypeDesc() + " " +
 						msgs.getString("with_id") + " " + 
-						_incid.getIncidentCode() + " " + 
+						selected.getIncidentCode() + " " + 
 						msgs.getString("updated");     	
     	messages.addMessage(Constants.head_menu[6],
 				new MessageBean(Constants.INFO, summaryMsg, okMsg, Calendar.getInstance().getTime()));
     	log.info(okMsg);
-
+    	RequestContext context = RequestContext.getCurrentInstance();
+		context.execute("PF('nextStatusDlg').hide();");
     	// Se actualiza la vista.
-    	items = service.search(filters); 		
-        // Se deja marcado (selected) el incidente que se acaba de editar. 
-        selected = _incid;
+    	items = service.search(filters); 	
     }
 	//CH706
 	public boolean renderedOperatorComments(OffSpecIncidentBean item){
@@ -372,17 +400,25 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 	}
 	
 	public void handleFileUpload(FileUploadEvent event) {
-    	
 		file = event.getFile();
-		if(file!=null){
-			uploadFile = new FileBean(file.getFileName(), file.getContentType(), file.getContents());
+		OffSpecActionFileBean uploadFile = null;
+		if(file != null){
+			uploadFile = new OffSpecActionFileBean(selected.getIncidentId(), selected.getGroupId(), selected.getIdnAction(), file.getFileName(), file.getContents(), getUser().getUsername());
+			selected.getFilesAction().add(uploadFile);
 		}
-        
-		if(file==null || uploadFile==null){
-			messages.addMessage(Constants.head_menu[6],new MessageBean(Constants.ERROR,"Error saving file","The open file should be selected", Calendar.getInstance().getTime()));
+		if(file == null || uploadFile == null){
+			getMessages().addMessage(Constants.head_menu[6],new MessageBean(Constants.ERROR,"Error saving file","The file should be selected", Calendar.getInstance().getTime()));
 			return;
 		}
     }
+	
+	public String getFileName() {
+		String value = "";
+		if(selected != null && !selected.getFilesAction().isEmpty()) {
+			value = selected.getFilesAction().get(0).getFileName();
+		}
+		return value;
+	}
 	
 	public StreamedContent selectFile(OffSpecResponseBean bean) {
 		ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication()
@@ -403,5 +439,47 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 					new MessageBean(Constants.ERROR, summaryMsg, errorMsg, Calendar.getInstance().getTime()));			
 			return null; 
 		}	
+	}
+	
+	public boolean renderedEditResponse(OffSpecIncidentBean item) {
+		boolean value = false;
+		if(item != null) {
+			value = item.getGroupId().compareTo(getUser().getIdn_user_group()) == 0;
+		}
+		return value;
+	}
+	
+	public void acceptRejectAction(String responseValue) {
+		ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication().getResourceBundle(FacesContext.getCurrentInstance(),"msg");
+    	String summaryMsg = msgs.getString("saving_data_error");
+    	String errorMsg = null;
+    	if(responseValue.equals("OK") && selected != null && selected.getFilesAction().size() < 1) {
+    		errorMsg = msgs.getString("osrg_man_mandatoryOneFile");
+    		getMessages().addMessage(Constants.head_menu[6],
+					new MessageBean(Constants.ERROR, summaryMsg, errorMsg, Calendar.getInstance().getTime()));
+	    	return;
+    	}
+		try {
+			if(selected != null) {
+				int res = serviceManagement.acceptRejectAction(selected, responseValue, getUser());
+				if(res != 1) { errorMsg = msgs.getString("osgr_man_errorChangeAction");
+					 getMessages().addMessage(Constants.head_menu[6], new
+					 MessageBean(Constants.ERROR, summaryMsg, errorMsg,
+					 Calendar.getInstance().getTime())); return; 
+				} 
+			}
+		} catch (Exception e) {
+			errorMsg = e.getMessage();
+    		getMessages().addMessage(Constants.head_menu[6],
+					new MessageBean(Constants.ERROR, summaryMsg, errorMsg, Calendar.getInstance().getTime()));
+	    	return;
+		}
+		summaryMsg = msgs.getString("osgr_man_updatedSuccessfully");
+		String[] params = { selected.getIncidentCode() };
+		String msg = super.getMessageResourceString("osgr_man_changeActionOK", params);
+		getMessages().addMessage(Constants.head_menu[3], new MessageBean(Constants.INFO, summaryMsg, msg, new Date()));
+		RequestContext context = RequestContext.getCurrentInstance();
+		context.execute("PF('nextStatusDlg').hide();");
+		onSearch();
 	}
 }

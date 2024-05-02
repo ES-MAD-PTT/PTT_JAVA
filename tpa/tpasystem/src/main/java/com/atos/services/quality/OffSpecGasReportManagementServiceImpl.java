@@ -10,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
 import javax.faces.context.FacesContext;
 
@@ -188,6 +189,8 @@ public class OffSpecGasReportManagementServiceImpl implements OffSpecGasReportMa
 			for(OffSpecIncidentBean incid: tmpLIncidents) {
 				params.put("incidentId", incid.getIncidentId());
 				incid.setDiscloseResponses(osgrmMapper.selectDiscloseResponsesFromIncidentId(params));
+				incid.setActionsFree(osgrmMapper.selectFreeActions(incid).stream().collect(
+						Collectors.toMap(ComboFilterNS::getKey, ComboFilterNS::getValue, (e1, e2) -> e1, LinkedHashMap::new)));
 			}
 		
 		return tmpLIncidents;
@@ -365,6 +368,7 @@ public class OffSpecGasReportManagementServiceImpl implements OffSpecGasReportMa
 			osResponse.setGroupId(idnShipper);
 			osResponse.setIsResponded(OffSpecResponseBean.isRespondedNo);
 			osResponse.setUserId(_user.getIdn_user());
+			osResponse.setIdnAction(_incid.getIdnAction());
 			
 			// Se inserta un registro en la tabla de respuestas para el disclose.
 			res = osgrmMapper.insertOffSpecResponse(osResponse);
@@ -807,7 +811,7 @@ public class OffSpecGasReportManagementServiceImpl implements OffSpecGasReportMa
 	}
 
 	@Override
-	public List<OffSpecActionFileBean> selectActionFiles(OffSpecIncidentBean item) {
+	public List<OffSpecActionFileBean> selectActionFiles(OffSpecResponseBean item) {
 		return osgrmMapper.selectActionFiles(item);
 	}
 

@@ -231,15 +231,14 @@
 				       	
 				       	<p:column headerText="#{msg['osgr_man_action']}"  style="width: 145px;">
 				       		<p:selectOneMenu id="actionId" value="#{incident.idnAction}" 
-				       			autoWidth="fasle"  style="width:120px" 
-				       			rendered="#{!OSGRManagementView.isShipper}">
+				       			autoWidth="fasle"  style="width:120px" rendered="#{!OSGRManagementView.isShipper()}">
 			                    <f:selectItem itemLabel="Select One" itemValue=""/>
-			                    <f:selectItems value="#{OSGRManagementView.chargeActions.entrySet()}" var="entry" 
+			                    <f:selectItems value="#{incident.actionsFree.entrySet()}" var="entry" 
  											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
  								<p:ajax oncomplete="PF('cargando').hide();" update="nextStatusFormId" onstart="PF('cargando').show()"
  									listener="#{OSGRManagementView.updateSelected(incident)}"/>
 			                </p:selectOneMenu>
-			                <h:outputText value="#{incident.action}" rendered="#{OSGRManagementView.isShipper}"/>
+			                <h:outputText value="#{incident.action}" rendered="#{OSGRManagementView.isShipper()}"/>
 				       	</p:column>
 				       	<p:column headerText="#{msg['osgr_man_notifiedToShippers']}" style="width: 120px;text-align:center;">
 				       		<h:outputText value="#{OSGRManagementView.notifiedYesNo(incident, 'NOTIF')}" />
@@ -407,7 +406,7 @@
 			</h:form>
 		</p:dialog>
 		
- 		<p:dialog header="#{msg['osgr_man_shipper_responses']}" widgetVar="shipperResponsesDlg" modal="true" appendTo="@(body)" width="1500" height="200">
+ 		<p:dialog header="#{msg['osgr_man_shipper_responses']}" widgetVar="shipperResponsesDlg" modal="true" appendTo="@(body)" width="1300" height="200">
 			<h:form id="shipperResponsesFormId" style="width:100%;height:98%;border-collapse:collapse" enctype="multipart/form-data">
 				<p:growl id="msgs" showDetail="true" life="10000" globalOnly="true" />
 				
@@ -423,12 +422,14 @@
 	        					<p:columnToggler datasource="responses1" trigger="toggler" style="width:200px"/>
 	        					<p:commandButton icon="ui-icon fa fa-envelope-o" update="filesActionFormId" value="#{msg['osrg_man_transporterFiles']}"
 									onstart="PF('cargando').show()"	oncomplete="PF('cargando').hide(),PF('filesActionDlg').show()" style="float:right"
-									actionListener="#{OSGRManagementView.selectActionFiles}"
-									rendered="#{OSGRManagementView.mapAllActions[incid.idnAction].actionCode ne 'FIX_ORIG_SHIP'}"/>
+									actionListener="#{OSGRManagementView.selectActionFiles(null, 'TRANSPORTER')}"/>
 					</p:outputPanel>
 					</f:facet>
 			       	<p:column headerText="#{msg['osgr_man_shipper']}" style="width: 100px;" sortBy="#{response.groupCode}">
 			       		<h:outputText value="#{response.groupCode}" />
+			       	</p:column>
+			       	<p:column headerText="#{msg['osgr_man_action']}" style="width: 100px;" sortBy="#{response.userComments}">
+			       		<h:outputText value="#{response.action}" />
 			       	</p:column>
 			       	
 			       	<p:column headerText="#{msg['osgr_man_comments']}" style="width: 100px;" sortBy="#{response.userComments}">
@@ -444,18 +445,12 @@
 			       	<p:column headerText="#{msg['osgr_man_ok_ko']}" style="width: 50px;" sortBy="#{response.responseValue}">
 			       		<h:outputText value="#{response.responseValue}" />
 			       	</p:column>
-			       	
-			       	<p:column headerText="#{msg['osgr_man_fileName']}" style="width: 50px;" sortBy="#{response.fileName}">
-			       		<h:outputText value="#{response.fileName}" rendered="#{OSGRManagementView.showFile(response.fileOnResponse)}"/>
-			       	</p:column>
-			       	<p:column headerText="#{msg['osgr_man_file']}" style="width: 100px;"
-			       				rendered="#{OSGRManagementView.mapAllActions[incid.idnAction].actionCode eq 'FIX_ORIG_SHIP'}">
+			       	<p:column headerText="#{msg['osgr_man_file']}" style="width: 100px;">
 			       		<p:commandButton icon="ui-icon fa fa-envelope-o" update="filesActionFormId" value="#{msg['osrg_man_shipperFiles']}"
 									onstart="PF('cargando').show()"	oncomplete="PF('cargando').hide(),PF('filesActionDlg').show()" style="float:right"
-									actionListener="#{OSGRManagementView.selectActionFiles}"/>
+									actionListener="#{OSGRManagementView.selectActionFiles(response, 'SHIPPER')}"/>
 			       	</p:column>
-			       	<p:column headerText="#{msg['osgr_man_file']}" style="width: 100px;" sortBy="#{response.fileName}" 
-			       				rendered="#{OSGRManagementView.mapAllActions[incid.idnAction].actionCode ne 'FIX_ORIG_SHIP'}">
+			       	<p:column headerText="#{msg['osgr_man_file']}" style="width: 100px;" sortBy="#{response.fileName}" >
 			       		<h:outputText value="#{response.fileName}" title="#{response.fileName}" rendered="#{response.fileName!=null and response.fileName!=''}" />
 			       		<p:commandButton ajax="false"
 										rendered="#{OSGRManagementView.showFile(response.fileOnResponse) and response.fileName!=null and response.fileName!=''}"
@@ -815,15 +810,12 @@
 						</p:column>
 						<p:column>
 							<p:selectCheckboxMenu id="newShipperId" dynamic="true" label="Shippers"
-												  rendered="#{OSGRManagementView.mapAllActions[incid.idnAction].actionCode ne 'FIX_ORIG_SHIP'}"
 					                              filter="true" filterMatchMode="contains"
 					                              style="width: 15rem" panelStyle="width: 15rem" scrollHeight="250"
 					                              value="#{incid.multiShippers}">
 					            <f:selectItems value="#{OSGRManagementView.shipperIdsForInsert.entrySet()}" var="entry" 
 	   											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
 					        </p:selectCheckboxMenu>
-					        <h:outputText value="#{incid.groupCode}" 
-					        	rendered="#{OSGRManagementView.mapAllActions[incid.idnAction].actionCode eq 'FIX_ORIG_SHIP'}"/>
 						</p:column>
 					</p:row>
 
@@ -858,23 +850,11 @@
 						<h:outputText value="#{item.fileName}" />
 					</p:column>
 				</p:dataTable>
-				<p:panelGrid rendered="#{OSGRManagementView.mapAllActions[incid.idnAction].actionCode ne 'FIX_ORIG_SHIP'}">
+				<p:panelGrid>
 					<p:row>
 		       			<p:column>
 							<p:commandButton value="#{msg['save']}" style="float: right; vertical-align: bottom" 
 								actionListener="#{OSGRManagementView.onChangeAction}" 
-								update="#{p:component('incidents1')},nextStatusFormId"/>
-						</p:column>
-					</p:row>
-				</p:panelGrid>
-				<p:panelGrid rendered="#{OSGRManagementView.mapAllActions[incid.idnAction].actionCode eq 'FIX_ORIG_SHIP'}">
-					<p:row>
-		       			<p:column>
-		       				<p:commandButton value="#{msg['osrg_man_reject']}" style="float: right; vertical-align: bottom" 
-								actionListener="#{OSGRManagementView.acceptRejectAction('KO')}" 
-								update="#{p:component('incidents1')},nextStatusFormId"/>
-							<p:commandButton value="#{msg['osrg_man_accept']}" style="float: right; vertical-align: bottom" 
-								actionListener="#{OSGRManagementView.acceptRejectAction('OK')}" 
 								update="#{p:component('incidents1')},nextStatusFormId"/>
 						</p:column>
 					</p:row>

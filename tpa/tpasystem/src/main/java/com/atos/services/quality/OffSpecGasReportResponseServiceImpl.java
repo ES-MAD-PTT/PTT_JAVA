@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
 import javax.faces.context.FacesContext;
 
@@ -18,10 +19,10 @@ import org.springframework.stereotype.Service;
 
 import com.atos.beans.ComboFilterNS;
 import com.atos.beans.UserBean;
+import com.atos.beans.quality.OffSpecActionFileBean;
 import com.atos.beans.quality.OffSpecIncidentBean;
 import com.atos.beans.quality.OffSpecResponseBean;
 import com.atos.beans.quality.OffSpecStatusBean;
-import com.atos.beans.scadaAlarms.EmergencyDiffDayBean;
 import com.atos.exceptions.ValidationException;
 import com.atos.filters.quality.OffSpecGasReportManagementFilter;
 import com.atos.mapper.quality.OffSpecGasReportManagementMapper;
@@ -188,6 +189,10 @@ public class OffSpecGasReportResponseServiceImpl implements OffSpecGasReportResp
 		if(res!=1){
     		throw new Exception("Error inserting into Off Specification Event Response table.");   		
     	}
+		//Insertamos los ficheros
+		for(OffSpecActionFileBean item : _incid.getFilesAction()) {
+			osgrmMapper.insertFileAction(item);
+		}
 	}
 	
 	@Override
@@ -207,5 +212,11 @@ public class OffSpecGasReportResponseServiceImpl implements OffSpecGasReportResp
 			return new DefaultStreamedContent(ba, "", b.getFileName());
 		}
 		return null;
+	}
+
+	@Override
+	public Map<BigDecimal, Object> selectShipperAction(OffSpecIncidentBean item) {
+		return osgrmMapper.selectShipperAction(item).stream().collect(
+				Collectors.toMap(ComboFilterNS::getKey, ComboFilterNS::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 	}
 }

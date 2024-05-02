@@ -14,12 +14,23 @@ public class OffSpecActionFileBean implements Serializable {
 
 	private BigDecimal idnOffspecActionFile;
 	private BigDecimal idnOffspec;
+	private BigDecimal groupId;
+	private BigDecimal idnAction;
 	private String fileName;
 	private byte[] binaryData;
 	private String userName;
 	
 	public OffSpecActionFileBean() {}
 	
+	
+	public OffSpecActionFileBean(BigDecimal idnOffspec, BigDecimal groupId, BigDecimal idnAction, String fileName, byte[] binaryData, String userName) {
+		this.idnOffspec = idnOffspec;
+		this.groupId = groupId;
+		this.idnAction = idnAction;
+		this.fileName = fileName;
+		this.binaryData = binaryData;
+		this.userName = userName;
+	}
 	
 	public OffSpecActionFileBean(BigDecimal idnOffspec, String fileName, byte[] binaryData, String userName) {
 		this.idnOffspec = idnOffspec;
@@ -47,6 +58,26 @@ public class OffSpecActionFileBean implements Serializable {
 
 	public void setIdnOffspec(BigDecimal idnOffspec) {
 		this.idnOffspec = idnOffspec;
+	}
+
+
+	public BigDecimal getGroupId() {
+		return groupId;
+	}
+
+
+	public void setGroupId(BigDecimal groupId) {
+		this.groupId = groupId;
+	}
+
+
+	public BigDecimal getIdnAction() {
+		return idnAction;
+	}
+
+
+	public void setIdnAction(BigDecimal idnAction) {
+		this.idnAction = idnAction;
 	}
 
 

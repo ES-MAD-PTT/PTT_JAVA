@@ -12,7 +12,6 @@ import com.atos.beans.UserBean;
 import com.atos.beans.quality.OffSpecIncidentBean;
 import com.atos.beans.quality.OffSpecResponseBean;
 import com.atos.beans.quality.OffSpecStatusBean;
-import com.atos.beans.scadaAlarms.EmergencyDiffDayBean;
 import com.atos.filters.quality.OffSpecGasReportManagementFilter;
 
 public interface OffSpecGasReportResponseService extends Serializable {
@@ -23,6 +22,7 @@ public interface OffSpecGasReportResponseService extends Serializable {
 	//public BigDecimal getDisclosedStatusIdNewFlow() throws Exception;
 	public Map<BigDecimal, Object> selectQualityPoints(BigDecimal systemId);
 	public Map<BigDecimal, Object> selectShipperId();
+	public Map<BigDecimal, Object> selectShipperAction(OffSpecIncidentBean item);
 	public List<ComboFilterNS> getAllShippers();
 	public List<OffSpecStatusBean> selectStatusIds(OffSpecGasReportManagementFilter filter);
 	public List<OffSpecIncidentBean> search(OffSpecGasReportManagementFilter filter);

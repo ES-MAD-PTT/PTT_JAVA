@@ -15,6 +15,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -37,7 +38,6 @@ import org.primefaces.model.UploadedFile;
 import com.atos.beans.ComboFilterNS;
 import com.atos.beans.FileBean;
 import com.atos.beans.MessageBean;
-import com.atos.beans.UserBean;
 import com.atos.beans.quality.OffSpecActionBean;
 import com.atos.beans.quality.OffSpecActionFileBean;
 import com.atos.beans.quality.OffSpecFileBean;
@@ -87,9 +87,9 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 	
 	private UploadedFile file;
 	private List<FileBean> files;
-	private Map<BigDecimal, Object> chargeActions;
+//	private Map<BigDecimal, Object> chargeActions;
 	private List<OffSpecActionBean> allActions;
-	private Map<BigDecimal, OffSpecActionBean> mapAllActions;
+//	private Map<BigDecimal, OffSpecActionBean> mapAllActions;
 	private OffSpecStatusBean idnStatusUnsolved;
 	private DefaultStreamedContent scFile;
 	
@@ -184,13 +184,13 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 		this.newEvent = newEvent;
 	}
 
-	public Map<BigDecimal, OffSpecActionBean> getMapAllActions() {
-		return mapAllActions;
-	}
-
-	public void setMapAllActions(Map<BigDecimal, OffSpecActionBean> mapAllActions) {
-		this.mapAllActions = mapAllActions;
-	}
+//	public Map<BigDecimal, OffSpecActionBean> getMapAllActions() {
+//		return mapAllActions;
+//	}
+//
+//	public void setMapAllActions(Map<BigDecimal, OffSpecActionBean> mapAllActions) {
+//		this.mapAllActions = mapAllActions;
+//	}
 
 	public StreamedContent getScEventFlowDiagFile() {
         InputStream stream = FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream("/resources/images/qualityEventFlow.png");
@@ -220,27 +220,27 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 		return getUser().isUser_type(Constants.OPERATOR);
 	}
 
-	public Map<BigDecimal, Object> getChargeActions() {
-		if(chargeActions == null) {
-			chargeActions = new HashMap<BigDecimal, Object>();
-			allActions = service.selectAllActions();
-			allActions.forEach(item -> {
-				if(item.getActionCode().equals("FIX_ORIG_SHIP")) {
-					if(isShipper()) {
-						chargeActions.put(item.getIdnOffspecAction(), item.getActionDesc());
-					}
-				}else {
-					chargeActions.put(item.getIdnOffspecAction(), item.getActionDesc());
-				}
-			});
-			mapAllActions = allActions.stream().collect(Collectors.toMap(OffSpecActionBean::getIdnOffspecAction, action -> action));
-		}
-		return chargeActions;
-	}
-
-	public void setChargeActions(Map<BigDecimal, Object> chargeActions) {
-		this.chargeActions = chargeActions;
-	}
+//	public Map<BigDecimal, Object> getChargeActions() {
+//		if(chargeActions == null) {
+//			chargeActions = new HashMap<BigDecimal, Object>();
+//			allActions = service.selectAllActions();
+//			allActions.forEach(item -> {
+//				if(item.getActionCode().equals("FIX_ORIG_SHIP")) {
+//					if(isShipper()) {
+//						chargeActions.put(item.getIdnOffspecAction(), item.getActionDesc());
+//					}
+//				}else {
+//					chargeActions.put(item.getIdnOffspecAction(), item.getActionDesc());
+//				}
+//			});
+//			mapAllActions = allActions.stream().collect(Collectors.toMap(OffSpecActionBean::getIdnOffspecAction, action -> action));
+//		}
+//		return chargeActions;
+//	}
+//
+//	public void setChargeActions(Map<BigDecimal, Object> chargeActions) {
+//		this.chargeActions = chargeActions;
+//	}
 
 	public Boolean renderedAction(OffSpecIncidentBean item) {
 			return idnStatusUnsolved != null && item.getStatusId().compareTo(idnStatusUnsolved.getStatusId()) == 0 ? true : false;
@@ -261,6 +261,7 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 		hmAllStatusRules = linkAllStatusRules(allStatusRules);
 		allQualityParameters = service.selectGasQualityParameters();
 		idnStatusUnsolved = allStatus.stream().filter(item -> item.getStatusCode().equals("EV.UNSOLVED")).findFirst().orElse(null);
+		allActions = service.selectAllActions();
 		
    		filters = initFilter();
 		
@@ -563,17 +564,9 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 		selected.setNewStatusId(item.getStatusId());
 		selected.setIdnAction(item.getIdnAction());
 		selected.setIncidentCode(item.getIncidentCode());
-		if(mapAllActions != null && !mapAllActions.isEmpty() && selected.getIdnAction() != null && 
-				mapAllActions.get(selected.getIdnAction()).getActionCode().equals("FIX_ORIG_SHIP")) {
-			UserBean userShipper = getUser();
-			selected.setMultiShippers(new ArrayList<BigDecimal>());
-			selected.getMultiShippers().add(userShipper.getIdn_user_group());
-			selected.setGroupCode(userShipper.getUser_group_id());
-			onChangeAction();
-		}else {
-			RequestContext context = RequestContext.getCurrentInstance();
-			context.execute("PF('nextStatusDlg').show();");
-		}
+		selected.setGroupId(item.getGroupId());
+		RequestContext context = RequestContext.getCurrentInstance();
+		context.execute("PF('nextStatusDlg').show();");
 	}
 	
 	public void closeChangeAction() {
@@ -582,40 +575,40 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
         updateIncidentInfo(hmAllStatus, items);
 	}
 	
-	public void acceptRejectAction(String responseValue) {
-		ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication().getResourceBundle(FacesContext.getCurrentInstance(),"msg");
-    	String summaryMsg = msgs.getString("saving_data_error");
-    	String errorMsg = null;
-    	if(responseValue.equals("OK") && selected != null && selected.getFilesAction().size() < 1) {
-    		errorMsg = msgs.getString("osrg_man_mandatoryOneFile");
-    		getMessages().addMessage(Constants.head_menu[6],
-					new MessageBean(Constants.ERROR, summaryMsg, errorMsg, Calendar.getInstance().getTime()));
-	    	return;
-    	}
-		try {
-			if(selected != null) {
-				int res = service.acceptRejectAction(selected, responseValue, getUser());
-				if(res != 1) { errorMsg = msgs.getString("osgr_man_errorChangeAction");
-					 getMessages().addMessage(Constants.head_menu[6], new
-					 MessageBean(Constants.ERROR, summaryMsg, errorMsg,
-					 Calendar.getInstance().getTime())); return; 
-				} 
-			}
-		} catch (Exception e) {
-			errorMsg = e.getMessage();
-    		getMessages().addMessage(Constants.head_menu[6],
-					new MessageBean(Constants.ERROR, summaryMsg, errorMsg, Calendar.getInstance().getTime()));
-	    	return;
-		}
-		summaryMsg = msgs.getString("osgr_man_updatedSuccessfully");
-		String[] params = { selected.getIncidentCode() };
-		String msg = super.getMessageResourceString("osgr_man_changeActionOK", params);
-		getMessages().addMessage(Constants.head_menu[3], new MessageBean(Constants.INFO, summaryMsg, msg, new Date()));
-		RequestContext context = RequestContext.getCurrentInstance();
-		context.execute("PF('nextStatusDlg').hide();");
-		items = service.search(filters, getUser());
-        updateIncidentInfo(hmAllStatus, items);
-	}
+//	public void acceptRejectAction(String responseValue) {
+//		ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication().getResourceBundle(FacesContext.getCurrentInstance(),"msg");
+//    	String summaryMsg = msgs.getString("saving_data_error");
+//    	String errorMsg = null;
+//    	if(responseValue.equals("OK") && selected != null && selected.getFilesAction().size() < 1) {
+//    		errorMsg = msgs.getString("osrg_man_mandatoryOneFile");
+//    		getMessages().addMessage(Constants.head_menu[6],
+//					new MessageBean(Constants.ERROR, summaryMsg, errorMsg, Calendar.getInstance().getTime()));
+//	    	return;
+//    	}
+//		try {
+//			if(selected != null) {
+//				int res = service.acceptRejectAction(selected, responseValue, getUser());
+//				if(res != 1) { errorMsg = msgs.getString("osgr_man_errorChangeAction");
+//					 getMessages().addMessage(Constants.head_menu[6], new
+//					 MessageBean(Constants.ERROR, summaryMsg, errorMsg,
+//					 Calendar.getInstance().getTime())); return; 
+//				} 
+//			}
+//		} catch (Exception e) {
+//			errorMsg = e.getMessage();
+//    		getMessages().addMessage(Constants.head_menu[6],
+//					new MessageBean(Constants.ERROR, summaryMsg, errorMsg, Calendar.getInstance().getTime()));
+//	    	return;
+//		}
+//		summaryMsg = msgs.getString("osgr_man_updatedSuccessfully");
+//		String[] params = { selected.getIncidentCode() };
+//		String msg = super.getMessageResourceString("osgr_man_changeActionOK", params);
+//		getMessages().addMessage(Constants.head_menu[3], new MessageBean(Constants.INFO, summaryMsg, msg, new Date()));
+//		RequestContext context = RequestContext.getCurrentInstance();
+//		context.execute("PF('nextStatusDlg').hide();");
+//		items = service.search(filters, getUser());
+//        updateIncidentInfo(hmAllStatus, items);
+//	}
 	
 	public void onChangeAction() {
 		ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication().getResourceBundle(FacesContext.getCurrentInstance(),"msg");
@@ -962,10 +955,16 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 		 selected.getFiles().addAll(service.selectFiles(selected, userGroupType));
 	 }
 	 
-	 public void selectActionFiles() {
+	 public void selectActionFiles(OffSpecResponseBean item, String action) {
 		 if(selected != null) {
 			 selected.setFilesAction(new ArrayList<OffSpecActionFileBean>());
-			 selected.getFilesAction().addAll(service.selectActionFiles(selected));
+			 OffSpecResponseBean newItem = new OffSpecResponseBean();
+			 newItem.setIncidentId(selected.getIncidentId());
+			 if(item != null && action.equals("SHIPPER")) {
+				newItem.setGroupId(item.getGroupId());
+				newItem.setIdnAction(item.getIdnAction());
+			 }
+			 selected.getFilesAction().addAll(service.selectActionFiles(newItem));
 		 }else {
 			 selected.setFilesAction(new ArrayList<OffSpecActionFileBean>());
 		 }
@@ -992,13 +991,24 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 			scFile.setContentType(URLConnection.guessContentTypeFromStream(bais));
 	 }
 	 
-	 public String notifiedYesNo(OffSpecIncidentBean item, String nameColumn) {
-		 String value = "";
-		 if(item != null && mapAllActions != null && !mapAllActions.isEmpty()) {
-			 value = item.getIdnAction() == null ? "NO" : 
-				 mapAllActions.get(item.getIdnAction()).getActionCode().equals(nameColumn) ? "YES" : "NO";
-		 }
-		 return value;
+	 public String notifiedYesNo(OffSpecIncidentBean incid, String nameColumn) {
+		 if (incid.getIdnAction() == null) {
+	        return "NO";
+	    }
+	    // Crear un conjunto de las claves que no son el ID de la acción actual.
+	    Set<BigDecimal> actionsFreeKeys = 
+	        incid.getActionsFree().keySet().stream()
+	            .filter(key -> !key.equals(incid.getIdnAction()))
+	            .collect(Collectors.toSet());
+
+	    // Verificar si algún elemento en allActions tiene el actionCode y no está en actionsFreeKeys.
+	    boolean found = allActions.stream()
+	        .anyMatch(item -> 
+	            item.getActionCode().equals(nameColumn) && 
+	            !actionsFreeKeys.contains(item.getIdnOffspecAction())
+	        );
+
+	    return found ? "YES" : "NO";
 	 }
 	 
 	 public String answerShipperOriginatorYesNo(OffSpecIncidentBean item) {
@@ -1012,21 +1022,21 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 	 
 	 public boolean renderedAsnwer(OffSpecIncidentBean item, String nameColumn) {
 		 boolean value = false;
-		 if(isShipper()) {
-			 if(item != null && item.getOriginatorShipperId().compareTo(getUser().getIdn_user_group()) == 0) {
-				 value = nameColumn.equals("SHIPPER_ANSWER") || nameColumn.equals("SHIPPER_IF_ANSWER") ? false : true;
-			 }else {
-				 value = nameColumn.equals("SHIPPER_ANSWER") ? true : false;
-			 }
-		 }else {
-			 if(mapAllActions != null && !mapAllActions.isEmpty() && item != null && item.getIdnAction() != null) {
-				 if(nameColumn.equals("ORIGINATOR_ANSWER") || nameColumn.equals("ORIGINATOR_IF_ANSWER")) {
-					value = mapAllActions.get(item.getIdnAction()).getActionCode().equals("FIX_ORIG_SHIP") ? true : false;
-				 }else {
-					 value = mapAllActions.get(item.getIdnAction()).getActionCode().equals("FIX_ORIG_SHIP") ? false : true;
-				 }
-			 }
-		 }
-		 return value;
+//		 if(isShipper()) {
+//			 if(item != null && item.getOriginatorShipperId().compareTo(getUser().getIdn_user_group()) == 0) {
+//				 value = nameColumn.equals("SHIPPER_ANSWER") || nameColumn.equals("SHIPPER_IF_ANSWER") ? false : true;
+//			 }else {
+//				 value = nameColumn.equals("SHIPPER_ANSWER") ? true : false;
+//			 }
+//		 }else {
+//			 if(mapAllActions != null && !mapAllActions.isEmpty() && item != null && item.getIdnAction() != null) {
+//				 if(nameColumn.equals("ORIGINATOR_ANSWER") || nameColumn.equals("ORIGINATOR_IF_ANSWER")) {
+//					value = mapAllActions.get(item.getIdnAction()).getActionCode().equals("FIX_ORIG_SHIP") ? true : false;
+//				 }else {
+//					 value = mapAllActions.get(item.getIdnAction()).getActionCode().equals("FIX_ORIG_SHIP") ? false : true;
+//				 }
+//			 }
+//		 }
+		 return true;
 	 }
 }

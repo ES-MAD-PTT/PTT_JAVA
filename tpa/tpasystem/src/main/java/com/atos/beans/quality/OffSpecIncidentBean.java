@@ -6,7 +6,9 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.UploadedFile;
@@ -99,6 +101,7 @@ public class OffSpecIncidentBean extends UserAudBean implements Serializable {
     private List<BigDecimal> multiShippers = new ArrayList<BigDecimal>();
     private List<OffSpecFileBean> files = new ArrayList<OffSpecFileBean>();
     private List<OffSpecActionFileBean> filesAction = new ArrayList<OffSpecActionFileBean>();
+    private Map<BigDecimal, Object> actionsFree= new HashMap<BigDecimal, Object>();
     
     //CH706
     private String operatorComments; // en realidad es Transporter Response comment
@@ -155,6 +158,14 @@ public class OffSpecIncidentBean extends UserAudBean implements Serializable {
 
 	public void setFiles(List<OffSpecFileBean> files) {
 		this.files = files;
+	}
+
+	public Map<BigDecimal, Object> getActionsFree() {
+		return actionsFree;
+	}
+
+	public void setActionsFree(Map<BigDecimal, Object> actionsFree) {
+		this.actionsFree = actionsFree;
 	}
 
 	public String getCommentsShipper() {

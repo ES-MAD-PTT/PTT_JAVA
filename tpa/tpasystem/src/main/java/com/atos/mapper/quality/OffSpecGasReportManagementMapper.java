@@ -27,6 +27,8 @@ public interface OffSpecGasReportManagementMapper extends Serializable {
 	public String selectPointCodeFromId(BigDecimal pointId);
 	public List<ComboFilterNS> selectQualityPointsForInsert(BigDecimal systemId);
 	public List<ComboFilterNS> selectShipperId();
+	public List<ComboFilterNS> selectShipperAction(OffSpecIncidentBean item);
+	public List<ComboFilterNS> selectFreeActions(OffSpecIncidentBean item);
 	public List<OffSpecActionBean> selectAllActions();
 	public List<ComboFilterNS> selectShipperIdForInsert();
 	public List<BigDecimal> selectGroupIdFromGroupCode(String groupCode);
@@ -38,7 +40,7 @@ public interface OffSpecGasReportManagementMapper extends Serializable {
 	public List<OffSpecIncidentBean> selectIncidents(OffSpecGasReportManagementFilter filter);
 	public List<OffSpecIncidentBean> selectIncidentsToRespond(OffSpecGasReportManagementFilter filter);
 	public List<OffSpecGasQualityParameterBean> selectGasQualityParameters();
-	public List<OffSpecActionFileBean> selectActionFiles(OffSpecIncidentBean item);
+	public List<OffSpecActionFileBean> selectActionFiles(OffSpecResponseBean item);
 	public List<OffSpecFileBean> selectFiles(@Param("incidentId") BigDecimal incidentId, @Param("userGroupType") String userGroupType);
 	public String selectCommentsShipperOperator(OffSpecIncidentBean item);
 	// En params, se esperan los siguientes datos para filtrar: incidentId y shipperId.

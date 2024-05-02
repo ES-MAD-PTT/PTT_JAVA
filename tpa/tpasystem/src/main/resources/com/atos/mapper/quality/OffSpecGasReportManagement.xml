@@ -86,6 +86,25 @@
 		where tgr.idn_user_group_type = (select idn_user_group_type from tpa_tuser_group_type where type_code = 'SHIPPER')
 		order by upper(tgr.user_group_id) asc
     </select>
+    
+    <select id="selectShipperAction" resultType="com.atos.beans.ComboFilterNS">
+		select distinct r.idn_offspec_action as key, a.action_desc as value
+			from tpa_toffspec_response r,
+			     tpa_toffspec_action a
+			where r.idn_offspec_action = a.idn_offspec_action
+			  and r.idn_offspec = #{incidentId}
+			  and r.idn_user_group = #{groupId}
+	</select>
+	
+	<select id="selectFreeActions" resultType="com.atos.beans.ComboFilterNS">
+		select a.idn_offspec_action as key, a.action_desc as value
+	       from tpa_toffspec_action a
+	      where a.idn_offspec_action in (select o.idn_offspec_action from tpa_toffspec o where o.idn_offspec = #{incidentId})
+	      union 
+	      select  a.idn_offspec_action as key, a.action_desc as value
+	       from tpa_toffspec_action a
+	      where a.idn_offspec_action not in (select o.idn_offspec_action from tpa_toffspec_response o where o.idn_offspec = #{incidentId})
+	</select>
 
 	<!-- Cuando el filtro se quiera usar para insertar datos debe estar vigente en el dia actual. -->
     <select id="selectShipperIdForInsert" resultType="com.atos.beans.ComboFilterNS">
@@ -256,6 +275,8 @@ AND sr.ask_other_shippers = 'Y'
         <result property="idnAction" column="idnAction"/>
         <result property="action" column="action"/>
         <result property="shipper" column="shipper"/>
+        <result property="groupId" column="groupId"/>
+        <result property="groupCode" column="groupCode"/>
         <association property="gasParams" select="selectGasQualityParametersFromIncidentId" column="idn_offspec"/>
     </resultMap>
         
@@ -307,12 +328,11 @@ AND sr.ask_other_shippers = 'Y'
            tlogmin.user_comments  as initial_comments,
            tlogmin.operator_comments as operator_comments,
            tlogmin.idn_user as idn_first_user,
+           tlogmin.IDN_USER_GROUP as groupId,
            (select u.user_id from tpa_tuser u where u.idn_user = tlogmin.idn_user) as first_user,
            (select u.USER_GROUP_ID from tpa_tuser_group u where u.IDN_USER_GROUP = tlogmin.IDN_USER_GROUP) as shipper,
-           tospec.idn_offspec_action as idnAction,
-               (select a.action_desc 
-                       from tpa_toffspec_action a
-                       where a.idn_offspec_action = tospec.idn_offspec_action) as action
+           (select a.idn_offspec_action from tpa_toffspec_action a
+		      where a.idn_offspec_action in (select o.idn_offspec_action from tpa_toffspec o where o.idn_offspec = tospec.idn_offspec)) as idnAction
     from tpa_toffspec tospec,
          tpa_tuser_group tgr,
          tpa_tsystem_point tsp,
@@ -381,12 +401,11 @@ AND sr.ask_other_shippers = 'Y'
            tlogmin.user_comments  as initial_comments,
            tlogmin.operator_comments as operator_comments,
            tlogmin.idn_user as idn_first_user,
+           tlogmin.IDN_USER_GROUP as groupId,
            (select u.user_id from tpa_tuser u where u.idn_user = tlogmin.idn_user) as first_user,
            (select u.USER_GROUP_ID from tpa_tuser_group u where u.IDN_USER_GROUP = tlogmin.IDN_USER_GROUP) as shipper,
-           tospec.idn_offspec_action as idnAction,
-           (select a.action_desc 
-                       from tpa_toffspec_action a
-                       where a.idn_offspec_action = tospec.idn_offspec_action) as action
+           (select a.idn_offspec_action from tpa_toffspec_action a
+		      where a.idn_offspec_action in (select o.idn_offspec_action from tpa_toffspec o where o.idn_offspec = tospec.idn_offspec)) as idnAction
       from tpa_toffspec tospec,
            tpa_tuser_group tgr,
            tpa_tsystem_point tsp,
@@ -474,6 +493,8 @@ AND sr.ask_other_shippers = 'Y'
            tsp.point_code,
            tospec.idn_user_group,
            tgr.user_group_id,
+           tlogmin.idn_user_group as groupId,
+           (select u.USER_GROUP_ID from tpa_tuser_group u where u.IDN_USER_GROUP = tlogmin.idn_user_group) as groupCode,
            tospec.start_date,
            tospec.end_date,
            tospec.aud_last_date,
@@ -497,6 +518,7 @@ AND sr.ask_other_shippers = 'Y'
 	         tpa_toffspec_status tstatus,
 	         tpa_toffspec_status_flow tflow,
 	         tpa_toffspec_log tlogmax,
+	         tpa_toffspec_log tlogmin, 
 	         tpa_toffspec_response tores,
              pipeline_points  pp         
 	    where tgr.idn_user_group (+)= tospec.idn_user_group
@@ -551,6 +573,10 @@ AND sr.ask_other_shippers = 'Y'
 			        (#{item2} = 3 AND tores.is_responded = 'Y' AND tores.response_value != 'OK')
 	        	</foreach>	        
 	        </if>
+	        and tlogmin.idn_offspec = tospec.idn_offspec
+        and tlogmin.insert_date = (select min(tlog4.insert_date)
+                                       from tpa_toffspec_log tlog4
+                                        where tlog4.idn_offspec = tlogmin.idn_offspec)
 	    order by tsp.point_code asc, tospec.start_date desc
     </select>
 
@@ -609,6 +635,7 @@ AND sr.ask_other_shippers = 'Y'
 
     <resultMap type="com.atos.beans.quality.OffSpecResponseBean" id="OffSpecResponsesFromId">
         <id property="incidentResponseId" column="idn_offspec_response" />
+        <result property="incidentId" column="incidentId"/>
 		<result property="groupId" column="idn_user_group"/>
 		<result property="groupCode" column="user_group_id"/>
 		<result property="userComments" column="user_comments"/>
@@ -620,6 +647,8 @@ AND sr.ask_other_shippers = 'Y'
         <result property="fileName" column="file_Name"/>
         <result property="fileOnResponse" column="file_On_Response"/>
         <result property="fileOnResponse" column="file_On_Start"/>
+        <result property="idnAction" column="idnAction"/>
+        <result property="action" column="action"/>
  </resultMap>
     
     <update id="updateTransporterComments" parameterType="com.atos.beans.quality.OffSpecResponseBean">
@@ -632,21 +661,24 @@ AND sr.ask_other_shippers = 'Y'
 	<!-- Se filtra para que un shipper no vea las respuestas de otro. -->
     <select id="selectDiscloseResponsesFromIncidentId" parameterType="map" resultMap="OffSpecResponsesFromId">    
 		select tres.idn_offspec_response,
+			   tof.idn_offspec as incidentId,
+			   tres.idn_offspec_action as idnAction,
+       		   tact.action_desc as action,
 		       tres.idn_user_group,
        		   tgr.user_group_id,
 		       tres.user_comments,
 		       tres.is_responded,
 		       tres.response_date,
 		       tres.response_value,
-		       tres.file_name,
-               tres.attached_file,
                tes.file_on_response,
 		       tres.operator_comments	            
 		from tpa_toffspec_response tres,
 			 tpa_toffspec tof,
              tpa_toffspec_status tes,
-     		 tpa_tuser_group tgr
+     		 tpa_tuser_group tgr,
+     		 tpa_toffspec_action tact
 		where tres.idn_offspec=#{incidentId}
+			  and tres.idn_offspec_action = tact.idn_offspec_action
       		  and tgr.idn_user_group=tres.idn_user_group
       		  and tof.idn_offspec = tres.idn_offspec
               and tof.idn_offspec_status = tes.idn_offspec_status 
@@ -754,12 +786,7 @@ AND sr.ask_other_shippers = 'Y'
 		                                   user_comments,
 		                                   idn_response_user,
 		                                    operator_comments,
-		                                    <if test="fileName != null and fileName != ''">
-		                                    file_name,
-		                                    </if>
-		                                    <if test="attachedFile != null">
-		                                    attached_file,
-		                                    </if>
+		                                    IDN_OFFSPEC_ACTION,
 	                                        aud_ins_user,
 	                                        aud_last_user)
 		values (tpa_soffspec_response.nextval
@@ -771,12 +798,7 @@ AND sr.ask_other_shippers = 'Y'
 				,#{userComments}
 		        ,#{userId}
 		        ,#{operatorComments}
-		        <if test="fileName != null and fileName != ''">
-				,#{fileName}
-				</if>
-				<if test="attachedFile != null">
-				,#{attachedFile}
-				</if>
+		        ,#{idnAction}
 	      ,#{username}
 	      ,#{username})
 	</insert>	
@@ -952,7 +974,9 @@ WHERE qpa.idn_area = a.IDN_AREA
 	<insert id="insertFileAction" parameterType="com.atos.beans.quality.OffSpecActionFileBean">
 		insert into TPA_TOFFSPEC_ACTION_FILE(
 			idn_offspec_action_file, 
-			idn_offspec, 
+			idn_offspec,
+			IDN_USER_GROUP,
+			IDN_ACTION, 
 			file_name, 
 			binary_data, 
 			aud_ins_date, 
@@ -962,6 +986,8 @@ WHERE qpa.idn_area = a.IDN_AREA
 		values(
 			TPA_SOFFSPEC_ACTION_FILE.nextval, 
 			#{idnOffspec}, 
+			#{groupId},
+			#{idnAction},
 			#{fileName}, 
 			#{binaryData}, 
 			sysdate, 
@@ -989,6 +1015,18 @@ WHERE qpa.idn_area = a.IDN_AREA
 		select f.file_name as fileName, f.binary_data as binaryData 
 			from TPA_TOFFSPEC_ACTION_FILE f
 			where f.idn_offspec = #{incidentId}
+			<if test="groupId != null and groupId != ''">
+				and f.idn_user_group = #{groupId}
+			</if>
+			<if test="idnAction != null and idnAction != ''">
+				and f.idn_action = #{idnAction}
+			</if>
+			<if test="groupId == null">
+				and f.idn_user_group is null
+			</if>
+			<if test="idnAction == null">
+				and f.idn_action is null
+			</if>
 	</select>
 	
 	<select id="selectCommentsShipperOperator" resultType="java.lang.String">
@@ -1013,4 +1051,6 @@ WHERE qpa.idn_area = a.IDN_AREA
 			set o.idn_offspec_action = #{idnAction}
 			where o.idn_offspec = #{incidentId}
 	</update>
+	
+	
 </mapper>

@@ -464,7 +464,7 @@ public class OffSpecIncidentBean extends UserAudBean implements Serializable {
 	public OffSpecResponseBean getFirstResponse(){
 		OffSpecResponseBean tmpRes = null;
 		
-		if(discloseResponses!= null)
+		if(discloseResponses!= null && !discloseResponses.isEmpty())
 			tmpRes = discloseResponses.get(0); 
 		
 		return tmpRes;

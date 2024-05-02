@@ -3,6 +3,7 @@ package com.atos.views.quality;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -306,12 +307,15 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 	}
 	
 	public void prepareResponse(OffSpecIncidentBean item) {
-		selected = item;
+		selected = new OffSpecIncidentBean();
 		actions = new HashMap<BigDecimal, Object>();
+		selected = item;
+		selected.getFirstResponse().setUserComments(null);
+		selected.getFirstResponse().setResponseValue("OK");
 		actions = service.selectShipperAction(selected);
 		if(actions != null && !actions.isEmpty()) {
 			RequestContext context = RequestContext.getCurrentInstance();
-			context.execute("PF('nextStatusDlg').hide();");
+			context.execute("PF('nextStatusDlg').show();");
 		}else {
 			ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication().getResourceBundle(FacesContext.getCurrentInstance(),"msg");
 			String errorMsg = msgs.getString("osgr_man_noActionEvent");
@@ -380,30 +384,30 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
     	items = service.search(filters); 	
     }
 	//CH706
-	public boolean renderedOperatorComments(OffSpecIncidentBean item){
-		
-		if (item!=null){
-			if(Constants.OPERATOR.equalsIgnoreCase(getUser().getUser_type())
-					||
-					Constants.SHIPPER.equalsIgnoreCase(getUser().getUser_type()) && 
-					item.getFirstResponse().getResponseValue()!=null && 
-					item.getFirstResponse().getResponseValue().equals("KO")
-						) {
-					return true;	
-					
-				}else{
-					return false;
-				}
-			
-		}
-		return false;	
-	}
+//	public boolean renderedOperatorComments(OffSpecIncidentBean item){
+//		
+//		if (item!=null){
+//			if(Constants.OPERATOR.equalsIgnoreCase(getUser().getUser_type())
+//					||
+//					Constants.SHIPPER.equalsIgnoreCase(getUser().getUser_type()) && 
+//					item.getFirstResponse().getResponseValue() != null && 
+//					item.getFirstResponse().getResponseValue().equals("KO")
+//						) {
+//					return true;	
+//					
+//				}else{
+//					return false;
+//				}
+//			
+//		}
+//		return false;	
+//	}
 	
 	public void handleFileUpload(FileUploadEvent event) {
 		file = event.getFile();
 		OffSpecActionFileBean uploadFile = null;
 		if(file != null){
-			uploadFile = new OffSpecActionFileBean(selected.getIncidentId(), selected.getGroupId(), selected.getIdnAction(), file.getFileName(), file.getContents(), getUser().getUsername());
+			uploadFile = new OffSpecActionFileBean(selected.getIncidentId(), selected.getFirstResponse().getGroupId(), selected.getIdnAction(), file.getFileName(), file.getContents(), getUser().getUsername());
 			selected.getFilesAction().add(uploadFile);
 		}
 		if(file == null || uploadFile == null){
@@ -482,4 +486,17 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 		context.execute("PF('nextStatusDlg').hide();");
 		onSearch();
 	}
+	
+	public void selectActionFiles(OffSpecIncidentBean item) {
+		 if(selected != null) {
+			 selected.setFilesAction(new ArrayList<OffSpecActionFileBean>());
+			 OffSpecResponseBean newItem = new OffSpecResponseBean();
+			 newItem.setIncidentId(item.getIncidentId());
+			 newItem.setGroupId(item.getGroupId());
+			 newItem.setIdnAction(item.getIdnAction());
+			 selected.getFilesAction().addAll(serviceManagement.selectActionFiles(newItem));
+		 }else {
+			 selected.setFilesAction(new ArrayList<OffSpecActionFileBean>());
+		 }
+	 }
 }

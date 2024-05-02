@@ -183,6 +183,7 @@ public class OffSpecGasReportResponseServiceImpl implements OffSpecGasReportResp
 		osResponse.setIsResponded(OffSpecResponseBean.isRespondedYes);
 		osResponse.setResponseDate(new Date());
 		osResponse.setUserId(_user.getIdn_user());
+		osResponse.setIdnAction(_incid.getIdnAction());
 		
 		// Se inserta un registro en la tabla de respuestas para el disclose.
 		int res = osgrmMapper.insertOffSpecResponse(osResponse);

@@ -257,12 +257,6 @@
 									escape="false" />
 							</p:column>
 
-							<p:column headerText="#{msg['osgr_man_fileName']}"
-								style="width: 120px;"
-								sortBy="#{incident.firstResponse.fileName}">
-								<h:outputText value="#{incident.firstResponse.fileName}" />
-							</p:column>
-
 							<p:column
 								headerText="#{msg['osgr_man_shipper_response_comment']}"
 								style="width: 145px;"
@@ -280,8 +274,7 @@
 							<!-- ch706 rendered="OSGRResponseView.renderedOperatorComments(incident)"-->
 							<p:column headerText="#{msg['osgr_man_operator_commets']}"
 								style="width: 130px;" sortBy="#{incident.operatorComments}">
-								<h:outputText value="#{incident.operatorComments}"
-									rendered="#{OSGRResponseView.renderedOperatorComments(incident)}" />
+								<h:outputText value="#{incident.operatorComments}"/>
 							</p:column>
 
 
@@ -380,10 +373,11 @@
 						</p:column>
 						<p:column>
 							<p:selectOneMenu id="actionsId" value="#{incident.idnAction}"
-								autoWidth="fasle" style="width:120px">
+								autoWidth="fasle" style="width:120px" disabled="#{incident.idnAction != null}">
 								<f:selectItem itemLabel="Select One" itemValue="" />
 								<f:selectItems value="#{OSGRResponseView.actions.entrySet()}"
 									var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+								<p:ajax update="actionsId uploadId"/>
 							</p:selectOneMenu>
 						</p:column>
 					</p:row>
@@ -423,7 +417,7 @@
 								update="uploadId :#{p:component('fileUploadOO')} :#{p:component('tableFileId')}"
 								onstart="PF('cargando').show()"
 								oncomplete="PF('cargando').hide()"
-								disabled="#{(!OSGRResponseView.renderedEditResponse(incident) and OSGRResponseView.selected.filesAction.size() eq 1) or
+								disabled="#{incident.idnAction == null or (!OSGRResponseView.renderedEditResponse(incident) and OSGRResponseView.selected.filesAction.size() eq 1) or
 									(OSGRResponseView.renderedEditResponse(incident) and OSGRResponseView.selected.filesAction.size() eq 10)}" />
 						</p:column>
 					</p:row>
@@ -459,7 +453,7 @@
 							<p:commandButton value="#{msg['save']}"
 								style="float: right; vertical-align: bottom"
 								actionListener="#{OSGRResponseView.onRowEdit}"
-								update="msgs nextStatusFormId #{p:component('incidents1')}" />
+								update="msgs #{p:component('incidents1')}" />
 						</p:column>
 					</p:row>
 				</p:panelGrid>

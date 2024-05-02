@@ -3,8 +3,10 @@ package com.atos.beans.quality;
 import java.io.ByteArrayInputStream;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 import org.primefaces.model.DefaultStreamedContent;
 
@@ -36,6 +38,7 @@ public class OffSpecResponseBean extends UserAudBean implements Serializable {
 	
 	private BigDecimal idnAction;
 	private String action;
+	private List<OffSpecActionFileBean> filesAction = new ArrayList<OffSpecActionFileBean>();
 	
 	//CH706
 	private String operatorComments; // en realidad es Transporter Response comment
@@ -90,6 +93,14 @@ public class OffSpecResponseBean extends UserAudBean implements Serializable {
 
 	public void setGroupId(BigDecimal groupId) {
 		this.groupId = groupId;
+	}
+
+	public List<OffSpecActionFileBean> getFilesAction() {
+		return filesAction;
+	}
+
+	public void setFilesAction(List<OffSpecActionFileBean> filesAction) {
+		this.filesAction = filesAction;
 	}
 
 	public BigDecimal getIdnAction() {

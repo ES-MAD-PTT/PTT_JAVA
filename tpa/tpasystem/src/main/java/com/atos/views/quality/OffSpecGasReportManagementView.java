@@ -91,6 +91,7 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 	private List<OffSpecActionBean> allActions;
 //	private Map<BigDecimal, OffSpecActionBean> mapAllActions;
 	private OffSpecStatusBean idnStatusUnsolved;
+	private OffSpecActionBean actionFix;
 	private DefaultStreamedContent scFile;
 	
 	
@@ -243,7 +244,7 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 //	}
 
 	public Boolean renderedAction(OffSpecIncidentBean item) {
-			return idnStatusUnsolved != null && item.getStatusId().compareTo(idnStatusUnsolved.getStatusId()) == 0 ? true : false;
+			return getIsOperator() && idnStatusUnsolved != null && item.getStatusId().compareTo(idnStatusUnsolved.getStatusId()) == 0 ? true : false;
 	}
 
 	@PostConstruct
@@ -262,6 +263,7 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 		allQualityParameters = service.selectGasQualityParameters();
 		idnStatusUnsolved = allStatus.stream().filter(item -> item.getStatusCode().equals("EV.UNSOLVED")).findFirst().orElse(null);
 		allActions = service.selectAllActions();
+		actionFix = allActions.stream().filter(i -> i.getActionCode().equals("FIX_ORIG_SHIP")).findFirst().orElse(null);
 		
    		filters = initFilter();
 		
@@ -565,8 +567,15 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 		selected.setIdnAction(item.getIdnAction());
 		selected.setIncidentCode(item.getIncidentCode());
 		selected.setGroupId(item.getGroupId());
-		RequestContext context = RequestContext.getCurrentInstance();
-		context.execute("PF('nextStatusDlg').show();");
+		if(actionFix.getIdnOffspecAction().compareTo(item.getIdnAction()) == 0) {
+			selected.setMultiShippers(new ArrayList<BigDecimal>());
+			selected.getMultiShippers().add(item.getOriginatorShipperId());
+			selected.setGroupCode(item.getOriginatorShipperCode());
+			onChangeAction();
+		}else {
+			RequestContext context = RequestContext.getCurrentInstance();
+			context.execute("PF('nextStatusDlg').show();");
+		}
 	}
 	
 	public void closeChangeAction() {
@@ -575,46 +584,11 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
         updateIncidentInfo(hmAllStatus, items);
 	}
 	
-//	public void acceptRejectAction(String responseValue) {
-//		ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication().getResourceBundle(FacesContext.getCurrentInstance(),"msg");
-//    	String summaryMsg = msgs.getString("saving_data_error");
-//    	String errorMsg = null;
-//    	if(responseValue.equals("OK") && selected != null && selected.getFilesAction().size() < 1) {
-//    		errorMsg = msgs.getString("osrg_man_mandatoryOneFile");
-//    		getMessages().addMessage(Constants.head_menu[6],
-//					new MessageBean(Constants.ERROR, summaryMsg, errorMsg, Calendar.getInstance().getTime()));
-//	    	return;
-//    	}
-//		try {
-//			if(selected != null) {
-//				int res = service.acceptRejectAction(selected, responseValue, getUser());
-//				if(res != 1) { errorMsg = msgs.getString("osgr_man_errorChangeAction");
-//					 getMessages().addMessage(Constants.head_menu[6], new
-//					 MessageBean(Constants.ERROR, summaryMsg, errorMsg,
-//					 Calendar.getInstance().getTime())); return; 
-//				} 
-//			}
-//		} catch (Exception e) {
-//			errorMsg = e.getMessage();
-//    		getMessages().addMessage(Constants.head_menu[6],
-//					new MessageBean(Constants.ERROR, summaryMsg, errorMsg, Calendar.getInstance().getTime()));
-//	    	return;
-//		}
-//		summaryMsg = msgs.getString("osgr_man_updatedSuccessfully");
-//		String[] params = { selected.getIncidentCode() };
-//		String msg = super.getMessageResourceString("osgr_man_changeActionOK", params);
-//		getMessages().addMessage(Constants.head_menu[3], new MessageBean(Constants.INFO, summaryMsg, msg, new Date()));
-//		RequestContext context = RequestContext.getCurrentInstance();
-//		context.execute("PF('nextStatusDlg').hide();");
-//		items = service.search(filters, getUser());
-//        updateIncidentInfo(hmAllStatus, items);
-//	}
-	
 	public void onChangeAction() {
 		ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication().getResourceBundle(FacesContext.getCurrentInstance(),"msg");
     	String summaryMsg = msgs.getString("saving_data_error");
     	String errorMsg = null;
-    	if(selected != null && selected.getFilesAction().size() < 1) {
+    	if(actionFix.getIdnOffspecAction().compareTo(selected.getIdnAction()) != 0 && selected != null && selected.getFilesAction().size() < 1) {
     		errorMsg = msgs.getString("osrg_man_mandatoryOneFile");
     		getMessages().addMessage(Constants.head_menu[6],
 					new MessageBean(Constants.ERROR, summaryMsg, errorMsg, Calendar.getInstance().getTime()));

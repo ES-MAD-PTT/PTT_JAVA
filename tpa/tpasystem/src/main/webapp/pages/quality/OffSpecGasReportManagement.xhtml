@@ -231,7 +231,7 @@
 				       	
 				       	<p:column headerText="#{msg['osgr_man_action']}"  style="width: 145px;">
 				       		<p:selectOneMenu id="actionId" value="#{incident.idnAction}" 
-				       			autoWidth="fasle"  style="width:120px" rendered="#{!OSGRManagementView.isShipper()}">
+				       			autoWidth="fasle"  style="width:120px" rendered="#{OSGRManagementView.renderedAction(incident)}">
 			                    <f:selectItem itemLabel="Select One" itemValue=""/>
 			                    <f:selectItems value="#{incident.actionsFree.entrySet()}" var="entry" 
  											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
@@ -406,7 +406,7 @@
 			</h:form>
 		</p:dialog>
 		
- 		<p:dialog header="#{msg['osgr_man_shipper_responses']}" widgetVar="shipperResponsesDlg" modal="true" appendTo="@(body)" width="1300" height="200">
+ 		<p:dialog header="#{msg['osgr_man_shipper_responses']}" widgetVar="shipperResponsesDlg" modal="true" appendTo="@(body)" width="1300" height="500">
 			<h:form id="shipperResponsesFormId" style="width:100%;height:98%;border-collapse:collapse" enctype="multipart/form-data">
 				<p:growl id="msgs" showDetail="true" life="10000" globalOnly="true" />
 				
@@ -449,16 +449,6 @@
 			       		<p:commandButton icon="ui-icon fa fa-envelope-o" update="filesActionFormId" value="#{msg['osrg_man_shipperFiles']}"
 									onstart="PF('cargando').show()"	oncomplete="PF('cargando').hide(),PF('filesActionDlg').show()" style="float:right"
 									actionListener="#{OSGRManagementView.selectActionFiles(response, 'SHIPPER')}"/>
-			       	</p:column>
-			       	<p:column headerText="#{msg['osgr_man_file']}" style="width: 100px;" sortBy="#{response.fileName}" >
-			       		<h:outputText value="#{response.fileName}" title="#{response.fileName}" rendered="#{response.fileName!=null and response.fileName!=''}" />
-			       		<p:commandButton ajax="false"
-										rendered="#{OSGRManagementView.showFile(response.fileOnResponse) and response.fileName!=null and response.fileName!=''}"
-										oncomplete="PrimeFaces.monitorDownload(start, stop);"
-										icon="ui-icon-document">
-										<p:fileDownload
-											value="#{response.scFile}" />
-									</p:commandButton>	
 			       	</p:column>
 				<!--CH706 NUEVA columna editable Transporter reponse comment  -->
 						 <shiro:hasPermission name="#{changeSystemView.system}.QUALITY.OFFSPEC.REPORT_RESPONSE.OPER_MOD">   

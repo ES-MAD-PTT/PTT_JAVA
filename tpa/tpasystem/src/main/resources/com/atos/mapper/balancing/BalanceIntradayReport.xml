@@ -6,7 +6,7 @@
     
 	<!-- Para hacer consultas, el shipper no tendria por que estar vigente. -->
     <select id="selectShipperId" resultType="com.atos.beans.ComboFilterNS">
-		select tgr.idn_user_group as key, tgr.short_name as value
+		select tgr.idn_user_group as key, tgr.user_group_id || ' (' || tgr.short_name || ')' AS value
 		from tpa_tuser_group tgr
 		where tgr.idn_user_group_type = (select idn_user_group_type from tpa_tuser_group_type where type_code = 'SHIPPER')
 		order by upper(tgr.short_name) asc

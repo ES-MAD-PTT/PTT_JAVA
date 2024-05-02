@@ -127,7 +127,7 @@ public class RenominationIntradayServiceImpl implements RenominationIntradayServ
 		Date today = renomIntradayMapper.getSysdate();
 		Calendar cal = Calendar.getInstance();
 		cal.setTime(today);
-		int hour = cal.get(Calendar.HOUR_OF_DAY) +1;
+		int hour = cal.get(Calendar.HOUR_OF_DAY) ;
 		if(hour<24) {
 			for(int i=hour;i<25;i++) {
 				if(i!=24) {
@@ -241,6 +241,38 @@ public class RenominationIntradayServiceImpl implements RenominationIntradayServ
 		
 		return "0";
 
+	}
+
+	@Override
+	public List<BigDecimal> getMinutes(RenominationIntradayDialogBean newReIntraday) {
+		ArrayList<BigDecimal> minutes = new ArrayList<BigDecimal>();
+		Date today = renomIntradayMapper.getSysdate();
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(today);
+		int hour = cal.get(Calendar.HOUR_OF_DAY);
+		int hour_bean = (newReIntraday.getHour()==null ? 0 : newReIntraday.getHour().intValue());
+		if(hour==hour_bean) {
+			int minute = cal.get(Calendar.MINUTE);
+			if(minute<15) {
+				minutes.add(BigDecimal.valueOf(15));
+			}
+			if(minute<30) {
+				minutes.add(BigDecimal.valueOf(30));
+			}
+			if(minute<45) {
+				minutes.add(BigDecimal.valueOf(45));
+			}
+			
+			
+		} else {
+			minutes.add(BigDecimal.valueOf(0));
+			minutes.add(BigDecimal.valueOf(15));
+			minutes.add(BigDecimal.valueOf(30));
+			minutes.add(BigDecimal.valueOf(45));
+		}
+		
+		
+		return minutes;
 	}
 	
 	

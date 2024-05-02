@@ -66,31 +66,30 @@
 	<select id="selectShipperId" resultType="com.atos.beans.ComboFilterNS"
 		parameterType="BigDecimal">
 		WITH logged_user AS
-		(SELECT ug.idn_user_group,
-		ug.short_name,
-		ugt.type_code
-		FROM tpa_tuser u,
-		tpa_tuser_group ug,
-		tpa_tuser_group_type ugt
-		WHERE u.idn_user = #{value}
-		AND u.idn_user_group = ug.idn_user_group
-		AND ug.idn_user_group_type = ugt.idn_user_group_type)
-		SELECT idn_user_group as key,
-		short_name as value
-		FROM (SELECT lu.idn_user_group,
-		lu.short_name
-		FROM logged_user lu
-		WHERE lu.type_code = 'SHIPPER'
-		UNION
-		SELECT ug.idn_user_group,
-		ug.short_name
-		FROM tpa_tuser_group ug,
-		tpa_tuser_group_type ugt
-		WHERE ug.idn_user_group_type = ugt.idn_user_group_type
-		AND ugt.type_code = 'SHIPPER'
-		AND EXISTS (SELECT 1 FROM logged_user lu WHERE lu.type_code !=
-		'SHIPPER'))
-		ORDER BY upper(short_name)
+    (SELECT ug.idn_user_group, ug.user_group_id,
+	    ug.short_name,
+	    ugt.type_code
+	    FROM tpa_tuser u,
+	    tpa_tuser_group ug,
+	    tpa_tuser_group_type ugt
+	    WHERE u.idn_user = #{value}
+	    AND u.idn_user_group = ug.idn_user_group
+	    AND ug.idn_user_group_type = ugt.idn_user_group_type)
+	    SELECT idn_user_group as key,   user_group_id  || ' (' || short_name || ')' AS value
+	    FROM (SELECT lu.idn_user_group, lu.user_group_id,
+	    lu.short_name
+	    FROM logged_user lu
+	    WHERE lu.type_code = 'SHIPPER'
+	    UNION
+	    SELECT ug.idn_user_group,  ug.user_group_id,
+	    ug.short_name
+	    FROM tpa_tuser_group ug,
+	    tpa_tuser_group_type ugt
+	    WHERE ug.idn_user_group_type = ugt.idn_user_group_type
+	    AND ugt.type_code = 'SHIPPER'
+	    AND EXISTS (SELECT 1 FROM logged_user lu WHERE lu.type_code !=
+	    'SHIPPER'))
+	    ORDER BY upper(user_group_id)
 	</select>
 
 	<select id="selectReserveBalId" resultType="com.atos.beans.ComboFilterNS"

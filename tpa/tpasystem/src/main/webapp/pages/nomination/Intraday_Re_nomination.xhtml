@@ -237,7 +237,7 @@
 								   		<f:selectItem itemLabel="" itemValue="" />
      									<f:selectItems value="#{renominationIntradayView.hours.entrySet()}" var="entry" 
      											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
-										<p:ajax event="change" listener="#{renominationIntradayView.reloadDetail}" update="renominationIntradayTable"/>     											
+										<p:ajax event="change" listener="#{renominationIntradayView.reloadDetail}" update="renominationIntradayTable,:#{p:component('minutes')}"/>     											
 				           		</p:selectOneMenu>
 							</p:column>
 						</p:row>
@@ -260,13 +260,10 @@
 							                        <h:outputText value="#{item.minutes}"/>
 							                    </f:facet>
 							                    <f:facet name="input">
-									           		<p:selectOneMenu required="true" requiredMessage="#{msg['renom_intraday_period']}: #{msg['empty_field']}" style="width:100px" value="#{item.minutes}" 
-														>
-				 								   		<f:selectItem itemLabel="" itemValue="" />
-				      									<f:selectItem itemLabel="15" itemValue="15" />
-				      									<f:selectItem itemLabel="30" itemValue="30" />
-				      									<f:selectItem itemLabel="45" itemValue="45" />
-				      									<f:selectItem itemLabel="00" itemValue="00" />
+									           		<p:selectOneMenu id="minutes" required="true" requiredMessage="#{msg['renom_intraday_period']}: #{msg['empty_field']}" style="width:100px" value="#{item.minutes}">
+														<f:selectItem itemLabel="" itemValue="" />
+				     									<f:selectItems value="#{renominationIntradayView.minutes}" var="entry" 
+				     											itemValue="#{entry}" itemLabel="#{entry}" />
 									           		</p:selectOneMenu>
 									           	</f:facet>
 									         </p:cellEditor>

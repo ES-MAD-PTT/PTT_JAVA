@@ -38,7 +38,7 @@
 			<p:row>
 				<p:column rowspan="2" headerText="#{msg['bal_rep_shipper']}" style="min-width: 125px;max-width: 125px;font-size:15px;"/>
 				<p:column rowspan="2" headerText="#{msg['bal_rep_shipperName']}" style="min-width: 200px;max-width: 200px;font-size:15px;"/>
-				<p:column rowspan="2" headerText="#{msg['bal_rep_shipper_short_name']}" style="min-width: 200px;max-width: 200px;font-size:15px;"/>				
+				<!-- <p:column rowspan="2" headerText="#{msg['bal_rep_shipper_short_name']}" style="min-width: 200px;max-width: 200px;font-size:15px;"/>	 -->			
 				<p:column rowspan="2" headerText="#{msg['bal_rep_contract']}" style="min-width: 100px;max-width: 100px;font-size:15px;"/>
 				<p:column rowspan="2" headerText="#{msg['bal_rep_total_entry']}&lt;br&gt;#{msg['bal_rep_mmbtu']}" style="min-width: 120px;max-width: 120px;font-size:15px;"/>
 				<p:column rowspan="2" headerText="#{msg['bal_rep_total_exit_offshore']}" style="min-width: 120px;max-width: 120px;font-size:15px;white-space:normal"/>
@@ -95,16 +95,16 @@
 	       	</p:column>
 
 	       	<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 125px;max-width: 125px;">
-	       		<h:outputText value="#{balanceOff.isTotal eq 'Y'? 'TOTAL: ' : ''}#{balanceOff.shipperCode}" />
+	       		<h:outputText value="#{balanceOff.isTotal eq 'Y'? 'TOTAL: ' : ''}#{balanceOff.shipperCode}(#{balanceOff.shortName})" />
 	       	</p:column>
 
 			<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 200px;max-width: 200px;">
 	       		<h:outputText value="#{balanceOff.shipperName}" title="#{balanceOff.shipperName}"/>
 	       	</p:column>
 	       	
-	       	<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 200px;max-width: 200px;">
+	       	<!-- <p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 200px;max-width: 200px;">
 	       		<h:outputText value="#{balanceOff.shortName}" title="#{balanceOff.shortName}"/>
-	       	</p:column>
+	       	</p:column> -->
 
 
 	       	<p:column styleClass="#{balanceOff.isTotal eq 'Y'? 'headerColor' : ''}" style="min-width: 100px;max-width: 100px;">

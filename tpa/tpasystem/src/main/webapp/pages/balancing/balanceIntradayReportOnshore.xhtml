@@ -33,401 +33,401 @@
 		
 		 	<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.BALANCE.INTRADAY.REPORT.QUERY">
 	       
-    		<p:column headerText="#{msg['bal_int_timestamp']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" style="min-width: 130px;max-width: 130px;">
+    		<p:column headerText="#{msg['bal_int_timestamp']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" style="min-width: 130px;max-width: 130px;">
               	<h:outputText value="#{balance.versionDate}" >
              		<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
              	</h:outputText>
 	       	</p:column>
 
-	       <p:column headerText="#{msg['bal_rep_shipper']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" style="min-width: 125px;max-width: 125px;">
-	       		<h:outputText value="#{balance.flag_nomination eq 1 and balance.isTotal eq 'N'? 'Nomination value' : balance.isTotal eq 'Y' or balance.isTotalAllShippers eq 'Y'? 'TOTAL ' : ''}#{balance.flag_nomination eq 1 and balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'NOMINATION' : ((balance.flag_nomination eq 1 and balance.isTotal eq 'N') or (balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'))? '' : balance.shipperCode}" />
+	       <p:column headerText="#{msg['bal_rep_shipper']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" style="min-width: 125px;max-width: 125px;">
+	       		<h:outputText value="#{balance.flag_nomination eq 1 and balance.isTotal eq 'N'? 'Nomination value' : balance.isTotal eq 'Y' or balance.isTotalAllShippers eq 'Y'? 'TOTAL ' : ''}#{balance.flag_nomination eq 1 and balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'NOMINATION' : ((balance.flag_nomination eq 1 and balance.isTotal eq 'N') or (balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'))? '' : balance.shipperCode}(#{balance.shortName})" />
 	       	</p:column>
 	       
-	        <p:column headerText="#{msg['bal_rep_shipperName']}" id="shipperName" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" style="min-width: 200px;max-width: 200px;">
+	        <p:column headerText="#{msg['bal_rep_shipperName']}" id="shipperName" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" style="min-width: 200px;max-width: 200px;">
 	       		<h:outputText value="#{balance.flag_nomination eq 1 and balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'NOMINATION' : balance.shipperName}" title="#{balance.flag_nomination eq 1 and balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'NOMINATION' : balance.shipperName}" />
 	       </p:column>
 	       
-	       <p:column headerText="#{msg['bal_rep_shipper_short_name']}" id="shortName" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" style="min-width: 200px;max-width: 200px;">
+	       <!-- <p:column headerText="#{msg['bal_rep_shipper_short_name']}" id="shortName" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" style="min-width: 200px;max-width: 200px;">
 	       		<h:outputText value="#{balance.flag_nomination eq 1 and balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'NOMINATION' : balance.shortName}" title="#{balance.flag_nomination eq 1 and balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'NOMINATION' : balance.shortName}" />
-	       </p:column>		       
+	       </p:column>	 -->	       
 
-	       <p:column headerText="#{msg['bal_rep_contract']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" style="min-width: 100px;max-width: 100px;">
+	       <p:column headerText="#{msg['bal_rep_contract']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" style="min-width: 100px;max-width: 100px;">
 	       		<h:outputText value="#{balance.isTotal eq 'Y'? '' : balance.contractCode}" />
 	       </p:column>
 
-			<p:column headerText="#{msg['bal_rep_totalEntryEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_totalEntryEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.eTotalEntry}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 			
-			<p:column headerText="#{msg['bal_rep_totalEntryWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_totalEntryWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.wTotalEntry}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 				
-			<p:column headerText="#{msg['bal_rep_totalEntryEW']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" > 
+			<p:column headerText="#{msg['bal_rep_totalEntryEW']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" > 
 				<h:outputText style="float:right" value="#{balance.ewTotalEntry}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 				
-			<p:column headerText="#{msg['bal_rep_totalExitEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_totalExitEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.eTotalExit}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 			
-			<p:column headerText="#{msg['bal_rep_totalExitWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_totalExitWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.wTotalExit}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 			
-			<p:column headerText="#{msg['bal_rep_totalExitEW']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_totalExitEW']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.ewTotalExit}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 
-			<p:column headerText="#{msg['bal_rep_imbalanceZoneEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_imbalanceZoneEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.eImbalanceZone}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 			
-			<p:column headerText="#{msg['bal_rep_imbalanceZoneWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_imbalanceZoneWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.wImbalanceZone}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 			
-			<p:column headerText="#{msg['bal_rep_imbalanceZoneTotal']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_imbalanceZoneTotal']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.totalImbalanceZone}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 			
-			<p:column headerText="#{msg['bal_rep_instructedFlowEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_instructedFlowEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.eInstructedFlow}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 			
-			<p:column headerText="#{msg['bal_rep_instructedFlowWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_instructedFlowWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.wInstructedFlow}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 			
-			<p:column headerText="#{msg['bal_rep_shrinkageVolumeEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_shrinkageVolumeEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.eShrinkageQuantity}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 			
-			<p:column headerText="#{msg['bal_rep_shrinkageVolumeWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_shrinkageVolumeWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.wShrinkageQuantity}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 			
-			<p:column headerText="#{msg['bal_rep_parkEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_parkEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.ePark}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 			
-			<p:column headerText="#{msg['bal_rep_parkWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_parkWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.wPark}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 			
-			<p:column headerText="#{msg['bal_rep_unparkEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_unparkEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.eUnpark}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 			
-			<p:column headerText="#{msg['bal_rep_unparkWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_unparkWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.wUnpark}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 			
-			<p:column headerText="#{msg['bal_rep_SODParkEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_SODParkEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.eSOTDPark}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 			
-			<p:column headerText="#{msg['bal_rep_SODParkWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_SODParkWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.wSOTDPark}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 			
-			<p:column headerText="#{msg['bal_rep_EODParkEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_EODParkEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.eEOTDPark}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 										
-			<p:column headerText="#{msg['bal_rep_EODParkWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_EODParkWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.wEOTDPark}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 										
-			<p:column headerText="#{msg['bal_rep_minInventoryEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_minInventoryEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.eMinInventory}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 			
-			<p:column headerText="#{msg['bal_rep_minInventoryWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_minInventoryWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.wMinInventory}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 			
-			<p:column headerText="#{msg['bal_rep_reserveBalEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_reserveBalEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.eResBalancingGas}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 			
-			<p:column headerText="#{msg['bal_rep_reserveBalWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_reserveBalWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.wResBalancingGas}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 			
-			<p:column headerText="#{msg['bal_rep_adjustIMBEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_adjustIMBEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.eMonthAdjust}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 										
-			<p:column headerText="#{msg['bal_rep_adjustIMBWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_adjustIMBWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.wMonthAdjust}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 										
-			<p:column headerText="#{msg['bal_rep_stockIMBEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_stockIMBEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.eImbalanceStock}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 										
-			<p:column headerText="#{msg['bal_rep_stockIMBWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_stockIMBWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.wImbalanceStock}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 										
-			<p:column headerText="#{msg['bal_rep_totalAIP']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_totalAIP']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.totalAIP}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 			
-			<p:column headerText="#{msg['bal_rep_totalAIN']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_totalAIN']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.totalAIN}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 
-			<p:column headerText="#{msg['bal_rep_totalAbsImb']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_totalAbsImb']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.imbalancePercentage}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="2" maxFractionDigits="2"/>
 				</h:outputText>
 			</p:column>
 
-			<p:column headerText="#{msg['bal_rep_accIMBMonthEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_accIMBMonthEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.eAccImbalanceMonth}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 										
-			<p:column headerText="#{msg['bal_rep_accIMBMonthWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_accIMBMonthWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.wAccImbalanceMonth}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 										
-			<p:column headerText="#{msg['bal_rep_accIMBEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" style='min-width: 120px;max-width: 120px;background-color:"#{balance.eAccImbalanceColor}" !important'>
+			<p:column headerText="#{msg['bal_rep_accIMBEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" style='min-width: 120px;max-width: 120px;background-color:"#{balance.eAccImbalanceColor}" !important'>
 				<h:outputText style="float:right" value="#{balance.eAccImbalance}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 										
-			<p:column headerText="#{msg['bal_rep_accIMBWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? balance.eACCImbInvPttColor eq 'NONE' ? 'headerColor' : balance.eACCImbInvPttColor : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" style='min-width: 120px;max-width: 120px;background-color:"#{balance.wAccImbalanceColor}" !important'>
+			<p:column headerText="#{msg['bal_rep_accIMBWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? balance.eACCImbInvPttColor eq 'NONE' ? 'headerColorIntraBalReport' : balance.eACCImbInvPttColor : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" style='min-width: 120px;max-width: 120px;background-color:"#{balance.wAccImbalanceColor}" !important'>
 				<h:outputText style="float:right" value="#{balance.wAccImbalance}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 										
-			<p:column headerText="#{msg['bal_rep_accIMBInventoryEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? balance.wACCImbInvPttColor eq 'NONE' ? 'headerColor' : balance.wACCImbInvPttColor : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" style='min-width: 120px;max-width: 120px;background-color:"#{balance.eACCImbInvPttColor}" !important'>
+			<p:column headerText="#{msg['bal_rep_accIMBInventoryEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? balance.wACCImbInvPttColor eq 'NONE' ? 'headerColorIntraBalReport' : balance.wACCImbInvPttColor : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" style='min-width: 120px;max-width: 120px;background-color:"#{balance.eACCImbInvPttColor}" !important'>
 				<h:outputText style="float:right" value="#{balance.eACCImbInvPtt}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 
-			<p:column headerText="#{msg['bal_rep_accIMBInventoryWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" style='min-width: 120px;max-width: 120px;background-color:"#{balance.wACCImbInvPttColor}" !important'>
+			<p:column headerText="#{msg['bal_rep_accIMBInventoryWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" style='min-width: 120px;max-width: 120px;background-color:"#{balance.wACCImbInvPttColor}" !important'>
 				<h:outputText style="float:right" value="#{balance.wACCImbInvPtt}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 										
-			<p:column headerText="#{msg['bal_rep_usedCapEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_usedCapEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.eUsedCapacity}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="2" maxFractionDigits="2"/>
 				</h:outputText>
 			</p:column>
 			
-			<p:column headerText="#{msg['bal_rep_usedCapWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_usedCapWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.wUsedCapacity}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="2" maxFractionDigits="2"/>
 				</h:outputText>
 			</p:column>
 
-			<p:column headerText="#{msg['bal_rep_entryEastGSP']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_entryEastGSP']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.GSP}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 
-			<p:column headerText="#{msg['bal_rep_entryEastBypass']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_entryEastBypass']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.BYPASS}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 
-			<p:column headerText="#{msg['bal_rep_entryEastLNG']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_entryEastLNG']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.LNG}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 
-			<p:column headerText="#{msg['bal_rep_entryWestYDN']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_entryWestYDN']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.YDN}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 
-			<p:column headerText="#{msg['bal_rep_entryWestYTG']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_entryWestYTG']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.YTG}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 
-			<p:column headerText="#{msg['bal_rep_entryWestZTK']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_entryWestZTK']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.ZTK}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 
-			<p:column headerText="#{msg['bal_rep_entryEWRA6East']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_entryEWRA6East']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.eFrom}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 
-			<p:column headerText="#{msg['bal_rep_entryEWRA6West']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_entryEWRA6West']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.wFrom}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 
-			<p:column headerText="#{msg['bal_rep_entryEWBVW10East']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_entryEWBVW10East']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.bvw10East}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 
-			<p:column headerText="#{msg['bal_rep_entryEWBVW10']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_entryEWBVW10']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.bvw10West}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 
-			<p:column headerText="#{msg['bal_rep_exitEastEGAT']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_exitEastEGAT']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.eEGAT}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 
-			<p:column headerText="#{msg['bal_rep_exitEASTIPP']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_exitEASTIPP']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.eIPP}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 			
-			<p:column headerText="#{msg['bal_rep_exitEASTOthers']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_exitEASTOthers']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.e_others}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 		  </p:column>
 		  
-			<p:column headerText="#{msg['bal_rep_exitWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_exitWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.wEGAT}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 
-			<p:column headerText="#{msg['bal_rep_exitWestIPP']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_exitWestIPP']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.wIPP}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 				
-			<p:column headerText="#{msg['bal_rep_exitWestOthers']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_exitWestOthers']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.w_others}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 		  </p:column>
 
-			<p:column headerText="#{msg['bal_rep_exitEWEGAT']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_exitEWEGAT']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.ewEGAT}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 
-			<p:column headerText="#{msg['bal_rep_exitEWIPP']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+			<p:column headerText="#{msg['bal_rep_exitEWIPP']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.ewIPP}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 			
-	       <p:column headerText="#{msg['bal_rep_exitEWOthers']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+	       <p:column headerText="#{msg['bal_rep_exitEWOthers']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.ew_others}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 		  </p:column>
 		  
-		  <p:column headerText="#{msg['bal_rep_exitEastF2G']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+		  <p:column headerText="#{msg['bal_rep_exitEastF2G']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.eF2g}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 		  </p:column>
 		  
-		  <p:column headerText="#{msg['bal_rep_exitWestF2G']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+		  <p:column headerText="#{msg['bal_rep_exitWestF2G']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.wF2g}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 		  </p:column>
 		  
-		  <p:column headerText="#{msg['bal_rep_exitEastE']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+		  <p:column headerText="#{msg['bal_rep_exitEastE']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.e_east}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 		  </p:column>
 		  
-		  <p:column headerText="#{msg['bal_rep_exitWestE']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColor' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
+		  <p:column headerText="#{msg['bal_rep_exitWestE']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" >
 				<h:outputText style="float:right" value="#{balance.e_west}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>

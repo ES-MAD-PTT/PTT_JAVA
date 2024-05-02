@@ -34,7 +34,7 @@
 						
 							<p:row>
 								<p:column style="font-weight: bold;">
-									<h:outputText value="#{msg['res_bal_sbs_shipper_short_name']}" />
+									<h:outputText value="#{msg['res_bal_sbs_shipper_id']}" />
 								</p:column>
 
 								<p:column style="font-weight: bold;">
@@ -196,12 +196,12 @@
 							</p:column>
 
 							<p:column headerText="#{msg['shipper_id']}">
-								<h:outputText value="#{item.userGroupId}" />
+								<h:outputText value="#{item.userGroupId}(#{item.shortName})" />
 							</p:column>
 							
-							<p:column headerText="#{msg['res_bal_sbs_shipper_short_name']}">
+							<!-- <p:column headerText="#{msg['res_bal_sbs_shipper_short_name']}">
 								<h:outputText value="#{item.shortName}" />
-							</p:column>
+							</p:column> -->
 
 							<p:column headerText="#{msg['res_bal_contract_id']}">
 								<h:outputText value="#{item.contractCode}" />
@@ -293,7 +293,7 @@
 				<p:panelGrid id="newBal" style="width=100%">
 					<p:row>
 						<p:column>
-							<p:outputLabel value="#{msg['res_bal_sbs_shipper_short_name']}" />
+							<p:outputLabel value="#{msg['res_bal_sbs_shipper_id']}" />
 						</p:column>
 						<p:column>
 							<p:selectOneMenu id="newShipperId"

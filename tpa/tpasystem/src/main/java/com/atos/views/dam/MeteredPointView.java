@@ -45,6 +45,7 @@ public class MeteredPointView extends CommonView implements Serializable {
 
 	private MeteredPointFilter filters;
 	private MeteredPointBean newMeteredPoint;
+	private MeteredPointBean newMeteredPointNewPeriod;
 	private MeteredPointBean newPeriodMeteredPoint;
 	private List<MeteredPointBean> items, items_backup;
 
@@ -680,8 +681,23 @@ public class MeteredPointView extends CommonView implements Serializable {
 			return;
 		}
 		
+		
+		
+		try {
+			newMeteredPointNewPeriod = service.selectMeteredPoint(newPeriodMeteredPoint);
+			
+			if(newMeteredPointNewPeriod != null) {
+				newMeteredPointNewPeriod.setStartDate(newPeriodMeteredPoint.getStartDate());
+				service.updateMeteredPointNewPeriod(newMeteredPointNewPeriod);
+			}
+		} catch (Exception e) {
+			log.catching(e);
+		}
+		
 		String error = "0";
 		try {
+			
+			
 			
 			error = service.insertMeteredPointNewPeriod(newPeriodMeteredPoint);
 		} catch (Exception e) {

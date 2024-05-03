@@ -798,7 +798,6 @@ public class ContractNomPointView  extends CommonView implements Serializable {
         }
 
         Calendar tomorrow = Calendar.getInstance();
-        tomorrow.add(Calendar.DAY_OF_MONTH, 1); // Sumar un día al calendario
         
         // Establecer la hora, minuto, segundo y milisegundo a 0 para el día de mañana
         tomorrow.set(Calendar.HOUR_OF_DAY, 0);
@@ -806,10 +805,10 @@ public class ContractNomPointView  extends CommonView implements Serializable {
         tomorrow.set(Calendar.SECOND, 0);
         tomorrow.set(Calendar.MILLISECOND, 0);
         
-        Date startDate = newContractNomPoint.getStartDate(); 
+        Date endDate = newContractNomPoint.getEndDateActive(); 
         
         // Comprobar si startDate es antes de mañana
-        return startDate != null && startDate.before(tomorrow.getTime());
+        return endDate != null && endDate.before(tomorrow.getTime());
     }
 
     

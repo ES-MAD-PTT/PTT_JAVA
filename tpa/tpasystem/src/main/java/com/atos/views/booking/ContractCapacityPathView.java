@@ -264,8 +264,16 @@ public class ContractCapacityPathView extends CommonView {
         UIColumn col= event.getColumn();
         DataTable o=(DataTable) event.getSource();
         ContractCapacityConnectionPathsBean bean=(ContractCapacityConnectionPathsBean)o.getRowData();
-        
-        service.getCapacityPathStep(bean.getIdn_capacity_path());
+        bean.setEdited("Y");
+    }
+    
+    public void save() {
+
+		for(int i=0;i<connectionPaths.size();i++) {
+			
+			if(connectionPaths.get(i).getEdited().equals("Y")){
+    	
+				service.getCapacityPathStep(connectionPaths.get(i).getIdn_capacity_path());
         
     /*    for(int i=0;i<tech_capacities.size();i++) {
         	ContractCapacityPathDetailBean b = tech_capacities.get(i);
@@ -286,14 +294,16 @@ public class ContractCapacityPathView extends CommonView {
         }
         */
         
-        BigDecimal idn_entry_point = searchIdnPoint(filters2.getIdn_area_orig(), entry_points);
-        BigDecimal idn_exit_point = searchIdnPoint(filters2.getIdn_area_dest(), exit_points);
-        
-        int salida = service.savePath(filters2, (BigDecimal)newValue, bean.getIdn_capacity_path(), idn_entry_point, idn_exit_point);
-        if(salida!= 0) {
-        	getMessages().addMessage(Constants.head_menu[1],new MessageBean(Constants.ERROR,"Contract Capacity Path", "Error saving capacity path", Calendar.getInstance().getTime()));
-        }
-        
+		        BigDecimal idn_entry_point = searchIdnPoint(filters2.getIdn_area_orig(), entry_points);
+		        BigDecimal idn_exit_point = searchIdnPoint(filters2.getIdn_area_dest(), exit_points);
+		        
+		        int salida = service.savePath(filters2, connectionPaths.get(i).getBooked(), connectionPaths.get(i).getIdn_capacity_path(), idn_entry_point, idn_exit_point);
+		        if(salida!= 0) {
+		        	getMessages().addMessage(Constants.head_menu[1],new MessageBean(Constants.ERROR,"Contract Capacity Path", "Error saving capacity path", Calendar.getInstance().getTime()));
+		        }
+				
+			}
+		}
         onSearch2();
         onSearch3();
         

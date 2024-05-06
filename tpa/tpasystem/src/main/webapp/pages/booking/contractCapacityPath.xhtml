@@ -182,33 +182,64 @@
 					            </p:row>
 							</f:facet>					             
 					            <p:row>
-					                <p:column style="border: 1px solid grey !important;">#{msg['ccp_tech_cap']}</p:column>
+					                <p:column style="border-top: 2px solid grey !important;border-left: 1px solid grey !important;border-right: 1px solid grey !important;">#{msg['ccp_tech_cap']}</p:column>
 					             	<p:repeat value="#{contractCapacityPathView.tech_capacities}" var="tech">
-					                	<p:column style="border: 1px solid grey !important;">#{tech.technical_capacity}</p:column>
+					                	<p:column style="border-top: 2px solid grey !important;border-left: 1px solid grey !important;border-right: 1px solid grey !important;">#{tech.technical_capacity}</p:column>
+					             	</p:repeat>   
+					            </p:row>
+					            <p:row>
+					                <p:column style="border-top: 2px solid grey !important;border-left: 1px solid grey !important;border-right: 1px solid grey !important;">#{msg['ccp_booked']}</p:column>
+					             	<p:repeat value="#{contractCapacityPathView.tech_capacities}" var="tech">
+					                	<p:column style="border-top: 2px solid grey !important;border-left: 1px solid grey !important;border-right: 1px solid grey !important;">
+					                		<h:outputText value="#{tech.remain_booked}"></h:outputText>
+					                	</p:column>
+					             	</p:repeat>   
+					            </p:row>
+
+					            <p:row>
+					                <p:column style="border: 1px solid grey !important;">#{msg['ccp_assigned']}</p:column>
+					             	<p:repeat value="#{contractCapacityPathView.tech_capacities}" var="tech">
+					                	<p:column style="border: 1px solid grey !important;">
+					                		<p:repeat value="#{tech.list_values_remain_booked}" var="value">
+					                			-<h:outputText style="color:green" value="#{value}"/><br/>
+					                		</p:repeat>
+					                	</p:column>
 					             	</p:repeat>   
 					            </p:row>
 					            <p:row>
 					                <p:column style="border: 1px solid grey !important;">#{msg['ccp_remain_booked']}</p:column>
 					             	<p:repeat value="#{contractCapacityPathView.tech_capacities}" var="tech">
 					                	<p:column style="border: 1px solid grey !important;">
-					                		<h:outputText value="#{tech.remain_booked}"></h:outputText>
-					                		<p:repeat value="#{tech.list_values_remain_booked}" var="value">
-					                			<br/>-<h:outputText style="color:green" value="#{value}"></h:outputText>
-					                		</p:repeat>
-					                		<br/>
 					                		<h:outputText style="color:darkgreen" value="#{tech.total_remain_booked}"></h:outputText>
 					                	</p:column>
 					             	</p:repeat>   
 					            </p:row>
+
+					            
 					            <p:row>
-					                <p:column style="border: 1px solid grey !important;">#{msg['ccp_available']}</p:column>
+					                <p:column style="border-top: 2px solid grey !important;border-left: 1px solid grey !important;border-right: 1px solid grey !important;">#{msg['ccp_pre_assigned']}</p:column>
+					             	<p:repeat value="#{contractCapacityPathView.tech_capacities}" var="tech">
+					                	<p:column style="border-top: 2px solid grey !important;border-left: 1px solid grey !important;border-right: 1px solid grey !important;">
+					                		<h:outputText value="#{tech.available}"></h:outputText>
+					                	</p:column>
+					             	</p:repeat>   
+					            </p:row>
+
+					            <p:row>
+					                <p:column style="border: 1px solid grey !important;">#{msg['ccp_assigned']}</p:column>
 					             	<p:repeat value="#{contractCapacityPathView.tech_capacities}" var="tech">
 					                	<p:column style="border: 1px solid grey !important;">
-					                		<h:outputText value="#{tech.available}"></h:outputText>
 					                		<p:repeat value="#{tech.list_values_available}" var="value">
-					                			<br/>-<h:outputText style="color:green" value="#{value}"></h:outputText>
+					                			-<h:outputText style="color:green" value="#{value}"/><br/>
 					                		</p:repeat>
-					                		<br/>
+					                	</p:column>
+					             	</p:repeat>   
+					            </p:row>
+
+					            <p:row>
+					                <p:column style="border-bottom: 2px solid grey !important;border-top: 1px solid grey !important;border-left: 1px solid grey !important;border-right: 1px solid grey !important;">#{msg['ccp_available']}</p:column>
+					             	<p:repeat value="#{contractCapacityPathView.tech_capacities}" var="tech">
+					                	<p:column style="border-bottom: 2px solid grey !important;border-top: 1px solid grey !important;border-left: 1px solid grey !important;border-right: 1px solid grey !important;">
 					                		<h:outputText style="color:darkgreen" value="#{tech.total_available}"></h:outputText>
 					                	</p:column>
 					             	</p:repeat>   
@@ -237,7 +268,7 @@
 									 		<p:ajax event="cellEdit" listener="#{contractCapacityPathView.onCellEdit}"
 									 		onstart="PF('cargando').show()"
 											oncomplete="PF('cargando').hide()" 
-									 		update=":form:msgs,:form:contractCapacityPathDetail"/>
+									 		update=":form:msgs"/>
 										    
 											<p:column headerText="#{msg['ccp_booked']}" style="width: 150px;">
 									           <p:cellEditor>
@@ -255,7 +286,15 @@
 										</shiro:hasPermission>
 									</p:dataTable>
 								</p:column>
-								
+								<p:column  >
+									<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CONTRACT_CAPACITY_PATH.QUERY">
+										<p:commandButton value="#{msg['save']}"
+											actionListener="#{contractCapacityPathView.save}"
+											onstart="PF('grabando').show()"
+											oncomplete="PF('grabando').hide()" 
+											update=":form:msgs,:form:contractCapacityPathDetail"/>
+									</shiro:hasPermission>
+								</p:column>
 							</p:row>
 							<p:row>
 								<p:column>
@@ -280,7 +319,9 @@
 									</shiro:hasPermission> 
 									
 								</p:column>
-								
+								<p:column >
+									<h:outputText value="" />
+								</p:column>
 							</p:row>
 						</p:panelGrid>	
 					</p:panelGrid>

@@ -213,6 +213,9 @@ PIVOT(SUM(allocated_value) AS val, MIN(colour) AS warn, MIN(mode_code) AS mode_c
 		AND to_char(a.gas_day,'DD/MM/YY')
              = to_char(#{gasDay},'DD/MM/YY')
         AND trunc(a.version_date) = a.gas_day
+		<if test='"Y".equals(isShipper)'>
+		   AND a.idn_allocation IN (SELECT idn_allocation FROM tpa_tallocation_shipper_filter WHERE gas_day = #{gasDay} AND page_code = 'INTR_ACC_IMBALANCE_INVENTORY' AND is_enabled = 'Y')
+		</if>
 		GROUP BY idn_allocation, to_char(a.version_date, 'DD/MM/YY HH24:MI:SS FF9')
 		ORDER BY idn_allocation, to_char(a.version_date, 'DD/MM/YY HH24:MI:SS FF9')
 		</select>
@@ -277,4 +280,17 @@ PIVOT(SUM(allocated_value) AS val, MIN(colour) AS warn, MIN(mode_code) AS mode_c
 	      #{username},
 	      #{username})	  
 	</insert>
+	
+	<delete id="deleteAllocationShipperFilter" parameterType="com.atos.beans.balancing.IntradayAccImbalanceInventoryFormBean">
+		DELETE tpa_tallocation_shipper_filter
+		  WHERE gas_day = #{gasday}
+		    AND page_code = 'INTR_ACC_IMBALANCE_INVENTORY'
+	</delete>
+	
+	<insert id="insertAllocationShipperFilter" parameterType="com.atos.beans.balancing.IntradayAccImbalanceInventoryFormBean">
+		INSERT INTO tpa_tallocation_shipper_filter(gas_day, idn_allocation, page_code, is_enabled, aud_ins_date, aud_last_date, aud_ins_user, aud_last_user)
+		VALUES (#{gasday}, #{idn_allocation}, 'INTR_ACC_IMBALANCE_INVENTORY', 'Y', SYSDATE, SYSDATE, #{user}, #{user})
+
+	</insert>	
+	
 </mapper>

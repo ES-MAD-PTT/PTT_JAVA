@@ -22,4 +22,5 @@ public interface IntradayAccImbalanceInvService extends Serializable {
 	public ByteArrayInputStream getReportTemplate(BigDecimal systemId, boolean isShipper) throws Exception;
 	public void copySheets(XSSFSheet srcSheet, XSSFSheet destSheet);
 	public void updateWsFromFile(FileBean _file, UserBean _user, LanguageBean _lang, ChangeSystemView _system) throws Exception;
+	public String saveTimestamp(IntradayAccImbalanceInventoryFilter filters_form, String user);
 }

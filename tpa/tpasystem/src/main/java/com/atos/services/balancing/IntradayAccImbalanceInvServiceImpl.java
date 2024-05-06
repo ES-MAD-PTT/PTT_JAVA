@@ -31,6 +31,7 @@ import com.atos.beans.WebServiceInputBean;
 import com.atos.beans.WebServiceProcBean;
 import com.atos.beans.WebserviceLogBean;
 import com.atos.beans.balancing.IntradayAccImbalanceInventoryBean;
+import com.atos.beans.balancing.IntradayAccImbalanceInventoryFormBean;
 import com.atos.exceptions.ValidationException;
 import com.atos.filters.balancing.IntradayAccImbalanceInventoryFilter;
 import com.atos.mapper.NotificationMapper;
@@ -391,5 +392,40 @@ public class IntradayAccImbalanceInvServiceImpl implements IntradayAccImbalanceI
 		public void callWS() throws Exception {
 			
 			acumWS.callAcumInventoryClient();
+		}
+
+		@Override
+		public String saveTimestamp(IntradayAccImbalanceInventoryFilter filters_form, String user) {
+			
+			IntradayAccImbalanceInventoryFormBean bean = new IntradayAccImbalanceInventoryFormBean();
+			bean.setGasday(filters_form.getGasDay());
+			bean.setUser(user);
+			
+			try {
+				intradayAccImbInvMapper.deleteAllocationShipperFilter(bean);	
+			} catch(Exception e) {
+				log.error("Error deleting timestamps");
+				e.printStackTrace();
+				return "-1";
+			}
+			
+			
+			
+			for(int i=0;i<filters_form.getTimestampVarList().size();i++) {
+				try {
+					BigDecimal idn_allocation = new BigDecimal(filters_form.getTimestampVarList().get(i));
+					bean.setIdn_allocation(idn_allocation);
+					
+					int ret = intradayAccImbInvMapper.insertAllocationShipperFilter(bean);
+
+				} catch (Exception e) {
+					log.error("Error saving timestamps");
+					e.printStackTrace();
+					return "-1";
+				}
+				
+			}
+
+			return "0";
 		}
 }

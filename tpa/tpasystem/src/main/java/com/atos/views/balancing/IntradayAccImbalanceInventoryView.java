@@ -32,7 +32,6 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.primefaces.context.RequestContext;
 import org.primefaces.event.FileUploadEvent;
-import org.primefaces.event.RowEditEvent;
 import org.primefaces.model.StreamedContent;
 import org.primefaces.model.UploadedFile;
 
@@ -55,7 +54,7 @@ public class IntradayAccImbalanceInventoryView extends CommonView implements Ser
 	private static final String excelTotalLabel ="TOTAL";
 	private static final String excelTotalLabelG ="TOTAL";
 	
-	private IntradayAccImbalanceInventoryFilter filters;
+	private IntradayAccImbalanceInventoryFilter filters, filters_form;
 	private List<IntradayAccImbalanceInventoryBean> items;
 	
 	private StreamedContent templateFile =  null;
@@ -80,6 +79,14 @@ public class IntradayAccImbalanceInventoryView extends CommonView implements Ser
 		this.filters = filters;
 	}
 	
+	public IntradayAccImbalanceInventoryFilter getFilters_form() {
+		return filters_form;
+	}
+
+	public void setFilters_form(IntradayAccImbalanceInventoryFilter filters_form) {
+		this.filters_form = filters_form;
+	}
+
 	public List<IntradayAccImbalanceInventoryBean> getItems() {
 		return items;
 	}
@@ -104,6 +111,8 @@ public class IntradayAccImbalanceInventoryView extends CommonView implements Ser
     public void init() {
     	filters = new IntradayAccImbalanceInventoryFilter();
     	filters.setSystemId(getChangeSystemView().getIdn_active());
+    	filters_form = new IntradayAccImbalanceInventoryFilter();
+    	filters_form.setSystemId(getChangeSystemView().getIdn_active());
     	//LOOKING TO THE SYSDATE parameter BD
     	sysdate= gettingValidDateStart();
     }
@@ -113,6 +122,21 @@ public class IntradayAccImbalanceInventoryView extends CommonView implements Ser
     	
     	Calendar sysdate = Calendar.getInstance(); 
     	filters.setGasDay(sysdate.getTime());
+    	filters_form.setGasDay(sysdate.getTime());
+    	
+    	sysdate.setTime(sysdate.getTime());
+    	sysdate.set(Calendar.HOUR_OF_DAY, 0);
+    	sysdate.set(Calendar.MINUTE, 0);
+    	sysdate.set(Calendar.SECOND, 0);
+    	sysdate.set(Calendar.MILLISECOND, 0);
+    	
+        return sysdate;
+    }
+	//sysdate 
+    public Calendar gettingValidDateStartForm(){
+    	
+    	Calendar sysdate = Calendar.getInstance(); 
+    	filters_form.setGasDay(sysdate.getTime());
     	
     	sysdate.setTime(sysdate.getTime());
     	sysdate.set(Calendar.HOUR_OF_DAY, 0);
@@ -129,6 +153,7 @@ public class IntradayAccImbalanceInventoryView extends CommonView implements Ser
 	public void onSearch(){
 		
 		filters.setSystemId(getChangeSystemView().getIdn_active());
+		filters_form.setSystemId(getChangeSystemView().getIdn_active());
 		items = service.selectIntradayAccImbalanceInv(filters);
        
 	}
@@ -159,10 +184,17 @@ public class IntradayAccImbalanceInventoryView extends CommonView implements Ser
     }
     
     public Map<BigDecimal, Object> getTimestampIds() {
-    	if(filters.getStrLastVersion().equals("N"))
+    	if(filters.getStrLastVersion().equals("N")) {
+    		if(isShipper()) {
+    			filters.setIsShipper("Y");
+    		}
     		return service.selectTimestampIds(filters);
-		else
+    	} else {
 			return null;
+    	}
+	}
+    public Map<BigDecimal, Object> getTimestampIds_form() {
+   		return service.selectTimestampIds(filters_form);
 	}
     
 	// Para crear la cabecera de la hoja excel.
@@ -704,5 +736,24 @@ public class IntradayAccImbalanceInventoryView extends CommonView implements Ser
     	if(filters.getStrLastVersion().equals("Y"))
     		filters.setTimestampVar(null);
     }
-    
+
+    public void cancelTimestamp() {
+    	filters_form = new IntradayAccImbalanceInventoryFilter();
+    	filters_form.setSystemId(getChangeSystemView().getIdn_active());
+    	//LOOKING TO THE SYSDATE parameter BD
+    	sysdate= gettingValidDateStartForm();
+    	
+    }
+    public void saveTimestamp() {
+    	
+    	String ret = service.saveTimestamp(filters_form,getUser().getUsername());
+    	if(ret.equals("0")) {
+    		getMessages().addMessage(Constants.head_menu[9],new MessageBean(Constants.INFO,"Timestamp saved","Timestamp saved", Calendar.getInstance().getTime()));
+    	} else {
+    		getMessages().addMessage(Constants.head_menu[9],
+					new MessageBean(Constants.ERROR, "Error modifing timestamps", "Error modifing timestamps", Calendar.getInstance().getTime()));
+	    	
+    	}
+    	
+    }
 }

@@ -519,8 +519,8 @@ WITH quality_point AS
 	
 	<update id="updateMeteredPointNewPeriod" parameterType="com.atos.beans.dam.MeteredPointBean">
 		update tpa_tsystem_point_param spp
-		 set spp.end_date = #{start_date - 1}
-		 where spp.idn_system_point_param = #{idn_system_point_param}
+		 set spp.end_date = #{startDate}-1
+		 where spp.idn_system_point_param = #{idn_system_point}
 	</update>
 	
 	 <!--no se usa... son historicos  -->

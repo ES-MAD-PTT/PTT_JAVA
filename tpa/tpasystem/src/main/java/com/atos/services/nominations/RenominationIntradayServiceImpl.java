@@ -127,7 +127,11 @@ public class RenominationIntradayServiceImpl implements RenominationIntradayServ
 		Date today = renomIntradayMapper.getSysdate();
 		Calendar cal = Calendar.getInstance();
 		cal.setTime(today);
+		int minutes = cal.get(Calendar.MINUTE);
 		int hour = cal.get(Calendar.HOUR_OF_DAY) ;
+		if(minutes>45) {
+			hour++;
+		}
 		if(hour<24) {
 			for(int i=hour;i<25;i++) {
 				if(i!=24) {

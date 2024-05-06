@@ -87,12 +87,11 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 	
 	private UploadedFile file;
 	private List<FileBean> files;
-//	private Map<BigDecimal, Object> chargeActions;
 	private List<OffSpecActionBean> allActions;
-//	private Map<BigDecimal, OffSpecActionBean> mapAllActions;
 	private OffSpecStatusBean idnStatusUnsolved;
 	private OffSpecActionBean actionFix;
 	private DefaultStreamedContent scFile;
+	private List<OffSpecResponseBean> copyResp;
 	
 	
 	private static final Logger log = LogManager.getLogger("com.atos.views.quality.OffSpecGasReportManagementView");
@@ -584,6 +583,12 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
         updateIncidentInfo(hmAllStatus, items);
 	}
 	
+	public void closeResponse() {
+		//selected = new OffSpecIncidentBean();
+		selected.setDiscloseResponses(new ArrayList<OffSpecResponseBean>());
+		selected.setDiscloseResponses(copyResp);
+	}
+	
 	public void onChangeAction() {
 		ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication().getResourceBundle(FacesContext.getCurrentInstance(),"msg");
     	String summaryMsg = msgs.getString("saving_data_error");
@@ -996,21 +1001,33 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 	 
 	 public boolean renderedAsnwer(OffSpecIncidentBean item, String nameColumn) {
 		 boolean value = false;
-//		 if(isShipper()) {
-//			 if(item != null && item.getOriginatorShipperId().compareTo(getUser().getIdn_user_group()) == 0) {
-//				 value = nameColumn.equals("SHIPPER_ANSWER") || nameColumn.equals("SHIPPER_IF_ANSWER") ? false : true;
-//			 }else {
-//				 value = nameColumn.equals("SHIPPER_ANSWER") ? true : false;
-//			 }
-//		 }else {
-//			 if(mapAllActions != null && !mapAllActions.isEmpty() && item != null && item.getIdnAction() != null) {
-//				 if(nameColumn.equals("ORIGINATOR_ANSWER") || nameColumn.equals("ORIGINATOR_IF_ANSWER")) {
-//					value = mapAllActions.get(item.getIdnAction()).getActionCode().equals("FIX_ORIG_SHIP") ? true : false;
-//				 }else {
-//					 value = mapAllActions.get(item.getIdnAction()).getActionCode().equals("FIX_ORIG_SHIP") ? false : true;
-//				 }
-//			 }
-//		 }
-		 return true;
+		 if(isShipper()) {
+			 if(item != null && item.getShipper().equals(getUser().getUser_group_id())) {
+				 value = nameColumn.equals("SHIPPER_ANSWER") || nameColumn.equals("SHIPPER_IF_ANSWER") ? false : true;
+			 }else {
+				 value = nameColumn.equals("SHIPPER_ANSWER") ? true : false;
+			 }
+		 }else {
+			 value = true;
+		 }
+		 return value;
+	 }
+	 
+	 public void prepareResponse(OffSpecIncidentBean offspec, String nameColumn) {
+		 selected = offspec;
+		 if(selected != null && selected.getDiscloseResponses() != null && !selected.getDiscloseResponses().isEmpty()) {
+			 if(!isShipper() && nameColumn != null) {
+				 copyResp = new ArrayList<OffSpecResponseBean>(selected.getDiscloseResponses());
+				 selected.getDiscloseResponses().clear();
+				 for(OffSpecResponseBean item : copyResp) {
+					 if(nameColumn.equals("ORIGINATOR") && item.getGroupCode().equals(selected.getShipper())) {
+						 selected.getDiscloseResponses().add(item);
+					 }
+					 if(nameColumn.equals("SHIPPER") && !item.getGroupCode().equals(selected.getShipper())) {
+						 selected.getDiscloseResponses().add(item);
+					 }
+				 }
+			 }
+		}
 	 }
 }

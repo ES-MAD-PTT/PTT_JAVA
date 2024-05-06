@@ -1,8 +1,10 @@
 package com.atos.views.quality;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -62,6 +64,7 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 //	private Map<BigDecimal, OffSpecActionBean> mapAllActions;
 	private List<FileBean> files;
 	private Map<BigDecimal, Object> actions;
+	private DefaultStreamedContent scFile;
 	
 	// Para que el usuario se pueda descargar los diagramas de flujos.
 	private StreamedContent scEventFlowDiagFile;
@@ -100,6 +103,12 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 		this.filters = filters;
 	}
 
+	public DefaultStreamedContent getScFile() {
+		return scFile;
+	}
+	public void setScFile(DefaultStreamedContent scFile) {
+		this.scFile = scFile;
+	}
 	public List<OffSpecIncidentBean> getItems() {
 		return items;
 	}
@@ -312,7 +321,8 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 		selected = item;
 		selected.getFirstResponse().setUserComments(null);
 		selected.getFirstResponse().setResponseValue("OK");
-		actions = service.selectShipperAction(selected);
+		selected.setIdnAction(null);
+		actions = selected.getActionsFree();
 		if(actions != null && !actions.isEmpty()) {
 			RequestContext context = RequestContext.getCurrentInstance();
 			context.execute("PF('nextStatusDlg').show();");
@@ -487,16 +497,25 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 		onSearch();
 	}
 	
-	public void selectActionFiles(OffSpecIncidentBean item) {
+	public void selectActionFiles(OffSpecResponseBean item, String action) {
 		 if(selected != null) {
 			 selected.setFilesAction(new ArrayList<OffSpecActionFileBean>());
 			 OffSpecResponseBean newItem = new OffSpecResponseBean();
-			 newItem.setIncidentId(item.getIncidentId());
-			 newItem.setGroupId(item.getGroupId());
-			 newItem.setIdnAction(item.getIdnAction());
+			 newItem.setIncidentId(selected.getIncidentId());
+			 if(item != null && action.equals("SHIPPER")) {
+				newItem.setGroupId(item.getGroupId());
+				newItem.setIdnAction(item.getIdnAction());
+			 }
 			 selected.getFilesAction().addAll(serviceManagement.selectActionFiles(newItem));
 		 }else {
 			 selected.setFilesAction(new ArrayList<OffSpecActionFileBean>());
 		 }
 	 }
+	
+	public void downloadActionFile(OffSpecActionFileBean file) throws Exception {
+		ByteArrayInputStream bais = new ByteArrayInputStream(file.getBinaryData());
+		scFile = new DefaultStreamedContent(bais);
+		scFile.setName(file.getFileName());
+		scFile.setContentType(URLConnection.guessContentTypeFromStream(bais));
+ }
 }

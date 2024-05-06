@@ -990,13 +990,19 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 	    return found ? "YES" : "NO";
 	 }
 	 
-	 public String answerShipperOriginatorYesNo(OffSpecIncidentBean item) {
-		 String value = "";
+	 public String answerShipperOriginatorYesNo(OffSpecIncidentBean item, String nameColumn) {
+		 boolean exist = false;
 		 if(item != null && item.getDiscloseResponses() != null && !item.getDiscloseResponses().isEmpty()) {
-			 value = item.getDiscloseResponses().stream()
-					 .anyMatch(obj -> "Y".equalsIgnoreCase(obj.getIsResponded())) ? "YES" : "NO";
+			 if(nameColumn.equals("ORIGINATOR")) {
+				 exist = item.getDiscloseResponses().stream()
+			                .anyMatch(obj ->  obj.getGroupCode().equals(item.getShipper()) && "Y".equalsIgnoreCase(obj.getIsResponded()));
+			 }
+			 if(nameColumn.equals("SHIPPER")) {
+				 exist = item.getDiscloseResponses().stream()
+			                .anyMatch(obj -> !obj.getGroupCode().equals(item.getShipper()) && "Y".equalsIgnoreCase(obj.getIsResponded()));
+			 }
 		 }
-		 return value;
+		 return exist ? "YES" : "NO";
 	 }
 	 
 	 public boolean renderedAsnwer(OffSpecIncidentBean item, String nameColumn) {

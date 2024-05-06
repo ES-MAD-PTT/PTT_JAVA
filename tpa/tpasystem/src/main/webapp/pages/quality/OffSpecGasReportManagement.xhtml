@@ -260,7 +260,7 @@
 							</p:commandButton>
 				       	</p:column>
 				       	<p:column headerText="#{msg['osgr_man_shipperIfAnswer']}" style="width: 70px;text-align:center;">
-				       		<h:outputText value="#{OSGRManagementView.answerShipperOriginatorYesNo(incident)}" rendered="#{OSGRManagementView.renderedAsnwer(incident, 'SHIPPER_IF_ANSWER')}"/>
+				       		<h:outputText value="#{OSGRManagementView.answerShipperOriginatorYesNo(incident, 'SHIPPER')}" rendered="#{OSGRManagementView.renderedAsnwer(incident, 'SHIPPER_IF_ANSWER')}"/>
 				       	</p:column>
 				       	<p:column headerText="#{msg['osgr_man_originattorAnswer']}" style="width: 70px;text-align:center;">
 				       		<p:commandButton icon="ui-icon fa fa-envelope-o" update=":shipperResponsesFormId"
@@ -270,7 +270,7 @@
 							</p:commandButton>
 				       	</p:column>
 				       	<p:column headerText="#{msg['osgr_man_originarIfAnswer']}" style="width: 70px;text-align:center;">
-				       		<h:outputText value="#{OSGRManagementView.answerShipperOriginatorYesNo(incident)}" rendered="#{OSGRManagementView.renderedAsnwer(incident, 'ORIGINATOR_IF_ANSWER')}"/>
+				       		<h:outputText value="#{OSGRManagementView.answerShipperOriginatorYesNo(incident, 'ORIGINATOR')}" rendered="#{OSGRManagementView.renderedAsnwer(incident, 'ORIGINATOR_IF_ANSWER')}"/>
 				       	</p:column>
 				       	
 						<p:column headerText="#{msg['osgr_man_attachedFileOperator']}" style="width: 90px;text-align:center;">

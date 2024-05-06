@@ -93,7 +93,7 @@
 	           tpa_toffspec_action a
 	      where r.idn_offspec_action = a.idn_offspec_action
 	        and r.idn_offspec = #{incidentId}
-	        and r.idn_user_group = #{groupId}
+	        and r.idn_user_group = #{idnFirstUser}
 	        and r.is_responded = 'N'
 	        and r.version_date = (select max(rx.version_date)
 	                     from tpa_toffspec_response rx

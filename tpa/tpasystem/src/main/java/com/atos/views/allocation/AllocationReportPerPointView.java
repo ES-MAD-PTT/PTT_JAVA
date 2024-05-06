@@ -341,4 +341,13 @@ public class AllocationReportPerPointView extends CommonView implements Serializ
 			return 0;
 		}
 	}
+    
+    public String concatCodeShort(AllocationReportPerPointBean item) {
+    	String result = "";
+    	if(item != null && item.getIsTotal() != null) {
+    		result = item.getIsTotal().equals("Y") ? "Total" : item.getShipperCode() +"(" + item.getShortName() + ")";
+    	}
+    	
+    	return result;
+    }
 }

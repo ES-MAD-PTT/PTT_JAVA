@@ -146,7 +146,7 @@
 								style="width: 100px;" sortBy="#{allocReportPoint.shipperCode}"
 								filterMatchMode="contains"
 								filterBy="#{allocReportPoint.shipperCode}">
-								<h:outputText value="#{allocReportPoint.isTotal eq 'Y'? 'Total' : allocReportPoint.shipperCode(allocReportPoint.shortName)}"/>
+								<h:outputText value="#{AllocationReportPerPointView.concatCodeShort(allocReportPoint)}"/>
 							</p:column>
 							
 							

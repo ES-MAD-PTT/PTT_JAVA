@@ -812,13 +812,20 @@ public class ContractNomPointView  extends CommonView implements Serializable {
     }
     
     public boolean isEndDatePast() {
-        Date endDate = newContractNomPoint.getEndDate();
-        Date today = new Date(); // Obtener la fecha actual
+    	Date endDate = newContractNomPoint.getEndDate();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(new Date()); // Establecer la fecha actual en el calendario
+        calendar.add(Calendar.DAY_OF_MONTH, -1); // Restar un día
+        
+        Date yesterday = calendar.getTime();
 
-        // Comparar endDate con la fecha actual
-        return endDate != null && endDate.before(today);
+        // Comparar endDate con la fecha actual menos un día
+        return endDate != null && endDate.before(yesterday);
     }
-
+    
+    public Date getToday() {
+        return new Date();
+    }
     
     public boolean isEndDateBeforeTomorrow() {
         Calendar tomorrow = Calendar.getInstance();

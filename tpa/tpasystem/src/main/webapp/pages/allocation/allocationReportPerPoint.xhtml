@@ -145,9 +145,11 @@
 								styleClass="#{allocReportPoint.isTotal eq 'Y'? 'headerColor' : ''}"
 								style="width: 100px;" sortBy="#{allocReportPoint.shipperCode}"
 								filterMatchMode="contains"
-								filterBy="#{allocReportPoint.shipperCode}(#{allocReportPoint.shortName})" />
-								<h:outputText value="#{allocReportPoint.isTotal eq 'Y'? 'Total' : allocReportPoint.shipperCode}"/>
+								filterBy="#{allocReportPoint.shipperCode}">
+								<h:outputText value="#{AllocationReportPerPointView.concatCodeShort(allocReportPoint)}"/>
 							</p:column>
+							
+							
 							<p:column headerText="#{msg['all_per_point_shipper_name']}"
 								styleClass="#{allocReportPoint.isTotal eq 'Y'? 'headerColor' : ''}"
 								style="width: 100px;" sortBy="#{allocReportPoint.shipperName}"

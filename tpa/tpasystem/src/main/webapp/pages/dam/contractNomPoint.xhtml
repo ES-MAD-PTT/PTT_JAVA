@@ -387,7 +387,7 @@
 								<h:outputText value="#{msg['contractNomPoint_date_to']}" />
 							</p:column>
 							<p:column>
-								<p:calendar required="true" id="new_fecFin" size="10" pattern="dd/MM/yyyy" mask="true" value="#{contractNomPointView.newContractNomPoint.endDate}"
+								<p:calendar required="true" id="new_fecFin" size="10" pattern="dd/MM/yyyy" mask="true" value="#{contractNomPointView.newContractNomPoint.endDate}" mindate="#{contractNomPointView.today}"
 									requiredMessage="You need to select a date" 
 									showOn="button" navigator="true" disabled="#{contractNomPointView.isEndDatePast()}">
 									<p:ajax event="dateSelect" update="new_fecFin,new_contract_id"></p:ajax>

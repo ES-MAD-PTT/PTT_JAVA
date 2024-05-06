@@ -184,14 +184,6 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 		this.newEvent = newEvent;
 	}
 
-//	public Map<BigDecimal, OffSpecActionBean> getMapAllActions() {
-//		return mapAllActions;
-//	}
-//
-//	public void setMapAllActions(Map<BigDecimal, OffSpecActionBean> mapAllActions) {
-//		this.mapAllActions = mapAllActions;
-//	}
-
 	public StreamedContent getScEventFlowDiagFile() {
         InputStream stream = FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream("/resources/images/qualityEventFlow.png");
         scEventFlowDiagFile = new DefaultStreamedContent(stream, "image/png", "qualityEventFlow.png");
@@ -219,28 +211,6 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 	public boolean getIsOperator() {
 		return getUser().isUser_type(Constants.OPERATOR);
 	}
-
-//	public Map<BigDecimal, Object> getChargeActions() {
-//		if(chargeActions == null) {
-//			chargeActions = new HashMap<BigDecimal, Object>();
-//			allActions = service.selectAllActions();
-//			allActions.forEach(item -> {
-//				if(item.getActionCode().equals("FIX_ORIG_SHIP")) {
-//					if(isShipper()) {
-//						chargeActions.put(item.getIdnOffspecAction(), item.getActionDesc());
-//					}
-//				}else {
-//					chargeActions.put(item.getIdnOffspecAction(), item.getActionDesc());
-//				}
-//			});
-//			mapAllActions = allActions.stream().collect(Collectors.toMap(OffSpecActionBean::getIdnOffspecAction, action -> action));
-//		}
-//		return chargeActions;
-//	}
-//
-//	public void setChargeActions(Map<BigDecimal, Object> chargeActions) {
-//		this.chargeActions = chargeActions;
-//	}
 
 	public Boolean renderedAction(OffSpecIncidentBean item) {
 			return getIsOperator() && idnStatusUnsolved != null && item.getStatusId().compareTo(idnStatusUnsolved.getStatusId()) == 0 ? true : false;
@@ -807,50 +777,45 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 	}
 	
 	 public int getItemsSize() { 
-			if(this.items!=null && !this.items.isEmpty()){
-				return this.items.size();
-			}else{
-				return 0;
-			}
+		if(this.items!=null && !this.items.isEmpty()){
+			return this.items.size();
+		}else{
+			return 0;
 		}
+	}
 	 
 	 
 	 //CH706
 	 public void onRowEdit(RowEditEvent event) {
-		  
 		 OffSpecResponseBean response = (OffSpecResponseBean) event.getObject();
-	    	
-	   
-	    	ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication().getResourceBundle(FacesContext.getCurrentInstance(),"msg");
-	    	String[] params = {msgs.getString("osgr_man_operator_commets")};
-	    	String summaryMsgOk = getMessageResourceString("update_ok", params);
-	    	String summaryMsgNotOk= getMessageResourceString("update_noOk", params);
-	    	
-	    	
-	    	String error = "0";
-			try {
-				error = service.updateTransporterComments(response);
-			} catch(Exception e) {
-				log.catching(e);
-				// we assign the return message 
-				error = e.getMessage();
-			}
-			
-			String[] par2 = {response.getGroupCode(),msgs.getString("shipper") };
-			
-			if(error!=null && error.equals("0")){
-				getMessages().addMessage(Constants.head_menu[6],new MessageBean(Constants.INFO,summaryMsgOk, summaryMsgOk + " Shipper: " + response.getGroupCode(), Calendar.getInstance().getTime()));	
-				log.info("Transporter Response Comment Updated ok: " + response.toString(), Calendar.getInstance().getTime());
-	 
-	    	}else if (error!=null && error.equals("-1")){
-	    		String msg =  getMessageResourceString("error_updating", par2);
-				getMessages().addMessage(Constants.head_menu[6],new MessageBean(Constants.ERROR,summaryMsgNotOk, msg, Calendar.getInstance().getTime()));
-	    		log.info("Error updating Transporter Response Comment. Error updating Table Toffspec_Response: "  + response.toString(), Calendar.getInstance().getTime());		
-	    		
-	    	}
-			
-			
-	    }
+    	ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication().getResourceBundle(FacesContext.getCurrentInstance(),"msg");
+    	String[] params = {msgs.getString("osgr_man_operator_commets")};
+    	String summaryMsgOk = getMessageResourceString("update_ok", params);
+    	String summaryMsgNotOk= getMessageResourceString("update_noOk", params);
+    	
+    	
+    	String error = "0";
+		try {
+			error = service.updateTransporterComments(response);
+		} catch(Exception e) {
+			log.catching(e);
+			// we assign the return message 
+			error = e.getMessage();
+		}
+		
+		String[] par2 = {response.getGroupCode(),msgs.getString("shipper") };
+		
+		if(error!=null && error.equals("0")){
+			getMessages().addMessage(Constants.head_menu[6],new MessageBean(Constants.INFO,summaryMsgOk, summaryMsgOk + " Shipper: " + response.getGroupCode(), Calendar.getInstance().getTime()));	
+			log.info("Transporter Response Comment Updated ok: " + response.toString(), Calendar.getInstance().getTime());
+ 
+    	}else if (error!=null && error.equals("-1")){
+    		String msg =  getMessageResourceString("error_updating", par2);
+			getMessages().addMessage(Constants.head_menu[6],new MessageBean(Constants.ERROR,summaryMsgNotOk, msg, Calendar.getInstance().getTime()));
+    		log.info("Error updating Transporter Response Comment. Error updating Table Toffspec_Response: "  + response.toString(), Calendar.getInstance().getTime());		
+    		
+    	}
+    }
 
 	 public void onRowCancel(RowEditEvent event) {
 	    	

@@ -337,6 +337,7 @@
 							                              filter="true" filterMatchMode="startsWith" panelStyle="width:250px">
 							            <f:selectItems value="#{intradayAccImbInvView.timestampIds_form.entrySet()}" var="entry" 
 								                       itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+								        <p:ajax event="change" update="timestampId_form"/>
 							        </p:selectCheckboxMenu>
 									
 								</p:column>

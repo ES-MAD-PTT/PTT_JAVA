@@ -47,9 +47,7 @@ import com.atos.views.MessagesView;
 @ViewScoped
 public class OffSpecGasReportResponseView extends CommonView implements Serializable {
 
-	/**
-	 * 
-	 */
+
 	private static final long serialVersionUID = 920551701830503048L;
 
 	private UploadedFile file;
@@ -60,8 +58,6 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 	private List<BigDecimal> disclosedStatusIds;
 
 
-//	private List<OffSpecActionBean> allActions;
-//	private Map<BigDecimal, OffSpecActionBean> mapAllActions;
 	private List<FileBean> files;
 	private Map<BigDecimal, Object> actions;
 	private DefaultStreamedContent scFile;
@@ -157,21 +153,9 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 	public void setActions(Map<BigDecimal, Object> actions) {
 		this.actions = actions;
 	}
-//	public boolean isDisclosed(OffSpecIncidentBean item) {
-//		//return (disclosedStatusId.compareTo(_statusId)==0 || disclosedStatusIdNewFlow.compareTo(_statusId)==0);
-//		boolean distinctShipper = item.getOriginatorShipperId().compareTo(getUser().getIdn_user_group()) != 0;
-//		return (distinctShipper && disclosedStatusIds.contains(item.getStatusId()));
-//	}
 	
 	@PostConstruct
     public void init() {
-//		if(allActions == null) {
-//			allActions = serviceManagement.selectAllActions();
-//			if(allActions != null && !allActions.isEmpty()) {
-//				mapAllActions = new HashMap<BigDecimal, OffSpecActionBean>();
-//				mapAllActions = allActions.stream().collect(Collectors.toMap(OffSpecActionBean::getIdnOffspecAction, action -> action));
-//			}
-//		}
 		try{
 			disclosedStatusIds = service.getDisclosedStatusIds();
 			//disclosedStatusIdNewFlow = service.getDisclosedStatusIdNewFlow();
@@ -314,6 +298,7 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 	
 	public void prepareResponse(OffSpecIncidentBean item) {
 		selected = new OffSpecIncidentBean();
+		selected.setFilesAction(new ArrayList<OffSpecActionFileBean>());
 		actions = new HashMap<BigDecimal, Object>();
 		selected = item;
 		selected.getFirstResponse().setUserComments(null);
@@ -391,25 +376,6 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 		activeIndex = -1;
     	items = service.search(filters); 	
     }
-	//CH706
-//	public boolean renderedOperatorComments(OffSpecIncidentBean item){
-//		
-//		if (item!=null){
-//			if(Constants.OPERATOR.equalsIgnoreCase(getUser().getUser_type())
-//					||
-//					Constants.SHIPPER.equalsIgnoreCase(getUser().getUser_type()) && 
-//					item.getFirstResponse().getResponseValue() != null && 
-//					item.getFirstResponse().getResponseValue().equals("KO")
-//						) {
-//					return true;	
-//					
-//				}else{
-//					return false;
-//				}
-//			
-//		}
-//		return false;	
-//	}
 	
 	public void handleFileUpload(FileUploadEvent event) {
 		file = event.getFile();

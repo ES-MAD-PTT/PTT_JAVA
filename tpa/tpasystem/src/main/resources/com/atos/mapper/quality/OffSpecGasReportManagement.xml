@@ -88,12 +88,18 @@
     </select>
     
     <select id="selectShipperAction" resultType="com.atos.beans.ComboFilterNS">
-		select distinct r.idn_offspec_action as key, a.action_desc as value
-			from tpa_toffspec_response r,
-			     tpa_toffspec_action a
-			where r.idn_offspec_action = a.idn_offspec_action
-			  and r.idn_offspec = #{incidentId}
-			  and r.idn_user_group = #{groupId}
+		select  r.idn_offspec_action as key, a.action_desc as value
+	      from tpa_toffspec_response r,
+	           tpa_toffspec_action a
+	      where r.idn_offspec_action = a.idn_offspec_action
+	        and r.idn_offspec = #{incidentId}
+	        and r.idn_user_group = #{groupId}
+	        and r.is_responded = 'N'
+	        and r.version_date = (select max(rx.version_date)
+	                     from tpa_toffspec_response rx
+	                     where r.Idn_User_Group = rx.idn_user_group
+	                       and r.idn_offspec_action = rx.idn_offspec_action
+	                       and r.idn_offspec = rx.idn_offspec)
 	</select>
 	
 	<select id="selectFreeActions" resultType="com.atos.beans.ComboFilterNS">
@@ -659,36 +665,38 @@ AND sr.ask_other_shippers = 'Y'
 	</update>
 	
 	<!-- Se filtra para que un shipper no vea las respuestas de otro. -->
-    <select id="selectDiscloseResponsesFromIncidentId" parameterType="map" resultMap="OffSpecResponsesFromId">    
-		select tres.idn_offspec_response,
-			   tof.idn_offspec as incidentId,
-			   tres.idn_offspec_action as idnAction,
-       		   tact.action_desc as action,
-		       tres.idn_user_group,
-       		   tgr.user_group_id,
-		       tres.user_comments,
-		       tres.is_responded,
-		       tres.response_date,
-		       tres.response_value,
-               tes.file_on_response,
-		       tres.operator_comments	            
-		from tpa_toffspec_response tres,
-			 tpa_toffspec tof,
-             tpa_toffspec_status tes,
-     		 tpa_tuser_group tgr,
-     		 tpa_toffspec_action tact
-		where tres.idn_offspec=#{incidentId}
-			  and tres.idn_offspec_action = tact.idn_offspec_action
-      		  and tgr.idn_user_group=tres.idn_user_group
-      		  and tof.idn_offspec = tres.idn_offspec
-              and tof.idn_offspec_status = tes.idn_offspec_status 
-		      <if test="shipperId != null">
-		      and tres.idn_user_group=#{shipperId}
-		      </if>
-			  and tres.idn_offspec_response = (select max(tres2.idn_offspec_response) from tpa_toffspec_response tres2
-												where tres2.idn_offspec=tres.idn_offspec
-												and tres2.idn_user_group=tres.idn_user_group)
-		order by 1 asc
+    <select id="selectDiscloseResponsesFromIncidentId" parameterType="map" resultMap="OffSpecResponsesFromId"> 
+    	select tres.idn_offspec_response,
+		         tof.idn_offspec as incidentId,
+		         tres.idn_offspec_action as idnAction,
+		             tact.action_desc as action,
+		           tres.idn_user_group,
+		             tgr.user_group_id,
+		           tres.user_comments,
+		           tres.is_responded,
+		           tres.response_date,
+		           tres.response_value,
+		               tes.file_on_response,
+		           tres.operator_comments             
+		    from tpa_toffspec_response tres,
+		         tpa_toffspec tof,
+		         tpa_toffspec_status tes,
+		         tpa_tuser_group tgr,
+		         tpa_toffspec_action tact
+		    where tres.idn_offspec= #{incidentId}
+		        and tres.idn_offspec_action = tact.idn_offspec_action
+		            and tgr.idn_user_group=tres.idn_user_group
+		            and tof.idn_offspec = tres.idn_offspec
+		              and tof.idn_offspec_status = tes.idn_offspec_status
+		    <if test="shipperId != null">
+		          and tres.idn_user_group= #{shipperId}
+			</if>
+		         and tres.version_date = (select max(rx.version_date)
+		                     from tpa_toffspec_response rx
+		                     where tres.Idn_User_Group = rx.idn_user_group
+		                       and tres.idn_offspec_action = rx.idn_offspec_action
+		                       and tres.idn_offspec = rx.idn_offspec)                      
+		    order by user_group_id, tres.idn_offspec_action asc
     </select>
 
     <resultMap type="com.atos.beans.quality.OffSpecIncidentBean" id="OffSpecIncidentForFile">

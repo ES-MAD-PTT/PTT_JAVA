@@ -350,7 +350,7 @@
 								<h:outputText value="#{msg['contractNomPoint_shipper']}" />
 							</p:column>
 							<p:column>
-								<p:selectOneMenu id="new_shipper"  style="width:100px" value="#{contractNomPointView.newContractNomPoint.idn_shipper}" disabled="#{contractNomPointView.isStartDateBeforeTomorrow()}">
+								<p:selectOneMenu id="new_shipper"  style="width:100px" value="#{contractNomPointView.newContractNomPoint.idn_shipper}" disabled="#{contractNomPointView.isStartDateBeforeToday()}">
 											<f:selectItem itemLabel="" itemValue="" />
 											<f:selectItems value="#{contractNomPointView.shippers.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
 											<p:ajax update="new_contract_id"/>
@@ -361,7 +361,7 @@
 							</p:column>
 							<p:column>
 								<p:selectOneMenu id="new_contract_id" style="width:100px" value="#{contractNomPointView.newContractNomPoint.idn_contract}" 
-								    required="true" requiredMessage="#{msg['contractNomPoint_id_contract']}: #{msg['empty_field']}" disabled="#{contractNomPointView.isStartDateBeforeTomorrow()}">
+								    required="true" requiredMessage="#{msg['contractNomPoint_id_contract']}: #{msg['empty_field']}" disabled="#{contractNomPointView.isStartDateBeforeToday()}">
 								    <f:selectItem itemLabel="" itemValue="" />
 								    <f:selectItems value="#{contractNomPointView.contractForm.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
 								    <p:ajax event="change" update="new_contract_point, new_contract_id"/>
@@ -378,7 +378,7 @@
 							<p:column>
 								<p:calendar required="true" id="new_fecInicio" size="10" pattern="dd/MM/yyyy" mask="true" value="#{contractNomPointView.newContractNomPoint.startDate}"
 									requiredMessage="You need to select a date" 
-									showOn="button" navigator="true" disabled="#{contractNomPointView.isStartDateBeforeTomorrow()}">
+									showOn="button" navigator="true" disabled="#{contractNomPointView.isStartDateBeforeToday()}">
 									<p:ajax event="dateSelect" update="new_fecInicio,new_contract_id"></p:ajax>
 									<p:ajax event="change" update="new_fecInicio,new_contract_id"></p:ajax>
 								</p:calendar>
@@ -389,7 +389,7 @@
 							<p:column>
 								<p:calendar required="true" id="new_fecFin" size="10" pattern="dd/MM/yyyy" mask="true" value="#{contractNomPointView.newContractNomPoint.endDate}"
 									requiredMessage="You need to select a date" 
-									showOn="button" navigator="true" disabled="#{contractNomPointView.isStartDateBeforeTomorrow()}">
+									showOn="button" navigator="true" disabled="#{contractNomPointView.isEndDatePast()}">
 									<p:ajax event="dateSelect" update="new_fecFin,new_contract_id"></p:ajax>
 									<p:ajax event="change" update="new_fecFin,new_contract_id"></p:ajax>
 								</p:calendar>

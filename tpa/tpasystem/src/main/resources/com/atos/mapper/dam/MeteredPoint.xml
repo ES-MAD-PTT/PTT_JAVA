@@ -143,6 +143,19 @@
 		
     </select>
     
+    <select id="selectMeteredPoint" resultMap="MeteredPoint">
+    select spp.idn_system_point_param as idn_system_point
+		from tpa_tsystem_point_param spp		
+		where spp.idn_system_point = #{idn_system_point}		
+		  and spp.idn_subarea = #{idn_subarea}		
+		  and spp.idn_contract_point = #{idn_system_point_contract}		
+		  and spp.idn_nomination_point = #{idn_system_point_nomination}		
+		  and spp.idn_quality_point = #{idn_system_point_quality}		
+		  and spp.idn_customer_type = #{idn_customer_type}		
+		  and spp.start_date <![CDATA[ < ]]> = #{startDate}		
+		  and (spp.end_date is null or spp.end_date = '')
+    </select>
+    
      <select id="selectMeteredPointsQuery" resultMap="MeteredPoint">
 	SELECT tp.idn_system_point idn_system_point, 
             pp.METERING_ID metering_id,
@@ -502,6 +515,12 @@ WITH quality_point AS
 			longitude=#{longitud},
 		    aud_last_user=#{username}
 		WHERE idn_system_point = #{idn_system_point}
+	</update>
+	
+	<update id="updateMeteredPointNewPeriod" parameterType="com.atos.beans.dam.MeteredPointBean">
+		update tpa_tsystem_point_param spp
+		 set spp.end_date = #{start_date - 1}
+		 where spp.idn_system_point_param = #{idn_system_point_param}
 	</update>
 	
 	 <!--no se usa... son historicos  -->

@@ -30,6 +30,7 @@
 <id column="GAS_DAY" property="gasDay"/>
 <id column="SHIPPER_CODE" property="shipperCode"/>
 <id column="SHIPPER_NAME" property="shipperName"/>
+<id column="short_name" property="shortName"/>
 <id column="CONTRACT_CODE" property="contractCode"/>
 <id column="POINT_CODE" property="pointCode"/>
 <id column="POINT_TYPE_CODE" property="pointTypeCode"/>
@@ -91,6 +92,7 @@ SELECT ad.idn_allocation,
        ad.gas_day,
        ug.user_group_id AS shipper_code,
        ug.user_group_name AS shipper_name,
+       ug.short_name AS short_name,
        c.contract_code,
        spc.point_code AS POINT_CODE,
        spn.point_code AS nomination_point,
@@ -125,6 +127,7 @@ SELECT ad.idn_allocation,
           ad.gas_day,
           ug.user_group_id,
           ug.user_group_name,
+          ug.short_name,
           c.contract_code,
           spc.point_code,
           spn.point_code,

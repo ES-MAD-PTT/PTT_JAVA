@@ -13,6 +13,8 @@ import com.atos.filters.dam.MeteredPointFilter;
 public interface MeteredPointMapper {
 
 	public List<MeteredPointBean> selectMeteredPoints(MeteredPointFilter filters);
+	
+	public MeteredPointBean selectMeteredPoint(MeteredPointBean item);
 
 	public List<MeteredPointBean> selectMeteredPointsQuery(MeteredPointFilter filters);
 	
@@ -53,6 +55,8 @@ public interface MeteredPointMapper {
 	public int updateMeteredPoint(MeteredPointBean meteredPoint);
 
 	public int updateMeteredPointParam(MeteredPointBean meteredPoint);
+	
+	public int updateMeteredPointNewPeriod(MeteredPointBean meteredPoint);
 
 	public List<String> getMeteredPointId(MeteredPointBean bean);
 

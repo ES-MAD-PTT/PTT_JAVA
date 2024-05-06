@@ -31,6 +31,7 @@
 <id column="SHIPPER_CODE" property="shipperCode"/>
 <id column="SHIPPER_NAME" property="shipperName"/>
 <id column="CONTRACT_CODE" property="contractCode"/>
+<id column="SHORT_NAME" property="shortName"/>
 <id column="POINT_CODE" property="pointCode"/>
 <id column="POINT_TYPE_CODE" property="pointTypeCode"/>
 <id column="CONTRACTED_VALUE" property="contractedValue"/>

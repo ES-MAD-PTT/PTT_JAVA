@@ -14,6 +14,8 @@ import com.atos.filters.dam.MeteredPointFilter;
 public interface MeteredPointService extends Serializable {
 
 	public List<MeteredPointBean> selectMeteredPoints(MeteredPointFilter filter);
+	
+	public MeteredPointBean selectMeteredPoint(MeteredPointBean item);
 
 	public List<MeteredPointBean> selectMeteredPointsQuery(MeteredPointFilter filter);
 
@@ -46,6 +48,8 @@ public interface MeteredPointService extends Serializable {
 	public SystemParameterBean getSystemParameter(String str);
 
 	public String updateMeteredPoint(MeteredPointBean meteredPoint) throws Exception;
+	
+	public String updateMeteredPointNewPeriod(MeteredPointBean meteredPoint) throws Exception;
 
 	public String insertMeteredPoint(MeteredPointBean meteredPoint) throws Exception;
 

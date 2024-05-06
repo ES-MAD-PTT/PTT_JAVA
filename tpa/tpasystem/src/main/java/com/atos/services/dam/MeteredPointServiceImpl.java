@@ -40,6 +40,10 @@ public class MeteredPointServiceImpl implements MeteredPointService {
 	public List<MeteredPointBean> selectMeteredPoints(MeteredPointFilter filter) {
 		return meteredPointMapper.selectMeteredPoints(filter);
 	}
+	
+	public MeteredPointBean selectMeteredPoint(MeteredPointBean item) {
+		return meteredPointMapper.selectMeteredPoint(item);
+	}
 
 	public List<MeteredPointBean> selectMeteredPointsQuery(MeteredPointFilter filter) {
 		return meteredPointMapper.selectMeteredPointsQuery(filter);
@@ -310,6 +314,17 @@ public class MeteredPointServiceImpl implements MeteredPointService {
 		if (ins2 != 1) {
 			throw new Exception("-2");
 		}
+
+		return "0";
+	}
+	
+	@Transactional(rollbackFor = { Throwable.class })
+	public String updateMeteredPointNewPeriod(MeteredPointBean meteredPoint) throws Exception {
+
+		int upd = meteredPointMapper.updateMeteredPointNewPeriod(meteredPoint);
+		if (upd != 1) {
+			throw new Exception("-1");
+		}		
 
 		return "0";
 	}

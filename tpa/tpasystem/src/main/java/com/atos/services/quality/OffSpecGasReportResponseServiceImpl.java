@@ -2,6 +2,7 @@ package com.atos.services.quality;
 
 import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -115,7 +116,7 @@ public class OffSpecGasReportResponseServiceImpl implements OffSpecGasReportResp
 	
 	public List<OffSpecIncidentBean> search(OffSpecGasReportManagementFilter filter){
 		
-		List<OffSpecIncidentBean> tmpLIncidents = null;
+		List<OffSpecIncidentBean> tmpLIncidents = new ArrayList<OffSpecIncidentBean>();
 		
 		// Se crea un nuevo filtro, para anadir los % e invocar la consulta.
 		OffSpecGasReportManagementFilter tmpFilter = new OffSpecGasReportManagementFilter(filter);
@@ -130,12 +131,22 @@ public class OffSpecGasReportResponseServiceImpl implements OffSpecGasReportResp
 		Map<String, BigDecimal> params = new HashMap<String, BigDecimal>();
 		params.put("shipperId", filter.getShipperId());
 		
-		tmpLIncidents = osgrmMapper.selectIncidentsToRespond(tmpFilter);
-		if(tmpLIncidents!=null)
-			for(OffSpecIncidentBean incid: tmpLIncidents) {
-				params.put("incidentId", incid.getIncidentId());
-				incid.setDiscloseResponses(osgrmMapper.selectDiscloseResponsesFromIncidentId(params));
+		List<OffSpecIncidentBean> items = osgrmMapper.selectIncidentsToRespond(tmpFilter);
+		if(items!=null)
+			for(OffSpecIncidentBean incid: items) {
 				incid.setActionsFree(selectShipperAction(incid));
+				for(String value : filter.getResStatusId()) {
+					if(value.equals("1") && incid.getActionsFree() != null && !incid.getActionsFree().isEmpty() && incid.getActionsFree().size() > 0) {
+						params.put("incidentId", incid.getIncidentId());
+						incid.setDiscloseResponses(osgrmMapper.selectDiscloseResponsesFromIncidentId(params));
+						tmpLIncidents.add(incid);
+					}
+					if(value.equals("2") && incid.getActionsFree() != null && incid.getActionsFree().isEmpty()) {
+						params.put("incidentId", incid.getIncidentId());
+						incid.setDiscloseResponses(osgrmMapper.selectDiscloseResponsesFromIncidentId(params));
+						tmpLIncidents.add(incid);
+					}
+				}
 			}
 		
 		return tmpLIncidents;

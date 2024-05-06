@@ -137,12 +137,10 @@
 										style="width:100px"
 										value="#{OSGRResponseView.filters.resStatusId}"
 										label="#{msg['osgr_man_status']}">
-										<f:selectItem itemLabel="#{msg['osgr_man_not_responded']}"
+										<f:selectItem itemLabel="#{msg['osgr_man_notAllAswered']}"
 											itemValue="1" />
-										<f:selectItem itemLabel="#{msg['osgr_man_responded_ok']}"
+										<f:selectItem itemLabel="#{msg['osgr_man_AllAswered']}"
 											itemValue="2" />
-										<f:selectItem itemLabel="#{msg['osgr_man_responded_ko']}"
-											itemValue="3" />
 									</p:selectCheckboxMenu>
 								</p:column>
 							</p:row>
@@ -243,7 +241,7 @@
 							</p:column>
 							<p:column headerText="#{msg['osgr_man_actionsWithoutReponse']}"
 								style="width: 120px;">
-								<p:accordionPanel style="padding: 0px !important;" activeIndex="-1">
+								<p:accordionPanel style="padding: 0px !important;" activeIndex="#{OSGRResponseView.activeIndex}">
 									<p:tab title="#{msg['osgr_man_actions']}: #{incident.actionsFree.entrySet().size()}" disabled="#{empty incident.actionsFree.entrySet()}">
 										<p:dataList value="#{incident.actionsFree.entrySet()}"
 											var="item" type="unordered" itemType="disc">
@@ -252,7 +250,7 @@
 									</p:tab>
 								</p:accordionPanel>
 							</p:column>
-							<p:column headerText="#{msg['osgr_man_originattorAnswer']}"
+							<p:column headerText="#{msg['osgr_man_shipperAnswer']}"
 								style="width: 70px;text-align:center;">
 								<p:commandButton icon="ui-icon fa fa-envelope-o"
 									update=":shipperResponsesFormId"

@@ -569,16 +569,6 @@ AND sr.ask_other_shippers = 'Y'
 			and tores.idn_offspec_response = (select max(tres2.idn_offspec_response) from tpa_toffspec_response tres2
 											where tres2.idn_offspec=tores.idn_offspec
 											and tres2.idn_user_group=tores.idn_user_group)
-	        <if test="resStatusId != null and resStatusId.length > 0">
-	          	<foreach item="item2" index="index2" collection="resStatusId"
-	                   open="and (" separator=" or " close=")">
-					(#{item2} = 1 AND tores.is_responded = 'N') 
-			        OR 
-			        (#{item2} = 2 AND tores.is_responded = 'Y' AND tores.response_value = 'OK') 
-			        OR 
-			        (#{item2} = 3 AND tores.is_responded = 'Y' AND tores.response_value != 'OK')
-	        	</foreach>	        
-	        </if>
 	        and tlogmin.idn_offspec = tospec.idn_offspec
         and tlogmin.insert_date = (select min(tlog4.insert_date)
                                        from tpa_toffspec_log tlog4

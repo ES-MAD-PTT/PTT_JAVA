@@ -129,7 +129,7 @@ public class RenominationIntradayServiceImpl implements RenominationIntradayServ
 		cal.setTime(today);
 		int minutes = cal.get(Calendar.MINUTE);
 		int hour = cal.get(Calendar.HOUR_OF_DAY) ;
-		if(minutes>45) {
+		if(minutes>44) {
 			hour++;
 		}
 		if(hour<24) {

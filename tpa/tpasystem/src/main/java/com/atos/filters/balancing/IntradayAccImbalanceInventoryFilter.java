@@ -15,6 +15,7 @@ public class IntradayAccImbalanceInventoryFilter implements Serializable{
 	private String strLastVersion; 	// "Y"/"N" Esta variable corresponde al valor del booleano. Para filtrar en base de datos.
 	private BigDecimal systemId;
 	private String timestampVar;
+	private String isShipper;
 	private List<String> timestampVarList = new ArrayList<>();
 	
 	public IntradayAccImbalanceInventoryFilter() {
@@ -24,10 +25,11 @@ public class IntradayAccImbalanceInventoryFilter implements Serializable{
 		this.systemId = null;
 		this.timestampVar = null;
 		this.timestampVarList = null;
+		this.isShipper = null;
 	}
 
 	public IntradayAccImbalanceInventoryFilter(Date gasDay, boolean lastVersion, String strLastVersion,
-			BigDecimal systemId, String timestampVar, List<String> timestampVarList) {
+			BigDecimal systemId, String timestampVar, List<String> timestampVarList, String isShipper) {
 		super();
 		this.gasDay = gasDay;
 		this.lastVersion = lastVersion;
@@ -35,6 +37,7 @@ public class IntradayAccImbalanceInventoryFilter implements Serializable{
 		this.systemId = systemId;
 		this.timestampVar = timestampVar;
 		this.timestampVarList = timestampVarList;
+		this.isShipper = isShipper;
 	}
 
 	public Date getGasDay() {
@@ -79,6 +82,35 @@ public class IntradayAccImbalanceInventoryFilter implements Serializable{
 
 	public void setTimestampVarList(List<String> timestampVarList) {
 		this.timestampVarList = timestampVarList;
+	}
+
+	public String getIsShipper() {
+		return isShipper;
+	}
+
+	public void setIsShipper(String isShipper) {
+		this.isShipper = isShipper;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("IntradayAccImbalanceInventoryFilter [gasDay=");
+		builder.append(gasDay);
+		builder.append(", lastVersion=");
+		builder.append(lastVersion);
+		builder.append(", strLastVersion=");
+		builder.append(strLastVersion);
+		builder.append(", systemId=");
+		builder.append(systemId);
+		builder.append(", timestampVar=");
+		builder.append(timestampVar);
+		builder.append(", isShipper=");
+		builder.append(isShipper);
+		builder.append(", timestampVarList=");
+		builder.append(timestampVarList);
+		builder.append("]");
+		return builder.toString();
 	}
 
 }

@@ -8,6 +8,7 @@ import com.atos.beans.LockBean;
 import com.atos.beans.ReportTemplateBean;
 import com.atos.beans.WebserviceLogBean;
 import com.atos.beans.balancing.IntradayAccImbalanceInventoryBean;
+import com.atos.beans.balancing.IntradayAccImbalanceInventoryFormBean;
 import com.atos.beans.metering.MeteringProcBean;
 import com.atos.filters.balancing.IntradayAccImbalanceInventoryFilter;
 
@@ -21,4 +22,8 @@ public interface IntradayAccImbalanceInvMapper extends Serializable{
 	public Integer exclusiveLockRelease(LockBean bean);
 	public List<ComboFilterNS> selectUserGroupByUserId(String userId);
 	public int insertRequestWebserviceLog(WebserviceLogBean bean);
+	
+	public int deleteAllocationShipperFilter(IntradayAccImbalanceInventoryFormBean bean);
+	public int insertAllocationShipperFilter(IntradayAccImbalanceInventoryFormBean bean);
+	
 }

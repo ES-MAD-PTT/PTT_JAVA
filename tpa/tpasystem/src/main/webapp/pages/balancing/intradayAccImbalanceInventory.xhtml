@@ -96,9 +96,11 @@
 									update="msgs,:#{p:component('intradayAccImbInv1')}"/> 
 							</shiro:hasPermission>
 								
+							<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.INTRADAY.ACCIMBALANCEINVENTORY.MOD">
+							
 								<p:commandButton id="timestampDisplay" type="button" value="#{msg['met_man_shippers_timestamp_display']}" icon="fa fa-fw fa-edit" style="float:left;"
         							onclick="PF('dlgTimestampDisplay').show();"/>
-								
+							</shiro:hasPermission>	
 						</p:panelGrid>
 					</p:panelGrid>
 
@@ -307,9 +309,9 @@
 	</p:dialog> 
 	
 	<p:dialog header="#{msg['met_man_shippers_timestamp_display']}" widgetVar="dlgTimestampDisplay" modal="true" appendTo="@(body)" minHeight="150">
-		<h:form id="timestampDisplay" style="width:100%;height:98%;border-collapse:collapse">
+		<h:form id="formTimestampDisplay" style="width:100%;height:98%;border-collapse:collapse">
 
-			<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.INTRADAY.ACCIMBALANCEINVENTORY.QUERY">
+			<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.INTRADAY.ACCIMBALANCEINVENTORY.MOD">
 				<p:growl id="msgs" showDetail="true" life="10000" globalOnly="true" />
 				<p:panelGrid>
 							<p:row>
@@ -318,47 +320,25 @@
 								</p:column>
 								
 								<p:column  style="font-weight: bold;">
-									<h:outputText value="#{msg['intradayAccImbInv_last_version']}" />
-								</p:column>
-								
-								<p:column  style="font-weight: bold;">
 									<h:outputText value="#{msg['intradayAccImbInv_timestamp']}" />
 								</p:column>
 							</p:row>
 							<p:row>
 								<p:column>
-									<p:calendar id="gasDay" size="6" pattern="dd/MM/yyyy" mask="true" value="#{intradayAccImbInvView.filters.gasDay}"
+									<p:calendar id="gasDay_form" size="6" pattern="dd/MM/yyyy" mask="true" value="#{intradayAccImbInvView.filters_form.gasDay}"
 										showOn="button" readonlyInput="true" navigator="true" maxdate="#{(intradayAccImbInvView.sysdate).getTime()}">
-										<p:ajax event="dateSelect" update="timestampId"></p:ajax>
-										<p:ajax event="change" update="timestampId"></p:ajax>
+										<p:ajax event="dateSelect" update="timestampId_form"></p:ajax>
+										<p:ajax event="change" update="timestampId_form"></p:ajax>
 									</p:calendar>
 								</p:column>
 								
-								<p:column style="text-align:center">
-									<p:selectBooleanCheckbox id="lastVersionCheckbox" value="#{intradayAccImbInvView.filters.lastVersion}" >
- 										<p:ajax event="change" listener="#{intradayAccImbInvView.updateTimestamp}" update=":#{p:component('timestampId')}"/>
-									</p:selectBooleanCheckbox>						
-								</p:column>
-								
-								<!-- <p:column>
-									<p:selectOneMenu id="timestampId" style="width:70px" value="#{intradayAccImbInvView.filters.timestampVar}" >
- 								   		<f:selectItem itemLabel="" itemValue="" />
-      									<f:selectItems value="#{intradayAccImbInvView.timestampIds.entrySet()}" var="entry" 
-      											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
-					           		</p:selectOneMenu>
-								</p:column> -->
-								
 								<p:column>
-									<p:selectCheckboxMenu id="timestampId" value="#{intradayAccImbInvView.filters.timestampVarList}" label="Please select..."
+									<p:selectCheckboxMenu id="timestampId_form" value="#{intradayAccImbInvView.filters_form.timestampVarList}" label="Please select..."
 							                              filter="true" filterMatchMode="startsWith" panelStyle="width:250px">
-							            <f:selectItems value="#{intradayAccImbInvView.timestampIds.entrySet()}" var="entry" 
+							            <f:selectItems value="#{intradayAccImbInvView.timestampIds_form.entrySet()}" var="entry" 
 								                       itemValue="#{entry.key}" itemLabel="#{entry.value}" />
 							        </p:selectCheckboxMenu>
 									
-								   <!--  <p:selectManyMenu id="timestampId" style="width:70px" value="#{intradayAccImbInvView.filters.timestampVarList}" multiple="true">
-								        <f:selectItems value="#{intradayAccImbInvView.timestampIds.entrySet()}" var="entry" 
-								                       itemValue="#{entry.key}" itemLabel="#{entry.value}" />
-								    </p:selectManyMenu> -->
 								</p:column>
 
 								
@@ -368,8 +348,19 @@
 						<p:panelGrid>
 							<p:row>
 								<p:column>
-									<p:commandButton value="#{msg['save']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" validateClient="true"/>
-					        		<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close"/>	
+									<p:commandButton value="#{msg['save']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check"  
+										actionListener="#{intradayAccImbInvView.saveTimestamp}"
+										onstart="PF('grabando').show()"
+										oncomplete="PF('grabando').hide();PF('dlgTimestampDisplay').hide();" 
+										process="@this"
+										update=":form,:formTimestampDisplay"/>
+									
+					        		<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close"
+					        			actionListener="#{intradayAccImbInvView.cancelTimestamp}"
+										onstart="PF('limpiando').show()"
+										oncomplete="PF('limpiando').hide();PF('dlgTimestampDisplay').hide();" 
+										process="@this"
+										update=":form,:formTimestampDisplay"/>	
 								</p:column>					
 							</p:row>
 						</p:panelGrid>

@@ -65,6 +65,7 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 	private List<FileBean> files;
 	private Map<BigDecimal, Object> actions;
 	private DefaultStreamedContent scFile;
+	private Integer activeIndex;
 	
 	// Para que el usuario se pueda descargar los diagramas de flujos.
 	private StreamedContent scEventFlowDiagFile;
@@ -117,6 +118,12 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 		this.items = items;
 	}
 	
+	public Integer getActiveIndex() {
+		return activeIndex;
+	}
+	public void setActiveIndex(Integer activeIndex) {
+		this.activeIndex = activeIndex;
+	}
 	public OffSpecIncidentBean getSelected() {
 		return selected;
 	}
@@ -173,7 +180,7 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 			log.error(e.getMessage(), e);
 	    	return;			
 		}
-		
+		activeIndex = -1;
 		filters = initFilter();
         items = service.search(filters);
         selected = new OffSpecIncidentBean();
@@ -192,15 +199,6 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 			ComboFilterNS tmpFirstShipper = tmpAllShippers.get(0);
 			tmpFilter.setShipperId(tmpFirstShipper.getKey());
 		}
-		
-		// Por ahora en la pantalla solo se mostraran estados correspondientes a Events.
-		// Se deja comentado por si en el futuro se pudieran dar respuestas a Requests.
-		//List<ComboFilterNS> allIncidentTypes = service.selectIncidentTypes();
-		//// Como inicializacion se traen los estados del primer tipo de incidencia.
-		//if(allIncidentTypes!=null && allIncidentTypes.size()>0)
-		//	tmpFilter.setIncidentTypeId(allIncidentTypes.get(0).getKey());
-		//else
-		//	tmpFilter.setIncidentTypeId(null);
     	
 		// En sucesivas consultas de estados, siempre se usara este tipo de incidencia (Event).
     	BigDecimal tmpIncidentTypeId =  service.selectIncidentTypeIdFromCode(strEventFlowTypeCode);
@@ -209,9 +207,8 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 		BigDecimal[] tmpStatusIds = disclosedStatusIds.toArray(new BigDecimal[disclosedStatusIds.size()]);
     	tmpFilter.setStatusId(tmpStatusIds);
 
-		Integer[] tmpResStatusIds = new Integer[3];
-		tmpResStatusIds[0] = OffSpecGasReportManagementFilter.resStatusNoResponsedId;
-		tmpFilter.setResStatusId(tmpResStatusIds);
+		tmpFilter.setResStatusId(new ArrayList<String>());
+		tmpFilter.getResStatusId().add("1");
 		
 		Calendar tmpToday = Calendar.getInstance();
         tmpToday.set(Calendar.HOUR_OF_DAY, 0);
@@ -296,7 +293,7 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
     	    	return;
     		}
     	}
-    	
+    	activeIndex = -1;
         items = service.search(filters);
         // En cada busqueda se resetea la fila seleccionada.
         selected = new OffSpecIncidentBean();
@@ -309,7 +306,7 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
         if (items != null) {
             items.clear();
         }
-
+        activeIndex = -1;
         items = service.search(filters);
         // En cada busqueda se resetea la fila seleccionada.
         selected = new OffSpecIncidentBean();
@@ -391,6 +388,7 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
     	RequestContext context = RequestContext.getCurrentInstance();
 		context.execute("PF('nextStatusDlg').hide();");
     	// Se actualiza la vista.
+		activeIndex = -1;
     	items = service.search(filters); 	
     }
 	//CH706

@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 public class OffSpecGasReportManagementFilter implements Serializable {
 
@@ -26,7 +27,7 @@ public class OffSpecGasReportManagementFilter implements Serializable {
 	// 2 - RespondidoOK
 	// 3 - RespondidoKO
 	public static final int resStatusNoResponsedId = 1;
-	private Integer[] resStatusId;
+	private List<String> resStatusId;
 	private BigDecimal systemId;				// Obligatorio. Siempre debe estar relleno al consultar en la BD.
 	
 	public OffSpecGasReportManagementFilter() {
@@ -57,10 +58,7 @@ public class OffSpecGasReportManagementFilter implements Serializable {
 			}
 			this.startDate = _filter.getStartDate();
 			this.endDate = _filter.getEndDate();
-			if(_filter.getResStatusId()!= null) {
-				this.resStatusId = new Integer[_filter.getResStatusId().length];
-				System.arraycopy( _filter.getResStatusId(), 0, this.resStatusId, 0, _filter.getResStatusId().length );
-			}
+			this.resStatusId = _filter.getResStatusId();
 			this.systemId = _filter.getSystemId();
 		}
 	}
@@ -129,11 +127,11 @@ public class OffSpecGasReportManagementFilter implements Serializable {
 		this.endDate = endDate;
 	}
 
-	public Integer[] getResStatusId() {
+	public List<String> getResStatusId() {
 		return resStatusId;
 	}
 
-	public void setResStatusId(Integer[] resStatusId) {
+	public void setResStatusId(List<String> resStatusId) {
 		this.resStatusId = resStatusId;
 	}
 
@@ -150,6 +148,6 @@ public class OffSpecGasReportManagementFilter implements Serializable {
 		return "OffSpecGasReportManagementFilter [incidentTypeId=" + incidentTypeId + ", incidentCode=" + incidentCode
 				+ ", qualityPointId=" + qualityPointId + ", shipperId=" + shipperId + ", shipperCode=" + shipperCode
 				+ ", statusId=" + Arrays.toString(statusId) + ", startDate=" + startDate + ", endDate=" + endDate
-				+ ", resStatusId=" + Arrays.toString(resStatusId) + ", systemId=" + systemId + "]";
+				+ ", resStatusId=" + resStatusId + ", systemId=" + systemId + "]";
 	}
 }

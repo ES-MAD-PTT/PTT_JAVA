@@ -134,6 +134,7 @@ public class OffSpecGasReportResponseServiceImpl implements OffSpecGasReportResp
 		List<OffSpecIncidentBean> items = osgrmMapper.selectIncidentsToRespond(tmpFilter);
 		if(items!=null)
 			for(OffSpecIncidentBean incid: items) {
+				incid.setIdnFirstUser(tmpFilter.getShipperId());
 				incid.setActionsFree(selectShipperAction(incid));
 				for(String value : filter.getResStatusId()) {
 					if(value.equals("1") && incid.getActionsFree() != null && !incid.getActionsFree().isEmpty() && incid.getActionsFree().size() > 0) {

@@ -255,8 +255,8 @@
 				       	<p:column headerText="#{msg['osgr_man_shipperAnswer']}" style="width: 70px;text-align:center;">
 				       		<p:commandButton icon="ui-icon fa fa-envelope-o" update=":shipperResponsesFormId"
 								onstart="PF('cargando').show()"	oncomplete="PF('cargando').hide(),PF('shipperResponsesDlg').show()"
-								rendered="#{incident.discloseResponses.size() != 0 and OSGRManagementView.renderedAsnwer(incident, 'SHIPPER_ANSWER')}">
- 					       		<f:setPropertyActionListener value="#{incident}" target="#{OSGRManagementView.selected}" />
+								rendered="#{incident.discloseResponses.size() != 0 and OSGRManagementView.renderedAsnwer(incident, 'SHIPPER_ANSWER')}"
+								actionListener="#{OSGRManagementView.prepareResponse(incident, 'SHIPPER')}">
 							</p:commandButton>
 				       	</p:column>
 				       	<p:column headerText="#{msg['osgr_man_shipperIfAnswer']}" style="width: 70px;text-align:center;">
@@ -265,8 +265,8 @@
 				       	<p:column headerText="#{msg['osgr_man_originattorAnswer']}" style="width: 70px;text-align:center;">
 				       		<p:commandButton icon="ui-icon fa fa-envelope-o" update=":shipperResponsesFormId"
 								onstart="PF('cargando').show()"	oncomplete="PF('cargando').hide(),PF('shipperResponsesDlg').show()"
-								rendered="#{incident.discloseResponses.size() != 0 and OSGRManagementView.renderedAsnwer(incident, 'ORIGINATOR_ANSWER')}">
-								<f:setPropertyActionListener value="#{incident}" target="#{OSGRManagementView.selected}" />
+								rendered="#{incident.discloseResponses.size() != 0 and OSGRManagementView.renderedAsnwer(incident, 'ORIGINATOR_ANSWER')}"
+								actionListener="#{OSGRManagementView.prepareResponse(incident, 'ORIGINATOR')}">
 							</p:commandButton>
 				       	</p:column>
 				       	<p:column headerText="#{msg['osgr_man_originarIfAnswer']}" style="width: 70px;text-align:center;">
@@ -277,7 +277,7 @@
 	 					    <p:commandButton icon="ui-icon fa fa-file-text-o" update="filesFormId" 
 								onstart="PF('cargando').show()"	oncomplete="PF('cargando').hide(),PF('filesDlg').show()" 
 								actionListener="#{OSGRManagementView.selectFiles(incident, 'OPERATOR')}"
-								rendered="#{OSGRManagementView.isOperator or incident.idnFirstUser eq OSGRManagementView.user.idn_user}">
+								rendered="#{OSGRManagementView.isOperator or incident.shipper eq OSGRManagementView.user.user_group_id}">
 							</p:commandButton>
 				       	</p:column>
 				       	
@@ -285,7 +285,7 @@
 	 					    <p:commandButton icon="ui-icon fa fa-file-text-o" update="filesFormId"
 								onstart="PF('cargando').show()"	oncomplete="PF('cargando').hide(),PF('filesDlg').show()" 
 								actionListener="#{OSGRManagementView.selectFiles(incident, 'SHIPPER')}"
-								rendered="#{OSGRManagementView.isOperator or incident.idnFirstUser eq OSGRManagementView.user.idn_user}">
+								rendered="#{OSGRManagementView.isOperator or incident.shipper eq OSGRManagementView.user.user_group_id}">
 							</p:commandButton>
 				       	</p:column>
 				       
@@ -293,7 +293,7 @@
  					       	<p:commandButton icon="ui-icon fa fa-list" update=":commentsFormId" 
  					       		onstart="PF('cargando').show()"	oncomplete="PF('cargando').hide(),PF('commentsDlg').show()"
  					       		actionListener="#{OSGRManagementView.selectComments(incident, 'OPERATOR')}"
- 					       		rendered="#{OSGRManagementView.isOperator or incident.idnFirstUser eq OSGRManagementView.user.idn_user}">
+ 					       		rendered="#{OSGRManagementView.isOperator or incident.shipper eq OSGRManagementView.user.user_group_id}">
 							</p:commandButton>	
 				       	</p:column>
 				       	
@@ -301,7 +301,7 @@
  					       	<p:commandButton icon="ui-icon fa fa-list" update=":commentsFormId"
  					       		onstart="PF('cargando').show()"	oncomplete="PF('cargando').hide(),PF('commentsDlg').show()"
  					       		actionListener="#{OSGRManagementView.selectComments(incident, 'SHIPPER')}"
- 					       		rendered="#{OSGRManagementView.isOperator or incident.idnFirstUser eq OSGRManagementView.user.idn_user}">
+ 					       		rendered="#{OSGRManagementView.isOperator or incident.shipper eq OSGRManagementView.user.user_group_id}">
 							</p:commandButton>	
 				       	</p:column>
 					       				       	
@@ -407,6 +407,8 @@
 		</p:dialog>
 		
  		<p:dialog header="#{msg['osgr_man_shipper_responses']}" widgetVar="shipperResponsesDlg" modal="true" appendTo="@(body)" width="1300" height="500">
+ 			<p:ajax event="close" resetValues="true" update="form" listener="#{OSGRManagementView.closeResponse}"
+				oncomplete="PF('cargando').hide();" onstart="PF('cargando').show()"/>
 			<h:form id="shipperResponsesFormId" style="width:100%;height:98%;border-collapse:collapse" enctype="multipart/form-data">
 				<p:growl id="msgs" showDetail="true" life="10000" globalOnly="true" />
 				
@@ -442,10 +444,10 @@
 			       		</h:outputText>
 			       	</p:column>
 			       	
-			       	<p:column headerText="#{msg['osgr_man_ok_ko']}" style="width: 50px;" sortBy="#{response.responseValue}">
+			       	<p:column headerText="#{msg['osgr_man_ok_ko']}" style="width: 50px;text-align:center;" sortBy="#{response.responseValue}">
 			       		<h:outputText value="#{response.responseValue}" />
 			       	</p:column>
-			       	<p:column headerText="#{msg['osgr_man_file']}" style="width: 100px;">
+			       	<p:column headerText="#{msg['osgr_man_file']}" style="width: 100px;text-align:center;">
 			       		<p:commandButton icon="ui-icon fa fa-envelope-o" update="filesActionFormId" value="#{msg['osrg_man_shipperFiles']}"
 									onstart="PF('cargando').show()"	oncomplete="PF('cargando').hide(),PF('filesActionDlg').show()" style="float:right"
 									actionListener="#{OSGRManagementView.selectActionFiles(response, 'SHIPPER')}"/>

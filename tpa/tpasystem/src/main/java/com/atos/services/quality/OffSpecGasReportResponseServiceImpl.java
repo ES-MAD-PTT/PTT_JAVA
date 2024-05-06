@@ -135,6 +135,7 @@ public class OffSpecGasReportResponseServiceImpl implements OffSpecGasReportResp
 			for(OffSpecIncidentBean incid: tmpLIncidents) {
 				params.put("incidentId", incid.getIncidentId());
 				incid.setDiscloseResponses(osgrmMapper.selectDiscloseResponsesFromIncidentId(params));
+				incid.setActionsFree(selectShipperAction(incid));
 			}
 		
 		return tmpLIncidents;

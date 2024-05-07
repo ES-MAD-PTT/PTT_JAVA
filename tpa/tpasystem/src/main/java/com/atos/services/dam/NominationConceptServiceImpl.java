@@ -49,5 +49,22 @@ public class NominationConceptServiceImpl implements NominationConceptService {
 	public List<NominationConceptBean> selectNominationConcept(NominationConceptFilter filter) {
 		return nominationConceptMapper.selectNominationConcept(filter);
 	}
+	
+	@Override
+	public Map<BigDecimal, Object> selectNominationConceptComboUnitType(BigDecimal system) {
+		Map<BigDecimal, Object> map = new LinkedHashMap<BigDecimal, Object>();
+		List<ComboFilterNS> list = nominationConceptMapper.selectNominationConceptComboUnitType(system);
+		for (ComboFilterNS combo : list) {
+			if (combo == null) continue;
+			map.put(combo.getKey(), combo.getValue());
+		}
+		return map; 
+	}
+	
+	@Override
+	public Integer getCountNominationConcept(NominationConceptFilter filters) {
+		
+		return nominationConceptMapper.getCountNominationConcept(filters);
+	}
 
 }

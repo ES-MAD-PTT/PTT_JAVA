@@ -43,5 +43,79 @@ AND a.idn_nomination_concept = c.idn_nomination_concept
         order by 2
     </select>
     
+    <select id="selectNominationConceptComboUnitType" resultType="com.atos.beans.ComboFilterNS">
+		select idn_unit_type as key, type_desc as value from tpa_tunit_type
+    </select>
+    
+    <select id="getCountNominationConcept" resultType="java.lang.Integer">
+	    SELECT COUNT(*)		
+  FROM (		
+        SELECT p.point_code		
+          FROM tpa_tsystem_point p		
+         WHERE p.point_code = #{nomConcept}		
+        UNION		
+        SELECT c.concept_code		
+          FROM tpa_tnomination_concept c		
+         WHERE c.concept_code = #{nomConcept})	    
+	</select>
+	<insert id="insertNomConcep" useGeneratedKeys="true" keyProperty="idn_nom_concept_system" keyColumn="idn_nom_concept_system" parameterType="com.atos.filters.dam.NominationConceptFilter">
+		INSERT INTO tpa_tnom_concept_system(idn_nom_concept_system,					
+                                    idn_nomination_concept,							
+                                    idn_pipeline_system,							
+                                    start_date,							
+                                    end_date,							
+                                    aud_ins_date,							
+                                    aud_last_date,							
+                                    aud_ins_user,							
+                                    aud_last_user)							
+			  VALUES(tpa_snom_concept_system.nextval,							
+			          (SELECT idn_nomination_concept FROM tpa_tnomination_concept WHERE concept_code = #{nomConcept}),							
+			          #{idn_system},							
+			          TRUNC(SYSDATE-1),							
+			          NULL,							
+			          SYSDATE,							
+			          SYSDATE,							
+			          #{user},							
+			          #{user})
+	</insert>
+	
+	
+	
+	<insert id="insertNomConcept" useGeneratedKeys="true" keyProperty="idn_nom_concept_system" keyColumn="idn_nom_concept_system" parameterType="com.atos.filters.dam.NominationConceptFilter">
+INSERT
+	INTO tpa_tnomination_concept (idn_nomination_concept,
+	concept_code,
+	concept_desc,
+	idn_nom_concept_type,
+	idn_unit_type,
+	sort_value,
+	is_point_concept,
+	is_area_concept,
+	is_zone_concept,
+	is_enabled,
+	is_calculated,
+	allow_negative,
+	aud_ins_date,
+	aud_last_date,
+	aud_ins_user,
+	aud_last_user)
+VALUES (#{idn_nomination_concept,
+#{nomConcept},
+#{nomConcept},
+#{unitType},
+#{unitType},
+999999,
+'N',
+#{is_area_concept},
+#{is_zone_concept},
+'Y',
+'N',
+'Y',
+SYSDATE,
+SYSDATE,
+#{user},
+#{user}))
+	</insert>
+    
 
 </mapper>

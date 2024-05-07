@@ -140,14 +140,12 @@
 					</p:row>
 					<p:row>					
 						<p:column>
-							<p:selectOneMenu id="nomConceptId" style="width:100px" value="#{NominationConceptView.filtersNew.nomConcept}" 
-								rendered="#{!NominationConceptView.isShipper}"  required="true" requiredMessage="#{msg['nominationConcept_Cod']}: #{msg['empty_field']}">
-							   		<f:selectItem itemLabel="" itemValue="" />
-    									<f:selectItems value="#{NominationConceptView.nomConcept.entrySet()}" var="entry" 
-    											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
-			           		</p:selectOneMenu>
-			           		<p:message for="nomConceptId" />
-							<!-- <h:outputText value="#{NominationConceptView.user.user_group_id}" style="float:left" rendered="#{AllocationQueryView.isShipper()}"/> -->
+							<p:inputText required="true" id="nomConceptId" value="#{NominationConceptView.filtersNew.nomConcept}"  maxlength="120"
+								requiredMessage="#{msg['nominationConcept_Name']}: #{msg['empty_field']}"
+								validatorMessage="#{msg['nominationConcept_Name']}: #{msg['lenght_field']} 120">
+								 <f:validateLength maximum="120"/>
+							</p:inputText>
+							<p:message for="nomConceptId" />
 						</p:column>
 						<p:column>
 							<p:selectOneMenu id="nomConceptType" style="width:100px" value="#{NominationConceptView.filtersNew.nomConceptType}" 
@@ -158,6 +156,34 @@
 			           		</p:selectOneMenu>
 			           		<p:message for="nomConceptType" />	
 							<!-- <h:outputText value="#{NominationConceptView.user.user_group_id}" style="float:left" rendered="#{AllocationQueryView.isShipper()}"/> -->
+						</p:column>
+					</p:row>
+					<p:row>
+						<p:column  style="font-weight: bold;">
+							<h:outputText value="#{msg['nominationConcept_UnitType']}" />
+						</p:column>
+						<p:column  style="font-weight: bold;">
+							<h:outputText value="#{msg['nominationConcept_Type']}" />
+						</p:column>
+					</p:row>
+					<p:row>					
+						<p:column>
+							<p:selectOneMenu id="nomConceptId2" style="width:100px" value="#{NominationConceptView.filtersNew.unitType}" 
+								rendered="#{!NominationConceptView.isShipper}"  required="true" requiredMessage="#{msg['nominationConcept_Cod']}: #{msg['empty_field']}">
+							   		<f:selectItem itemLabel="" itemValue="" />
+    									<f:selectItems value="#{NominationConceptView.unitType.entrySet()}" var="entry" 
+    											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+			           		</p:selectOneMenu>
+			           		<p:message for="nomConceptId2" />
+							<!-- <h:outputText value="#{NominationConceptView.user.user_group_id}" style="float:left" rendered="#{AllocationQueryView.isShipper()}"/> -->
+						</p:column>
+						<p:column>
+							<p:selectOneMenu id="areaZone" style="width:100px" value="#{NominationConceptView.filtersNew.type}" 
+								rendered="#{!NominationConceptView.isShipper}" required="true" requiredMessage="#{msg['nominationConcept_Name']}: #{msg['empty_field']}">
+							   		<f:selectItem itemLabel="Area" itemValue="area" />
+							   		<f:selectItem itemLabel="Zone" itemValue="zone" />    									
+			           		</p:selectOneMenu>
+			           		<p:message for="areaZone" />
 						</p:column>
 					</p:row>
 				</p:panelGrid>

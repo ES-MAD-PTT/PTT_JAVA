@@ -14,4 +14,8 @@ public interface NominationConceptMapper {
 	public List<ComboFilterNS> selectNominationConceptCombo (BigDecimal system);
 	
 	public List<ComboFilterNS> selectNominationConceptTypeCombo (BigDecimal system);
+	
+	public List<ComboFilterNS> selectNominationConceptComboUnitType (BigDecimal system);
+	
+	public Integer getCountNominationConcept(NominationConceptFilter filters);
 }

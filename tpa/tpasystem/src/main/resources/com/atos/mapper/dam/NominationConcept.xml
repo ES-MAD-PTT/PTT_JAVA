@@ -99,7 +99,7 @@ INSERT
 	aud_last_date,
 	aud_ins_user,
 	aud_last_user)
-VALUES (#{idn_nomination_concept,
+VALUES (tpa_snomination_concept.nextval,
 #{nomConcept},
 #{nomConcept},
 #{unitType},

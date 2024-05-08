@@ -50,27 +50,7 @@ public class OffSpecGasReportResponseServiceImpl implements OffSpecGasReportResp
 			return tmpLStatusId;// = tmpLStatusId.get(0);
 		else
 			throw new Exception("OffSpecGasReportResponseServiceImpl: DISCLOSED status not found in database.");
-		
-		/*if(bdDisclosedStatusId==null)
-			throw new Exception("OffSpecGasReportResponseServiceImpl: DISCLOSED status not found in database.");
-		
-		return bdDisclosedStatusId;*/
 	}
-	
-	/*public BigDecimal getDisclosedStatusIdNewFlow() throws Exception {
-		BigDecimal bdDisclosedStatusId = null;
-		
-		List<BigDecimal> tmpLStatusId = osgrmMapper.selectStatusIdFromStatusCode(strDisclosedStatusCodeNewFlow);
-		if(tmpLStatusId!=null)
-			bdDisclosedStatusId = tmpLStatusId.get(0);
-		else
-			throw new Exception("OffSpecGasReportResponseServiceImpl: DISCLOSED status not found in database.");
-		
-		if(bdDisclosedStatusId==null)
-			throw new Exception("OffSpecGasReportResponseServiceImpl: DISCLOSED status not found in database.");
-		
-		return bdDisclosedStatusId;
-	}*/
 	
 	public List<ComboFilterNS> selectIncidentTypes(){
 		return osgrmMapper.selectIncidentTypes();	
@@ -232,5 +212,22 @@ public class OffSpecGasReportResponseServiceImpl implements OffSpecGasReportResp
 	public Map<BigDecimal, Object> selectShipperAction(OffSpecIncidentBean item) {
 		return osgrmMapper.selectShipperAction(item).stream().collect(
 				Collectors.toMap(ComboFilterNS::getKey, ComboFilterNS::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+	}
+
+	@Override
+	public void insertFile(OffSpecActionFileBean file) {
+		if(file != null) {
+			osgrmMapper.insertFileAction(file);
+		}
+	}
+
+	@Override
+	public BigDecimal selectStatusIdFromStatusCode(String status) {
+		BigDecimal result = BigDecimal.ZERO;
+		List<BigDecimal> listStatus = osgrmMapper.selectStatusIdFromStatusCode(status);
+		if(listStatus != null && !listStatus.isEmpty()) {
+			result = listStatus.get(0);//Solo debería aparecer una
+		}
+		return result;
 	}
 }

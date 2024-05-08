@@ -332,23 +332,32 @@
 							<p:column style="width:30px; text-align:center;">
 								<p:commandButton update="nextStatusFormId"
 									icon="ui-icon fa fa-pencil" title="View"
-									disabled="#{empty incident.actionsFree.entrySet()}"
+									disabled="#{empty incident.actionsFree.entrySet() or OSGRResponseView.unsolvedStatusId ne incident.statusId}"
 									actionListener="#{OSGRResponseView.prepareResponse(incident)}">
 								</p:commandButton>
 							</p:column>
 						</shiro:hasPermission>
-
 					</p:dataTable>
 				</p:layoutUnit>
 			</p:layout>
 		</h:form>
 
-		<p:dialog header="#{msg['osrg_man_files']}" widgetVar="filesActionDlg"
+		<p:dialog widgetVar="filesActionDlg" header="#{msg['osrg_man_files']}"
 			modal="true" appendTo="@(body)" width="800" height="200">
 			<h:form id="filesActionFormId"
 				style="width:100%;height:98%;border-collapse:collapse"
 				enctype="multipart/form-data">
 				<p:growl id="msgs" showDetail="true" life="10000" globalOnly="true" />
+				<h:panelGrid style="width:100%;" rendered="#{OSGRResponseView.isShipper() and OSGRResponseView.selected.idnAction != null and
+															OSGRResponseView.unsolvedStatusId eq OSGRResponseView.selected.statusId}">
+					<p:fileUpload id="uploadId"
+								fileUploadListener="#{OSGRResponseView.handleFileNewUpload}"
+								mode="advanced" dragDropSupport="true" auto="true"
+								update=":#{p:component('msgs')} uploadId :#{p:component('listActionFileId')}"
+								onstart="PF('cargando').show()" 
+								oncomplete="PF('cargando').hide()"
+								disabled="#{OSGRResponseView.selected.filesAction.size() eq 10}" />
+				</h:panelGrid>
 				<p:dataTable id="listActionFileId"
 					value="#{OSGRResponseView.selected.filesAction}" var="item"
 					scrollable="true" scrollHeight="150"
@@ -366,6 +375,11 @@
 					</p:column>
 				</p:dataTable>
 			</h:form>
+			<style>
+				.ui-fileupload-content{
+					display:none;
+				}
+			</style>
 		</p:dialog>
 
 		<p:dialog header="#{msg['osgr_man_shipper_responses']}"
@@ -530,31 +544,17 @@
 							<p:fileUpload id="uploadId" style="width:100%"
 								fileUploadListener="#{OSGRResponseView.handleFileUpload}"
 								mode="advanced" dragDropSupport="true" auto="true"
-								update="uploadId :#{p:component('fileUploadOO')} :#{p:component('tableFileId')}"
+								update="uploadId :#{p:component('tableFileId')}"
 								onstart="PF('cargando').show()"
 								oncomplete="PF('cargando').hide()"
-								disabled="#{incident.idnAction == null or (!OSGRResponseView.renderedEditResponse(incident) and OSGRResponseView.selected.filesAction.size() eq 1) or
-									(OSGRResponseView.renderedEditResponse(incident) and OSGRResponseView.selected.filesAction.size() eq 10)}" />
+								disabled="#{(incident.idnAction == null) or (OSGRResponseView.selected.filesAction.size() eq 10)}" />
 						</p:column>
 					</p:row>
-					<p:row
-						rendered="#{!OSGRResponseView.renderedEditResponse(incident)}">
-						<p:column>
-							<h:outputText value="#{msg['osgr_man_fileName']}" />
-						</p:column>
-						<p:column>
-							<h:outputText id="fileUploadOO"
-								value="#{OSGRResponseView.fileName}" />
-						</p:column>
-					</p:row>
-					<h:panelGrid columns="1" id="tableFileId"
-						rendered="#{OSGRResponseView.renderedEditResponse(incident)}">
+					<h:panelGrid columns="1" id="tableFileId">
 						<p:outputLabel id="numberFilesId"
-							rendered="#{OSGRResponseView.renderedEditResponse(incident)}"
 							style="font-weight: bold; color:red"
 							value="#{msg['osgr_man_number_files_added']}: #{OSGRResponseView.selected.filesAction.size()} / 10" />
 						<p:dataTable id="listDocId"
-							rendered="#{OSGRResponseView.renderedEditResponse(incident)}"
 							value="#{OSGRResponseView.selected.filesAction}" var="item"
 							scrollable="true" scrollHeight="150">
 							<p:column headerText="#{msg['osgr_man_fileName']}">

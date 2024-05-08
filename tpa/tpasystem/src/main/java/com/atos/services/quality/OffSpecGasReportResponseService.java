@@ -9,6 +9,7 @@ import org.primefaces.model.StreamedContent;
 
 import com.atos.beans.ComboFilterNS;
 import com.atos.beans.UserBean;
+import com.atos.beans.quality.OffSpecActionFileBean;
 import com.atos.beans.quality.OffSpecIncidentBean;
 import com.atos.beans.quality.OffSpecResponseBean;
 import com.atos.beans.quality.OffSpecStatusBean;
@@ -28,4 +29,6 @@ public interface OffSpecGasReportResponseService extends Serializable {
 	public List<OffSpecIncidentBean> search(OffSpecGasReportManagementFilter filter);
 	public StreamedContent getResponseFile(OffSpecResponseBean bean) throws Exception;
 	public void saveResponse(OffSpecIncidentBean _incid, UserBean _user, List <BigDecimal> _disclosedStatusId) throws Exception;
+	public void insertFile(OffSpecActionFileBean file);
+	public BigDecimal selectStatusIdFromStatusCode(String status);
 }

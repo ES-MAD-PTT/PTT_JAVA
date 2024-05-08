@@ -22,7 +22,6 @@ public class OffSpecActionFileBean implements Serializable {
 	
 	public OffSpecActionFileBean() {}
 	
-	
 	public OffSpecActionFileBean(BigDecimal idnOffspec, BigDecimal groupId, BigDecimal idnAction, String fileName, byte[] binaryData, String userName) {
 		this.idnOffspec = idnOffspec;
 		this.groupId = groupId;

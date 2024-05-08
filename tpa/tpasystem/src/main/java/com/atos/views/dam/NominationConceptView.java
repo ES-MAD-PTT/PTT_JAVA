@@ -320,7 +320,7 @@ public class NominationConceptView  extends CommonView implements Serializable {
 			Integer count = service.getCountNominationConcept(filtersNew);
 			
 			if(count == 0) {
-				if ("zona".equals(filtersNew.getType())) {
+				if ("zone".equals(filtersNew.getType())) {
 					filtersNew.setIs_area_concept("N");
 					filtersNew.setIs_zone_concept("Y");
 				}else {
@@ -328,13 +328,22 @@ public class NominationConceptView  extends CommonView implements Serializable {
 					filtersNew.setIs_zone_concept("N");
 				}
 				
+				filtersNew.setUserName(getUser().getUsername());
+				filtersNew.setIdn_system(getChangeSystemView().getIdn_active());
+				
+				service.insertNomConcept(filtersNew);
+				service.insertNomConceptSystem(filtersNew);
+				String[] par2 = {msgs.getString("nominationConcept") };
+				String msg = getMessageResourceString("insert_ok", par2);
+				getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.INFO,summaryMsgOk, msg, Calendar.getInstance().getTime()));
+				
 			}else {
 				errorMsg = msgs.getString("existing_nomination_concept"); //existing_nomination_concept= The Nomination Concept already exists
 				getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
 		    	log.error(errorMsg);
 				return;
 			}
-//			error = service.insertConceptNom(filtersNew);			
+		
 			
 		} catch (Exception e) {
 			log.catching(e);

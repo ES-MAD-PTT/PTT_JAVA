@@ -19,5 +19,9 @@ public interface NominationConceptService extends Serializable {
 	public Map<BigDecimal, Object> selectNominationConceptComboUnitType(BigDecimal system);
 	
 	public Integer getCountNominationConcept(NominationConceptFilter filters);
+	
+	public int insertNomConceptSystem(NominationConceptFilter filters);
+	
+	public int insertNomConcept(NominationConceptFilter filters);
 
 }

@@ -67,4 +67,14 @@ public class NominationConceptServiceImpl implements NominationConceptService {
 		return nominationConceptMapper.getCountNominationConcept(filters);
 	}
 
+	@Override
+	public int insertNomConceptSystem(NominationConceptFilter filters) {
+		return nominationConceptMapper.insertNomConceptSystem(filters);
+	}
+
+	@Override
+	public int insertNomConcept(NominationConceptFilter filters) {
+		return nominationConceptMapper.insertNomConcept(filters);
+	}
+
 }

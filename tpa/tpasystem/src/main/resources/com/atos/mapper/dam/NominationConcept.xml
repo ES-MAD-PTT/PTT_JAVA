@@ -58,7 +58,7 @@ AND a.idn_nomination_concept = c.idn_nomination_concept
           FROM tpa_tnomination_concept c		
          WHERE c.concept_code = #{nomConcept})	    
 	</select>
-	<insert id="insertNomConcep" useGeneratedKeys="true" keyProperty="idn_nom_concept_system" keyColumn="idn_nom_concept_system" parameterType="com.atos.filters.dam.NominationConceptFilter">
+	<insert id="insertNomConceptSystem" parameterType="com.atos.filters.dam.NominationConceptFilter">
 		INSERT INTO tpa_tnom_concept_system(idn_nom_concept_system,					
                                     idn_nomination_concept,							
                                     idn_pipeline_system,							
@@ -75,13 +75,13 @@ AND a.idn_nomination_concept = c.idn_nomination_concept
 			          NULL,							
 			          SYSDATE,							
 			          SYSDATE,							
-			          #{user},							
-			          #{user})
+			          #{userName},							
+			          #{userName})
 	</insert>
 	
 	
 	
-	<insert id="insertNomConcept" useGeneratedKeys="true" keyProperty="idn_nom_concept_system" keyColumn="idn_nom_concept_system" parameterType="com.atos.filters.dam.NominationConceptFilter">
+	<insert id="insertNomConcept" parameterType="com.atos.filters.dam.NominationConceptFilter">
 INSERT
 	INTO tpa_tnomination_concept (idn_nomination_concept,
 	concept_code,
@@ -113,8 +113,8 @@ VALUES (tpa_snomination_concept.nextval,
 'Y',
 SYSDATE,
 SYSDATE,
-#{user},
-#{user}))
+#{userName},
+#{userName})
 	</insert>
     
 

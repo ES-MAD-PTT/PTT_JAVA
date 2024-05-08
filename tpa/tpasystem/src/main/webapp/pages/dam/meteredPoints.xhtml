@@ -856,7 +856,7 @@
 												requiredMessage="#{msg['meteredPoint_ID']}: #{msg['empty_field']}" valueChangeListener="#{meteredPointView.selectMeteredPointID}">
 									<f:selectItem itemValue="" itemLabel=""/>
 							    	<f:selectItems value="#{meteredPointView.meteringPointIds.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
-							    	<p:ajax event="change" onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()" update="meteringID, name, pointType,latitude, longitud, customerType, nominationPoint, qualityPoint"/>	
+							    	<p:ajax event="change" onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()" update="meteringID, name, pointType,minPressure, maxPressure, latitude, longitud, nominalCapacity, contractPoint, customerType, nominationPoint, qualityPoint,area, subarea, conectingPartyName, conectingPartyPhoneNumber, conectingPartyEmail"/>	
 
 					            </p:selectOneMenu>
 								<p:message for="id" />
@@ -888,6 +888,16 @@
 						</p:row>
 					
 						<p:row>
+							<p:column>
+								<h:outputText value="#{msg['meteredPoint_newID']}" />
+							</p:column>
+							<p:column> 
+								<p:inputText required="false" id="newId" value="#{meteredPointView.newPeriodMeteredPoint.newId}"  maxlength="120"
+									requiredMessage="#{msg['meteredPoint_newID']}: #{msg['empty_field']}" validatorMessage="#{msg['meteredPoint_newID']}: #{msg['lenght_field']} 250">
+									<f:validateLength maximum="250"/>
+								</p:inputText>
+								<p:message for="newId" />
+							</p:column>
 							<p:column>
 								<h:outputText value="#{msg['meteredPoint_Point_Type']}" />
 							</p:column>

@@ -328,6 +328,17 @@ public class MeteredPointServiceImpl implements MeteredPointService {
 
 		return "0";
 	}
+	
+	@Transactional(rollbackFor = { Throwable.class })
+	public String updatePointCode(MeteredPointBean meteredPoint) throws Exception {
+
+		int upd = meteredPointMapper.updatePointCode(meteredPoint);
+		if (upd != 1) {
+			throw new Exception("-1");
+		}		
+
+		return "0";
+	}
 
 	public Date restarDiasFecha(Date fecha, int dias) {
 

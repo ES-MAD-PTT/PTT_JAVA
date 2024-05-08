@@ -39,7 +39,7 @@
              	</h:outputText>
 	       	</p:column>
 
-	       <p:column headerText="#{msg['bal_rep_shipper']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" style="min-width: 125px;max-width: 125px;">
+	       <p:column headerText="#{msg['bal_rep_shipper']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerTotalColor' : ''}" style="min-width: 200px;max-width: 200px;">
 	       		<h:outputText value="#{balance.flag_nomination eq 1 and balance.isTotal eq 'N'? 'Nomination value' : balance.isTotal eq 'Y' or balance.isTotalAllShippers eq 'Y'? 'TOTAL ' : ''}#{balance.flag_nomination eq 1 and balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'NOMINATION' : ((balance.flag_nomination eq 1 and balance.isTotal eq 'N') or (balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'))? '' : balance.shipperCode}(#{balance.shortName})" />
 	       	</p:column>
 	       

@@ -25,6 +25,7 @@ public class BalanceIntradayReportFilter implements Serializable {
 	private boolean totalAllShippers;
 	private String strTotalAllShippers; 
 	private String is_operator;
+	private String isShipper;
 	
 	public BalanceIntradayReportFilter() {
 		this.shipperId = null;
@@ -40,6 +41,7 @@ public class BalanceIntradayReportFilter implements Serializable {
 		this.totalAllShippers = false;
 		this.strTotalAllShippers = null;
 		this.is_operator= "N";
+		this.isShipper = null;
 	}
 
 	public BigDecimal getShipperId() {
@@ -139,6 +141,14 @@ public class BalanceIntradayReportFilter implements Serializable {
 		this.is_operator = is_operator;
 	}
 
+	public String getIsShipper() {
+		return isShipper;
+	}
+
+	public void setIsShipper(String isShipper) {
+		this.isShipper = isShipper;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
@@ -168,6 +178,8 @@ public class BalanceIntradayReportFilter implements Serializable {
 		builder.append(strTotalAllShippers);
 		builder.append(", is_operator=");
 		builder.append(is_operator);
+		builder.append(", isShipper=");
+		builder.append(isShipper);
 		builder.append("]");
 		return builder.toString();
 	}

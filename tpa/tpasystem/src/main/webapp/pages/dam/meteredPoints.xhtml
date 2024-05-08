@@ -856,7 +856,7 @@
 												requiredMessage="#{msg['meteredPoint_ID']}: #{msg['empty_field']}" valueChangeListener="#{meteredPointView.selectMeteredPointID}">
 									<f:selectItem itemValue="" itemLabel=""/>
 							    	<f:selectItems value="#{meteredPointView.meteringPointIds.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
-							    	<p:ajax onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()" update="meteringID, name, pointType,latitude, longitud, customerType, nominationPoint, qualityPoint"/>	
+							    	<p:ajax event="change" onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()" update="meteringID, name, pointType,latitude, longitud, customerType, nominationPoint, qualityPoint"/>	
 
 					            </p:selectOneMenu>
 								<p:message for="id" />
@@ -1047,7 +1047,7 @@
 									    <p:ajax  update="subarea,contractPoint" /> 					    
 					             </p:selectOneMenu>
 					            --> 
-					            <p:inputText disabled="true" required="true" id="area" value="#{meteredPointView.getAreaCode(meteredPointView.newPeriodMeteredPoint)}"  maxlength="120"
+					            <p:inputText disabled="true" required="true" id="area" value="#{meteredPointView.newPeriodMeteredPoint.area}"  maxlength="120"
 									requiredMessage="#{msg['meteredPoint_Area']}: #{msg['empty_field']}" validatorMessage="#{msg['meteredPoint_Area']}: #{msg['lenght_field']} 250">
 									<f:validateLength maximum="250"/>
 								</p:inputText> 

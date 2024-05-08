@@ -252,7 +252,11 @@ public class NominationConceptView  extends CommonView implements Serializable {
 	// Para los elementos del combo del filtro de Nomination Concept.
 	public Map<BigDecimal, Object> getNomConcept() {
 		return service.selectNominationConceptCombo(systemView.getIdn_active());
-	}	
+	}
+	
+	public Map<BigDecimal, Object> getUnitType() {
+		return service.selectNominationConceptComboUnitType(systemView.getIdn_active());
+	}
 	
 	// Para los elementos del combo del filtro de Type Concept Nomination.
 		public Map<BigDecimal, Object> getNomConceptType() {
@@ -313,8 +317,33 @@ public class NominationConceptView  extends CommonView implements Serializable {
 
 		String error = "0";
 		try {
+			Integer count = service.getCountNominationConcept(filtersNew);
 			
-//			error = service.insertConceptNom(filtersNew);			
+			if(count == 0) {
+				if ("zone".equals(filtersNew.getType())) {
+					filtersNew.setIs_area_concept("N");
+					filtersNew.setIs_zone_concept("Y");
+				}else {
+					filtersNew.setIs_area_concept("Y");
+					filtersNew.setIs_zone_concept("N");
+				}
+				
+				filtersNew.setUserName(getUser().getUsername());
+				filtersNew.setIdn_system(getChangeSystemView().getIdn_active());
+				
+				service.insertNomConcept(filtersNew);
+				service.insertNomConceptSystem(filtersNew);
+				String[] par2 = {msgs.getString("nominationConcept") };
+				String msg = getMessageResourceString("insert_ok", par2);
+				getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.INFO,summaryMsgOk, msg, Calendar.getInstance().getTime()));
+				
+			}else {
+				errorMsg = msgs.getString("existing_nomination_concept"); //existing_nomination_concept= The Nomination Concept already exists
+				getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
+		    	log.error(errorMsg);
+				return;
+			}
+		
 			
 		} catch (Exception e) {
 			log.catching(e);

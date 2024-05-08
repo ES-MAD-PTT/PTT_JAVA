@@ -859,18 +859,20 @@ public class ContractNomPointView  extends CommonView implements Serializable {
     }
     
     public boolean isStartDateBeforeToday() {
-        Calendar today = Calendar.getInstance();
-        
-        // Establecer la hora, minuto, segundo y milisegundo a 0 para el día de mañana
-        today.set(Calendar.HOUR_OF_DAY, 0);
-        today.set(Calendar.MINUTE, 0);
-        today.set(Calendar.SECOND, 0);
-        today.set(Calendar.MILLISECOND, 0);
-        
-        Date startDate = newContractNomPoint.getStartDate(); 
-        
-        // Comprobar si startDate es antes de mañana
-        return startDate != null && startDate.before(today.getTime());
+    	Calendar tomorrow = Calendar.getInstance();
+    	tomorrow.add(Calendar.DAY_OF_MONTH, 1); // Obtener la fecha de mañana
+
+    	// Establecer la hora, minuto, segundo y milisegundo a 0 para mañana
+    	tomorrow.set(Calendar.HOUR_OF_DAY, 0);
+    	tomorrow.set(Calendar.MINUTE, 0);
+    	tomorrow.set(Calendar.SECOND, 0);
+    	tomorrow.set(Calendar.MILLISECOND, 0);
+
+    	Date startDate = newContractNomPoint.getStartDate();
+
+    	// Comprobar si startDate es antes de mañana
+    	return startDate != null && startDate.before(tomorrow.getTime());
+
     }
     
     

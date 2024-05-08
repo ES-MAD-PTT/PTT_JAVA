@@ -56,7 +56,7 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 	private List<OffSpecIncidentBean> items;
 	private OffSpecIncidentBean selected;
 	private List<BigDecimal> disclosedStatusIds;
-	private BigDecimal solvedStatusId;
+	private BigDecimal unsolvedStatusId;
 
 
 	private List<FileBean> files;
@@ -128,12 +128,11 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 	public void setSelected(OffSpecIncidentBean selected) {
 		this.selected = selected;
 	}
-
-	public BigDecimal getSolvedStatusId() {
-		return solvedStatusId;
+	public BigDecimal getUnsolvedStatusId() {
+		return unsolvedStatusId;
 	}
-	public void setSolvedStatusId(BigDecimal solvedStatusId) {
-		this.solvedStatusId = solvedStatusId;
+	public void setUnsolvedStatusId(BigDecimal unsolvedStatusId) {
+		this.unsolvedStatusId = unsolvedStatusId;
 	}
 	public StreamedContent getScEventFlowDiagFile() {
         InputStream stream = FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream("/resources/images/qualityEventFlow.png");
@@ -165,7 +164,7 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
     public void init() {
 		try{
 			disclosedStatusIds = service.getDisclosedStatusIds();
-			solvedStatusId = service.selectStatusIdFromStatusCode("EV.SOLVED - CLOSED");
+			unsolvedStatusId = service.selectStatusIdFromStatusCode("EV.UNSOLVED");
 		}
 		catch(Exception e){
 			log.error(e.getMessage(), e);

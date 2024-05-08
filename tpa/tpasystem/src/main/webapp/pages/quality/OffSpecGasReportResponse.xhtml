@@ -332,12 +332,11 @@
 							<p:column style="width:30px; text-align:center;">
 								<p:commandButton update="nextStatusFormId"
 									icon="ui-icon fa fa-pencil" title="View"
-									disabled="#{empty incident.actionsFree.entrySet()}"
+									disabled="#{empty incident.actionsFree.entrySet() or OSGRResponseView.unsolvedStatusId ne incident.statusId}"
 									actionListener="#{OSGRResponseView.prepareResponse(incident)}">
 								</p:commandButton>
 							</p:column>
 						</shiro:hasPermission>
-
 					</p:dataTable>
 				</p:layoutUnit>
 			</p:layout>
@@ -350,7 +349,7 @@
 				enctype="multipart/form-data">
 				<p:growl id="msgs" showDetail="true" life="10000" globalOnly="true" />
 				<h:panelGrid style="width:100%;" rendered="#{OSGRResponseView.isShipper() and OSGRResponseView.selected.idnAction != null and
-															OSGRResponseView.solvedStatusId ne OSGRResponseView.selected.statusId}">
+															OSGRResponseView.unsolvedStatusId eq OSGRResponseView.selected.statusId}">
 					<p:fileUpload id="uploadId"
 								fileUploadListener="#{OSGRResponseView.handleFileNewUpload}"
 								mode="advanced" dragDropSupport="true" auto="true"

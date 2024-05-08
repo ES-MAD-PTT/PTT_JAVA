@@ -56,6 +56,7 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 	private List<OffSpecIncidentBean> items;
 	private OffSpecIncidentBean selected;
 	private List<BigDecimal> disclosedStatusIds;
+	private BigDecimal solvedStatusId;
 
 
 	private List<FileBean> files;
@@ -128,6 +129,12 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 		this.selected = selected;
 	}
 
+	public BigDecimal getSolvedStatusId() {
+		return solvedStatusId;
+	}
+	public void setSolvedStatusId(BigDecimal solvedStatusId) {
+		this.solvedStatusId = solvedStatusId;
+	}
 	public StreamedContent getScEventFlowDiagFile() {
         InputStream stream = FacesContext.getCurrentInstance().getExternalContext().getResourceAsStream("/resources/images/qualityEventFlow.png");
         scEventFlowDiagFile = new DefaultStreamedContent(stream, "image/png", "qualityEventFlow.png");
@@ -158,7 +165,7 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
     public void init() {
 		try{
 			disclosedStatusIds = service.getDisclosedStatusIds();
-			//disclosedStatusIdNewFlow = service.getDisclosedStatusIdNewFlow();
+			solvedStatusId = service.selectStatusIdFromStatusCode("EV.SOLVED - CLOSED");
 		}
 		catch(Exception e){
 			log.error(e.getMessage(), e);
@@ -381,11 +388,29 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 		file = event.getFile();
 		OffSpecActionFileBean uploadFile = null;
 		if(file != null){
-			uploadFile = new OffSpecActionFileBean(selected.getIncidentId(), selected.getFirstResponse().getGroupId(), selected.getIdnAction(), file.getFileName(), file.getContents(), getUser().getUsername());
+			uploadFile = new OffSpecActionFileBean(selected.getIncidentId(), selected.getFirstResponse().getGroupId(), selected.getIdnAction(), file.getFileName(), 
+					file.getContents(), getUser().getUsername());
 			selected.getFilesAction().add(uploadFile);
 		}
 		if(file == null || uploadFile == null){
-			getMessages().addMessage(Constants.head_menu[6],new MessageBean(Constants.ERROR,"Error saving file","The file should be selected", Calendar.getInstance().getTime()));
+			messages.addMessage(Constants.head_menu[6],new MessageBean(Constants.ERROR,"Error saving file","The file should be selected", Calendar.getInstance().getTime()));
+			return;
+		}
+    }
+	
+	public void handleFileNewUpload(FileUploadEvent event) {
+		file = event.getFile();
+		OffSpecActionFileBean uploadFile = null;
+		if(file != null){
+			uploadFile = new OffSpecActionFileBean(selected.getIncidentId(), selected.getFirstResponse().getGroupId(), selected.getIdnAction(), file.getFileName(), 
+					file.getContents(), getUser().getUsername());
+			service.insertFile(uploadFile);
+			selected.getFilesAction().add(uploadFile);
+			messages.addMessage(Constants.head_menu[6],new MessageBean(Constants.INFO,"Insert successfully","The file has been saved correctly", Calendar.getInstance().getTime()));
+			return;
+		}
+		if(file == null || uploadFile == null){
+			messages.addMessage(Constants.head_menu[6],new MessageBean(Constants.ERROR,"Error saving file","The file should be selected", Calendar.getInstance().getTime()));
 			return;
 		}
     }
@@ -464,11 +489,13 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 	public void selectActionFiles(OffSpecResponseBean item, String action) {
 		 if(selected != null) {
 			 selected.setFilesAction(new ArrayList<OffSpecActionFileBean>());
+			 selected.setIdnAction(null);//Lo inicializamos a null para saber si es transportista o shipper
 			 OffSpecResponseBean newItem = new OffSpecResponseBean();
 			 newItem.setIncidentId(selected.getIncidentId());
 			 if(item != null && action.equals("SHIPPER")) {
 				newItem.setGroupId(item.getGroupId());
 				newItem.setIdnAction(item.getIdnAction());
+				selected.setIdnAction(item.getIdnAction());//Lo necesitamos si queremos guardar un nuevo fichero
 			 }
 			 selected.getFilesAction().addAll(serviceManagement.selectActionFiles(newItem));
 		 }else {

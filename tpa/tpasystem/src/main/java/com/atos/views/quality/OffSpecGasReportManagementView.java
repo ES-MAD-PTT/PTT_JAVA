@@ -504,7 +504,7 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 									  List<OffSpecIncidentBean> _items ) {
 		
 		for(OffSpecIncidentBean incid : _items){
-			incid.setGroupId(getUser().getIdn_user_group());
+			//incid.setGroupId(getUser().getIdn_user_group());
 			incid.setStatus(_hmAllStatus.get(incid.getStatusId()));
 		}
 	}

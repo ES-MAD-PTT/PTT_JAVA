@@ -39,7 +39,7 @@ public class CapacityRequestClient  implements Serializable {
 	// Por ser un proceso automatico no va a tener usuario de acceso a la aplicacion. Le ponemos el inicial 'managerAut'.
 	private static final String strUser="managerAut";
 	private static final String strLanguage="en";
-	private static final String strBooking= "BOOKING";
+	private static final String strBooking= "CONTRACT";
 	
 	
 	

@@ -44,7 +44,7 @@ public class ContractQueryServiceImpl implements ContractQueryService{
 	private static final long serialVersionUID = 3387425404695877624L;
 	private static final String strNotifTypeCodeToOperator = "CAPACITY.REQUEST.DELETED";
 	private static final String strNotifTypeCodeToShipper = "CONTRACT.CAP_REQUEST_MANAGED";
-	private static final String strNotifOrigin = "CONTRACT";
+	private static final String strNotifOrigin = "BOOKING";
 	
 	@Autowired
 	private ContractQueryMapper crMapper;

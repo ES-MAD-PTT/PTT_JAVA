@@ -404,43 +404,6 @@
 		        </p:dataTable>
 			 </p:tab> 
 			 <!-- pos 3 -->
-			 <p:tab title="#{msg['menu_contract']} - #{notificationView.getNotifList('CONTRACT').size()}">
-		         <p:dataTable id="notificationContractTable" var="notif" value="#{notificationView.getNotifList('CONTRACT')}" rows="5" paginator="true">  
-		            <f:facet name="header">
-		        		<p:outputLabel value="CONTRACT Notification Area"/> 
-        				<p:commandButton oncomplete="PF('notificationPanelWidget').loadContents()" style="float:right;width:22px;height:22px;top:-3px"
-        					actionListener="#{notificationView.removeAllNotificationsOrigin('CONTRACT')}"
-        					update=":#{p:component('msgs')}"
-        					 icon="fa fa-check-square-o" title="Acknowledge all CONTRACT notifications"/>
-    				</f:facet> 
-		            <p:column style="width:15px;white-space: nowrap" headerText="#{msg['notification_id']}">
-		                <h:outputText value="#{notif.idn_notification}" />
-		            </p:column>
-		            <p:column style="width:50px;white-space: nowrap" headerText="#{msg['notification_origin']}">
-		                <h:outputText value="#{notif.origin}" />
-		            </p:column>
-		            <p:column style="width:230px" headerText="#{msg['notification_text']}">
-		                <p:commandButton icon="fa fa-search-plus"
-		                	action="#{notificationView.setLongMessage(notif.information)}"
-		                	oncomplete="PF('viewNotificationTextDialog').show()"
-		                	update=":#{p:component('viewNotificationText')}"
-		                />
-		                <h:outputText style="word-wrap: break-word" value="#{notif.information.length() gt 100 ? notif.information.substring(0,100).concat('...') : notif.information}"/>
-		            </p:column>
-		            <p:column style="width:90px;white-space: nowrap" headerText="#{msg['messages_date']}">
-		                <h:outputText value="#{notif.start_date}" >
-		                	<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
-						</h:outputText>
-				    </p:column>
-		            <p:column style="width:45px;text-align: center" headerText="#{msg['notification_acknowledge']}">
-			            <p:commandButton oncomplete="PF('notificationPanelWidget').loadContents()" icon="fa fa-check-square-o"
-			            	actionListener="#{notificationView.acknowledgeNotification(notif)}"
-			            	update=":#{p:component('msgs')},:#{p:component('notif_blue')},:#{p:component('notificationContractTable')}">
-			            </p:commandButton>
-					 </p:column> 
-		        </p:dataTable>
-			 </p:tab>  
-			 <!-- pos 4 -->
 			 <p:tab title="#{msg['menu_booking']} - #{notificationView.getNotifList('BOOKING').size()}">
 		         <p:dataTable id="notificationBookingTable" var="notif" value="#{notificationView.getNotifList('BOOKING')}" rows="5" paginator="true">  
 		            <f:facet name="header">
@@ -477,6 +440,43 @@
 					 </p:column> 
 		        </p:dataTable>
 			 </p:tab> 
+			 <!-- pos 4 -->
+			 <p:tab title="#{msg['menu_contract']} - #{notificationView.getNotifList('CONTRACT').size()}">
+		         <p:dataTable id="notificationContractTable" var="notif" value="#{notificationView.getNotifList('CONTRACT')}" rows="5" paginator="true">  
+		            <f:facet name="header">
+		        		<p:outputLabel value="CONTRACT Notification Area"/> 
+        				<p:commandButton oncomplete="PF('notificationPanelWidget').loadContents()" style="float:right;width:22px;height:22px;top:-3px"
+        					actionListener="#{notificationView.removeAllNotificationsOrigin('CONTRACT')}"
+        					update=":#{p:component('msgs')}"
+        					 icon="fa fa-check-square-o" title="Acknowledge all CONTRACT notifications"/>
+    				</f:facet> 
+		            <p:column style="width:15px;white-space: nowrap" headerText="#{msg['notification_id']}">
+		                <h:outputText value="#{notif.idn_notification}" />
+		            </p:column>
+		            <p:column style="width:50px;white-space: nowrap" headerText="#{msg['notification_origin']}">
+		                <h:outputText value="#{notif.origin}" />
+		            </p:column>
+		            <p:column style="width:230px" headerText="#{msg['notification_text']}">
+		                <p:commandButton icon="fa fa-search-plus"
+		                	action="#{notificationView.setLongMessage(notif.information)}"
+		                	oncomplete="PF('viewNotificationTextDialog').show()"
+		                	update=":#{p:component('viewNotificationText')}"
+		                />
+		                <h:outputText style="word-wrap: break-word" value="#{notif.information.length() gt 100 ? notif.information.substring(0,100).concat('...') : notif.information}"/>
+		            </p:column>
+		            <p:column style="width:90px;white-space: nowrap" headerText="#{msg['messages_date']}">
+		                <h:outputText value="#{notif.start_date}" >
+		                	<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+						</h:outputText>
+				    </p:column>
+		            <p:column style="width:45px;text-align: center" headerText="#{msg['notification_acknowledge']}">
+			            <p:commandButton oncomplete="PF('notificationPanelWidget').loadContents()" icon="fa fa-check-square-o"
+			            	actionListener="#{notificationView.acknowledgeNotification(notif)}"
+			            	update=":#{p:component('msgs')},:#{p:component('notif_blue')},:#{p:component('notificationContractTable')}">
+			            </p:commandButton>
+					 </p:column> 
+		        </p:dataTable>
+			 </p:tab>  
 			 <!-- pos 5 -->       
 			 <p:tab title="#{msg['menu_metering']} - #{notificationView.getNotifList('METERING').size()}">
 		         <p:dataTable id="notificationMeteringTable" var="notif" value="#{notificationView.getNotifList('METERING')}" rows="5" paginator="true">  

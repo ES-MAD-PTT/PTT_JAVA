@@ -223,7 +223,7 @@
 	<!--  Alarm panel -->	
     <p:overlayPanel id="alarmPanel" for="alarmBtn" showEffect="size" hideEffect="fold" widgetVar="alarmPanelWidget" 
     	dismissable="false" my="left top" at="left bottom"
-    	dynamic="true" style="width:950px">
+    	dynamic="true" style="width:1050px">
     	
 		<p:panel style="height:21px">
 			<h3 style="margin-top: -2px;text-align: center">
@@ -251,7 +251,7 @@
             
             
             
-            <p:column headerText="#{msg['scadaAlarms_Time_Stamp']}"  style="width: 60px;">
+            <p:column headerText="#{msg['scadaAlarms_Time_Stamp']}"  style="width: 110px;">
                 <h:outputText value="#{alarms.scada_timestamp}" >
 				   	<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss"/>
 				</h:outputText>
@@ -270,7 +270,7 @@
             <p:column headerText="#{msg['scadaAlarms_Area']}" style="width: 30px;">
                 <h:outputText value="#{alarms.area_code}" />
             </p:column>
-            <p:column headerText="#{msg['scadaAlarms_Temp_Resolution_Time']}" style="width: 60px;">
+            <p:column headerText="#{msg['scadaAlarms_Temp_Resolution_Time']}" style="width: 110px;">
                 <h:outputText value="#{alarms.temp_resolution_time}" >
                 	<f:convertDateTime pattern="dd/MM/yyyy"/>
                 </h:outputText>

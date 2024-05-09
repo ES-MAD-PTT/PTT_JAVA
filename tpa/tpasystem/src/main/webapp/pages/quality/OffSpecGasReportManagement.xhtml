@@ -192,7 +192,6 @@
 				       	<p:column headerText="#{msg['osgr_man_quality_point']}" style="width: 80px;" sortBy="#{incident.qualityPointCode}">
 				       		<h:outputText value="#{incident.qualityPointCode}" />
 				       	</p:column>
-				       
 				       	<p:column headerText="#{msg['osgr_man_shipper']}" style="width: 150px;" sortBy="#{incident.originatorShipperCode}"
 				       		rendered="#{OSGRManagementView.hasOperatorManagPermission()}" >
 				       		<h:outputText value="#{incident.shipper}" />
@@ -235,7 +234,7 @@
 			                    <f:selectItem itemLabel="Select One" itemValue=""/>
 			                    <f:selectItems value="#{incident.actionsFree.entrySet()}" var="entry" 
  											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
- 								<p:ajax oncomplete="PF('cargando').hide();" update="nextStatusFormId" onstart="PF('cargando').show()"
+ 								<p:ajax oncomplete="PF('cargando').hide();" update="incidents1 nextStatusFormId" onstart="PF('cargando').show()"
  									listener="#{OSGRManagementView.updateSelected(incident)}"/>
 			                </p:selectOneMenu>
 			                <h:outputText value="#{incident.action}" rendered="#{OSGRManagementView.isShipper()}"/>

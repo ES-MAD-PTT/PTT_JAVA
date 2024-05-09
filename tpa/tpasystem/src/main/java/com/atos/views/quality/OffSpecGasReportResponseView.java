@@ -443,14 +443,6 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 		}	
 	}
 	
-	public boolean renderedEditResponse(OffSpecIncidentBean item) {
-		boolean value = false;
-		if(item != null) {
-			value = item.getGroupId().compareTo(getUser().getIdn_user_group()) == 0;
-		}
-		return value;
-	}
-	
 	public void acceptRejectAction(String responseValue) {
 		ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication().getResourceBundle(FacesContext.getCurrentInstance(),"msg");
     	String summaryMsg = msgs.getString("saving_data_error");

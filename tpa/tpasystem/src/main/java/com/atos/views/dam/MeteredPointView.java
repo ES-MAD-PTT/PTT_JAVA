@@ -689,17 +689,23 @@ public class MeteredPointView extends CommonView implements Serializable {
 			if(newMeteredPointNewPeriod != null) {
 				newMeteredPointNewPeriod.setStartDate(newPeriodMeteredPoint.getStartDate());
 				service.updateMeteredPointNewPeriod(newMeteredPointNewPeriod);
+				
+				
 			}
+			
+			
 		} catch (Exception e) {
 			log.catching(e);
 		}
 		
 		String error = "0";
-		try {
-			
-			
+		try {			
 			
 			error = service.insertMeteredPointNewPeriod(newPeriodMeteredPoint);
+			
+			if(newPeriodMeteredPoint.getNewId()!= null) {
+				service.updatePointCode(newPeriodMeteredPoint);
+			}
 		} catch (Exception e) {
 			log.catching(e);
 			// we assign the return message

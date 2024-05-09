@@ -57,6 +57,8 @@ public interface MeteredPointMapper {
 	public int updateMeteredPointParam(MeteredPointBean meteredPoint);
 	
 	public int updateMeteredPointNewPeriod(MeteredPointBean meteredPoint);
+	
+	public int updatePointCode(MeteredPointBean meteredPoint);
 
 	public List<String> getMeteredPointId(MeteredPointBean bean);
 

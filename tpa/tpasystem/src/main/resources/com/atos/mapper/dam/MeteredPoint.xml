@@ -354,9 +354,25 @@
       t.latitude as latitude,
       t.longitude as longitud,
       t.idn_area as idn_area,
-      (select a.area_code from tpa_tarea a where a.idn_area = t.idn_area) as area
-    from tpa_tsystem_point t 
-		where t.idn_system_point = #{id}
+      (select a.area_code from tpa_tarea a where a.idn_area = t.idn_area) as area,
+      p.nominal_capacity as nominalCapacity,
+      p.min_pressure as minPressure,
+      p.max_pressure as maxPressure,
+      p.idn_subarea as idn_subarea,
+      (select a.subarea_code from tpa_tsubarea a where a.idn_subarea = p.idn_subarea) as subarea,
+      p.idn_contract_point as idn_system_point_contract,
+      p.idn_nomination_point as idn_system_point_nomination,
+      p.idn_quality_point,
+      p.idn_customer_type,
+      p.con_party_name as conectingPartyName,
+      p.con_party_phone as conectingPartyPhoneNumber,
+      p.con_party_email as conectingPartyEmail      
+    from tpa_tsystem_point t ,
+         tpa_tsystem_point_param p
+    where t.idn_system_point = #{id}
+       and t.idn_system_point = p.idn_system_point
+       and ((p.end_date is null or p.end_date = '')
+        or  p.end_date >= trunc(sysdate))
 	</select>
 
 
@@ -521,6 +537,12 @@ WITH quality_point AS
 		update tpa_tsystem_point_param spp
 		 set spp.end_date = #{startDate}-1
 		 where spp.idn_system_point_param = #{idn_system_point}
+	</update>
+	
+	<update id="updatePointCode" parameterType="com.atos.beans.dam.MeteredPointBean">
+		UPDATE tpa_tsystem_point set
+			POINT_CODE = #{newId}
+  		 WHERE idn_system_point = #{idn_system_point}
 	</update>
 	
 	 <!--no se usa... son historicos  -->

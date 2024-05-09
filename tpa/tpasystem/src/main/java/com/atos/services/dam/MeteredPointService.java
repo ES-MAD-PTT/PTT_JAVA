@@ -50,6 +50,8 @@ public interface MeteredPointService extends Serializable {
 	public String updateMeteredPoint(MeteredPointBean meteredPoint) throws Exception;
 	
 	public String updateMeteredPointNewPeriod(MeteredPointBean meteredPoint) throws Exception;
+	
+	public String updatePointCode(MeteredPointBean meteredPoint) throws Exception;
 
 	public String insertMeteredPoint(MeteredPointBean meteredPoint) throws Exception;
 

@@ -2,8 +2,10 @@ package com.atos.filters.balancing;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 //import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 public class BalanceIntradayReportFilter implements Serializable {
 
@@ -26,6 +28,7 @@ public class BalanceIntradayReportFilter implements Serializable {
 	private String strTotalAllShippers; 
 	private String is_operator;
 	private String isShipper;
+	private List<String> timestampVarList = new ArrayList<>();
 	
 	public BalanceIntradayReportFilter() {
 		this.shipperId = null;
@@ -42,6 +45,7 @@ public class BalanceIntradayReportFilter implements Serializable {
 		this.strTotalAllShippers = null;
 		this.is_operator= "N";
 		this.isShipper = null;
+		this.timestampVarList = null;
 	}
 
 	public BigDecimal getShipperId() {
@@ -149,6 +153,14 @@ public class BalanceIntradayReportFilter implements Serializable {
 		this.isShipper = isShipper;
 	}
 
+	public List<String> getTimestampVarList() {
+		return timestampVarList;
+	}
+
+	public void setTimestampVarList(List<String> timestampVarList) {
+		this.timestampVarList = timestampVarList;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
@@ -180,6 +192,8 @@ public class BalanceIntradayReportFilter implements Serializable {
 		builder.append(is_operator);
 		builder.append(", isShipper=");
 		builder.append(isShipper);
+		builder.append(", timestampVarList=");
+		builder.append(timestampVarList);
 		builder.append("]");
 		return builder.toString();
 	}

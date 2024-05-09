@@ -378,7 +378,7 @@
 							<p:column>
 								<p:calendar required="true" id="new_fecInicio" size="10" pattern="dd/MM/yyyy" mask="true" value="#{contractNomPointView.newContractNomPoint.startDate}"
 									requiredMessage="You need to select a date" 
-									showOn="button" navigator="true" disabled="#{contractNomPointView.isStartDateBeforeToday()}">
+									showOn="button" navigator="true" disabled="#{contractNomPointView.isStartDateBeforeToday()}" mindate="#{contractNomPointView.today}">
 									<p:ajax event="dateSelect" update="new_fecInicio,new_contract_id"></p:ajax>
 									<p:ajax event="change" update="new_fecInicio,new_contract_id"></p:ajax>
 								</p:calendar>

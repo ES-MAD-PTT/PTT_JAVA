@@ -23,6 +23,4 @@ public interface BalanceIntradayReportService extends Serializable {
 	public void copySheets(XSSFSheet srcSheet, XSSFSheet destSheet);
 	// Para insertar la plantilla excel en la BD. Solo se usa en Desarrollo.
 	//public void insertReportTemplate(ReportTemplateBean rtb) throws Exception;
-	
-	public String saveTimestamp(BalanceIntradayReportFilter filters_form, String user);
 }

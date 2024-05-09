@@ -592,7 +592,7 @@ public class MeteredPointView extends CommonView implements Serializable {
 		}
 
 		//items = service.selectMeteredPoints(filters);
-		onSearch();
+		//onSearch();
 		service.selectIdsSystem(getChangeSystemView().getIdn_active());
 
 		// clean the formu new after save

@@ -353,6 +353,7 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 		newContractNomPoint.setStartDate(sysdate.getTime());
 		newContractNomPoint.setIdn_system(getChangeSystemView().getIdn_active());
 		selecteds = new ArrayList<ContractNomPointBean>();
+		selectedsFornNew = new ArrayList<ContractNomPointBean>();
 
 	}
 
@@ -531,7 +532,8 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 		selectedsFornNew = new ArrayList<ContractNomPointBean>();
 		selecteds = new ArrayList<ContractNomPointBean>();
 		
-		onSearch();
+		
+		//onSearch();
 
 	}
 	

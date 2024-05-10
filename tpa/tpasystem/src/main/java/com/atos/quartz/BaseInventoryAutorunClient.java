@@ -179,10 +179,10 @@ public class BaseInventoryAutorunClient  implements Serializable {
     	WebServiceInputBean wsInBean = null;
     	Date startUpdatingDate = new Date();
     	Calendar cal_gasDayFrom = Calendar.getInstance();
-    	BigDecimal count = wsMapper.checkIntradayExecution(this.idnOnshoreSystem);
+/*   	BigDecimal count = wsMapper.checkIntradayExecution(this.idnOnshoreSystem);
     	if(count.intValue()==0) {
     		cal_gasDayFrom.add(Calendar.DAY_OF_YEAR, -1);
-    	}
+    	}*/
     	Calendar cal_gasDayTo = Calendar.getInstance();
     	
     	SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
@@ -191,7 +191,7 @@ public class BaseInventoryAutorunClient  implements Serializable {
 				sdf.format(cal_gasDayFrom.getTime()) + strNotifSeparator +
 				sdf2.format(startUpdatingDate);	    	
         try {
-        	log.debug("[" + notifInfo + "] - callAcumInventoryFromWebserviceTask - run() start.");
+        	log.debug("[" + notifInfo + "] - callBaseInventoryFromWebserviceTask - run() start.");
 
         	ProcessMessage procMessage = prepareWsRequest(cal_gasDayFrom.getTime(),cal_gasDayTo.getTime());
         	log.debug("[" + notifInfo + "] - prepareWsRequest() finished.");

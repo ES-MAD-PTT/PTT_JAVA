@@ -29,10 +29,10 @@ public interface MeteringManagementService extends Serializable {
 	public Map<BigDecimal, Object> selectMeteringInputCodes(MeteringManagementFilter filter);
 	public List<MeasurementBean> search(MeteringManagementFilter filter);
 	public List<MeasureGasQualityParamBean> selectGasQualityParams(MeasurementBean mBean);
-	public void updateMeasurementsFromWebservice(MeteringManagementFilter filter, UserBean _user, LanguageBean _lang) throws Exception;
+	public void updateMeasurementsFromWebservice(MeteringManagementFilter filter, UserBean _user, LanguageBean _lang,Date _startDate, Date _endDate, BigDecimal idnSystem) throws Exception;
 	public void updateMeasurementsFromFile(FileBean _file, UserBean _user, LanguageBean _lang, ChangeSystemView _system) throws Exception;
 	public DefaultStreamedContent selectTemplateFile(BigDecimal _systemId) throws Exception;
 
 	public List<PointDto> getCheckedPoints(Date checkDate);
-	public void updateWebservice(Date _startDate, Date _endDate, UserBean _user, LanguageBean _lang, BigDecimal idnSystem) throws ValidationException;
+	public Date selectOpenPeriodFirstDay(Map<String, Object> params);
 }

@@ -2312,7 +2312,7 @@
              = to_char(#{gasDay},'DD/MM/YY')
         AND trunc(a.version_date) = a.gas_day
 		<if test='"Y".equals(isShipper)'>
-		   AND a.idn_allocation IN (SELECT idn_allocation FROM tpa_tallocation_shipper_filter WHERE gas_day = #{gasDay} AND page_code = 'INTR_ACC_IMBALANCE_INVENTORY' AND is_enabled = 'Y')
+		   AND a.idn_allocation IN (SELECT idn_allocation FROM tpa_tallocation_shipper_filter WHERE gas_day = #{gasDay} AND page_code = 'BALANCE_INTRADAY_REPORT' AND is_enabled = 'Y')
 		</if>
 		GROUP BY idn_allocation, to_char(a.version_date, 'DD/MM/YY HH24:MI:SS FF9')
 		ORDER BY idn_allocation, to_char(a.version_date, 'DD/MM/YY HH24:MI:SS FF9')

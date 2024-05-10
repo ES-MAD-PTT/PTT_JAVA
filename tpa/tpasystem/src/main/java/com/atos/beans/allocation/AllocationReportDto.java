@@ -355,7 +355,7 @@ public class AllocationReportDto implements Serializable {
 			builder.append("contracted_value;");
 			builder.append("nominated_value;");
 			builder.append("allocated_value;");
-			builder.append("balancing_gas");
+			builder.append("balancing_gas;");
 			builder.append("overusage");
 		return builder.toString();
 	}

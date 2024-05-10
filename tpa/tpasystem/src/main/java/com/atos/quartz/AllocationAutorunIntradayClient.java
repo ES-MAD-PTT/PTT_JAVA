@@ -326,34 +326,35 @@ public class AllocationAutorunIntradayClient  implements Serializable {
 
 	
 	
-	public void  callAllocationIntradayRequestClient()throws JobExecutionException {
+	public void  callAllocationIntradayRequestClient(boolean execute_ws_metering)throws JobExecutionException {
 		
 	
+		if(execute_ws_metering) {
 		
-		System.out.println("Job callAllocationIntradayRequestClient is runing");
-		log.info("Job callAllocationIntradayRequestClient is runing", Calendar.getInstance().getTime());
-
-		//buscamos el flag que nos indique si enviamos notificaciones o no...
-		String execution_enable="N";
-		try {
-			execution_enable = getSystemParameterString(strAllocationIntradayAllocation, strUser, strLanguage);
-		} catch (Exception e) {
-	    	log.error(e.getMessage(), e);
-		}
-		if(!execution_enable.equals("Y")) {
-			System.out.println("Job callAllocationIntradayRequestClient is disable");
-			log.info("Job callAllocationIntradayRequestClient is disable", Calendar.getInstance().getTime());
-			return;
-		}
-		
-		try {
-			// llamamos al metodo para obtener las medidas
-			callMeteringIntradayManagementRequestClient();
-		} catch(Exception e) {
-			log.error(e.getMessage(),e);
-			System.out.println("Exception: " + e.getMessage());
-			e.printStackTrace();
-			
+			System.out.println("Job callAllocationIntradayRequestClient is runing");
+			log.info("Job callAllocationIntradayRequestClient is runing", Calendar.getInstance().getTime());
+	
+			//buscamos el flag que nos indique si enviamos notificaciones o no...
+			String execution_enable="N";
+			try {
+				execution_enable = getSystemParameterString(strAllocationIntradayAllocation, strUser, strLanguage);
+			} catch (Exception e) {
+		    	log.error(e.getMessage(), e);
+			}
+			if(!execution_enable.equals("Y")) {
+				System.out.println("Job callAllocationIntradayRequestClient is disable");
+				log.info("Job callAllocationIntradayRequestClient is disable", Calendar.getInstance().getTime());
+				return;
+			}
+			try {
+				// llamamos al metodo para obtener las medidas
+				callMeteringIntradayManagementRequestClient();
+			} catch(Exception e) {
+				log.error(e.getMessage(),e);
+				System.out.println("Exception: " + e.getMessage());
+				e.printStackTrace();
+				
+			}
 		}
 				
 		

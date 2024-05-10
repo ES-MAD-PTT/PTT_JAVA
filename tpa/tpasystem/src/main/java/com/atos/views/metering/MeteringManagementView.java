@@ -6,6 +6,7 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -78,7 +79,7 @@ public class MeteringManagementView extends CommonView {
 	// Filtro para la actualizacion de medidas, utilizando el webservice. No se usa la lista de puntos en este filtro.
 	private MeteringManagementFilter updateMetsfilters;
 	private List<MeasurementBean> items;
-	private Date openPeriodFistDay;
+	private Date openPeriodFirstDay;
 	private StreamedContent templateFile =  null;
 	
 	private static final Logger log = LogManager.getLogger("com.atos.views.metering.MeteringManagementView");
@@ -110,6 +111,7 @@ public class MeteringManagementView extends CommonView {
 	}
 
 	private Date responsePeriodStartDate = null;
+	private Date responsePeriodEndDate = null;
 
 	public Date getResponsePeriodStartDate() {
 		return responsePeriodStartDate;
@@ -421,7 +423,7 @@ public class MeteringManagementView extends CommonView {
     	filters = new MeteringManagementFilter();
 
     	// Primer dia de balance abierto.
-    	openPeriodFistDay = service.selectOpenPeriodFirstDay();
+    	openPeriodFirstDay = service.selectOpenPeriodFirstDay();
 		filters.setGasDayFrom(DateUtil.getToday());
 
 		Calendar calMaxToDate = Calendar.getInstance();
@@ -574,7 +576,7 @@ public class MeteringManagementView extends CommonView {
     	String errorMsg = null;
     	
 		try {
-			service.updateMeasurementsFromWebservice(updateMetsfilters, getUser(), getLanguage());
+			service.updateMeasurementsFromWebservice(updateMetsfilters, getUser(), getLanguage(),responsePeriodStartDate, responsePeriodEndDate, getChangeSystemView().getIdn_active());
 			
 	    	String okMsg = msgs.getString("met_man_processing");
 	    	getMessages().addMessage(Constants.head_menu[7],
@@ -593,33 +595,7 @@ public class MeteringManagementView extends CommonView {
 			// Se guarda el detalle del error tecnico.
 	    	log.error(e.getMessage(), e);			
 		}
-    	
-		// Si se ejectua el proceso en background, no tiene sentido actualizar los datos.
-        // onSearch();
-		
-		// llamamos a acumInventory, baseInventory e intraday
-		try {
-			service.updateWebservice(responsePeriodStartDate, responsePeriodStartDate, getUser(), getLanguage(),
-				getChangeSystemView().getIdn_active());
-		
-	    	String okMsg = msgs.getString("met_man_processing");
-	    	getMessages().addMessage(Constants.head_menu[8],
-					new MessageBean(Constants.INFO, summaryMsg, okMsg, Calendar.getInstance().getTime()));
-	    	log.info(okMsg);
-		} 
-		catch(ValidationException ve){
-			errorMsg = ve.getMessage();
-			getMessages().addMessage(Constants.head_menu[8],
-					new MessageBean(Constants.ERROR, summaryMsg, errorMsg, Calendar.getInstance().getTime()));    		
-		}
-		catch (Exception e) {
-			errorMsg = msgs.getString("internal_error");
-			getMessages().addMessage(Constants.head_menu[8],
-					new MessageBean(Constants.ERROR, summaryMsg, errorMsg, Calendar.getInstance().getTime()));
-			// Se guarda el detalle del error tecnico.
-	    	log.error(e.getMessage(), e);			
-		}
-		
+    		
 	}
 	
 	public void handleFileUpload( FileUploadEvent event) {
@@ -946,11 +922,11 @@ public class MeteringManagementView extends CommonView {
 	private void setResponsePeriod(Integer _allocationMaxDateOffset){
 		// Primer dia de balance abierto.
 
-		/*HashMap<String, Object> params = new HashMap<>();
+		HashMap<String, Object> params = new HashMap<>();
 		params.put("closingTypeCode", "DEFINITIVE");
 		params.put("idnSystem", getChangeSystemView().getIdn_active());
 		params.put("sysCode", getChangeSystemView().getSystem());
-		openPeriodFirstDay = service.selectOpenPeriodFirstDay(params);*/
+		openPeriodFirstDay = service.selectOpenPeriodFirstDay(params);
 
 		Calendar tmpEndDate = Calendar.getInstance();
 		tmpEndDate.set(Calendar.HOUR_OF_DAY, 0);
@@ -959,10 +935,10 @@ public class MeteringManagementView extends CommonView {
 		tmpEndDate.set(Calendar.MILLISECOND, 0);
 		tmpEndDate.add(Calendar.DAY_OF_MONTH, _allocationMaxDateOffset * (-1));
 		
-		responsePeriodStartDate=tmpEndDate.getTime();
+		//responsePeriodStartDate=tmpEndDate.getTime();
 		
-		/*responsePeriodStartDate = openPeriodFirstDay;
-		responsePeriodEndDate = tmpEndDate.getTime();*/
+		responsePeriodStartDate = openPeriodFirstDay;
+		responsePeriodEndDate = tmpEndDate.getTime();
 	}
 		
 	 

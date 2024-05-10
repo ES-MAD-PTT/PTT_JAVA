@@ -29,7 +29,7 @@ public class AllocationAutorunIntradayJob implements Job {
 			e.printStackTrace();
 		}
 		
-		service.callAllocationIntradayRequestClient();
+		service.callAllocationIntradayRequestClient(true);
 		
 	}
 

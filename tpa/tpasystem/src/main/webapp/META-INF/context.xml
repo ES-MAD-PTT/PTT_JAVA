@@ -67,6 +67,6 @@
             url="jdbc:oracle:thin:@10.104.239.94:1521/TPA01"
             
             url para la BD de backup restore
-            url="jdbc:oracle:thin:@10.10.1.183:1521/TPA01"
+            url="jdbc:oracle:thin:@10.100.39.103:1521/TPA01"
            -->
            

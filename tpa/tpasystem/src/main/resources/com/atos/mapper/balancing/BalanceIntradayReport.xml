@@ -2285,6 +2285,38 @@
 		   and trunc(sysdate) between trep.start_date and
 		       nvl(trep.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
 	</select>
+	
+	<delete id="deleteBalanceIntradayReportShipperFilter" parameterType="com.atos.beans.balancing.BalanceIntradayReportFormBean">
+		DELETE tpa_tallocation_shipper_filter
+		  WHERE gas_day = #{gasday}
+		    AND page_code = 'BALANCE_INTRADAY_REPORT'
+	</delete>
+	
+	<insert id="insertBalanceIntradayReportShipperFilter" parameterType="com.atos.beans.balancing.BalanceIntradayReportFormBean">
+		INSERT INTO tpa_tallocation_shipper_filter(gas_day, idn_allocation, page_code, is_enabled, aud_ins_date, aud_last_date, aud_ins_user, aud_last_user)
+		VALUES (#{gasday}, #{idn_allocation}, 'BALANCE_INTRADAY_REPORT', 'Y', SYSDATE, SYSDATE, #{user}, #{user})
+
+	</insert>
+	
+	<select id="selectTimestampIds" resultType="com.atos.beans.ComboFilterNS">
+		SELECT a.idn_allocation as key,
+		to_char(a.version_date, 'DD/MM/YY HH24:MI:SS FF9') AS value
+		FROM tpa_tallocation a,
+		tpa_tallocation_origin ao
+		WHERE a.idn_pipeline_system = #{systemId}
+		AND ao.origin_code IN ('BALANCE', 'CLOSING_PROCESS')
+		AND a.idn_allocation_type =
+		(SELECT t.idn_allocation_type FROM tpa_tallocation_type t WHERE t.type_code = 'INTRADAY')
+		AND a.idn_allocation_origin = ao.idn_allocation_origin
+		AND to_char(a.gas_day,'DD/MM/YY')
+             = to_char(#{gasDay},'DD/MM/YY')
+        AND trunc(a.version_date) = a.gas_day
+		<if test='"Y".equals(isShipper)'>
+		   AND a.idn_allocation IN (SELECT idn_allocation FROM tpa_tallocation_shipper_filter WHERE gas_day = #{gasDay} AND page_code = 'INTR_ACC_IMBALANCE_INVENTORY' AND is_enabled = 'Y')
+		</if>
+		GROUP BY idn_allocation, to_char(a.version_date, 'DD/MM/YY HH24:MI:SS FF9')
+		ORDER BY idn_allocation, to_char(a.version_date, 'DD/MM/YY HH24:MI:SS FF9')
+		</select>
 
 	<!-- Para insertar la plantilla excel en la BD. Solo se usa en Desarrollo.	-->
  	<!-- <insert id="insertReportTemplate" useGeneratedKeys="true" keyProperty="repTemplateId" keyColumn="idn_report_template" parameterType="com.atos.beans.ReportTemplateBean">

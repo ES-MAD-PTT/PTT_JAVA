@@ -45,7 +45,7 @@ public class BalanceIntradayReportView extends CommonView {
 	private static final String excelTotalLabel ="TOTAL";
 	private static final String excelTotalLabelG ="TOTAL";
 	
-	private BalanceIntradayReportFilter filters;
+	private BalanceIntradayReportFilter filters, filters_form;
 	private List<BalanceIntradayReportBean> items;
 	private List<BalanceIntradayReportOffshoreBean> itemsOffshore;
 	private BalanceIntradayReportBean selected;
@@ -59,14 +59,32 @@ public class BalanceIntradayReportView extends CommonView {
 	public void setService(BalanceIntradayReportService service) {
 		this.service = service;
 	}
-	
+	private Calendar sysdate
 	//geters/seters
+	
+	;
+	public Calendar getSysdate() {
+		return sysdate;
+	}
+
+	public void setSysdate(Calendar sysdate) {
+		this.sysdate = sysdate;
+	} 
+	
 	public BalanceIntradayReportFilter getFilters() {
 		return filters;
 	}
 
 	public void setFilters(BalanceIntradayReportFilter filters) {
 		this.filters = filters;
+	}
+
+	public BalanceIntradayReportFilter getFilters_form() {
+		return filters_form;
+	}
+
+	public void setFilters_form(BalanceIntradayReportFilter filters_form) {
+		this.filters_form = filters_form;
 	}
 
 	public List<BalanceIntradayReportBean> getItems() {
@@ -114,7 +132,25 @@ public class BalanceIntradayReportView extends CommonView {
         //items = service.search(filters);
         selected = new BalanceIntradayReportBean();
         selectedOffshore = new BalanceIntradayReportOffshoreBean();
+        filters_form = new BalanceIntradayReportFilter();
+    	filters_form.setSystemId(getChangeSystemView().getIdn_active());
 	}
+	
+	//sysdate 
+    public Calendar gettingValidDateStart(){
+    	
+    	Calendar sysdate = Calendar.getInstance(); 
+    	filters.setGasDay(sysdate.getTime());
+    	filters_form.setGasDay(sysdate.getTime());
+    	
+    	sysdate.setTime(sysdate.getTime());
+    	sysdate.set(Calendar.HOUR_OF_DAY, 0);
+    	sysdate.set(Calendar.MINUTE, 0);
+    	sysdate.set(Calendar.SECOND, 0);
+    	sysdate.set(Calendar.MILLISECOND, 0);
+    	
+        return sysdate;
+    }
 	
 	private BalanceIntradayReportFilter initFilter(){
 		BalanceIntradayReportFilter tmpFilter = new BalanceIntradayReportFilter();
@@ -151,6 +187,8 @@ public class BalanceIntradayReportView extends CommonView {
 	public void onSearch(){
     	// Utilizo un ResourceBundle local por si el scope fuera Session o Application. En estos casos no se actualizaria el idioma.
     	ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication().getResourceBundle(FacesContext.getCurrentInstance(),"msg");
+    	
+    	filters_form.setSystemId(getChangeSystemView().getIdn_active());
 
 		if (filters.getGasDay() == null) {
 			String strError = msgs.getString("bal_int_gasday") + ": " + msgs.getString("empty_field");
@@ -576,5 +614,39 @@ public class BalanceIntradayReportView extends CommonView {
 	    public void updateTimestamp() {
 	    	if(filters.getStrLastVersion().equals("Y"))
 	    		filters.setTimestampVar(null);
+	    }
+	    
+	    public Map<BigDecimal, Object> getTimestampIds() {
+	    	if(filters.getStrLastVersion().equals("N")) {
+	    		if(isShipper()) {
+	    			filters.setIsShipper("Y");
+	    		}
+	    		return service.selectTimestampIds(filters);
+	    	} else {
+				return null;
+	    	}
+		}
+	    public Map<BigDecimal, Object> getTimestampIds_form() {
+	   		return service.selectTimestampIds(filters_form);
+		}
+	    
+	    public void cancelTimestamp() {
+	    	filters_form = new BalanceIntradayReportFilter();
+	    	filters_form.setSystemId(getChangeSystemView().getIdn_active());
+	    	//LOOKING TO THE SYSDATE parameter BD
+	    	sysdate= gettingValidDateStart();
+
+	    }
+	    public void saveTimestamp() {
+
+	    	String ret = service.saveTimestamp(filters_form,getUser().getUsername());
+	    	if(ret.equals("0")) {
+	    		getMessages().addMessage(Constants.head_menu[9],new MessageBean(Constants.INFO,"Timestamp saved","Timestamp saved", Calendar.getInstance().getTime()));
+	    	} else {
+	    		getMessages().addMessage(Constants.head_menu[9],
+						new MessageBean(Constants.ERROR, "Error modifing timestamps", "Error modifing timestamps", Calendar.getInstance().getTime()));
+
+	    	}
+
 	    }
 }

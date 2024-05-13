@@ -112,7 +112,7 @@
 				       	</p:column>
 
 				     	<p:column headerText="#{msg['rel_cap_man_shipper_from']}" style="width: 90px;" sortBy="#{releaseCapacity.shipperCodeFrom}">
-				       		<h:outputText value="#{releaseCapacity.shipperCodeFrom}" />
+				       		<h:outputText value="#{releaseCapacity.shipperCodeFrom}(#{releaseCapacity.shortName})" />
 				       	</p:column>
 
 				       	<p:column headerText="#{msg['rel_cap_man_contract_from']}" style="width: 90px;" sortBy="#{releaseCapacity.contractCodeFrom}">

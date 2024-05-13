@@ -362,7 +362,7 @@
       (select a.subarea_code from tpa_tsubarea a where a.idn_subarea = p.idn_subarea) as subarea,
       p.idn_contract_point as idn_system_point_contract,
       p.idn_nomination_point as idn_system_point_nomination,
-      p.idn_quality_point,
+      p.idn_quality_point as idn_system_point_quality,
       p.idn_customer_type,
       p.con_party_name as conectingPartyName,
       p.con_party_phone as conectingPartyPhoneNumber,

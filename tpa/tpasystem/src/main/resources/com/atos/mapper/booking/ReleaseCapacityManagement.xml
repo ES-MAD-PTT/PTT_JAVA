@@ -5,7 +5,7 @@
 <mapper namespace="com.atos.mapper.booking.ReleaseCapacityManagementMapper">
 
      <select id="selectShipperId" resultType="com.atos.beans.ComboFilterNS">
-		select tgr.idn_user_group as key, tgr.user_group_id as value
+		select tgr.idn_user_group as key, tgr.user_group_id || ' (' || tgr.short_name || ')' AS value
 		from tpa_tuser_group tgr
 		where tgr.idn_user_group_type = (select idn_user_group_type from tpa_tuser_group_type where type_code = 'SHIPPER')
 			  and trunc(sysdate) between tgr.start_date and nvl(tgr.end_date, to_date('31/12/9999', 'DD/MM/YYYY'))
@@ -45,6 +45,7 @@
         <result property="submittedTimestamp" column="arriving_date"/>
         <result property="shipperIdFrom" column="idn_user_group_from"/>
         <result property="shipperCodeFrom" column="user_group_id_from"/>
+        <result property="shortName" column="short_name"/>
         <result property="contractIdFrom" column="idn_contract_from"/>    
         <result property="contractCodeFrom" column="contract_code_from"/>
         <result property="statusCode" column="status"/>
@@ -61,6 +62,7 @@
 	           t1.arriving_date as arriving_date,
 	           t1.idn_user_group as idn_user_group_from,
 	           t1.user_group_id as user_group_id_from,
+	           t1.short_name as short_name,
 	           t1.idn_contract as idn_contract_from,
 	           t1.contract_code as contract_code_from,
 	           t1.status as status,
@@ -74,6 +76,7 @@
 	                 treq.arriving_date,
 	                 treq.idn_user_group,
 	                 tugr.user_group_id,
+	                 tugr.short_name,
 	                 treq.idn_contract,
 	                 tcon.contract_code,
 	                 treq.status,
@@ -103,7 +106,7 @@
 	                and tcon.idn_contract=treq.idn_contract
 	                and t3.idn_contract_request=treq.idn_contract_request
 	                and t3.received_from is null) t1     
-	      left outer join (select distinct tcon2.idn_user_group,
+	      left outer join (select distinct tcon2.idn_user_group, tugr2.short_name,
 	                             tugr2.user_group_id,
 	                             tcon2.idn_contract,
 	                             tcon2.contract_code

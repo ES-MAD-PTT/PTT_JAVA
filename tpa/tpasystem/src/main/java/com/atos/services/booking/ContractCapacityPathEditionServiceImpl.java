@@ -297,7 +297,8 @@ public class ContractCapacityPathEditionServiceImpl implements ContractCapacityP
 		bean.setIdn_contract(edit_bean.getIdn_booking());
 		bean.setIdn_capacity_path(idn_capacity_path);
 		bean.setVersion_date(Calendar.getInstance().getTime());
-
+		bean.setPublished("Y");
+		
 		List<ContractCapacityPathInsertBean> list = ccpMapper.getContractAgreementIdPoint(bean);
 		if(list.size()==0) {
 			return -1;

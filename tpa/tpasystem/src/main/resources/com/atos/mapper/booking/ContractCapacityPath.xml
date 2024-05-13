@@ -293,7 +293,7 @@ VALUES (
 	#{idn_contract_point_dest},
 	#{assigned_quantity},
 	'Y',
-	'N',
+	#{published},
     #{version_date},
     #{username},
     #{username} 

@@ -301,7 +301,7 @@ VALUES (
  
 </insert>
 
-<insert id="insertCapacityPathPublish" useGeneratedKeys="true" keyProperty="idn_contract_capacity_path" keyColumn="idn_contract_capacity_path" parameterType="com.atos.beans.booking.ContractCapacityPathInsertBean">
+<insert id="insertCapacityPathPublish" parameterType="com.atos.beans.booking.ContractCapacityPathInsertBean">
 INSERT INTO tpa_tcontract_capacity_path
   (idn_contract_capacity_path, idn_contract_agreement, idn_capacity_path,
    idn_contract_point_orig, idn_contract_point_dest, version_date,

@@ -314,6 +314,9 @@ public class ContractCapacityPathView extends CommonView {
         int salida = service.publishPath(filters2, getUser().getUsername());
         if(salida!= 0) {
         	getMessages().addMessage(Constants.head_menu[1],new MessageBean(Constants.ERROR,"Contract Capacity Path", "Error publishing capacity path", Calendar.getInstance().getTime()));
+        } else {
+        	getMessages().addMessage(Constants.head_menu[1],new MessageBean(Constants.INFO,"Contract Capacity Path", "Contract path values published", Calendar.getInstance().getTime()));
+
         }
 		
         onSearch2();

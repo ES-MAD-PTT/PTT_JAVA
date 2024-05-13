@@ -308,7 +308,20 @@ public class ContractCapacityPathView extends CommonView {
         onSearch3();
         
     }
+  
+    public void publish() {
+
+        int salida = service.publishPath(filters2, getUser().getUsername());
+        if(salida!= 0) {
+        	getMessages().addMessage(Constants.head_menu[1],new MessageBean(Constants.ERROR,"Contract Capacity Path", "Error publishing capacity path", Calendar.getInstance().getTime()));
+        }
+		
+        onSearch2();
+        onSearch3();
         
+    }
+        
+
     private BigDecimal searchIdnPoint(BigDecimal idn_area, List<ContractCapacityPathEntryExitBean> list) {
     	
     	for(int i=0;i<list.size();i++) {

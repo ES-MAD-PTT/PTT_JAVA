@@ -7,19 +7,26 @@
 	<select id="selectCapacityPublication" resultType="com.atos.beans.booking.CapacityPublicationBean" parameterType="com.atos.filters.booking.CapacityPublicationFilter">
 		
 		select idn_val_avail as idn_val_avail_capacity, area, cap_date as monthYear, end_date as endDate, tech_cap, available_cap, booked_cap
-		  from table(fun_tbl_query_capacity_public(#{startDate},
-		                                           #{endDate},
-		                                           #{zones_query},
-		                                           #{par_chart}))
+		  from table(pck_capacity_query.query_capacity_report(#{idn_system},
+                                                             #{startDate},
+                                                             #{endDate},
+                                                             #{zones_query},
+                                                             #{par_chart},
+                                                             'Y',
+                                                             'N') 
+		                                           )
 	</select>
 
 	<select id="selectCapacityChart" resultType="com.atos.beans.booking.CapacityPublicationBean" parameterType="com.atos.filters.booking.CapacityPublicationFilter">
 		
 		select area, cap_date as monthYear, tech_cap, available_cap, booked_cap
-		  from table(fun_tbl_query_capacity_chart(#{startDate},
-		                                           #{endDate},
-		                                           #{zones_query},
-		                                           #{par_chart}))
+		  from table(pck_capacity_query.query_capacity_report(#{idn_system},
+                                                             #{startDate},
+                                                             #{endDate},
+                                                             #{zones_query},
+                                                             #{par_chart},
+                                                             'Y',
+                                                             'N'))
 	</select>
 
 	<select id="selectCapacityBean" resultType="com.atos.beans.booking.CapacityPublicationBean" parameterType="com.atos.beans.booking.CapacityPublicationBean">

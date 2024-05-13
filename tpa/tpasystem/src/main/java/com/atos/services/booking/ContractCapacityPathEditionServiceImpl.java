@@ -154,6 +154,8 @@ public class ContractCapacityPathEditionServiceImpl implements ContractCapacityP
 			f.setStart_date(l.get(0).getStart_date());
 			f.setEnd_date(l.get(0).getEnd_date());
 			f.setIdn_booking(filters.getIdn_booking());
+			
+			f.setIs_publish("Y");
 			List<ContractCapacityPathAreaValuesBean> list3 = ccpMapper.getContractCapacityPathAreaValuesBean(f);
 			
 	/*		BigDecimal path_step_min = new BigDecimal(1000), path_step_max = new BigDecimal(0);

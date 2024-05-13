@@ -68,7 +68,7 @@ public class CapacityChartView extends CommonView {
 	
 	// Methods
 	public void onSearch(){
-		
+		filters.setIdn_system(super.getChangeSystemView().getIdn_active());
 		filters.setZones_query();
 		Date start_date = filters.getStartDate();
 		Calendar cal_start = Calendar.getInstance();

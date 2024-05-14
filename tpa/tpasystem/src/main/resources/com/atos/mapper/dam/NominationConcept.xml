@@ -102,7 +102,7 @@ INSERT
 VALUES (tpa_snomination_concept.nextval,
 #{nomConcept},
 #{nomConcept},
-#{unitType},
+#{nomConceptType},
 #{unitType},
 999999,
 'N',

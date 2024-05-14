@@ -326,7 +326,7 @@
 							</p:column>
 
 							<p:columns value="#{cRReview.period}" var="year" rendered="#{cRReview.entryQuantityUnit eq 1}"
-								style="#{cRReview.booleanBackGroud(year) ? 'background: #c4cbc8;' : ''}" >
+								style="#{cRReview.booleanBackGroud(year) ? 'background: #ebefed;' : ''}" >
 
 								<c:set var="mkey" value="#{it.entryPoint}-#{year}" />
 
@@ -374,7 +374,7 @@
 							</p:columns>
 
 							<p:columns value="#{cRReview.period}" var="year" rendered="#{cRReview.entryQuantityUnit eq 1}"
-								style="#{cRReview.booleanBackGroud(year) ? 'background: #c4cbc8;' : ''}">
+								style="#{cRReview.booleanBackGroud(year) ? 'background: #ebefed;' : ''}">
 										<h:outputText
 										rendered="#{!cRReview.editableData}"
 											value="#{cRReview.capacityEntriesMap[mkey].hourlyBookingMmbtu}" styleClass="number #{cRReview.capacityEntriesMap[mkey].hourlyBookingMmbtuEdited?'edited':''}">
@@ -418,7 +418,7 @@
 								</h:outputText>
 							</p:columns>
 							<p:columns value="#{cRReview.period}" var="year" rendered="#{cRReview.entryQuantityUnit eq 0}"
-								style="#{cRReview.booleanBackGroud(year) ? 'background: #c4cbc8;' : ''}">
+								style="#{cRReview.booleanBackGroud(year) ? 'background: #ebefed;' : ''}">
 										<h:outputText rendered="#{!cRReview.editableData}"
 											value="#{cRReview.capacityEntriesMap[mkey].dailyBookingMmscfd}" styleClass="number #{cRReview.capacityEntriesMap[mkey].dailyBookingMmscfdEdited?'edited':''}">
 											<f:convertNumber groupingUsed="true" minFractionDigits="3"
@@ -463,7 +463,7 @@
 							</p:columns>
 
 							<p:columns value="#{cRReview.period}" var="year" rendered="#{cRReview.entryQuantityUnit eq 0}"
-								style="#{cRReview.booleanBackGroud(year) ? 'background: #c4cbc8;' : ''}">
+								style="#{cRReview.booleanBackGroud(year) ? 'background: #ebefed;' : ''}">
 										<h:outputText rendered="#{!cRReview.editableData}"
 											value="#{cRReview.capacityEntriesMap[mkey].hourlyBookingMmscfd}" styleClass="number #{cRReview.capacityEntriesMap[mkey].hourlyBookingMmscfdEdited?'edited':''}">
 											<f:convertNumber groupingUsed="true" minFractionDigits="3"

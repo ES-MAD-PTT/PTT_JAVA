@@ -32,7 +32,6 @@ import com.atos.beans.booking.CRMFilterCtl;
 import com.atos.beans.booking.CapacityRequestBean;
 import com.atos.beans.booking.ContractAttachTypeBean;
 import com.atos.beans.booking.ContractAttachmentBean;
-import com.atos.beans.quality.OffSpecIncidentBean;
 import com.atos.exceptions.ValidationException;
 import com.atos.filters.booking.CRManagementFilter;
 import com.atos.services.MailService;

@@ -342,6 +342,7 @@ select
   t.quantity as assigned_quantity
  from tpa_tcontract_capacity_path t, tpa_tcontract_agreement ca
  where t.is_enabled = 'Y'
+ 		and t.is_published = #{published}
        and t.idn_capacity_path = #{idn_capacity_path}
        and ca.idn_contract_agreement = t.idn_contract_agreement
        AND #{end_date} >= ca.start_date

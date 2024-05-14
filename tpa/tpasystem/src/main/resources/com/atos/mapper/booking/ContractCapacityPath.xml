@@ -281,6 +281,7 @@ INSERT INTO tpa_tcontract_capacity_path(idn_contract_capacity_path,
                                         idn_contract_point_dest,
                                         quantity,
                                         is_enabled,
+                                        is_published,
                                         VERSION_DATE,
                                         aud_ins_user,
                                         aud_last_user)        
@@ -292,11 +293,40 @@ VALUES (
 	#{idn_contract_point_dest},
 	#{assigned_quantity},
 	'Y',
+	#{published},
     #{version_date},
     #{username},
     #{username} 
  )
  
+</insert>
+
+<insert id="insertCapacityPathPublish" parameterType="com.atos.beans.booking.ContractCapacityPathInsertBean">
+INSERT INTO tpa_tcontract_capacity_path
+  (idn_contract_capacity_path, idn_contract_agreement, idn_capacity_path,
+   idn_contract_point_orig, idn_contract_point_dest, version_date,
+   quantity, is_enabled, is_published,
+   aud_ins_date, aud_last_date, aud_ins_user, aud_last_user)
+SELECT tpa_scontract_capacity_path.nextval,
+       p.idn_contract_agreement,
+       p.idn_capacity_path,
+       p.idn_contract_point_orig,
+       p.idn_contract_point_dest,
+       SYSTIMESTAMP,
+       p.quantity,
+       p.is_enabled,
+       'Y',
+       SYSDATE,
+       SYSDATE,
+       #{username},
+       #{username}
+  FROM tpa_vcontract_request_path p
+WHERE p.version_date = p.max_version_date
+   AND p.is_enabled = 'Y'
+   AND p.is_published = 'N'
+   AND p.idn_contract = #{idn_contract} 
+   AND #{end_date} >= p.agreement_start_date
+   AND p.agreement_end_date >= #{start_date}
 </insert>
 
 
@@ -330,6 +360,9 @@ select distinct cp2.idn_capacity_path as idn_capacity_path,
  where cp2.idn_capacity_path = cps.idn_capacity_path
      and ca.idn_contract_agreement = cp2.idn_contract_agreement
        and cp2.is_enabled = 'Y'
+		<if test='"Y".equals(is_publish)'>       
+       and cp2.is_published = 'Y'
+       </if>
        and cp2.version_date = (select max(version_date) from tpa_tcontract_capacity_path ccpx where 
                       ccpx.idn_contract_agreement = cp2.idn_contract_agreement
                                    AND ccpx.idn_capacity_path = cp2.idn_capacity_path

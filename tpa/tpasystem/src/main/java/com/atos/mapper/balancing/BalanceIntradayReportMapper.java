@@ -17,9 +17,12 @@ public interface BalanceIntradayReportMapper extends Serializable {
 	public List<BalanceIntradayReportOffshoreBean> selectBalancesOffshore(BalanceIntradayReportFilter filter);
 	public List<ReportTemplateBean> selectReportTemplateFromCodeSystem(ReportTemplateBean rtb);
 	public List<ComboFilterNS> selectTimestamp(BalanceIntradayReportFilter filter);
+	
 	//Para insertar la plantilla excel en la BD. Solo se usa en Desarrollo.
 	//public void insertReportTemplate(ReportTemplateBean rtb);
 	
-	public int deleteAllocationShipperFilter(BalanceIntradayReportFormBean bean);
-	public int insertAllocationShipperFilter(BalanceIntradayReportFormBean bean);
+	public List<ComboFilterNS> selectTimestampIds(BalanceIntradayReportFilter filters);
+	
+	public int deleteBalanceIntradayReportShipperFilter(BalanceIntradayReportFormBean bean);
+	public int insertBalanceIntradayReportShipperFilter(BalanceIntradayReportFormBean bean);
 }

@@ -31,4 +31,6 @@ public interface ContractCapacityPathService extends Serializable{
 	public int savePath(ContractCapacityPathFilter filters2, BigDecimal value, BigDecimal idn_capacity_path, BigDecimal idn_entry, BigDecimal idn_exit);
 	
 	public ArrayList<BigDecimal> getCapacityPathStep(BigDecimal idn_capacity_path);
+
+	public int publishPath(ContractCapacityPathFilter filters2, String username);
 }

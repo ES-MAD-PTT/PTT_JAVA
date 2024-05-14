@@ -40,6 +40,8 @@ public interface ContractCapacityPathMapper extends Serializable {
 	
 	public int insertCapacityPath(ContractCapacityPathInsertBean bean);
 	
+	public int insertCapacityPathPublish(ContractCapacityPathInsertBean bean);
+	
 	public List<ContractCapacityPathInsertBean> getContractCapacityPathValues(ContractCapacityPathInsertBean bean);
 	
 	public List<ContractCapacityPathAreaValuesBean> getContractCapacityPathAreaValuesBean(ContractCapacityPathFilter filters);

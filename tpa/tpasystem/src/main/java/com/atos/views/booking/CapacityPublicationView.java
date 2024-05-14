@@ -133,6 +133,7 @@ public class CapacityPublicationView extends CommonView {
 
 		this.setMapModel(this.buildMapModel(filters));
 		filters.setZones_query();
+		filters.setIdn_system(super.getChangeSystemView().getIdn_active());
         items = service.search(filters);
         queryDate = new Date(System.currentTimeMillis());
 	}

@@ -61,7 +61,7 @@ public class NewConnectionServiceImpl implements NewConnectionService {
 	private static final int iPdfCharsInLine = 85;				// Para calcular aprox. el num. de lineas y escoger una plantilla.
 	private static final String sGeneratedPdfFileName = "NewConnection_"; 
 
-	private static final String categoryCode = "CONTRACT";
+	private static final String categoryCode = "BOOKING";
 	private static final String fileType = "NEW_CONNECTION_PDF";		// Para buscar la template.
 	protected static final String longTerm = "LONG";
 	protected static final String mediumTerm = "MEDIUM";

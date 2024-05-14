@@ -160,21 +160,18 @@
 							</f:facet>			
 								<p:repeat value="#{contractCapacityPathEditionView.tech_capacities}" var="list">		             
 						            <p:row>
-						                <p:column style="border: 1px solid grey !important;">#{msg['ccp_tech_cap']}</p:column>
+						                <p:column style="border-top: 2px solid grey !important;border-left: 1px solid grey !important;border-right: 1px solid grey !important;">#{msg['ccp_tech_cap']}</p:column>
 						             	<p:repeat value="#{list.list}" var="tech">
-						                	<p:column style="border: 1px solid grey !important;">#{tech.technical_capacity}</p:column>
+						                	<p:column style="border-top: 2px solid grey !important;border-left: 1px solid grey !important;border-right: 1px solid grey !important;">#{tech.technical_capacity}</p:column>
 						             	</p:repeat>   
-						            	<p:column style="border: 1px solid grey !important;"></p:column>
-						            	<p:column style="border: 1px solid grey !important;"></p:column>
+						            	<p:column style="border-top: 2px solid grey !important;border-left: 1px solid grey !important;border-right: 1px solid grey !important;"></p:column>
+						            	<p:column style="border-top: 2px solid grey !important;border-left: 1px solid grey !important;border-right: 1px solid grey !important;"></p:column>
 						            </p:row>
 						            <p:row>
-						                <p:column style="border: 1px solid grey !important;">#{msg['ccp_available']}</p:column>
+						                <p:column style="border: 1px solid grey !important;">#{msg['ccp_pre_assigned']}</p:column>
 						             	<p:repeat value="#{list.list}" var="avail">
 						                	<p:column style="border: 1px solid grey !important;">
 						                		<h:outputText value="#{avail.available}"></h:outputText>
-						                		<p:repeat value="#{avail.list_values_available}" var="v">
-						                			<br/>-<h:outputText style="color:green" value="#{v}"></h:outputText>
-						                		</p:repeat>
 						                	</p:column>
 						             	</p:repeat>   
 						             	<p:column style="border: 1px solid grey !important;">
@@ -188,6 +185,30 @@
 			              					</h:outputText>
 						             	</p:column>
 						            </p:row>
+						            <p:row>
+						                <p:column style="border: 1px solid grey !important;">#{msg['ccp_assigned']}</p:column>
+						             	<p:repeat value="#{list.list}" var="tech">
+						                	<p:column style="border: 1px solid grey !important;">
+						                		<p:repeat value="#{tech.list_values_available}" var="value">
+						                			-<h:outputText style="color:green" value="#{value}"/><br/>
+						                		</p:repeat>
+						                	</p:column>
+						             	</p:repeat>   
+						            	<p:column style="border: 1px solid grey !important;"></p:column>
+						            	<p:column style="border: 1px solid grey !important;"></p:column>
+						            </p:row>
+						            <p:row>
+						                <p:column style="border-bottom: 2px solid grey !important;border-top: 1px solid grey !important;border-left: 1px solid grey !important;border-right: 1px solid grey !important;">#{msg['ccp_available']}</p:column>
+						             	<p:repeat value="#{list.list}" var="tech">
+						                	<p:column style="border-bottom: 2px solid grey !important;border-top: 1px solid grey !important;border-left: 1px solid grey !important;border-right: 1px solid grey !important;">
+						                		<h:outputText style="color:darkgreen" value="#{tech.total_available}"></h:outputText>
+						                	</p:column>
+						             	</p:repeat>   
+						            	<p:column style="border-bottom: 2px solid grey !important;border-top: 1px solid grey !important;border-left: 1px solid grey !important;border-right: 1px solid grey !important;"></p:column>
+						            	<p:column style="border-bottom: 2px solid grey !important;border-top: 1px solid grey !important;border-left: 1px solid grey !important;border-right: 1px solid grey !important;"></p:column>
+						            </p:row>
+
+
 					            </p:repeat>
 
 						</p:panelGrid>

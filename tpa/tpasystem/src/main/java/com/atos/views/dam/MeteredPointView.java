@@ -592,7 +592,7 @@ public class MeteredPointView extends CommonView implements Serializable {
 		}
 
 		//items = service.selectMeteredPoints(filters);
-		onSearch();
+		//onSearch();
 		service.selectIdsSystem(getChangeSystemView().getIdn_active());
 
 		// clean the formu new after save
@@ -683,27 +683,24 @@ public class MeteredPointView extends CommonView implements Serializable {
 		
 		
 		
-		try {
-			newMeteredPointNewPeriod = service.selectMeteredPoint(newPeriodMeteredPoint);
-			
-			if(newMeteredPointNewPeriod != null) {
-				newMeteredPointNewPeriod.setStartDate(newPeriodMeteredPoint.getStartDate());
-				service.updateMeteredPointNewPeriod(newMeteredPointNewPeriod);
-				
-				
-			}
-			
-			
-		} catch (Exception e) {
-			log.catching(e);
-		}
+		
 		
 		String error = "0";
-		try {			
+		try {
+			try {
+				newMeteredPointNewPeriod = service.selectMeteredPoint(newPeriodMeteredPoint);
+				
+				if(newMeteredPointNewPeriod != null) {
+					newMeteredPointNewPeriod.setStartDate(newPeriodMeteredPoint.getStartDate());
+					service.updateMeteredPointNewPeriod(newMeteredPointNewPeriod);				
+				}						
+			} catch (Exception e) {
+				log.catching(e);
+			}
 			
 			error = service.insertMeteredPointNewPeriod(newPeriodMeteredPoint);
 			
-			if(newPeriodMeteredPoint.getNewId()!= null) {
+			if(newPeriodMeteredPoint.getNewId()!= null && !newPeriodMeteredPoint.getNewId().isEmpty()) {
 				service.updatePointCode(newPeriodMeteredPoint);
 			}
 		} catch (Exception e) {

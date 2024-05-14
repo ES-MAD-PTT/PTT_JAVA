@@ -22,7 +22,7 @@ public class Constants {
 	//static public String[] head_menu = {"DAM","BOOKING","NOMINATIONS","METERING","ALLOCATION","BALANCING","TARIFF","FORECAST","MAINTENANCE","ALARMS","QUALITY","GENERAL"};//
 	
 	static public String[] head_menu = {"DAM","BOOKING","FORECAST","MAINTENANCE","NOMINATIONS","ALARMS","QUALITY","METERING","ALLOCATION","BALANCING","TARIFF","GENERAL"};
-	static public String[] notifications_head_menu = {"BALANCING","MOC","CONTRACT","BOOKING","METERING","TARIFF","ALLOCATION","QUALITY","MAINTENANCE","NOMINATION","EVENT"};
+	static public String[] notifications_head_menu = {"BALANCING","MOC","BOOKING","CONTRACT","METERING","TARIFF","ALLOCATION","QUALITY","MAINTENANCE","NOMINATION","EVENT"};
 	
 	static public String SHIPPER = "SHIPPER";
 	static public String OPERATOR = "OPERATOR";

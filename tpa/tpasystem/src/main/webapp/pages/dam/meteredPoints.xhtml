@@ -856,7 +856,7 @@
 												requiredMessage="#{msg['meteredPoint_ID']}: #{msg['empty_field']}" valueChangeListener="#{meteredPointView.selectMeteredPointID}">
 									<f:selectItem itemValue="" itemLabel=""/>
 							    	<f:selectItems value="#{meteredPointView.meteringPointIds.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
-							    	<p:ajax event="change" onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()" update="meteringID, name, pointType,minPressure, maxPressure, latitude, longitud, nominalCapacity, contractPoint, customerType, nominationPoint, qualityPoint,area, subarea, conectingPartyName, conectingPartyPhoneNumber, conectingPartyEmail"/>	
+							    	<p:ajax event="change" onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()" update="meteringID, name, pointType,minPressure, maxPressure, latitude, longitud, nominalCapacity, contractPoint, customerType, nominationPoint, qualityPoint,area, subarea, conectingPartyName, conectingPartyPhoneNumber, conectingPartyEmail, startDate, endDate"/>	
 
 					            </p:selectOneMenu>
 								<p:message for="id" />
@@ -1084,7 +1084,7 @@
 								<h:outputText value="#{msg['meteredPoint_Conecting_Party_Name']}" />
 							</p:column>
 							<p:column> 
-								<p:inputText required="false" id="conectingPartyName" value="#{meteredPointView.newPeriodMeteredPoint.conectingPartyName}"  maxlength="120"
+								<p:inputText disabled="true" required="false" id="conectingPartyName" value="#{meteredPointView.newPeriodMeteredPoint.conectingPartyName}"  maxlength="120"
 									requiredMessage="#{msg['meteredPoint_Conecting_Party_Name']}: #{msg['empty_field']}" validatorMessage="#{msg['meteredPoint_Conecting_Party_Name']}: #{msg['lenght_field']} 250">
 									<f:validateLength maximum="250"/>
 								</p:inputText>
@@ -1095,7 +1095,7 @@
 								<h:outputText value="#{msg['meteredPoint_Conecting_Party_Phone_Number']}" />
 							</p:column>
 							<p:column>
-								<p:inputText required="false" id="conectingPartyPhoneNumber" value="#{meteredPointView.newPeriodMeteredPoint.conectingPartyPhoneNumber}" maxlength="120"
+								<p:inputText disabled="true" required="false" id="conectingPartyPhoneNumber" value="#{meteredPointView.newPeriodMeteredPoint.conectingPartyPhoneNumber}" maxlength="120"
 									requiredMessage="#{msg['meteredPoint_Conecting_Party_Phone_Number']}: #{msg['empty_field']}" validatorMessage="#{msg['meteredPoint_Conecting_Party_Phone_Number']}: #{msg['lenght_field']} 50">
 									<f:validateLength maximum="50"/>							
 								</p:inputText>
@@ -1105,7 +1105,7 @@
 								<h:outputText value="#{msg['meteredPoint_Conecting_Party_Email']}"/>
 							</p:column>
 							<p:column>
-								<p:inputText required="false" id="conectingPartyEmail" value="#{meteredPointView.newPeriodMeteredPoint.conectingPartyEmail}" maxlength="120"
+								<p:inputText disabled="true" required="false" id="conectingPartyEmail" value="#{meteredPointView.newPeriodMeteredPoint.conectingPartyEmail}" maxlength="120"
 									requiredMessage="#{msg['meteredPoint_Conecting_Party_Email']}: #{msg['empty_field']}"
 									validatorMessage= "#{msg['meteredPoint_Invalid_Email_Format']}" >
 									<f:validateRegex pattern="^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$" />							

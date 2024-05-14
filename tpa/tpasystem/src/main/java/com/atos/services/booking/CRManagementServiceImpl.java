@@ -47,7 +47,7 @@ public class CRManagementServiceImpl implements CRManagementService{
 	 */
 	private static final long serialVersionUID = 5131558852989617265L;
 	private static final String strNotifTypeCode = "CONTRACT.CAP_REQUEST_MANAGED";	
-	private static final String strNotifOrigin = "CONTRACT";
+	private static final String strNotifOrigin = "BOOKING";
 	
 	@Autowired
 	private CapacityRequestMapper crMapper;

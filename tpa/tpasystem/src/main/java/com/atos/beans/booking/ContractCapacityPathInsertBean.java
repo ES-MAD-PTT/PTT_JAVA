@@ -21,6 +21,7 @@ public class ContractCapacityPathInsertBean extends UserAudBean implements Seria
 	private BigDecimal assigned_quantity;
 	private Date version_date;
 	private String username;
+	private String published;
 	
 	private BigDecimal idn_contract_agreement;
 	private BigDecimal idn_contract_point_orig;
@@ -102,6 +103,12 @@ public class ContractCapacityPathInsertBean extends UserAudBean implements Seria
 	}
 	public void setIdn_contract_point_dest(BigDecimal idn_contract_point_dest) {
 		this.idn_contract_point_dest = idn_contract_point_dest;
+	}
+	public String getPublished() {
+		return published;
+	}
+	public void setPublished(String published) {
+		this.published = published;
 	}
 	@Override
 	public String toString() {

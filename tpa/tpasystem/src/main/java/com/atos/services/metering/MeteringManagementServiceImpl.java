@@ -188,7 +188,7 @@ public class MeteringManagementServiceImpl implements MeteringManagementService 
 		return mmMapper.selectGasQualityParametersFromMeasurementId(mBean.getMeasurementId());
 	}
 	
-	public void updateMeasurementsFromWebservice(MeteringManagementFilter filter, UserBean _user, LanguageBean _lang) throws Exception {
+	public void updateMeasurementsFromWebservice(MeteringManagementFilter filter, UserBean _user, LanguageBean _lang,Date _startDate, Date _endDate, BigDecimal idnSystem) throws Exception {
 		ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication().getResourceBundle(FacesContext.getCurrentInstance(),"msg");
     	boolean bTakeLock = false;
     	String userId = _user.getUsername();
@@ -209,7 +209,7 @@ public class MeteringManagementServiceImpl implements MeteringManagementService 
         	// Se lanza un thread para seguir con el proceso de forma asincrona/desatendida.
         	// Si se alcanza el numero maximo de threads concurrentes definidos en el metTaskExecutor,
         	// el siguiente thread no se puede lanzar y se genera una org.springframework.core.task.TaskRejectedException
-        	metTaskExecutor.execute(new UpdateMeasurementsFromWebserviceTask(filter, userId, lang, msgs));
+        	metTaskExecutor.execute(new UpdateMeasurementsFromWebserviceTask(filter, userId, lang, msgs, _startDate, _endDate, idnSystem,_user,_lang));
         }   
         catch (TaskRejectedException tre) {	// Excepcion para el caso de que no se pueda generar un thread porque se ha alcanzado el maximo numero de threads.
         			// En caso de error, se ha de liberar el bloqueo.
@@ -488,10 +488,20 @@ public class MeteringManagementServiceImpl implements MeteringManagementService 
     private class UpdateMeasurementsFromWebserviceTask extends UpdateMeasurementsTask {
 
         private MeteringManagementFilter mmFilter;
-        
-        public UpdateMeasurementsFromWebserviceTask(MeteringManagementFilter filter, String userId, String lang, ResourceBundle msgs) {
-            super(userId, lang, msgs);
+    	private Date startDate;
+    	private Date endDate;
+    	private BigDecimal idnSystem;
+    	private UserBean user;
+    	private LanguageBean lang;
+      
+        public UpdateMeasurementsFromWebserviceTask(MeteringManagementFilter filter, String userId, String language, ResourceBundle msgs, Date _startDate, Date _endDate, BigDecimal idnSystem, UserBean user, LanguageBean lang) {
+            super(userId, language, msgs);
         	this.mmFilter = filter;
+        	this.startDate = _startDate;
+        	this.endDate = _endDate;
+        	this.idnSystem = idnSystem;
+        	this.user = user;
+        	this.lang = lang;
         }
 
         public void run() {
@@ -597,6 +607,49 @@ public class MeteringManagementServiceImpl implements MeteringManagementService 
 	    	    	log.error("There has not been able to release the dababase lock on METERING_QUERY process.");
 	        	log.debug("[" + notifInfo + "] - releaseLockMeteringQuery() finished.");
 	        }
+	        
+			try {
+				acumWS.callAcumInventoryClient();
+				
+			} catch (Exception e) {
+				log.error("Error in Acum inventory WS");
+				e.printStackTrace();
+			}
+			try {
+				baseWS.callBaseInventoryClient();
+				
+			} catch (Exception e) {
+				log.error("Error in Base inventory WS");
+				e.printStackTrace();
+			}
+
+	        
+	        
+	        try{
+	        	// Se lanza un thread para seguir con el proceso de forma asincrona/desatendida.
+	        	// Si se alcanza el numero maximo de threads concurrentes definidos en el metTaskExecutor,
+	        	// el siguiente thread no se puede lanzar y se genera una org.springframework.core.task.TaskRejectedException
+	        	AllocationBalanceTask alloc = new AllocationBalanceTask(startDate, endDate, user, lang, msgs, amMapper,
+						notifMapper, idnSystem);
+	        	alloc.run();
+/*				allBalTaskExecutor.execute(new AllocationBalanceTask(startDate, endDate, user, lang, msgs, amMapper,
+						notifMapper, idnSystem));*/
+	        }   
+	        catch (Exception tre) {	// Excepcion para el caso de que no se pueda generar un thread porque se ha alcanzado el maximo numero de threads.
+	        			// En caso de error, se ha de liberar el bloqueo.
+						// En caso de ok, el bloqueo se libera en el thread.
+				log.error(tre.getMessage(), tre);
+				//throw new ValidationException(msgs.getString("all_man_max_processes_reached_error"));
+			}  	        
+	        
+			try {
+				intradayService.callAllocationIntradayRequestClient(false);
+			} catch (JobExecutionException e) {
+				log.error(e.getMessage(), e);
+				
+			}
+	        
+	        
 		}
 	
 		
@@ -899,41 +952,9 @@ public class MeteringManagementServiceImpl implements MeteringManagementService 
 	}
 
 	
-	@Override
-	public void updateWebservice(Date _startDate, Date _endDate, UserBean _user, LanguageBean _lang, BigDecimal idnSystem) throws ValidationException {
-		try {
-			acumWS.callAcumInventoryClient();
-			baseWS.callBaseInventoryClient();
-			
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication().getResourceBundle(FacesContext.getCurrentInstance(),"msg");
-
-		try {
-			intradayService.callAllocationIntradayRequestClient();
-		} catch (JobExecutionException e) {
-			log.error(e.getMessage(), e);
-			
-		}
-		
-    	
-    	try{
-        	// Se lanza un thread para seguir con el proceso de forma asincrona/desatendida.
-        	// Si se alcanza el numero maximo de threads concurrentes definidos en el metTaskExecutor,
-        	// el siguiente thread no se puede lanzar y se genera una org.springframework.core.task.TaskRejectedException
-			allBalTaskExecutor.execute(new AllocationBalanceTask(_startDate, _endDate, _user, _lang, msgs, amMapper,
-					notifMapper, idnSystem));
-        }   
-        catch (TaskRejectedException tre) {	// Excepcion para el caso de que no se pueda generar un thread porque se ha alcanzado el maximo numero de threads.
-        			// En caso de error, se ha de liberar el bloqueo.
-					// En caso de ok, el bloqueo se libera en el thread.
-			log.error(tre.getMessage(), tre);
-			throw new ValidationException(msgs.getString("all_man_max_processes_reached_error"));
-		}        
-		
+	public Date selectOpenPeriodFirstDay(Map<String, Object> params) {
+		return amMapper.selectOpenPeriodFirstDay(params);
 	}
-    
+	
+
 }

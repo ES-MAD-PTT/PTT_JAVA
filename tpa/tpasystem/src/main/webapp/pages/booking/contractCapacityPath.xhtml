@@ -295,6 +295,15 @@
 											update=":form:msgs,:form:contractCapacityPathDetail"/>
 									</shiro:hasPermission>
 								</p:column>
+								<p:column  >
+									<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CONTRACT_CAPACITY_PATH.QUERY">
+										<p:commandButton value="#{msg['publish']}"
+											actionListener="#{contractCapacityPathView.publish}"
+											onstart="PF('grabando').show()"
+											oncomplete="PF('grabando').hide()" 
+											update=":form:msgs,:form:contractCapacityPathDetail"/>
+									</shiro:hasPermission>
+								</p:column>
 							</p:row>
 							<p:row>
 								<p:column>

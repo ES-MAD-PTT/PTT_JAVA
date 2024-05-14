@@ -18,7 +18,7 @@ public class ReleaseCapacityManagementBean extends UserAudBean implements Serial
 	private String requestCode;
 	private Date submittedTimestamp;
 	private BigDecimal shipperIdFrom;
-	private BigDecimal shortName;
+	private String shortName;
 	private String shipperCodeFrom;
 	private BigDecimal contractIdFrom;
 	private String contractCodeFrom;
@@ -84,11 +84,11 @@ public class ReleaseCapacityManagementBean extends UserAudBean implements Serial
 		this.shipperIdFrom = shipperIdFrom;
 	}
 
-	public BigDecimal getShortName() {
+	public String getShortName() {
 		return shortName;
 	}
 
-	public void setShortName(BigDecimal shortName) {
+	public void setShortName(String shortName) {
 		this.shortName = shortName;
 	}
 

@@ -25,6 +25,7 @@ public class ContractCapacityPathFilter implements Serializable {
 	private BigDecimal idn_area_orig;
 	private BigDecimal idn_area_dest;
 	private BigDecimal idn_shipper;
+	private String is_publish;
 	
 	public BigDecimal getIdn_booking() {
 		return idn_booking;
@@ -117,6 +118,13 @@ public class ContractCapacityPathFilter implements Serializable {
 	public void setIdn_shipper(BigDecimal idn_shipper) {
 		this.idn_shipper = idn_shipper;
 	}
+	
+	public String getIs_publish() {
+		return is_publish;
+	}
+	public void setIs_publish(String is_publish) {
+		this.is_publish = is_publish;
+	}
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
@@ -136,6 +144,8 @@ public class ContractCapacityPathFilter implements Serializable {
 		builder.append(idn_area_dest);
 		builder.append(", idn_shipper=");
 		builder.append(idn_shipper);
+		builder.append(", is_publish=");
+		builder.append(is_publish);
 		builder.append("]");
 		return builder.toString();
 	}

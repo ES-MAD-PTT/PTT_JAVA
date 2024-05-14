@@ -1,6 +1,7 @@
 package com.atos.filters.booking;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -21,6 +22,7 @@ public class CapacityPublicationFilter implements Serializable {
 	// En caso de onshore las areas de offshore estaran a false y no se podrán modificar, y no intervienen en el calculo de selectAll.
 	// En caso de offshore, al revés.
 	private boolean onshoreSystem=true;
+	private BigDecimal idn_system = null;
 	// Areas onshore
 	// A1, A2, A3, B, C1, C2, C3, C4, C5, C6, D, E, F1, F2, G, H, R, S, 
 	// X1, X2, X3 e Y	
@@ -428,6 +430,12 @@ public class CapacityPublicationFilter implements Serializable {
 	// Areas offshore
 	// No hay.
 
+	public BigDecimal getIdn_system() {
+		return idn_system;
+	}
+	public void setIdn_system(BigDecimal idn_system) {
+		this.idn_system = idn_system;
+	}
 	public ArrayList<String> getAreas(){
 		ArrayList<String> zones = new ArrayList<String>();
 		if(isArea_a1()){
@@ -542,6 +550,7 @@ public class CapacityPublicationFilter implements Serializable {
 		result = prime * result + (area_x3 ? 1231 : 1237);
 		result = prime * result + (area_y ? 1231 : 1237);
 		result = prime * result + ((endDate == null) ? 0 : endDate.hashCode());
+		result = prime * result + ((idn_system == null) ? 0 : idn_system.hashCode());
 		result = prime * result + (onshoreSystem ? 1231 : 1237);
 		result = prime * result + ((par_chart == null) ? 0 : par_chart.hashCode());
 		result = prime * result + (selectAll ? 1231 : 1237);
@@ -608,6 +617,11 @@ public class CapacityPublicationFilter implements Serializable {
 				return false;
 		} else if (!endDate.equals(other.endDate))
 			return false;
+		if (idn_system == null) {
+			if (other.idn_system != null)
+				return false;
+		} else if (!idn_system.equals(other.idn_system))
+			return false;
 		if (onshoreSystem != other.onshoreSystem)
 			return false;
 		if (par_chart == null) {
@@ -636,13 +650,68 @@ public class CapacityPublicationFilter implements Serializable {
 	}
 	@Override
 	public String toString() {
-		return "CapacityPublicationFilter [startDate=" + startDate + ", endDate=" + endDate + ", selectedYear="
-				+ selectedYear + ", selectAll=" + selectAll + ", onshoreSystem=" + onshoreSystem + ", area_a1="
-				+ area_a1 + ", area_a2=" + area_a2 + ", area_a3=" + area_a3 + ", area_b=" + area_b + ", area_c1="
-				+ area_c1 + ", area_c2=" + area_c2 + ", area_c3=" + area_c3 + ", area_c4=" + area_c4 + ", area_c5="
-				+ area_c5 + ", area_c6=" + area_c6 + ", area_d=" + area_d + ", area_e=" + area_e + ", area_f1="
-				+ area_f1 + ", area_f2=" + area_f2 + ", area_g=" + area_g + ", area_h=" + area_h + ", area_r=" + area_r
-				+ ", area_s=" + area_s + ", area_x1=" + area_x1 + ", area_x2=" + area_x2 + ", area_x3=" + area_x3
-				+ ", area_y=" + area_y + ", par_chart=" + par_chart + ", zones_query=" + zones_query + "]";
+		StringBuilder builder = new StringBuilder();
+		builder.append("CapacityPublicationFilter [startDate=");
+		builder.append(startDate);
+		builder.append(", endDate=");
+		builder.append(endDate);
+		builder.append(", selectedYear=");
+		builder.append(selectedYear);
+		builder.append(", selectAll=");
+		builder.append(selectAll);
+		builder.append(", onshoreSystem=");
+		builder.append(onshoreSystem);
+		builder.append(", idn_system=");
+		builder.append(idn_system);
+		builder.append(", area_a1=");
+		builder.append(area_a1);
+		builder.append(", area_a2=");
+		builder.append(area_a2);
+		builder.append(", area_a3=");
+		builder.append(area_a3);
+		builder.append(", area_b=");
+		builder.append(area_b);
+		builder.append(", area_c1=");
+		builder.append(area_c1);
+		builder.append(", area_c2=");
+		builder.append(area_c2);
+		builder.append(", area_c3=");
+		builder.append(area_c3);
+		builder.append(", area_c4=");
+		builder.append(area_c4);
+		builder.append(", area_c5=");
+		builder.append(area_c5);
+		builder.append(", area_c6=");
+		builder.append(area_c6);
+		builder.append(", area_d=");
+		builder.append(area_d);
+		builder.append(", area_e=");
+		builder.append(area_e);
+		builder.append(", area_f1=");
+		builder.append(area_f1);
+		builder.append(", area_f2=");
+		builder.append(area_f2);
+		builder.append(", area_g=");
+		builder.append(area_g);
+		builder.append(", area_h=");
+		builder.append(area_h);
+		builder.append(", area_r=");
+		builder.append(area_r);
+		builder.append(", area_s=");
+		builder.append(area_s);
+		builder.append(", area_x1=");
+		builder.append(area_x1);
+		builder.append(", area_x2=");
+		builder.append(area_x2);
+		builder.append(", area_x3=");
+		builder.append(area_x3);
+		builder.append(", area_y=");
+		builder.append(area_y);
+		builder.append(", par_chart=");
+		builder.append(par_chart);
+		builder.append(", zones_query=");
+		builder.append(zones_query);
+		builder.append("]");
+		return builder.toString();
 	}	
 }

@@ -82,8 +82,8 @@ public class NotificationView implements Serializable{
 
 			case "BALANCING": return notifListBalancing;
 			case "MOC": return notifListMoc;
-			case "CONTRACT": return notifListContract;
 			case "BOOKING": return notifListBooking;
+			case "CONTRACT": return notifListContract;
 			case "METERING": return notifListMetering;
 			case "TARIFF": return notifListTariff;
 			case "ALLOCATION": return notifListAllocation;
@@ -104,8 +104,8 @@ public class NotificationView implements Serializable{
 		notifList = service.getNotifications((String)SecurityUtils.getSubject().getPrincipal());
 		notifListBalancing = service.getNotificationsOrigin(new NotificationOriginBean("BALANCING", (String)SecurityUtils.getSubject().getPrincipal()));
 		notifListMoc = service.getNotificationsOrigin(new NotificationOriginBean("MOC", (String)SecurityUtils.getSubject().getPrincipal()));
-		notifListContract = service.getNotificationsOrigin(new NotificationOriginBean("CONTRACT", (String)SecurityUtils.getSubject().getPrincipal()));
 		notifListBooking = service.getNotificationsOrigin(new NotificationOriginBean("BOOKING", (String)SecurityUtils.getSubject().getPrincipal()));
+		notifListContract = service.getNotificationsOrigin(new NotificationOriginBean("CONTRACT", (String)SecurityUtils.getSubject().getPrincipal()));
 		notifListMetering = service.getNotificationsOrigin(new NotificationOriginBean("METERING", (String)SecurityUtils.getSubject().getPrincipal()));
 		notifListTariff = service.getNotificationsOrigin(new NotificationOriginBean("TARIFF", (String)SecurityUtils.getSubject().getPrincipal()));
 		notifListAllocation = service.getNotificationsOrigin(new NotificationOriginBean("ALLOCATION", (String)SecurityUtils.getSubject().getPrincipal()));

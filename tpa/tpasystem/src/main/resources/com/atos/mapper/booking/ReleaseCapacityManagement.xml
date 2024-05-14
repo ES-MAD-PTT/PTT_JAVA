@@ -106,7 +106,7 @@
 	                and tcon.idn_contract=treq.idn_contract
 	                and t3.idn_contract_request=treq.idn_contract_request
 	                and t3.received_from is null) t1     
-	      left outer join (select distinct tcon2.idn_user_group,
+	      left outer join (select distinct tcon2.idn_user_group, tugr2.short_name,
 	                             tugr2.user_group_id,
 	                             tcon2.idn_contract,
 	                             tcon2.contract_code

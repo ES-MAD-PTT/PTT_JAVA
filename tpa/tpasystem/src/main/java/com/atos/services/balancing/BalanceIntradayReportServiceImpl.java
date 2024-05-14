@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import com.atos.beans.ComboFilterNS;
 import com.atos.beans.ReportTemplateBean;
 import com.atos.beans.balancing.BalanceIntradayReportBean;
+import com.atos.beans.balancing.BalanceIntradayReportFormBean;
 import com.atos.beans.balancing.BalanceIntradayReportOffshoreBean;
 import com.atos.filters.balancing.BalanceIntradayReportFilter;
 import com.atos.mapper.balancing.BalanceIntradayReportMapper;
@@ -33,9 +34,9 @@ public class BalanceIntradayReportServiceImpl implements BalanceIntradayReportSe
 	@Autowired
 	private BalanceIntradayReportMapper birMapper;
 	
-	private POIXSSFExcelUtils excelUtil = new POIXSSFExcelUtils();
-	
 	private static final Logger log = LogManager.getLogger("com.atos.services.balancing.BalanceIntradayReportServiceImpl");
+	
+	private POIXSSFExcelUtils excelUtil = new POIXSSFExcelUtils();
 	
 	
 	public Map<BigDecimal, Object> selectShipperId(){
@@ -95,44 +96,49 @@ public class BalanceIntradayReportServiceImpl implements BalanceIntradayReportSe
 	}
 
 	@Override
-	public String saveTimestamp(BalanceIntradayReportFilter filters_form, String user) {
-		// TODO Auto-generated method stub
-		return null;
+	public Map<BigDecimal, Object> selectTimestampIds(BalanceIntradayReportFilter filters) {
+		Map<BigDecimal, Object> map = new LinkedHashMap<BigDecimal, Object>();
+		List<ComboFilterNS> list = birMapper.selectTimestampIds(filters);
+		for (ComboFilterNS combo : list) {
+			if (combo == null) continue;
+			map.put(combo.getKey(), combo.getValue());
+		}
+		return map; 
 	}
 
-//	@Override
-//	public String saveTimestamp(BalanceIntradayReportFilter filters_form, String user) {
-//		BalanceIntradayReportFormBean bean = new BalanceIntradayReportFormBean();
-//		bean.setGasday(filters_form.getGasDay());
-//		bean.setUser(user);
-//
-//		try {
-//			birMapper.deleteAllocationShipperFilter(bean);	
-//		} catch(Exception e) {
-//			log.error("Error deleting timestamps");
-//			e.printStackTrace();
-//			return "-1";
-//		}
-//
-//
-//
-//		for(int i=0;i<filters_form.getTimestampVarList().size();i++) {
-//			try {
-//				BigDecimal idn_allocation = new BigDecimal(filters_form.getTimestampVarList().get(i));
-//				bean.setIdn_allocation(idn_allocation);
-//
-//				int ret = birMapper.insertAllocationShipperFilter(bean);
-//
-//			} catch (Exception e) {
-//				log.error("Error saving timestamps");
-//				e.printStackTrace();
-//				return "-1";
-//			}
-//
-//		}
-//
-//		return "0";
-//	}  
+	@Override
+	public String saveTimestamp(BalanceIntradayReportFilter filters_form, String user) {
+		BalanceIntradayReportFormBean bean = new BalanceIntradayReportFormBean();
+		bean.setGasday(filters_form.getGasDay());
+		bean.setUser(user);
+		
+		try {
+			birMapper.deleteBalanceIntradayReportShipperFilter(bean);	
+		} catch(Exception e) {
+			log.error("Error deleting timestamps");
+			e.printStackTrace();
+			return "-1";
+		}
+		
+		
+		
+		for(int i=0;i<filters_form.getTimestampVarList().size();i++) {
+			try {
+				BigDecimal idn_allocation = new BigDecimal(filters_form.getTimestampVarList().get(i));
+				bean.setIdn_allocation(idn_allocation);
+				
+				int ret = birMapper.insertBalanceIntradayReportShipperFilter(bean);
+
+			} catch (Exception e) {
+				log.error("Error saving timestamps");
+				e.printStackTrace();
+				return "-1";
+			}
+			
+		}
+
+		return "0";
+	}  
 	
 	// Para insertar la plantilla excel en la BD.
 	/*public void insertReportTemplate(ReportTemplateBean rtb) throws Exception {

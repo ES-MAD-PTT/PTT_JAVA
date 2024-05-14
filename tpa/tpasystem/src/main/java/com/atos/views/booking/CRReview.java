@@ -1008,4 +1008,32 @@ public class CRReview extends CommonView implements Serializable {
 		getMessages().addMessage(Constants.head_menu[1],
 				new MessageBean(Constants.INFO, "Mail values", texto, Calendar.getInstance().getTime())); 
 	}
+	
+	public boolean booleanBackGroud(String stringDate) {
+		boolean backgroundColor = false;
+		if(stringDate != null && !stringDate.isEmpty()) {
+			SimpleDateFormat dateFormat = new SimpleDateFormat("MMM/yyyy", Locale.ENGLISH);
+			try {
+	            Date date = dateFormat.parse(stringDate);
+	            Calendar calendar = Calendar.getInstance();
+	            calendar.setTime(date);
+	
+	            int month = calendar.get(Calendar.MONTH) + 1; // Sumamos 1 porque los meses en Calendar van de 0 a 11
+	            int year = calendar.get(Calendar.YEAR);
+	
+	            Calendar cal = Calendar.getInstance();
+				int currentMonth = cal.get(Calendar.MONTH) + 1;
+				int currentYear = cal.get(Calendar.YEAR);
+				if (year < currentYear || (year == currentYear && month <= currentMonth)) {
+					backgroundColor = true;
+		        } else {
+		        	backgroundColor = false;
+		        }
+	        } catch (ParseException e) {
+	            System.out.println("Error al analizar la fecha.");
+	            e.printStackTrace();
+	        }
+		}
+		return backgroundColor;
+	}
 }

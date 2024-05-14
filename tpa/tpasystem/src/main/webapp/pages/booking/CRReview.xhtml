@@ -325,8 +325,8 @@
 
 							</p:column>
 
-							<p:columns value="#{cRReview.period}" var="year"
-								rendered="#{cRReview.entryQuantityUnit eq 1}">
+							<p:columns value="#{cRReview.period}" var="year" rendered="#{cRReview.entryQuantityUnit eq 1}"
+								style="#{cRReview.booleanBackGroud(year) ? 'background: #c4cbc8;' : ''}" >
 
 								<c:set var="mkey" value="#{it.entryPoint}-#{year}" />
 
@@ -373,8 +373,8 @@
 								</h:outputText>
 							</p:columns>
 
-							<p:columns value="#{cRReview.period}" var="year"
-								rendered="#{cRReview.entryQuantityUnit eq 1}">
+							<p:columns value="#{cRReview.period}" var="year" rendered="#{cRReview.entryQuantityUnit eq 1}"
+								style="#{cRReview.booleanBackGroud(year) ? 'background: #c4cbc8;' : ''}">
 										<h:outputText
 										rendered="#{!cRReview.editableData}"
 											value="#{cRReview.capacityEntriesMap[mkey].hourlyBookingMmbtu}" styleClass="number #{cRReview.capacityEntriesMap[mkey].hourlyBookingMmbtuEdited?'edited':''}">
@@ -417,8 +417,8 @@
 										maxFractionDigits="3" />
 								</h:outputText>
 							</p:columns>
-							<p:columns value="#{cRReview.period}" var="year"
-								rendered="#{cRReview.entryQuantityUnit eq 0}">
+							<p:columns value="#{cRReview.period}" var="year" rendered="#{cRReview.entryQuantityUnit eq 0}"
+								style="#{cRReview.booleanBackGroud(year) ? 'background: #c4cbc8;' : ''}">
 										<h:outputText rendered="#{!cRReview.editableData}"
 											value="#{cRReview.capacityEntriesMap[mkey].dailyBookingMmscfd}" styleClass="number #{cRReview.capacityEntriesMap[mkey].dailyBookingMmscfdEdited?'edited':''}">
 											<f:convertNumber groupingUsed="true" minFractionDigits="3"
@@ -462,8 +462,8 @@
 								</h:outputText>
 							</p:columns>
 
-							<p:columns value="#{cRReview.period}" var="year"
-								rendered="#{cRReview.entryQuantityUnit eq 0}">
+							<p:columns value="#{cRReview.period}" var="year" rendered="#{cRReview.entryQuantityUnit eq 0}"
+								style="#{cRReview.booleanBackGroud(year) ? 'background: #c4cbc8;' : ''}">
 										<h:outputText rendered="#{!cRReview.editableData}"
 											value="#{cRReview.capacityEntriesMap[mkey].hourlyBookingMmscfd}" styleClass="number #{cRReview.capacityEntriesMap[mkey].hourlyBookingMmscfdEdited?'edited':''}">
 											<f:convertNumber groupingUsed="true" minFractionDigits="3"

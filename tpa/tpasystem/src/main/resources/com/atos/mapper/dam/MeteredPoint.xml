@@ -338,8 +338,8 @@
      from tpa_tsystem_point t, tpa_tsystem_point_param t2
      where t.idn_system_point = t2.idn_system_point
      and t.idn_system_point_group =(SELECT pg.idn_system_point_group  FROM tpa_tsystem_point_group pg WHERE pg.group_code='METERED')
-      and (sysdate between t.start_date and t.end_date or t.end_date is null)
-      and (sysdate between t2.start_date and t2.end_date or t2.end_date is null)
+      and (trunc(sysdate) between t.start_date and t.end_date or t.end_date is null)
+      and (trunc(sysdate) between t2.start_date and t2.end_date or t2.end_date is null)
      order by 2
     </select>
 
@@ -375,6 +375,7 @@
        and t.idn_system_point = p.idn_system_point
        and ((p.end_date is null or p.end_date = '')
         or  p.end_date >= trunc(sysdate))
+    order by p.end_date desc
 	</select>
 
 

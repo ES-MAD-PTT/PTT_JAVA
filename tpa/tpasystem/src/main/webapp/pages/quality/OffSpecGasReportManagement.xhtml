@@ -194,7 +194,7 @@
 				       	</p:column>
 				       	<p:column headerText="#{msg['osgr_man_shipper']}" style="width: 150px;" sortBy="#{incident.originatorShipperCode}"
 				       		rendered="#{OSGRManagementView.hasOperatorManagPermission()}" >
-				       		<h:outputText value="#{incident.shipper}" />
+				       		<h:outputText value="#{incident.shipper}(#{incident.shortName})" />
 				       	</p:column>
 				       
 				       	<p:column headerText="#{msg['osgr_man_start_date']}" style="width: 120px;" sortBy="#{incident.startDate}">

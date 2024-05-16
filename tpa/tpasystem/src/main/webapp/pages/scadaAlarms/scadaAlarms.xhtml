@@ -102,8 +102,8 @@
 					resizable="false" closable="false" collapsible="false">
  
 					<p:dataTable widgetVar="w_scadaAlarms"  id="scadaAlarms1" var="scadaAlarms" value="#{scadaAlarmView.items}" reflow="true" 
-						style="margin-bottom:20px;border-collapse:collapse" rowSelectMode="none"
-						selection="#{scadaAlarmView.selecteds}" rowKey="#{scadaAlarms.idn_scada_alarm}"
+						style="margin-bottom:20px;border-collapse:collapse" rowSelectMode="multiple"
+						selection="#{scadaAlarmView.selecteds}" rowKey="#{scadaAlarms.alarm_id}"
 					    paginator="true" rows="15"
 					    scrollable="true"  scrollHeight="240" 
 					    rowsPerPageTemplate="5,10,15,20,25,50,100"

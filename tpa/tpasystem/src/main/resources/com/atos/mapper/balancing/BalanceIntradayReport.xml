@@ -270,7 +270,14 @@
                                    AND ax.idn_pipeline_system = a.idn_pipeline_system
                                    AND ax.idn_allocation_type = a.idn_allocation_type
                                    AND ax.idn_allocation_origin = ao.idn_allocation_origin
-                                   AND ao.origin_code IN ('BALANCE', 'CLOSING_PROCESS'))
+                                   AND ao.origin_code IN ('BALANCE', 'CLOSING_PROCESS')
+                                   <if test='"Y".equals(isShipper)'>
+							          	AND ax.idn_allocation IN (SELECT idn_allocation
+										FROM tpa_tallocation_shipper_filter
+										WHERE gas_day = a.gas_day
+										AND page_code = 'BALANCE_INTRADAY_REPORT' AND is_enabled = 'Y')
+									  </if>
+									  )
           </when>
           <otherwise>
           <if test="generatedFrom != null">
@@ -279,6 +286,9 @@
           <if test="generatedTo != null">
           AND #{generatedTo} >= cast(a.version_date as date)
           </if>
+          <if test='"Y".equals(isShipper)'>
+          	AND a.idn_allocation IN (SELECT idn_allocation FROM tpa_tallocation_shipper_filter WHERE gas_day = a.gas_day AND page_code = 'BALANCE_INTRADAY_REPORT' AND is_enabled = 'Y')
+		  </if>
           </otherwise>
           </choose>
       ),

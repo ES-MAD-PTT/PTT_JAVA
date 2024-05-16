@@ -269,6 +269,7 @@ public class ContractCapacityPathEditionServiceImpl implements ContractCapacityP
 		ContractCapacityPathInsertBean bean = new ContractCapacityPathInsertBean();
 		bean.setStart_date(start_date);
 		bean.setEnd_date(end_date);
+		bean.setPublished("Y");
 		
 		for(int i=0;i<list.size();i++) {
 			bean.setIdn_capacity_path(list.get(i).getIdn_capacity_path());

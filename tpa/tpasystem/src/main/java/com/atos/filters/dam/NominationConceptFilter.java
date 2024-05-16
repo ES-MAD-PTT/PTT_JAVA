@@ -11,7 +11,7 @@ public class NominationConceptFilter implements Serializable{
 	private static final long serialVersionUID = -5384739501695766356L;
 
 		private String nomConcept;
-		private String nomConceptType;
+		private BigDecimal nomConceptType;
 		private BigDecimal unitType;
 		private String type;
 		private BigDecimal idn_system;//offshore
@@ -30,7 +30,7 @@ public class NominationConceptFilter implements Serializable{
 
 		
 
-		public NominationConceptFilter(String nomConcept, String nomConceptType, BigDecimal unitType, String type,
+		public NominationConceptFilter(String nomConcept, BigDecimal nomConceptType, BigDecimal unitType, String type,
 				BigDecimal idn_system, String is_area_concept, String is_zone_concept, BigDecimal idnUserGroup,
 				String userName) {
 			super();
@@ -53,13 +53,13 @@ public class NominationConceptFilter implements Serializable{
 
 		public void setNomConcept(String nomConcept) {
 			this.nomConcept = nomConcept;
-		}
-		
-		public String getNomConceptType() {
+		}		
+
+		public BigDecimal getNomConceptType() {
 			return nomConceptType;
 		}
 
-		public void setNomConceptType(String nomConceptType) {
+		public void setNomConceptType(BigDecimal nomConceptType) {
 			this.nomConceptType = nomConceptType;
 		}
 

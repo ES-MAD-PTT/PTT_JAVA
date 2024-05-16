@@ -127,7 +127,7 @@
 				<p:layoutUnit id="table_center_layout" position="center" resizable="false" closable="false" collapsible="false" style="border: 0;">
 
 					<p:dataTable widgetVar="w_capRequests1"  id="capRequests1" var="capRequest" value="#{CRManagementView.items}"
-						selectionMode="single" selection="#{CRManagementView.selected}" rowKey="#{capRequest.id}" 
+						
 						reflow="true" style="margin-bottom:20px;border-collapse:collapse"
 						scrollable="true" scrollHeight="100%"
 					    paginator="true" rows="15" rowsPerPageTemplate="5,10,15,20,25, #{CRManagementView.itemsSize}" >
@@ -137,9 +137,10 @@
 									<p:columnToggler datasource="capRequests1" trigger="toggler" style="width:200px"/>
 								</p:outputPanel>        										          
 	 				        </f:facet>
-					       <p:column headerText="#{msg['cr_man_capacity_request_code']}" style="width: 130px;" sortBy="#{capRequest.id}">
-					       	<p:commandLink  actionListener="#{CRManagementView.linkAction}"  ajax="true" >
-					       		<h:outputText value="#{capRequest.requestCode}" style="float:right" />
+	 				        
+					       <p:column style="width: 70px;">
+					       	<p:commandLink   actionListener="#{CRManagementView.linkAction}"  ajax="true" >
+					       		<h:outputText value="#{msg['rel_cap_man_details']}" />
 					       		<f:attribute name="request_code" value="#{capRequest.requestCode}"/>
 					       		<f:attribute name="contract_type" value="#{capRequest.contractTypeCode}"/>
 					       		<f:attribute name="shipper_name" value="#{capRequest.shipperCode}"/>
@@ -147,6 +148,10 @@
 					       <ui:remove>
 					       		<h:outputText value="#{capRequest.requestCode}" style="float:right" />
 						</ui:remove>
+					       </p:column>
+
+					       <p:column headerText="#{msg['cr_man_capacity_request_code']}" style="width: 100px;" sortBy="#{capRequest.requestCode}">
+					       		<h:outputText value="#{capRequest.requestCode}" />
 					       </p:column>
 					        					 
 					       <p:column headerText="#{msg['cr_man_submitted_timestamp']}" style="width: 75px;" sortBy="#{capRequest.submittedTimestamp}" >

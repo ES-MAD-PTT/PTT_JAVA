@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
-import java.util.TreeMap;
 
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
@@ -40,17 +39,13 @@ import org.primefaces.event.RowEditEvent;
 import org.primefaces.model.StreamedContent;
 import org.primefaces.model.UploadedFile;
 
-import com.atos.beans.ErrorBean;
 import com.atos.beans.FileBean;
 import com.atos.beans.MessageBean;
-import com.atos.beans.allocation.AccumulatedImbalanceAllocationBean;
-import com.atos.beans.allocation.AllocationBean;
 import com.atos.beans.balancing.InstructedOperationFlowShippersBean;
 import com.atos.filters.balancing.InstructedOperationFlowShippersFilter;
 import com.atos.services.MailService;
 import com.atos.services.balancing.InstructedOperationFlowShippersService;
 import com.atos.utils.Constants;
-import com.atos.utils.DateUtil;
 import com.atos.views.CommonView;
 
 @ManagedBean(name = "insOpFlowShippersView")
@@ -60,6 +55,8 @@ public class InstructedOperationFlowShippersView extends CommonView implements S
 	private static final long serialVersionUID = -8682819137997451254L;
 
 	private static final Logger log = LogManager.getLogger("com.atos.views.balancing.InstructedOperationFlowShippers");
+	private static String notificationCode = "BALANCING.INSTRUCTED.OPERATION.FLOW.SHIP.ADD.COM";
+	private static String balancing = "BALANCING";
 	private InstructedOperationFlowShippersFilter filters;
 	private List<InstructedOperationFlowShippersBean> resultList;
 	private InstructedOperationFlowShippersBean selectedItem;
@@ -481,6 +478,22 @@ public class InstructedOperationFlowShippersView extends CommonView implements S
 		try {
 			// En caso de que se quiera enviar una notificacion al usuario, se ha de indicar un systemId distinto de null.
 			error = service.updateComments(bean);
+			if(isShipper()) {
+				try {
+					String pattern = "dd/MM/yyyy";
+					SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+					String date = simpleDateFormat.format(bean.getTimestamp());
+					String info = getUser().getUser_group_id() + " ~ " + bean.getZoneCode() + " ~ " + date; 
+					BigDecimal userGroupId = getUser().getIdn_user_group();
+					service.sendNotification(notificationCode, balancing, info, userGroupId, getChangeSystemView().getIdn_active());
+				} catch (Exception e) {
+					getMessages().addMessage(Constants.head_menu[9],new MessageBean(Constants.ERROR, "Error sending notification","Error sending  notification",Calendar.getInstance().getTime()));
+					log.info("Not informed all shippers", "Error sending Notification to" + bean.getShipperCode());
+	
+					// TODO Auto-generated catch block
+					e.printStackTrace();					
+				}	
+			}
 		} catch (Exception e) {
 			log.catching(e);
 			// we assign the return message

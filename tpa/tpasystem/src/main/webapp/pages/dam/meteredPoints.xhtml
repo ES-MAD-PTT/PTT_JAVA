@@ -855,9 +855,9 @@
 								<p:selectOneMenu id="id"  style="width:130px"  value="#{meteredPointView.newPeriodMeteredPoint.id}" required="true"
 												requiredMessage="#{msg['meteredPoint_ID']}: #{msg['empty_field']}" valueChangeListener="#{meteredPointView.selectMeteredPointID}">
 									<f:selectItem itemValue="" itemLabel=""/>
-							    	<f:selectItems value="#{meteredPointView.meteringPointIds.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+							    	<f:selectItems value="#{meteredPointView.ids.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
 							    	<p:ajax event="change" onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()" update="meteringID, name, pointType,minPressure, maxPressure, latitude, longitud, nominalCapacity, contractPoint, customerType, nominationPoint, qualityPoint,area, subarea, conectingPartyName, conectingPartyPhoneNumber, conectingPartyEmail, startDate, endDate"/>	
-
+				
 					            </p:selectOneMenu>
 								<p:message for="id" />
 							</p:column>

@@ -257,14 +257,19 @@
 					       </p:column>
 					       <p:column headerText="#{msg['scadaAlarms_Comment_Shipper']}" style="width: 120px;" sortBy="#{scadaAlarms_Comment_Shipper}">
 					          <p:cellEditor>
-					               <f:facet name="output"><h:outputText value="#{scadaAlarms.comments_shipper}" /></f:facet>
-					               <f:facet name="input">
-					               		<p:inputTextarea cols="22"  maxlength="100" autoResize="true" value="#{scadaAlarms.comments_shipper}" style="width:100%;white-space:initial !important" label="#{msg['scadaAlarms_Comment_Shipper']}"
-					               			validatorMessage="#{msg['scadaAlarms_Comment_Shipper']}: #{msg['lenght_field']} 100">
-					               			<f:validateLength maximum="100"/>
-					               		</p:inputTextarea>	
-					               	</f:facet>
-					           </p:cellEditor>
+							        <f:facet name="output">
+							            <h:outputText value="#{scadaAlarms.comments_shipper}" />
+							        </f:facet>
+							        <f:facet name="input">
+							            <p:inputTextarea cols="22" maxlength="100" autoResize="true" 
+							                             value="#{scadaAlarms.comments_shipper}" 
+							                             style="width:100%;"
+							                             label="#{msg['scadaAlarms_Comment_Shipper']}"
+							                             validatorMessage="#{msg['scadaAlarms_Comment_Shipper']}: #{msg['lenght_field']} 100">
+							                <f:validateLength maximum="100"/>
+							            </p:inputTextarea>
+							        </f:facet>
+							    </p:cellEditor>
 					       </p:column>
 					 
 					       <!-- no editable

@@ -702,6 +702,7 @@ public class MeteredPointView extends CommonView implements Serializable {
 			
 			if(newPeriodMeteredPoint.getNewId()!= null && !newPeriodMeteredPoint.getNewId().isEmpty()) {
 				service.updatePointCode(newPeriodMeteredPoint);
+				newPeriodMeteredPoint.setPoint_code(newPeriodMeteredPoint.getNewId());
 			}
 		} catch (Exception e) {
 			log.catching(e);
@@ -709,7 +710,7 @@ public class MeteredPointView extends CommonView implements Serializable {
 			error = e.getMessage();
 		}
 
-		String[] par2 = {newPeriodMeteredPoint.getId(),msgs.getString("meteredPoint") };
+		String[] par2 = {newPeriodMeteredPoint.getPoint_code(),msgs.getString("meteredPoint") };
 		
 		if (error != null && error.equals("0")) {
 			String msg = getMessageResourceString("inserting_ok", par2);

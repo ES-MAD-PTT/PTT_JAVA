@@ -17,7 +17,8 @@
         <result property="idn_system_point_contract"   column="idn_system_point_contract"/>
 			
 		<result property="meteringID" column="metering_id"/>   
-        <result property="id" column="point_code"/>   
+        <result property="id" column="point_code"/> 
+        <result property="point_code" column="point_code"/>   
         	<result property="name" column="point_desc"/>
 	        <result property="pointType" column="type_desc"/>
 	        <result property="nominalCapacity" column="nominal_capacity"/>
@@ -353,6 +354,7 @@
       (select type_desc from tpa_tsystem_point_type pt where pt.idn_system_point_type = t.idn_system_point_type) as pointType,
       t.latitude as latitude,
       t.longitude as longitud,
+      t.POINT_CODE AS point_code,
       t.idn_area as idn_area,
       (select a.area_code from tpa_tarea a where a.idn_area = t.idn_area) as area,
       p.nominal_capacity as nominalCapacity,

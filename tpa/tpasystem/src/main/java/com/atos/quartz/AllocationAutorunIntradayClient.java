@@ -385,10 +385,10 @@ public class AllocationAutorunIntradayClient  implements Serializable {
 
 		
     	Calendar cal_gasDayFrom = Calendar.getInstance();
-    	BigDecimal count = wsMapper.checkIntradayExecution(this.idnOnshoreSystem);
+/*    	BigDecimal count = wsMapper.checkIntradayExecution(this.idnOnshoreSystem);
     	if(count.intValue()==0) {
     		cal_gasDayFrom.add(Calendar.DAY_OF_YEAR, -1);
-    	}
+    	}*/
     	Calendar cal_gasDayTo = Calendar.getInstance();
 		
     	Date startUpdatingDate = new Date();

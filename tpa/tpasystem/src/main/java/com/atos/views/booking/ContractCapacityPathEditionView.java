@@ -190,6 +190,28 @@ public class ContractCapacityPathEditionView extends CommonView {
 		
 	}
 
+    public void publish() {
+
+		if(filters.getIdn_booking()==null) {
+			getMessages().addMessage(Constants.head_menu[1],new MessageBean(Constants.ERROR,"Contract Capacity Path", "Must select a Booking ID to publish", Calendar.getInstance().getTime()));
+	    	return;
+		}
+		if(filters.getStart_date()==null) {
+			getMessages().addMessage(Constants.head_menu[1],new MessageBean(Constants.ERROR,"Contract Capacity Path", "Must select a Contract From value to publish", Calendar.getInstance().getTime()));
+	    	return;
+		}
+		if(filters.getEnd_date()==null) {
+			getMessages().addMessage(Constants.head_menu[1],new MessageBean(Constants.ERROR,"Contract Capacity Path", "Must select a Contract To value to publish", Calendar.getInstance().getTime()));
+	    	return;
+		}
+        int salida = service.publishPath(filters, getUser().getUsername());
+        if(salida!= 0) {
+        	getMessages().addMessage(Constants.head_menu[1],new MessageBean(Constants.ERROR,"Contract Capacity Path", "Error publishing capacity path", Calendar.getInstance().getTime()));
+        } else {
+        	getMessages().addMessage(Constants.head_menu[1],new MessageBean(Constants.INFO,"Contract Capacity Path", "Contract path values published", Calendar.getInstance().getTime()));
+
+        }
+    }
 	public void save() {
 		
 		for(int i=0;i<items.size();i++) {

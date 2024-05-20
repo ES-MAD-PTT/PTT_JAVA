@@ -298,7 +298,7 @@ public class ContractCapacityPathEditionServiceImpl implements ContractCapacityP
 		bean.setIdn_contract(edit_bean.getIdn_booking());
 		bean.setIdn_capacity_path(idn_capacity_path);
 		bean.setVersion_date(Calendar.getInstance().getTime());
-		bean.setPublished("Y");
+		bean.setPublished("N");
 		
 		List<ContractCapacityPathInsertBean> list = ccpMapper.getContractAgreementIdPoint(bean);
 		if(list.size()==0) {
@@ -424,6 +424,21 @@ public class ContractCapacityPathEditionServiceImpl implements ContractCapacityP
 		return list;
 	}
 
+	@Override
+	public int publishPath(ContractCapacityPathFilter filters2, String username) {
+		
+		ContractCapacityPathInsertBean bean = new ContractCapacityPathInsertBean();
+		
+		bean.setStart_date(filters2.getStart_date());
+		bean.setEnd_date(filters2.getEnd_date());
+		bean.setIdn_contract(filters2.getIdn_booking());
+		bean.setVersion_date(Calendar.getInstance().getTime());
+		bean.setUsername(username);
+
+		ccpMapper.insertCapacityPathPublish(bean);
+		
+		return 0;
+	}
 
 
 }

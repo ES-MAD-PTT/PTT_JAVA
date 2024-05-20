@@ -141,7 +141,6 @@ public class ContractCapacityPathServiceImpl implements ContractCapacityPathServ
 			}
 		}
 		
-		filters.setIs_publish("N");
 		List<ContractCapacityPathAreaValuesBean> list3 = ccpMapper.getContractCapacityPathAreaValuesBean(filters);
 		
 		for(int i=0;i<list.size();i++) {
@@ -235,7 +234,6 @@ public class ContractCapacityPathServiceImpl implements ContractCapacityPathServ
 		ContractCapacityPathInsertBean bean = new ContractCapacityPathInsertBean();
 		bean.setStart_date(filters2.getStart_date());
 		bean.setEnd_date(filters2.getEnd_date());
-		bean.setPublished("N");
 		
 		for(int i=0;i<list.size();i++) {
 			bean.setIdn_capacity_path(list.get(i).getIdn_capacity_path());

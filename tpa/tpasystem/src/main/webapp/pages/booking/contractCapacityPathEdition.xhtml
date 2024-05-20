@@ -137,6 +137,15 @@
 									oncomplete="PF('limpiando').hide()" 
 									update=":form:msgs"/>
 							</shiro:hasPermission>
+							
+							<shiro:hasPermission name="#{changeSystemView.system}.BOOKING.CONTRACT_CAPACITY_PATH_ED.QUERY">
+								<p:commandButton value="#{msg['publish']}"
+									actionListener="#{contractCapacityPathEditionView.publish}"
+									onstart="PF('grabando').show()"
+									oncomplete="PF('grabando').hide()" 
+									update=":form:msgs"/>
+							</shiro:hasPermission>
+							
 						</p:panelGrid>
 					</p:panelGrid>
 

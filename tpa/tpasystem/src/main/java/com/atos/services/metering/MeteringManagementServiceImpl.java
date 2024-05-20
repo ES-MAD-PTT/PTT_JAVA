@@ -22,7 +22,6 @@ import javax.xml.datatype.XMLGregorianCalendar;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.primefaces.model.DefaultStreamedContent;
-import org.quartz.JobExecutionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskRejectedException;
@@ -53,9 +52,7 @@ import com.atos.mapper.allocation.AllocationManagementMapper;
 import com.atos.mapper.metering.MeteringManagementMapper;
 import com.atos.mapper.utils.Xlsx2XmlMapper;
 import com.atos.quartz.AcumInventoryAutorunClient;
-import com.atos.quartz.AllocationAutorunIntradayClient;
 import com.atos.quartz.BaseInventoryAutorunClient;
-import com.atos.runnable.allocation.AllocationBalanceTask;
 import com.atos.utils.Constants;
 import com.atos.utils.Xlsx2XmlConverter2;
 import com.atos.views.ChangeSystemView;
@@ -125,9 +122,6 @@ public class MeteringManagementServiceImpl implements MeteringManagementService 
 	@Qualifier("meteringTaskExecutor")
 	private ThreadPoolTaskExecutor metTaskExecutor;
 	
-	@Autowired
-    private AllocationAutorunIntradayClient intradayService;
-
 	private static final Logger log = LogManager.getLogger("com.atos.services.metering.MeteringManagementServiceImpl");
 
 	public Date selectOpenPeriodFirstDay(){
@@ -623,32 +617,6 @@ public class MeteringManagementServiceImpl implements MeteringManagementService 
 				e.printStackTrace();
 			}
 
-	        
-	        
-	        try{
-	        	// Se lanza un thread para seguir con el proceso de forma asincrona/desatendida.
-	        	// Si se alcanza el numero maximo de threads concurrentes definidos en el metTaskExecutor,
-	        	// el siguiente thread no se puede lanzar y se genera una org.springframework.core.task.TaskRejectedException
-	        	AllocationBalanceTask alloc = new AllocationBalanceTask(startDate, endDate, user, lang, msgs, amMapper,
-						notifMapper, idnSystem);
-	        	alloc.run();
-/*				allBalTaskExecutor.execute(new AllocationBalanceTask(startDate, endDate, user, lang, msgs, amMapper,
-						notifMapper, idnSystem));*/
-	        }   
-	        catch (Exception tre) {	// Excepcion para el caso de que no se pueda generar un thread porque se ha alcanzado el maximo numero de threads.
-	        			// En caso de error, se ha de liberar el bloqueo.
-						// En caso de ok, el bloqueo se libera en el thread.
-				log.error(tre.getMessage(), tre);
-				//throw new ValidationException(msgs.getString("all_man_max_processes_reached_error"));
-			}  	        
-	        
-			try {
-				intradayService.callAllocationIntradayRequestClient(false);
-			} catch (JobExecutionException e) {
-				log.error(e.getMessage(), e);
-				
-			}
-	        
 	        
 		}
 	

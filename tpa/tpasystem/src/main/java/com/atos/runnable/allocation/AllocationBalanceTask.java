@@ -10,6 +10,8 @@ import java.util.ResourceBundle;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.quartz.JobExecutionException;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.atos.beans.ComboFilterNS;
 import com.atos.beans.LanguageBean;
@@ -19,6 +21,7 @@ import com.atos.beans.allocation.CalculateAllocationBalanceBean;
 import com.atos.exceptions.ValidationException;
 import com.atos.mapper.NotificationMapper;
 import com.atos.mapper.allocation.AllocationManagementMapper;
+import com.atos.quartz.AllocationAutorunIntradayClient;
 
 public class AllocationBalanceTask implements Serializable, Runnable {
 
@@ -35,7 +38,7 @@ public class AllocationBalanceTask implements Serializable, Runnable {
 	private static final String strUpdateBalanceY = "Y";
 	
 	private static final Logger log = LogManager.getLogger("com.atos.runnable.allocation.AllocationBalanceTask");
-	
+
 	private Date startDate;
 	private Date endDate;
 	private UserBean user;
@@ -45,9 +48,10 @@ public class AllocationBalanceTask implements Serializable, Runnable {
 	private AllocationManagementMapper amMapper;
 	private NotificationMapper notifMapper;	
 	private BigDecimal idnSystem;
+	private AllocationAutorunIntradayClient intradayService;
 	
     public AllocationBalanceTask(Date startDate, Date endDate, UserBean user, LanguageBean lang, ResourceBundle msgs,
-			AllocationManagementMapper amMapper, NotificationMapper notifMapper, BigDecimal idnSystem) {
+			AllocationManagementMapper amMapper, NotificationMapper notifMapper, BigDecimal idnSystem, AllocationAutorunIntradayClient intradayService) {
     	this.startDate = startDate;
     	this.endDate = endDate;
     	this.user = user;
@@ -56,6 +60,7 @@ public class AllocationBalanceTask implements Serializable, Runnable {
         this.amMapper = amMapper;
         this.notifMapper = notifMapper;
 		this.idnSystem = idnSystem;
+		this.intradayService = intradayService;
     }
 
     public void run() {
@@ -105,6 +110,16 @@ public class AllocationBalanceTask implements Serializable, Runnable {
 		    	log.error(e2.getMessage(), e2);
 	        }
         }
+    	if(intradayService!=null) {
+			try {
+				intradayService.callAllocationIntradayRequestClient(false);
+			} catch (JobExecutionException e) {
+				log.error(e.getMessage(), e);
+				
+			}
+    	}
+    	
+
     }
 	
 	private void calculateAllocationBalance(String userId, String lang, BigDecimal idnSystem) throws Exception {

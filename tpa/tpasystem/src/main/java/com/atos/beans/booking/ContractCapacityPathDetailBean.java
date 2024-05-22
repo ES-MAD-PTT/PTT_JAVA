@@ -100,7 +100,7 @@ public class ContractCapacityPathDetailBean extends UserAudBean implements Seria
 	public BigDecimal getAll_value_available(){
 		BigDecimal bd = new BigDecimal(0);
 		for(int i=0;i<this.list_values_available.size();i++) {
-			bd = bd.add(list_values_available.get(i));
+			bd = bd.add((list_values_available.get(i)==null ? new BigDecimal(0): list_values_available.get(i)));
 		}
 		return bd;	
 	}
@@ -112,7 +112,7 @@ public class ContractCapacityPathDetailBean extends UserAudBean implements Seria
 	public BigDecimal getAll_value_remain_booked(){
 		BigDecimal bd = new BigDecimal(0);
 		for(int i=0;i<this.list_values_remain_booked.size();i++) {
-			bd = bd.add(list_values_remain_booked.get(i));
+			bd = bd.add((list_values_remain_booked.get(i)==null ? new BigDecimal(0) : list_values_remain_booked.get(i)));
 		}
 		return bd;	
 	}

@@ -6,10 +6,12 @@ import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
@@ -627,7 +629,13 @@ public class BalanceIntradayReportView extends CommonView {
 	    	}
 		}
 	    public Map<BigDecimal, Object> getTimestampIds_form() {
-	   		return service.selectTimestampIds(filters_form);
+	    	Map<BigDecimal, Object> values = new HashMap<>();
+	    	values = service.selectTimestampIds(filters_form);
+	    	filters_form.setTimestampVarList(values.keySet().stream()
+	    			.map(BigDecimal::toString)
+	    			.collect(Collectors.toList()));
+	    	
+	    	return values;
 		}
 	    
 	    public void cancelTimestamp() {

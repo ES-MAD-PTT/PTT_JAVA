@@ -49,6 +49,8 @@ public interface MeteredPointMapper {
 	public List<ComboFilterNS> selectContractPointsSystem(MeteredPointBean newMeteredPoint);
 
 	public int insertMeteredPoint(MeteredPointBean meteredPoint);
+	
+	public int insertMeteredPointNewPerid(MeteredPointBean meteredPoint);
 
 	public int insertMeteredPointParam(MeteredPointBean meteredPoint);
 

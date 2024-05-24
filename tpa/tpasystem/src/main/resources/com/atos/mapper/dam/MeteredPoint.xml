@@ -526,6 +526,27 @@ WITH quality_point AS
 		     #{username},
 			 #{username})
 	</insert>
+	
+	<insert id="insertMeteredPointNewPerid" useGeneratedKeys="true" keyProperty="idn_system_point" keyColumn="idn_system_point" parameterType="com.atos.beans.dam.MeteredPointBean">
+		INSERT INTO tpa_tsystem_point
+			(idn_system_point,IDN_SYSTEM_POINT_GROUP,point_code,point_desc, 
+			idn_system_point_type, latitude, longitude, idn_area,
+			start_date, end_date,
+			aud_ins_user,aud_last_user)
+		VALUES
+			(tpa_ssystem_point.nextval,
+			 (SELECT pg.idn_system_point_group  FROM tpa_tsystem_point_group pg WHERE pg.group_code='METERED'),
+			 #{point_code},
+			 #{name}, 
+			 #{idn_system_point_type},
+			 #{latitude},
+			 #{longitud},
+			 #{idn_area},
+			 #{startDate},
+		     #{endDate},
+		     #{username},
+			 #{username})
+	</insert>
 
 	<update id="updateMeteredPoint" parameterType="com.atos.beans.dam.MeteredPointBean">
 		UPDATE tpa_tsystem_point set

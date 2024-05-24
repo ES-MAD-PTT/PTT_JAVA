@@ -679,9 +679,7 @@ public class MeteredPointView extends CommonView implements Serializable {
 			getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
 	    	log.error(errorMsg);
 			return;
-		}
-		
-		
+		}	
 		
 		
 		
@@ -698,12 +696,14 @@ public class MeteredPointView extends CommonView implements Serializable {
 				log.catching(e);
 			}
 			
-			error = service.insertMeteredPointNewPeriod(newPeriodMeteredPoint);
-			
 			if(newPeriodMeteredPoint.getNewId()!= null && !newPeriodMeteredPoint.getNewId().isEmpty()) {
-				service.updatePointCode(newPeriodMeteredPoint);
 				newPeriodMeteredPoint.setPoint_code(newPeriodMeteredPoint.getNewId());
+				error = service.insertMeteredPoint(newPeriodMeteredPoint);
+				
+			}else {
+				error = service.insertMeteredPointNewPeriod(newPeriodMeteredPoint);
 			}
+			
 		} catch (Exception e) {
 			log.catching(e);
 			// we assign the return message
@@ -732,6 +732,7 @@ public class MeteredPointView extends CommonView implements Serializable {
 
 		// clean the formu new after save
 		newPeriodMeteredPoint = new MeteredPointBean();
+		newMeteredPoint = new MeteredPointBean();
 		newPeriodMeteredPoint.setIdn_pipeline_system(getChangeSystemView().getIdn_active());
 
 	

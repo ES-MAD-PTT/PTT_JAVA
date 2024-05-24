@@ -263,25 +263,25 @@
 				</h:outputText>
 			</p:column>
 										
-			<p:column headerText="#{msg['bal_rep_accIMBEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport2' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerColorIntraBalReport' : ''}" style='min-width: 120px;max-width: 120px;background-color:"#{balance.eAccImbalanceColor}" !important'>
+			<p:column headerText="#{msg['bal_rep_accIMBEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N' ? balance.eAccImbalanceColor eq 'NONE' ? 'headerColorIntraBalReport2' : '' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerColorIntraBalReport' : ''}" style='min-width: 120px;max-width: 120px;background-color:#{balance.eAccImbalanceColor} !important'>
 				<h:outputText style="float:right" value="#{balance.eAccImbalance}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 										
-			<p:column headerText="#{msg['bal_rep_accIMBWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? balance.eACCImbInvPttColor eq 'NONE' ? 'headerColorIntraBalReport2' : balance.eACCImbInvPttColor : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerColorIntraBalReport' : ''}" style='min-width: 120px;max-width: 120px;background-color:"#{balance.wAccImbalanceColor}" !important'>
+			<p:column headerText="#{msg['bal_rep_accIMBWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N' ? balance.wAccImbalanceColor eq 'NONE' ? 'headerColorIntraBalReport2' : '' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerColorIntraBalReport' : ''}" style='min-width: 120px;max-width: 120px;background-color:#{balance.wAccImbalanceColor} !important'>
 				<h:outputText style="float:right" value="#{balance.wAccImbalance}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 										
-			<p:column headerText="#{msg['bal_rep_accIMBInventoryEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? balance.wACCImbInvPttColor eq 'NONE' ? 'headerColorIntraBalReport2' : balance.wACCImbInvPttColor : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerColorIntraBalReport' : ''}" style='min-width: 120px;max-width: 120px;background-color:"#{balance.eACCImbInvPttColor}" !important'>
+			<p:column headerText="#{msg['bal_rep_accIMBInventoryEast']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N' ? balance.eACCImbInvPttColor eq 'NONE' ? 'headerColorIntraBalReport2' : '' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerColorIntraBalReport' : ''}" style='min-width: 120px;max-width: 120px;background-color:#{balance.eACCImbInvPttColor} !important'>
 				<h:outputText style="float:right" value="#{balance.eACCImbInvPtt}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>
 			</p:column>
 
-			<p:column headerText="#{msg['bal_rep_accIMBInventoryWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N'? 'headerColorIntraBalReport2' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerColorIntraBalReport' : ''}" style='min-width: 120px;max-width: 120px;background-color:"#{balance.wACCImbInvPttColor}" !important'>
+			<p:column headerText="#{msg['bal_rep_accIMBInventoryWest']}" styleClass="#{balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'N' ? balance.wACCImbInvPttColor eq 'NONE' ? 'headerColorIntraBalReport2' : '' : balance.isTotal eq 'Y' and balance.isTotalAllShippers eq 'Y'? 'headerColorIntraBalReport' : ''}" style='min-width: 120px;max-width: 120px;background-color:#{balance.wACCImbInvPttColor} !important'>
 				<h:outputText style="float:right" value="#{balance.wACCImbInvPtt}">
 					<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 				</h:outputText>

@@ -272,7 +272,7 @@
                                    AND ax.idn_allocation_origin = ao.idn_allocation_origin
                                    AND ao.origin_code IN ('BALANCE', 'CLOSING_PROCESS')
                                    <if test='"Y".equals(isShipper)'>
-							          	AND ax.idn_allocation NOT IN (SELECT idn_allocation
+							          	AND ax.idn_allocation IN (SELECT idn_allocation
 										FROM tpa_tallocation_shipper_filter
 										WHERE gas_day = a.gas_day
 										AND page_code = 'BALANCE_INTRADAY_REPORT' AND is_enabled = 'Y')
@@ -287,7 +287,7 @@
           AND #{generatedTo} >= cast(a.version_date as date)
           </if>
           <if test='"Y".equals(isShipper)'>
-          	AND a.idn_allocation NOT IN (SELECT idn_allocation FROM tpa_tallocation_shipper_filter WHERE gas_day = a.gas_day AND page_code = 'BALANCE_INTRADAY_REPORT' AND is_enabled = 'Y')
+          	AND a.idn_allocation IN (SELECT idn_allocation FROM tpa_tallocation_shipper_filter WHERE gas_day = a.gas_day AND page_code = 'BALANCE_INTRADAY_REPORT' AND is_enabled = 'Y')
 		  </if>
           </otherwise>
           </choose>
@@ -2322,7 +2322,7 @@
              = to_char(#{gasDay},'DD/MM/YY')
         AND trunc(a.version_date) = a.gas_day
 		<if test='"Y".equals(isShipper)'>
-		   AND a.idn_allocation NOT IN (SELECT idn_allocation FROM tpa_tallocation_shipper_filter WHERE gas_day = #{gasDay} AND page_code = 'BALANCE_INTRADAY_REPORT' AND is_enabled = 'Y')
+		   AND a.idn_allocation IN (SELECT idn_allocation FROM tpa_tallocation_shipper_filter WHERE gas_day = #{gasDay} AND page_code = 'BALANCE_INTRADAY_REPORT' AND is_enabled = 'Y')
 		</if>
 		GROUP BY idn_allocation, to_char(a.version_date, 'DD/MM/YY HH24:MI:SS FF9')
 		ORDER BY idn_allocation, to_char(a.version_date, 'DD/MM/YY HH24:MI:SS FF9')

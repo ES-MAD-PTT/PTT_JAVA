@@ -98,6 +98,7 @@ public class OffSpecIncidentBean extends UserAudBean implements Serializable {
     private String commentsUser;
     private String shipper;
     private String commentClosed;
+    private String firstUserType;
     private List<BigDecimal> multiShippers = new ArrayList<BigDecimal>();
     private List<OffSpecFileBean> files = new ArrayList<OffSpecFileBean>();
     private List<OffSpecActionFileBean> filesAction = new ArrayList<OffSpecActionFileBean>();
@@ -182,6 +183,14 @@ public class OffSpecIncidentBean extends UserAudBean implements Serializable {
 
 	public void setShipper(String shipper) {
 		this.shipper = shipper;
+	}
+
+	public String getFirstUserType() {
+		return firstUserType;
+	}
+
+	public void setFirstUserType(String firstUserType) {
+		this.firstUserType = firstUserType;
 	}
 
 	public String getCommentClosed() {
@@ -623,11 +632,12 @@ public class OffSpecIncidentBean extends UserAudBean implements Serializable {
 			this.originatorShipperId==null ||
 			(this.originatorShipperId!=null && this.originatorShipperId.compareTo(_user.getIdn_user_group()) == 0) ) {
 			for(OffSpecStatusBean nextStatus: this.getStatus().getNextStatusSet()){
-				tmpItem = new DefaultMenuItem(nextStatus.getStatusDesc());
-				//tmpItem.setOncomplete(oncompleteString);
-				//tmpItem.setUpdate(updateString);
-				tmpItem.setCommand(commandStringStart + nextStatus.getStatusId() + commandStringEnd);
-				tmpModel.addElement(tmpItem);
+				if(this.firstUserType.equals(Constants.SHIPPER) || 
+						(this.firstUserType.equals(Constants.OPERATOR) && !nextStatus.getStatusCode().equals("EV.ACCEPTED - CLOSED"))) {
+					tmpItem = new DefaultMenuItem(nextStatus.getStatusDesc());
+					tmpItem.setCommand(commandStringStart + nextStatus.getStatusId() + commandStringEnd);
+					tmpModel.addElement(tmpItem);
+				}
 			}
 		}
 

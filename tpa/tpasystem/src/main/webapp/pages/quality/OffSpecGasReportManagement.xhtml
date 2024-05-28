@@ -229,7 +229,7 @@
 						    	model="#{incident.getModel(userBean)}"/>
 				       	</p:column>
 				       	
-				       	<p:column headerText="#{msg['osgr_man_statusAcceptedClosedInfo']}" style="width: 90px;text-align:center;">
+				       	<p:column headerText="#{msg['osgr_man_statusAcceptedClosedInfo']}" style="width: 125px;text-align:center;">
 	 					    <p:commandButton icon="ui-icon fa fa-file-text-o" update="statusAcceptedClosedInfoFormId" 
 								onstart="PF('cargando').show()"	oncomplete="PF('cargando').hide(),PF('statusAcceptedClosedInfoDlg').show()" 
 								actionListener="#{OSGRManagementView.prepareInfoStatusAcceptedClosed(incident)}"

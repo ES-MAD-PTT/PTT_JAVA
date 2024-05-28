@@ -480,7 +480,7 @@ public class InstructedOperationFlowShippersView extends CommonView implements S
 			error = service.updateComments(bean);
 			if(isShipper()) {
 				try {
-					String pattern = "dd/MM/yyyy";
+					String pattern = "dd/MM/yyyy HH:mm";
 					SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
 					String date = simpleDateFormat.format(bean.getTimestamp());
 					String info = getUser().getUser_group_id() + " ~ " + bean.getZoneCode() + " ~ " + date; 

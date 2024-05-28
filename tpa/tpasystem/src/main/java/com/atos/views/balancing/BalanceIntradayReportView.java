@@ -6,7 +6,6 @@ import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -631,14 +630,27 @@ public class BalanceIntradayReportView extends CommonView {
 	    	}
 		}
 	    public Map<BigDecimal, Object> getTimestampIds_form() {
-	    	Map<BigDecimal, Object> values = new HashMap<>();
+	    	
+	   		return service.selectTimestampIds(filters_form);
+		}
+	    
+	    public void changeGasDay() {
+	    	chargeGasDay();
+	    }
+	    
+	    public void prepareTimestamp() {
+	    	filters_form = new BalanceIntradayReportFilter();
+	    	filters_form.setSystemId(getChangeSystemView().getIdn_active());
+	    	chargeGasDay();
+	    }
+	    
+	    private void chargeGasDay(){
+	    	Map<BigDecimal, Object> values;
 	    	values = service.selectTimestampIds(filters_form);
 	    	filters_form.setTimestampVarList(values.keySet().stream()
 	    			.map(BigDecimal::toString)
 	    			.collect(Collectors.toList()));
-	    	
-	    	return values;
-		}
+	    }
 	    
 	    public void cancelTimestamp() {
 	    	filters_form = new BalanceIntradayReportFilter();
@@ -647,6 +659,8 @@ public class BalanceIntradayReportView extends CommonView {
 	    	sysdate= gettingValidDateStart();
 
 	    }
+	   
+	    
 	    public void saveTimestamp() {
 
 	    	String ret = service.saveTimestamp(filters_form,getUser().getUsername());
@@ -657,6 +671,9 @@ public class BalanceIntradayReportView extends CommonView {
 						new MessageBean(Constants.ERROR, "Error modifing timestamps", "Error modifing timestamps", Calendar.getInstance().getTime()));
 
 	    	}
+	    	
+	    	filters_form = new BalanceIntradayReportFilter();
+	    	filters_form.setSystemId(getChangeSystemView().getIdn_active());
 
 	    }
 }

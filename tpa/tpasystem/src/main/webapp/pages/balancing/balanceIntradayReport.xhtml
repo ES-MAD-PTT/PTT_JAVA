@@ -145,8 +145,8 @@
 							
 							<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.BALANCE.INTRADAY.REPORT.MOD">
 							
-								<p:commandButton id="timestampDisplay" type="button" value="#{msg['met_man_shippers_timestamp_display']}" icon="fa fa-fw fa-edit" style="float:left;"
-        							onclick="PF('dlgTimestampDisplay').show();"/>
+								<p:commandButton id="timestampDisplay" actionListener="#{balIntraReportView.prepareTimestamp}" type="button" value="#{msg['met_man_shippers_timestamp_display']}" icon="fa fa-fw fa-edit" style="float:left;"
+        							onclick="PF('dlgTimestampDisplay').show();" update="formTimestampDisplay"/>
 							</shiro:hasPermission>
 
 						</p:panelGrid>
@@ -187,7 +187,7 @@
 								<p:column>
 									<p:calendar id="gasDay_form" size="6" pattern="dd/MM/yyyy" mask="true" value="#{balIntraReportView.filters_form.gasDay}"
 										showOn="button" readonlyInput="true" navigator="true" maxdate="#{(balIntraReportView.sysdate).getTime()}">
-										<p:ajax event="dateSelect" update="timestampId_form"></p:ajax>
+										<p:ajax event="dateSelect" listener="#{balIntraReportView.changeGasDay}" update="timestampId_form"></p:ajax>
 										<p:ajax event="change" update="timestampId_form"></p:ajax>
 									</p:calendar>
 								</p:column>

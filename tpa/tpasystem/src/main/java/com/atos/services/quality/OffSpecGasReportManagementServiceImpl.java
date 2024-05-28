@@ -324,29 +324,16 @@ public class OffSpecGasReportManagementServiceImpl implements OffSpecGasReportMa
     		throw new Exception("Error inserting into Off Specification Event Log table.");   		
     	}
 
-		/*
-		 * if(OffSpecStatusRuleBean.askOtherShippersYes.equalsIgnoreCase(_incid.
-		 * getChosenNextStatusRule().getAskOtherShippers())) {
-		 * 
-		 * BigDecimal origShipperId = _incid.getNewOriginatorShipperId(); // Si no se ha
-		 * rellenado el shipper en la ultima pantalla, se toma el que hubiera antes. if(
-		 * origShipperId == null) origShipperId = _incid.getOriginatorShipperId();
-		 * 
-		 * if(origShipperId == null) throw new
-		 * Exception("It's not possible to disclose the off-spec event without be known the originator shipper."
-		 * );
-		 * 
-		 * //List<BigDecimal> allShipperIds = getAllShipperIdsForInsert();
-		 * //for(BigDecimal bdShipperId :allShipperIds){ for(BigDecimal bdShipperId :
-		 * _incid.getMultiShippers()) {
-		 * 
-		 * if((origShipperId != null) && (bdShipperId.compareTo(origShipperId) == 0))
-		 * continue;
-		 * 
-		 * discloseIncident(_incid, bdShipperId, _user); } }
-		 */
-			
-		// Si hubiera algun error al actualizar las tablas, el bean quedaria con los datos "new" para que el usuario siga trabajando con ellos.
+		if(_incid.getChosenNextStatusRule().getNextStatusCode().equals("EV.ACCEPTED - CLOSED")) {
+			//Insertamos los ficheros
+			for(OffSpecActionFileBean item : _incid.getFilesAction()) {
+				OffSpecFileBean file = new OffSpecFileBean(item.getFileName(), item.getBinaryData(), item.getUserName());
+				osgrmMapper.insertFileNewEvent(file);
+				OffSpecFileAttachBean fileAttach = new OffSpecFileAttachBean(_incid.getIncidentId(), file.getIdnOffspecFile(),
+									_incid.getChosenNextStatusRule().getNextStatusId(), _user.getUsername());
+				osgrmMapper.insertFileAttachNewEvent(fileAttach);
+			}
+		}
     }
     
     @Override
@@ -715,7 +702,7 @@ public class OffSpecGasReportManagementServiceImpl implements OffSpecGasReportMa
 		//Insertamos los ficheros
 		for(OffSpecFileBean item : _incid.getFiles()) {
 			osgrmMapper.insertFileNewEvent(item);
-			OffSpecFileAttachBean fileAttach = new OffSpecFileAttachBean(_incid.getIncidentId(), item.getIdnOffspecFile(), _user.getUsername());
+			OffSpecFileAttachBean fileAttach = new OffSpecFileAttachBean(_incid.getIncidentId(), item.getIdnOffspecFile(), null, _user.getUsername());
 			osgrmMapper.insertFileAttachNewEvent(fileAttach);
 		}
     }
@@ -801,8 +788,12 @@ public class OffSpecGasReportManagementServiceImpl implements OffSpecGasReportMa
 	}
 
 	@Override
-	public List<OffSpecFileBean> selectFiles(OffSpecIncidentBean item, String userGroupType) {
-		return osgrmMapper.selectFiles(item.getIncidentId(), userGroupType);
+	public List<OffSpecFileBean> selectFiles(OffSpecIncidentBean item, String statusCode, String userGroupType) {
+		Integer idnStatusCode = null;
+		if(statusCode.equals("EV.ACCEPTED - CLOSED")){
+			idnStatusCode = item.getStatusId().intValue();
+		}
+		return osgrmMapper.selectFiles(item.getIncidentId(), idnStatusCode, userGroupType);
 	}
 
 	@Override
@@ -834,5 +825,10 @@ public class OffSpecGasReportManagementServiceImpl implements OffSpecGasReportMa
 			osgrmMapper.insertFileAction(item);
 		}
 		return res;
+	}
+
+	@Override
+	public OffSpecIncidentBean selectInfoStatusAcceptedClosed(OffSpecIncidentBean item) {
+		return osgrmMapper.selectInfoStatusAcceptedClosed(item);
 	}
 }

@@ -27,12 +27,11 @@ public class OffSpecIncidentBean extends UserAudBean implements Serializable {
 	 */
 	private static final long serialVersionUID = 5715428377766750639L;
 	
-	private static final String oncompleteString = "#{OSGRManagementView.onChangeStatus}"; //"PF('nextStatusDlg').show()";
-	private static final String updateString = "incidents1"; //":nextStatusFormId:nextStatusPanelGridId";
+	//private static final String updateString = "incidents1"; 
 	// Comando para que al pulsar el boton "NextStatus" se guarde:
 	// - La instancia que se ha pulsado, como selected en la vista.
 	// - el id del nuevo estado para poder identificar la regla de cambio de estado a aplicar.
-	private static final String commandStringStart = "#{OSGRManagementView.onChangeStatus(incident,'"; //"#{OSGRManagementView.setChosenNextStatusRule(incident,'";
+	private static final String commandStringStart = "#{OSGRManagementView.prepareChangeStatus(incident,'";
 	private static final String commandStringEnd = "')}";
 	
 	private BigDecimal incidentId;
@@ -98,6 +97,7 @@ public class OffSpecIncidentBean extends UserAudBean implements Serializable {
     private String commentsOperator;
     private String commentsUser;
     private String shipper;
+    private String commentClosed;
     private List<BigDecimal> multiShippers = new ArrayList<BigDecimal>();
     private List<OffSpecFileBean> files = new ArrayList<OffSpecFileBean>();
     private List<OffSpecActionFileBean> filesAction = new ArrayList<OffSpecActionFileBean>();
@@ -182,6 +182,14 @@ public class OffSpecIncidentBean extends UserAudBean implements Serializable {
 
 	public void setShipper(String shipper) {
 		this.shipper = shipper;
+	}
+
+	public String getCommentClosed() {
+		return commentClosed;
+	}
+
+	public void setCommentClosed(String commentClosed) {
+		this.commentClosed = commentClosed;
 	}
 
 	public String getCommentsOperator() {
@@ -617,7 +625,7 @@ public class OffSpecIncidentBean extends UserAudBean implements Serializable {
 			for(OffSpecStatusBean nextStatus: this.getStatus().getNextStatusSet()){
 				tmpItem = new DefaultMenuItem(nextStatus.getStatusDesc());
 				//tmpItem.setOncomplete(oncompleteString);
-				tmpItem.setUpdate(updateString);
+				//tmpItem.setUpdate(updateString);
 				tmpItem.setCommand(commandStringStart + nextStatus.getStatusId() + commandStringEnd);
 				tmpModel.addElement(tmpItem);
 			}

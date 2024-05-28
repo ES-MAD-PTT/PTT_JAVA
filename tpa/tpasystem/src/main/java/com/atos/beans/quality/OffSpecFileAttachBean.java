@@ -14,14 +14,16 @@ public class OffSpecFileAttachBean implements Serializable {
 	private BigDecimal idnOffspecFileAttach;
 	private BigDecimal idnOffspec;
 	private BigDecimal idnOffspecFile;
+	private BigDecimal idnOffspecStatus;
 	private String userName;
 	
 	public OffSpecFileAttachBean() {}
 	
 	
-	public OffSpecFileAttachBean(BigDecimal idnOffspec, BigDecimal idnOffspecFile, String userName) {
+	public OffSpecFileAttachBean(BigDecimal idnOffspec, BigDecimal idnOffspecFile, BigDecimal idnOffspecStatus, String userName) {
 		this.idnOffspec = idnOffspec;
 		this.idnOffspecFile = idnOffspecFile;
+		this.idnOffspecStatus = idnOffspecStatus;
 		this.userName = userName;
 	}
 	public BigDecimal getIdnOffspecFileAttach() {
@@ -48,14 +50,25 @@ public class OffSpecFileAttachBean implements Serializable {
 	public void setUserName(String userName) {
 		this.userName = userName;
 	}
+	public BigDecimal getIdnOffspecStatus() {
+		return idnOffspecStatus;
+	}
+
+
+	public void setIdnOffspecStatus(BigDecimal idnOffspecStatus) {
+		this.idnOffspecStatus = idnOffspecStatus;
+	}
+
+
 	@Override
 	public String toString() {
 		return "OffSpecFileAttachBean [idnOffspecFileAttach=" + idnOffspecFileAttach + ", idnOffspec=" + idnOffspec
-				+ ", idnOffspecFile=" + idnOffspecFile + "]";
+				+ ", idnOffspecFile=" + idnOffspecFile + ", idnOffspecStatus=" + idnOffspecStatus + ", userName="
+				+ userName + "]";
 	}
 	@Override
 	public int hashCode() {
-		return Objects.hash(idnOffspec, idnOffspecFile, idnOffspecFileAttach);
+		return Objects.hash(idnOffspec, idnOffspecFile, idnOffspecFileAttach, idnOffspecStatus, userName);
 	}
 	@Override
 	public boolean equals(Object obj) {
@@ -67,7 +80,8 @@ public class OffSpecFileAttachBean implements Serializable {
 			return false;
 		OffSpecFileAttachBean other = (OffSpecFileAttachBean) obj;
 		return Objects.equals(idnOffspec, other.idnOffspec) && Objects.equals(idnOffspecFile, other.idnOffspecFile)
-				&& Objects.equals(idnOffspecFileAttach, other.idnOffspecFileAttach);
+				&& Objects.equals(idnOffspecFileAttach, other.idnOffspecFileAttach)
+				&& Objects.equals(idnOffspecStatus, other.idnOffspecStatus) && Objects.equals(userName, other.userName);
 	}
 	
 	

@@ -284,6 +284,7 @@ AND sr.ask_other_shippers = 'Y'
         <result property="shipper" column="shipper"/>
         <result property="groupId" column="groupId"/>
         <result property="groupCode" column="groupCode"/>
+        <result property="commentClosed" column="OP_COMMENT_CLOSED"/>
         <association property="gasParams" select="selectGasQualityParametersFromIncidentId" column="idn_offspec"/>
     </resultMap>
         
@@ -733,6 +734,9 @@ AND sr.ask_other_shippers = 'Y'
 			<if test="newEndDate != null">
 			end_date = #{newEndDate},
 			</if>
+			<if test="commentClosed != null">
+			OP_COMMENT_CLOSED = #{commentClosed},
+			</if>
 	       	idn_offspec_status = #{newStatusId}
 	    where idn_offspec=#{incidentId}
 	</update>
@@ -958,6 +962,7 @@ WHERE qpa.idn_area = a.IDN_AREA
 			idn_toffspec_file_attach,
             idn_offspec,
             idn_offspec_file,
+            idn_offspec_status,
             aud_ins_date,
             aud_last_date,
             aud_ins_user,
@@ -966,6 +971,7 @@ WHERE qpa.idn_area = a.IDN_AREA
 			tpa_soffspec_file_attach.nextval, 
 			#{idnOffspec}, 
 			#{idnOffspecFile}, 
+			#{idnOffspecStatus},
 			sysdate, 
 			sysdate, 
 			#{userName},
@@ -998,6 +1004,17 @@ WHERE qpa.idn_area = a.IDN_AREA
 		
 	</insert>
 	
+	<select id="selectInfoStatusAcceptedClosed" resultMap="OffSpecIncident">
+		select o.op_comment_closed, o.end_date
+			from   tpa_toffspec o ,
+			       tpa_toffspec_log ol
+			where o.idn_offspec = ol.idn_offspec      
+			  and ol.insert_date = (select max(tlog3.insert_date)
+					                    from tpa_toffspec_log tlog3
+			                        where tlog3.idn_offspec = ol.idn_offspec) 
+			  and o.idn_offspec = #{incidentId}
+	</select>
+	
 	<select id="selectFiles" resultType="com.atos.beans.quality.OffSpecFileBean">
 		select f.IDN_OFFSPEC_FILE as idnOffspecFile,
 		        f.file_name as fileName, 
@@ -1008,8 +1025,17 @@ WHERE qpa.idn_area = a.IDN_AREA
 		      and a.idn_offspec = o.idn_offspec
 		      and o.idn_user_group = ug.idn_user_group
 		      and ug.idn_user_group_type = ut.idn_user_group_type
-		      and ut.type_code = #{userGroupType}
 		      and a.idn_offspec = #{incidentId}
+		      <if test="userGroupType != null and userGroupType != ''">
+		       	and ut.type_code = #{userGroupType}
+		       </if>
+		      <if test="idnOffspecStatus == null">
+		      	and a.idn_offspec_status is null
+		      </if>
+		      <if test="idnOffspecStatus != null and idnOffspecStatus != ''">
+		      	and a.idn_offspec_status = #{idnOffspecStatus}
+		      </if>
+          order by f.file_name asc
 	</select>
 	
 	<select id="selectActionFiles" resultType="com.atos.beans.quality.OffSpecActionFileBean">

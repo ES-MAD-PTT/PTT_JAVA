@@ -285,6 +285,7 @@ AND sr.ask_other_shippers = 'Y'
         <result property="groupId" column="groupId"/>
         <result property="groupCode" column="groupCode"/>
         <result property="commentClosed" column="OP_COMMENT_CLOSED"/>
+        <result property="firstUserType" column="firstUserType"/>
         <association property="gasParams" select="selectGasQualityParametersFromIncidentId" column="idn_offspec"/>
     </resultMap>
         
@@ -337,6 +338,11 @@ AND sr.ask_other_shippers = 'Y'
            tlogmin.user_comments  as initial_comments,
            tlogmin.operator_comments as operator_comments,
            tlogmin.idn_user as idn_first_user,
+           (select tgrt.type_code 
+                 from tpa_tuser_group_type tgrt, tpa_tuser_group tgr, tpa_tuser tu
+                 where tu.idn_user_group = tgr.idn_user_group 
+                 and tgr.idn_user_group_type = tgrt.idn_user_group_type
+                 and tu.idn_user = tlogmin.idn_user) as firstUserType,
            tlogmin.IDN_USER_GROUP as groupId,
            (select u.user_id from tpa_tuser u where u.idn_user = tlogmin.idn_user) as first_user,
            (select u.USER_GROUP_ID from tpa_tuser_group u where u.IDN_USER_GROUP = tlogmin.IDN_USER_GROUP) as shipper,
@@ -411,6 +417,11 @@ AND sr.ask_other_shippers = 'Y'
            tlogmin.user_comments  as initial_comments,
            tlogmin.operator_comments as operator_comments,
            tlogmin.idn_user as idn_first_user,
+           (select tgrt.type_code 
+                 from tpa_tuser_group_type tgrt, tpa_tuser_group tgr, tpa_tuser tu
+                 where tu.idn_user_group = tgr.idn_user_group 
+                 and tgr.idn_user_group_type = tgrt.idn_user_group_type
+                 and tu.idn_user = tlogmin.idn_user) as firstUserType,
            tlogmin.IDN_USER_GROUP as groupId,
            (select u.user_id from tpa_tuser u where u.idn_user = tlogmin.idn_user) as first_user,
            (select u.USER_GROUP_ID from tpa_tuser_group u where u.IDN_USER_GROUP = tlogmin.IDN_USER_GROUP) as shipper,

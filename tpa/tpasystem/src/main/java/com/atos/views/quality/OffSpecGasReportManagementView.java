@@ -502,29 +502,9 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 
 	private void updateIncidentInfo( HashMap<BigDecimal, OffSpecStatusBean> _hmAllStatus, 
 									  List<OffSpecIncidentBean> _items ) {
-		
 		for(OffSpecIncidentBean incid : _items){
 			//incid.setGroupId(getUser().getIdn_user_group());
 			incid.setStatus(_hmAllStatus.get(incid.getStatusId()));
-		}
-	}
-	
-	public void setChosenNextStatusRule(OffSpecIncidentBean _incident, BigDecimal _chosenNextStatusId) {
-	
-		selected = _incident;
-		selected.setNewStatusId(_chosenNextStatusId);
-		// Para incluir el tipo de incidente (Request, Event) en notificaciones.
-		selected.setNewIncidentTypeDesc(this.hmAllStatus.get(_chosenNextStatusId).getIncidentTypeDesc());
-		OffSpecStatusRuleBean tmpRule = this.hmAllStatusRules.get(selected.getStatusId() + rulesIdSeparador + _chosenNextStatusId);
-		selected.setChosenNextStatusRule(tmpRule);
-		
-		// Si en el combo de cambio de estado, se puede incluir fecha, se le da valor por defecto.
-		if(tmpRule.endDateIsEditable()) {
-			// Se inicializan las newEndDate, respecto a la mayor entre la hora actual y a la startDate.
-			Date now = new Date();
-			Date tmpStartDate = selected.getStartDate();
-			Date tmpNewEndDate = (now.after(tmpStartDate))? now : tmpStartDate;
-			selected.setNewEndDate(tmpNewEndDate);
 		}
 	}
 	
@@ -599,13 +579,60 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
         updateIncidentInfo(hmAllStatus, items);
 	}
 	
-    public void onChangeStatus(OffSpecIncidentBean _incident, BigDecimal _chosenNextStatusId) {
-    	setChosenNextStatusRule(_incident, _chosenNextStatusId);
+	public void setChosenNextStatusRule(OffSpecIncidentBean _incident, BigDecimal _chosenNextStatusId) {
+		selected = new OffSpecIncidentBean();
+		selected = _incident;
+		selected.setNewStatusId(_chosenNextStatusId);
+		// Para incluir el tipo de incidente (Request, Event) en notificaciones.
+		selected.setNewIncidentTypeDesc(this.hmAllStatus.get(_chosenNextStatusId).getIncidentTypeDesc());
+		OffSpecStatusRuleBean tmpRule = this.hmAllStatusRules.get(selected.getStatusId() + rulesIdSeparador + _chosenNextStatusId);
+		selected.setChosenNextStatusRule(tmpRule);
+		
+		// Si en el combo de cambio de estado, se puede incluir fecha, se le da valor por defecto.
+//		if(tmpRule.endDateIsEditable()) {
+//			// Se inicializan las newEndDate, respecto a la mayor entre la hora actual y a la startDate.
+//			Date now = new Date();
+//			Date tmpStartDate = selected.getStartDate();
+//			Date tmpNewEndDate = (now.after(tmpStartDate))? now : tmpStartDate;
+//			selected.setNewEndDate(tmpNewEndDate);
+//		}
+	}
+	
+	public void prepareChangeStatus(OffSpecIncidentBean _incident, BigDecimal _chosenNextStatusId) {
+		RequestContext context = RequestContext.getCurrentInstance();
+		setChosenNextStatusRule(_incident, _chosenNextStatusId);
+		String status = hmAllStatus.get(_chosenNextStatusId).getStatusCode();
+		switch (status) {
+		case "EV.ACCEPTED - CLOSED":
+			selected.setNewEndDate(new Date());
+    		context.execute("PF('closeStatusDlg').show();");
+    		context.update("closeStatusFormId");
+			break;
+		case "EV.SOLVED - CLOSED":
+			selected.setNewEndDate(new Date());
+    		context.execute("PF('closeDateDlg').show();");
+    		context.update("closeDateFormId");
+			break;
+		default:
+			onChangeStatus();
+			break;
+		}
+	}
+	
+    public void onChangeStatus() {
+    	//setChosenNextStatusRule(_incident, _chosenNextStatusId);
     	// Utilizo un ResourceBundle local por si el scope fuera Session o Application. En estos casos no se actualizaria el idioma.
     	ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication().getResourceBundle(FacesContext.getCurrentInstance(),"msg");
     	String summaryMsg = null;
     	String errorMsg = null;
     	List<BigDecimal> lEmailRecipients = null;
+    	
+    	if(selected != null && selected.getFilesAction().size() < 1) {
+    		errorMsg = msgs.getString("osrg_man_mandatoryOneFile");
+    		getMessages().addMessage(Constants.head_menu[6],
+					new MessageBean(Constants.ERROR, msgs.getString("saving_data_error"), errorMsg, Calendar.getInstance().getTime()));
+	    	return;
+    	}
 
     	try {
 
@@ -653,7 +680,10 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
     	getMessages().addMessage(Constants.head_menu[6],
 				new MessageBean(Constants.INFO, summaryMsg, okMsg, Calendar.getInstance().getTime()));
     	log.info(okMsg);
-
+    	if(selected.getChosenNextStatusRule().getNextStatusCode().equals("EV.ACCEPTED - CLOSED")) {
+	    	RequestContext context = RequestContext.getCurrentInstance();
+			context.execute("PF('closeStatusDlg').hide();");
+    	}
     	// Se actualiza la vista.
     	items = service.search(filters, getUser()); 
         updateIncidentInfo(hmAllStatus, items);
@@ -878,7 +908,7 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 			}
 	 }
 	 
-	 public void handleFileUploadAction(FileUploadEvent event) {
+	 public void handleFileUploadActionOrStatus(FileUploadEvent event) {
 		file = event.getFile();
 		OffSpecActionFileBean uploadFile = null;
 		if(file != null){
@@ -896,7 +926,8 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 		 selected = new OffSpecIncidentBean();
 		 selected = item;
 		 selected.setFiles(new ArrayList<OffSpecFileBean>());
-		 selected.getFiles().addAll(service.selectFiles(selected, userGroupType));
+		 String statusCode = hmAllStatus.get(selected.getStatusId()).getStatusCode();
+		 selected.getFiles().addAll(service.selectFiles(selected, statusCode, userGroupType));
 	 }
 	 
 	 public void selectActionFiles(OffSpecResponseBean item, String action) {
@@ -1000,5 +1031,19 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 				 }
 			 }
 		}
+	 }
+	 
+	 public Boolean renderedInfoStatusAcceptedClosed(OffSpecIncidentBean item) {
+			return hmAllStatus.get(item.getStatusId()).getStatusCode().equals("EV.ACCEPTED - CLOSED");
+	}
+	 
+	 public void prepareInfoStatusAcceptedClosed(OffSpecIncidentBean offspec) {
+		 selected = new OffSpecIncidentBean();
+		 //Buscamos los comentarios y la fecha fin cuando el estado es 'EV.ACCEPTED - CLOSED'
+		 selected = service.selectInfoStatusAcceptedClosed(offspec);
+		 selected.setFiles(new ArrayList<OffSpecFileBean>());
+		 String statusCode = hmAllStatus.get(offspec.getStatusId()).getStatusCode();
+		 //Buscamos los ficheros asociados al estado 'EV.ACCEPTED - CLOSED'
+		 selected.getFiles().addAll(service.selectFiles(offspec, statusCode, null));
 	 }
 }

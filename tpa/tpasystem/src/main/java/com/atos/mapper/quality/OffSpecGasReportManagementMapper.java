@@ -41,7 +41,9 @@ public interface OffSpecGasReportManagementMapper extends Serializable {
 	public List<OffSpecIncidentBean> selectIncidentsToRespond(OffSpecGasReportManagementFilter filter);
 	public List<OffSpecGasQualityParameterBean> selectGasQualityParameters();
 	public List<OffSpecActionFileBean> selectActionFiles(OffSpecResponseBean item);
-	public List<OffSpecFileBean> selectFiles(@Param("incidentId") BigDecimal incidentId, @Param("userGroupType") String userGroupType);
+	public List<OffSpecFileBean> selectFiles(@Param("incidentId") BigDecimal incidentId, @Param("idnOffspecStatus") Integer idnOffspecStatus,
+											@Param("userGroupType") String userGroupType);
+	public OffSpecIncidentBean selectInfoStatusAcceptedClosed(OffSpecIncidentBean item);
 	public String selectCommentsShipperOperator(OffSpecIncidentBean item);
 	// En params, se esperan los siguientes datos para filtrar: incidentId y shipperId.
 	public List<OffSpecResponseBean> selectDiscloseResponsesFromIncidentId(Map<String, BigDecimal> params);

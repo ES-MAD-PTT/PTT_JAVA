@@ -31,7 +31,7 @@ public interface OffSpecGasReportManagementService extends Serializable {
 	public List<OffSpecStatusRuleBean> selectStatusRules(String userId);
 	public List<OffSpecGasQualityParameterBean> selectGasQualityParameters();
 	public List<OffSpecIncidentBean> search(OffSpecGasReportManagementFilter filter, UserBean _user);
-	public List<OffSpecFileBean> selectFiles(OffSpecIncidentBean item, String userGroupType);
+	public List<OffSpecFileBean> selectFiles(OffSpecIncidentBean item, String statusCode, String userGroupType);
 	public List<OffSpecActionFileBean> selectActionFiles(OffSpecResponseBean item);
 	public String selectCommentsShipperOperator(OffSpecIncidentBean item);
 	public void changeStatus(OffSpecIncidentBean incident, UserBean _user, LanguageBean _lang) throws Exception;
@@ -45,6 +45,7 @@ public interface OffSpecGasReportManagementService extends Serializable {
 	public void getFileResponse(OffSpecResponseBean incident) throws Exception;
 	public void getFile(OffSpecIncidentBean incident) throws Exception;
 	public String getZoneCode(OffSpecIncidentBean incident);
+	public OffSpecIncidentBean selectInfoStatusAcceptedClosed(OffSpecIncidentBean item);
 	
 	public Integer saveAction(OffSpecIncidentBean _incid, UserBean _user, boolean isShipper) throws Exception;
 	public Integer acceptRejectAction(OffSpecIncidentBean _incid, String responseValue, UserBean _user) throws Exception;

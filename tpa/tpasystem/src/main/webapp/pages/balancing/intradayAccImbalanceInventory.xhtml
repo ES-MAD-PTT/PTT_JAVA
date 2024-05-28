@@ -96,12 +96,12 @@
 									update="msgs,:#{p:component('intradayAccImbInv1')}"/> 
 							</shiro:hasPermission>
 								
-							<!-- Cambio de pantalla CR5 item 8 habilitar desabilitar timestamp -->
+							<!-- Cambio de pantalla CR5 item 8 habilitar desabilitar timestamp 
 							<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.INTRADAY.ACCIMBALANCEINVENTORY.MOD">
 							
 								<p:commandButton id="timestampDisplay" type="button" value="#{msg['met_man_shippers_timestamp_display']}" icon="fa fa-fw fa-edit" style="float:left;"
         							onclick="PF('dlgTimestampDisplay').show();"/>
-							</shiro:hasPermission> 	
+							</shiro:hasPermission> -->	
 						</p:panelGrid>
 					</p:panelGrid>
 
@@ -250,13 +250,13 @@
 		<shiro:hasPermission name="#{changeSystemView.system}.BALANCING.INTRADAY.IMBALANCEINVENTOR_SHIPPER.QUERY">
 		
 		<p:column style="min-width: 120px;max-width: 120px;">
-			<h:outputText style="float:right" value="#{intradayAccImbInv.e_pttshipper_val}">
+			<h:outputText value="#{intradayAccImbInv.e_pttshipper_val}" style="display: block;background-color:#{intradayAccImbInv.e_pttshipper_colour eq null or intradayAccImbInv.e_pttshipper_colour eq 'NO_WARN'? '' : intradayAccImbInv.e_pttshipper_colour}">
 				<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 			</h:outputText>
 		</p:column>
 		
 		<p:column style="min-width: 120px;max-width: 120px;">
-			<h:outputText style="float:right" value="#{intradayAccImbInv.w_pttshipper_val}">
+			<h:outputText value="#{intradayAccImbInv.w_pttshipper_val}" style="display: block;background-color:#{intradayAccImbInv.w_pttshipper_colour eq null or intradayAccImbInv.w_pttshipper_colour eq 'NO_WARN'? '' : intradayAccImbInv.w_pttshipper_colour}">
 				<f:convertNumber groupingUsed="true" minFractionDigits="4" maxFractionDigits="4"/>
 			</h:outputText>
 		</p:column>

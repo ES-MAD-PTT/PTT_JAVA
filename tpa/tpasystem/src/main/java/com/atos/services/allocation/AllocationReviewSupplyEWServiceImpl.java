@@ -310,7 +310,7 @@ public class AllocationReviewSupplyEWServiceImpl implements AllocationReviewSupp
         	// Si se alcanza el numero maximo de threads concurrentes definidos en el metTaskExecutor,
         	// el siguiente thread no se puede lanzar y se genera una org.springframework.core.task.TaskRejectedException
 			allBalTaskExecutor.execute(new AllocationBalanceTask(_startDate, _endDate, _user, _lang, msgs, amMapper,
-					notifMapper, idnSystem));
+					notifMapper, idnSystem,null));
         }   
         catch (TaskRejectedException tre) {	// Excepcion para el caso de que no se pueda generar un thread porque se ha alcanzado el maximo numero de threads.
         			// En caso de error, se ha de liberar el bloqueo.

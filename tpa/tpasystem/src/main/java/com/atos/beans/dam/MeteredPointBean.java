@@ -26,6 +26,7 @@ public class MeteredPointBean extends UserAudBean implements Serializable {
 
 	private String meteringID;
 	private String id;
+	private String point_code;
 	private String newId;
 	private String name;
 	private String pointType;
@@ -83,7 +84,7 @@ public class MeteredPointBean extends UserAudBean implements Serializable {
 			BigDecimal idn_subarea, BigDecimal idn_system_point_group, BigDecimal idn_system_point_type,
 			BigDecimal idn_customer_type, BigDecimal idn_system_point_param, BigDecimal idn_system_point_contract,
 			BigDecimal idn_system_point_quality, BigDecimal idn_zone, BigDecimal idn_pipeline_system, String meteringID,
-			String id, String newId ,String name, String pointType, BigDecimal nominalCapacity, BigDecimal minPressure,
+			String id,String point_code,String newId ,String name, String pointType, BigDecimal nominalCapacity, BigDecimal minPressure,
 			BigDecimal maxPressure, String customerType, String nominationPoint, String contractPoint,
 			String qualityPoint, BigDecimal latitude, BigDecimal longitud, String area, String subarea,
 			String conectingPartyName, String conectingPartyPhoneNumber, String conectingPartyEmail, Date startDate,
@@ -102,6 +103,7 @@ public class MeteredPointBean extends UserAudBean implements Serializable {
 		this.idn_zone = idn_zone;
 		this.idn_pipeline_system = idn_pipeline_system;
 		this.meteringID = meteringID;
+		this.point_code = point_code;
 		this.id = id;
 		this.newId = newId;
 		this.name = name;
@@ -181,6 +183,14 @@ public class MeteredPointBean extends UserAudBean implements Serializable {
 
 	public void setId(String id) {
 		this.id = id;
+	}
+
+	public String getPoint_code() {
+		return point_code;
+	}
+
+	public void setPoint_code(String point_code) {
+		this.point_code = point_code;
 	}
 
 	public String getNewId() {
@@ -472,6 +482,8 @@ public class MeteredPointBean extends UserAudBean implements Serializable {
 		builder.append(meteringID);
 		builder.append(", id=");
 		builder.append(id);
+		builder.append(", point_code=");
+		builder.append(point_code);
 		builder.append(", newId=");
 		builder.append(newId);
 		builder.append(", name=");
@@ -532,7 +544,7 @@ public class MeteredPointBean extends UserAudBean implements Serializable {
 
 	@Override
 	public int hashCode() {
-		final int prime = 32;
+		final int prime = 33;
 		int result = 1;
 		result = prime * result + ((area == null) ? 0 : area.hashCode());
 		result = prime * result + ((conectingPartyEmail == null) ? 0 : conectingPartyEmail.hashCode());
@@ -541,6 +553,7 @@ public class MeteredPointBean extends UserAudBean implements Serializable {
 		result = prime * result + ((contractPoint == null) ? 0 : contractPoint.hashCode());
 		result = prime * result + ((customerType == null) ? 0 : customerType.hashCode());
 		result = prime * result + ((endDate == null) ? 0 : endDate.hashCode());
+		result = prime * result + ((point_code == null) ? 0 : point_code.hashCode());
 		result = prime * result + ((id == null) ? 0 : id.hashCode());
 		result = prime * result + ((newId == null) ? 0 : newId.hashCode());
 		result = prime * result + ((idn_area == null) ? 0 : idn_area.hashCode());

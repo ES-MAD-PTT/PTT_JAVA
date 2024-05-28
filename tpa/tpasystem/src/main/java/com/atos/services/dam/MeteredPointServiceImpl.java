@@ -232,10 +232,20 @@ public class MeteredPointServiceImpl implements MeteredPointService {
 			// the id is already inserted
 			throw new Exception("-1");
 		}
-		int ins = meteredPointMapper.insertMeteredPoint(meteredPoint);
-		if (ins != 1) {
-			throw new Exception("-2");
+		
+		if(meteredPoint.getNewId()!= null && !meteredPoint.getNewId().isEmpty()) {
+			meteredPoint.setPoint_code(meteredPoint.getNewId());
+			int ins = meteredPointMapper.insertMeteredPointNewPerid(meteredPoint);
+			if (ins != 1) {
+				throw new Exception("-2");
+			}
+		}else {
+			int ins = meteredPointMapper.insertMeteredPoint(meteredPoint);
+			if (ins != 1) {
+				throw new Exception("-2");
+			}
 		}
+		
 		int ins2 = meteredPointMapper.insertMeteredPointParam(meteredPoint);
 		if (ins2 != 1) {
 			throw new Exception("-3");

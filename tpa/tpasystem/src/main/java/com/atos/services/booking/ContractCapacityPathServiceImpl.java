@@ -141,7 +141,6 @@ public class ContractCapacityPathServiceImpl implements ContractCapacityPathServ
 			}
 		}
 		
-		filters.setIs_publish("N");
 		List<ContractCapacityPathAreaValuesBean> list3 = ccpMapper.getContractCapacityPathAreaValuesBean(filters);
 		
 		for(int i=0;i<list.size();i++) {
@@ -182,34 +181,68 @@ public class ContractCapacityPathServiceImpl implements ContractCapacityPathServ
 
 		}
 		
-		for(int i=0;i<list.size();i++) {
-			ContractCapacityPathDetailBean b = list.get(i);
-			Iterator<ContractCapacityPathAreaValuesBean> it_min = mapa_min_path_step.values().iterator();
-			while(it_min.hasNext()) {
-				ContractCapacityPathAreaValuesBean bean = it_min.next();
-				if(b.getIdn_area().intValue()==bean.getIdn_area().intValue()) {
-					b.getList_values_remain_booked().add(bean.getQuantity());
+		TreeMap<BigDecimal,HashMap<BigDecimal,BigDecimal>> step_values = new TreeMap<BigDecimal,HashMap<BigDecimal,BigDecimal>>();
+		TreeMap<BigDecimal,HashMap<BigDecimal,BigDecimal>> step_values_min_max = new TreeMap<BigDecimal,HashMap<BigDecimal,BigDecimal>>();
+		
+
+		ArrayList<BigDecimal> l_idn_capacity_path = new ArrayList<BigDecimal>();
+		for(int j=0;j<list3.size();j++) {
+			ContractCapacityPathAreaValuesBean bean = list3.get(j);
+			HashMap<BigDecimal,BigDecimal> steps = null;
+			HashMap<BigDecimal,BigDecimal> steps_min_max = null;
+			if(step_values.containsKey(bean.getIdn_capacity_path())) {
+				steps = step_values.get(bean.getIdn_capacity_path());
+			} else {
+				steps =  new HashMap<BigDecimal,BigDecimal>();
+				step_values.put(bean.getIdn_capacity_path(), steps);
+				l_idn_capacity_path.add(bean.getIdn_capacity_path());
+			}
+			if(step_values_min_max.containsKey(bean.getIdn_capacity_path())) {
+				steps_min_max = step_values_min_max.get(bean.getIdn_capacity_path());
+			} else {
+				steps_min_max =  new HashMap<BigDecimal,BigDecimal>();
+				step_values_min_max.put(bean.getIdn_capacity_path(), steps_min_max);
+			}
+		}
+		for(int j=0;j<l_idn_capacity_path.size();j++) {
+			HashMap<BigDecimal,BigDecimal> steps = step_values.get(l_idn_capacity_path.get(j));
+			HashMap<BigDecimal,BigDecimal> steps_min_max = step_values_min_max.get(l_idn_capacity_path.get(j));
+			for(int i=0;i<list.size();i++) {
+				ContractCapacityPathDetailBean b = list.get(i);
+				steps.put(b.getIdn_area(), null);
+				steps_min_max.put(b.getIdn_area(), null);
+			}
+		}
+		for(int j=0;j<list3.size();j++) {
+			ContractCapacityPathAreaValuesBean bean = list3.get(j);
+			HashMap<BigDecimal,BigDecimal> steps = step_values.get(bean.getIdn_capacity_path());
+			steps.put(bean.getIdn_area(), bean.getQuantity());
+			HashMap<BigDecimal,BigDecimal> steps_min_max = step_values_min_max.get(bean.getIdn_capacity_path());
+			if(mapa_min_path_step.containsKey(bean.getIdn_capacity_path())){
+				if(mapa_min_path_step.get(bean.getIdn_capacity_path()).getIdn_area().equals(bean.getIdn_area()) ) {
+					steps_min_max.put(bean.getIdn_area(), mapa_min_path_step.get(bean.getIdn_capacity_path()).getQuantity());
 				}
 			}
-			Iterator<ContractCapacityPathAreaValuesBean> it_max = mapa_max_path_step.values().iterator();
-			while(it_max.hasNext()) {
-				ContractCapacityPathAreaValuesBean bean = it_max.next();
-				if(b.getIdn_area().intValue()==bean.getIdn_area().intValue()) {
-					b.getList_values_remain_booked().add(bean.getQuantity());
+			if(mapa_max_path_step.containsKey(bean.getIdn_capacity_path())){
+				if(mapa_max_path_step.get(bean.getIdn_capacity_path()).getIdn_area().equals(bean.getIdn_area()) ) {
+					steps_min_max.put(bean.getIdn_area(), mapa_max_path_step.get(bean.getIdn_capacity_path()).getQuantity());
 				}
 			}
 			
 		}
 		for(int i=0;i<list.size();i++) {
 			ContractCapacityPathDetailBean b = list.get(i);
-			for(int j=0;j<list3.size();j++) {
-				ContractCapacityPathAreaValuesBean bean = list3.get(j);
-				if(b.getIdn_area().intValue()==bean.getIdn_area().intValue()) {
-					b.getList_values_available().add(bean.getQuantity());
-				}
-				
+			for(int j=0;j<l_idn_capacity_path.size();j++) {
+				HashMap<BigDecimal,BigDecimal> steps = step_values.get(l_idn_capacity_path.get(j));
+				b.getList_values_available().add(steps.get(b.getIdn_area()));
+				HashMap<BigDecimal,BigDecimal> steps_min_max = step_values_min_max.get(l_idn_capacity_path.get(j));
+				b.getList_values_remain_booked().add(steps_min_max.get(b.getIdn_area()));
+
 			}
 		}
+		
+	
+		
 		
 		return list;
 	}
@@ -235,7 +268,6 @@ public class ContractCapacityPathServiceImpl implements ContractCapacityPathServ
 		ContractCapacityPathInsertBean bean = new ContractCapacityPathInsertBean();
 		bean.setStart_date(filters2.getStart_date());
 		bean.setEnd_date(filters2.getEnd_date());
-		bean.setPublished("N");
 		
 		for(int i=0;i<list.size();i++) {
 			bean.setIdn_capacity_path(list.get(i).getIdn_capacity_path());

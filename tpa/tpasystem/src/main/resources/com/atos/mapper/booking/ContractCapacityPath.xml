@@ -342,7 +342,6 @@ select
   t.quantity as assigned_quantity
  from tpa_tcontract_capacity_path t, tpa_tcontract_agreement ca
  where t.is_enabled = 'Y'
- 		and t.is_published = #{published}
        and t.idn_capacity_path = #{idn_capacity_path}
        and ca.idn_contract_agreement = t.idn_contract_agreement
        AND #{end_date} >= ca.start_date
@@ -361,9 +360,6 @@ select distinct cp2.idn_capacity_path as idn_capacity_path,
  where cp2.idn_capacity_path = cps.idn_capacity_path
      and ca.idn_contract_agreement = cp2.idn_contract_agreement
        and cp2.is_enabled = 'Y'
-		<if test='"Y".equals(is_publish)'>       
-       and cp2.is_published = 'Y'
-       </if>
        and cp2.version_date = (select max(version_date) from tpa_tcontract_capacity_path ccpx where 
                       ccpx.idn_contract_agreement = cp2.idn_contract_agreement
                                    AND ccpx.idn_capacity_path = cp2.idn_capacity_path

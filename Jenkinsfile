@@ -25,14 +25,11 @@ pipeline {
         stage('build') {
             steps {
                 echo "Building..${BRANCH_NAME}"
-                updateGitlabCommitStatus name: 'build', state: 'pending'
                 script {
                     try {
                         sh "/opt/maven/apache-maven-3.8.6/bin/mvn -f tpa/pom.xml -U -Ptst2 clean install"
-                        updateGitlabCommitStatus name: 'build', state: 'success'
                     } catch (Exception e) {
                         echo 'Exception occurred: ' + e.toString()
-                        updateGitlabCommitStatus name: 'build', state: 'failed'
                         sh 'exit 1'
                     }
                 }
@@ -41,14 +38,11 @@ pipeline {
         stage('test') {
             steps {
                 echo "Testing..${BRANCH_NAME}"
-                updateGitlabCommitStatus name: 'test', state: 'pending'
                 script {
                     try {
                         //sh ""
-                        updateGitlabCommitStatus name: 'test', state: 'success'
                     } catch (Exception e) {
                         echo 'Exception occurred: ' + e.toString()
-                        updateGitlabCommitStatus name: 'test', state: 'failed'
                         sh 'exit 1'
                     }
                 }
@@ -57,7 +51,6 @@ pipeline {
         stage('deploy') {
             steps {
                 echo "Deploying..${BRANCH_NAME}"
-                updateGitlabCommitStatus name: 'deploy', state: 'pending'
                 script {
                     try {
 	                     sshPublisher(
@@ -78,10 +71,8 @@ pipeline {
 						      )
 						     ])
 						   ])
-                        updateGitlabCommitStatus name: 'deploy', state: 'success'
                     } catch (Exception e) {
                         echo 'Exception occurred: ' + e.toString()
-                        updateGitlabCommitStatus name: 'deploy', state: 'failed'
                         sh 'exit 1'
                     }
                 }

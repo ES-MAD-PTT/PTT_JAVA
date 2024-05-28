@@ -37,4 +37,6 @@ public interface ContractCapacityPathEditionService extends Serializable{
 	public ArrayList<String> getAreaCodes(List<ContractCapacityPathEditionDatesBean> tech_capacities);
 
 	public ArrayList<ContractCapacityPathEditionBean> getEditTable(List<ContractCapacityPathEditionDatesBean> tech_capacities, ContractCapacityPathFilter filters);
+	
+	public int publishPath(ContractCapacityPathFilter filters2, String username);
 }

@@ -5,7 +5,7 @@
 <mapper namespace="com.atos.mapper.scadaAlarms.ScadaAlarmMapper">
 
     <resultMap type="com.atos.beans.scadaAlarms.ScadaAlarmBean" id="ScadaAlarm">
-        <id column="idn_scadaAlarm" property="idn_scada_alarm"  />
+        <id column="idn_scada_alarm" property="idn_scada_alarm"  />
 		<result property="scada_tag_name" column="scada_tag_name"/>
         <result property="scada_timestamp" column="scada_timestamp"/>   
         <result property="scada_label" column="scada_label"/>   

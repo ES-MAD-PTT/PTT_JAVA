@@ -6,10 +6,12 @@ import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
@@ -43,7 +45,7 @@ public class BalanceIntradayReportView extends CommonView {
 	private static final long serialVersionUID = -633536258494817245L;
 
 	private static final String excelTotalLabel ="TOTAL";
-	private static final String excelTotalLabelG ="TOTAL";
+	private static final String excelTotalLabelG ="TOTAL (TOTAL)";
 	
 	private BalanceIntradayReportFilter filters, filters_form;
 	private List<BalanceIntradayReportBean> items;
@@ -367,9 +369,9 @@ public class BalanceIntradayReportView extends CommonView {
         cellStyleRow.setBorderLeft(XSSFCellStyle.BORDER_THIN);
 
         byte[] rgb = new byte[3];
-        rgb[0] = (byte) 153; // red
-        rgb[1] = (byte) 230; // green
-        rgb[2] = (byte) 230; // blue
+        rgb[0] = (byte) 59; // red
+        rgb[1] = (byte) 195; // green
+        rgb[2] = (byte) 241; // blue
         XSSFColor totalColor = new XSSFColor(rgb); // #f2dcdb
         
         XSSFCellStyle cellStyleTotalRow = wb.createCellStyle();
@@ -381,9 +383,9 @@ public class BalanceIntradayReportView extends CommonView {
         cellStyleTotalRow.setFillPattern(XSSFCellStyle.SOLID_FOREGROUND);
         
         byte[] rgbG = new byte[3];
-        rgbG[0] = (byte) 217; // red
-        rgbG[1] = (byte) 208; // green
-        rgbG[2] = (byte) 86; // blue
+        rgbG[0] = (byte) 58; // red
+        rgbG[1] = (byte) 138; // green
+        rgbG[2] = (byte) 242; // blue
         XSSFColor totalColorG = new XSSFColor(rgbG); 
         
         XSSFCellStyle cellStyleTotalRowG = wb.createCellStyle();
@@ -477,6 +479,8 @@ public class BalanceIntradayReportView extends CommonView {
        				alTotalRowsG.add(new Integer(i));
        			else if(tmpStrValue.startsWith(excelTotalLabel))
        				alTotalRows.add(new Integer(i));
+       			
+       			
 	        }	        	
 			
 	        for(i=initialRowToProcess;i<sheet.getPhysicalNumberOfRows();i++){
@@ -627,7 +631,13 @@ public class BalanceIntradayReportView extends CommonView {
 	    	}
 		}
 	    public Map<BigDecimal, Object> getTimestampIds_form() {
-	   		return service.selectTimestampIds(filters_form);
+	    	Map<BigDecimal, Object> values = new HashMap<>();
+	    	values = service.selectTimestampIds(filters_form);
+	    	filters_form.setTimestampVarList(values.keySet().stream()
+	    			.map(BigDecimal::toString)
+	    			.collect(Collectors.toList()));
+	    	
+	    	return values;
 		}
 	    
 	    public void cancelTimestamp() {

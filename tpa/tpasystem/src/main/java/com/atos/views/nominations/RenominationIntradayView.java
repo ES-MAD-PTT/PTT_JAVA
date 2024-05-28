@@ -219,6 +219,12 @@ public class RenominationIntradayView extends CommonView implements Serializable
 						"Error filtering data", Calendar.getInstance().getTime()));
 				return;
 			}
+			if(newReIntraday.getDetail().size()==0) {
+				messages.addMessage(Constants.head_menu[4], new MessageBean(Constants.ERROR, "There is no registers to modify",
+						"There is no registers to modify", Calendar.getInstance().getTime()));
+				return;
+			}
+			boolean updated = false;
 			for(int i=0;i<newReIntraday.getDetail().size();i++) {
 				RenominationIntradayDialogDetBean det = newReIntraday.getDetail().get(i);
 				if(det.getUpdated().equals("S")) {
@@ -230,6 +236,7 @@ public class RenominationIntradayView extends CommonView implements Serializable
 						messages.addMessage(Constants.head_menu[4],new MessageBean(Constants.ERROR,"Error updating","Energy and Volume are required", Calendar.getInstance().getTime()));
 						return;
 					}
+					updated = true;
 				/*	if(newReIntraday.getHour().equals(BigDecimal.valueOf(0))) {
 						Calendar cal = Calendar.getInstance();
 						cal.setTime(det.getGas_day());
@@ -240,6 +247,11 @@ public class RenominationIntradayView extends CommonView implements Serializable
 					}*/
 
 				}
+			}
+			if(!updated) {
+				messages.addMessage(Constants.head_menu[4], new MessageBean(Constants.ERROR, "You have not modified any value",
+						"You have not modified any value", Calendar.getInstance().getTime()));
+				return;
 			}
 			newReIntraday.setUsername(getUser().getUsername());
 			String res = service.save(newReIntraday);

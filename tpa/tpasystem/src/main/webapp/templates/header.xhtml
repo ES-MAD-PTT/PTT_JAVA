@@ -251,12 +251,12 @@
             
             
             
-            <p:column headerText="#{msg['scadaAlarms_Time_Stamp']}"  style="width: 110px;">
+            <p:column headerText="#{msg['scadaAlarms_Time_Stamp']}"  style="width: 90px;">
                 <h:outputText value="#{alarms.scada_timestamp}" >
 				   	<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss"/>
 				</h:outputText>
             </p:column>
-            <p:column headerText="#{msg['scadaAlarms_Label']}" style="width: 65px;">
+            <p:column headerText="#{msg['scadaAlarms_Label']}" style="width: 85px;">
                 <h:outputText value="#{alarms.scada_label}" />
             </p:column>
             <p:column headerText="#{msg['scadaAlarms_Metering_Point']}" style="width: 55px;">

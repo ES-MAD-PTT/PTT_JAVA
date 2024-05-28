@@ -33,6 +33,7 @@ import com.atos.filters.allocation.AllocationManagementFilter;
 import com.atos.mapper.NotificationMapper;
 import com.atos.mapper.SystemParameterMapper;
 import com.atos.mapper.allocation.AllocationManagementMapper;
+import com.atos.quartz.AllocationAutorunIntradayClient;
 import com.atos.runnable.allocation.AllocationBalanceTask;
 import com.atos.utils.Constants;
 
@@ -62,6 +63,9 @@ public class AllocationManagementServiceImpl implements AllocationManagementServ
 	
 	@Autowired
 	private NotificationMapper notifMapper;	
+
+	@Autowired
+    private AllocationAutorunIntradayClient intradayService;
 
 	@Autowired
 	@Qualifier("allocationBalanceTaskExecutor")
@@ -435,7 +439,7 @@ public class AllocationManagementServiceImpl implements AllocationManagementServ
         	// Si se alcanza el numero maximo de threads concurrentes definidos en el metTaskExecutor,
         	// el siguiente thread no se puede lanzar y se genera una org.springframework.core.task.TaskRejectedException
 			allBalTaskExecutor.execute(new AllocationBalanceTask(_startDate, _endDate, _user, _lang, msgs, amMapper,
-					notifMapper, idnSystem));
+					notifMapper, idnSystem, intradayService));
         }   
         catch (TaskRejectedException tre) {	// Excepcion para el caso de que no se pueda generar un thread porque se ha alcanzado el maximo numero de threads.
         			// En caso de error, se ha de liberar el bloqueo.

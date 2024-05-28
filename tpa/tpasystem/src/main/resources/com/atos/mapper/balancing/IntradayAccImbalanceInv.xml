@@ -33,7 +33,7 @@
 		<result property="w_others_colour" column="w_others_warn" />
 		
 		<result property="e_pttshipper_val" column="e_pttShipper_val" />
-		<result property="w_pttshipper_colour" column="e_pttShipper_warn" />
+		<result property="e_pttshipper_colour" column="e_pttShipper_warn" />
 		<result property="w_pttshipper_val" column="w_pttShipper_val" />
 		<result property="w_pttshipper_colour" column="w_pttShipper_warn" />
 		
@@ -43,26 +43,54 @@
 	</resultMap>
 
 	<select id="selectIntradayAccImbalanceInv" resultMap="IntradayAccImbalanceInventory">
-WITH 
+WITH
   gas_day AS
     (SELECT #{gasDay}  AS gas_day FROM dual),
   all_concepts AS
     (SELECT nc.idn_nomination_concept AS idn,
             nc.concept_code           AS concept_code
        FROM tpa_tnomination_concept nc
-      WHERE nc.concept_code IN ('Accumulated_Total_Inventory', 
+      WHERE nc.concept_code IN ('Accumulated_Total_Inventory',
                                 'Base_Inventory',
                                 'Acc_Imbalance_Inventory_Operator',
-                                'Acc_Imbalance_Others', 
-                                'Acc_Imbalance_Inventory_Others', 
+                                'Acc_Imbalance_Others',
+                                'Acc_Imbalance_Inventory_Others',
                                 'Acc_Imbalance_Inventory_PTTShipper')
     ),
+  ptt_shipper AS
+    (SELECT ug.idn_user_group,
+            ug.user_group_id,
+            ug.idn_user_group_type,
+            ug.user_group_name
+       FROM tpa_tparameter       p,
+            tpa_tparameter_value pv,
+            tpa_tuser_group      ug,
+            gas_day              d
+      WHERE p.parameter_code = 'PTT.SHIPPER'
+        AND pv.idn_parameter = p.idn_parameter
+        AND pv.version_date = (SELECT MAX(pvx.version_date)
+                                 FROM tpa_tparameter_value pvx
+                                WHERE pvx.idn_parameter = pv.idn_parameter
+                                  AND pvx.start_date = pv.start_date)
+        AND d.gas_day BETWEEN pv.start_date AND
+            COALESCE(pv.end_date,
+                     (SELECT MIN(pvy.start_date) - 1
+                        FROM tpa_tparameter_value pvy
+                       WHERE pv.idn_parameter = pvy.idn_parameter
+                         AND nvl(pvy.end_date, pvy.start_date) >= pvy.start_date
+                         AND pvy.start_date > pv.start_date
+                         AND pvy.version_date = (SELECT MAX(pvz.version_date)
+                                                   FROM tpa_tparameter_value pvz
+                                                  WHERE pvz.idn_parameter = pvy.idn_parameter
+                                                    AND pvz.start_date = pvy.start_date)),
+                     to_date('9999-12-31', ' YYYY-MM-DD'))
+        AND pv.parameter_value = ug.user_group_id),
   intraday_balance AS
-    (SELECT t.idn_allocation, 
-            t.gas_day, 
+    (SELECT t.idn_allocation,
+            t.gas_day,
             t.version_date
        FROM tpa_tallocation        t,
-            tpa_tallocation_origin ao        
+            tpa_tallocation_origin ao
       WHERE t.gas_day = (SELECT gas_day FROM gas_day)
         AND t.idn_pipeline_system = #{systemId}
         AND ao.origin_code IN ('BALANCE', 'CLOSING_PROCESS')
@@ -85,23 +113,23 @@ WITH
                                        AND ax.idn_allocation_origin = ao.idn_allocation_origin
                                        AND ao.origin_code IN ('BALANCE', 'CLOSING_PROCESS'))
               </when>
-            </choose> 
+            </choose>
 
     ),
   data_global AS
     (SELECT ad.idn_allocation_data_global,
-            ad.idn_allocation, 
-            ad.idn_zone, 
+            ad.idn_allocation,
+            ad.idn_zone,
             c.concept_code,
             z.zone_code || '#' || c.concept_code AS aggregation,
             ad.idn_nomination_concept,
-            ad.allocated_value,  
+            ad.allocated_value,
             ib.version_date,
             ib.gas_day
        FROM intraday_balance ib,
             tpa_tallocation_data_global ad,
             all_concepts c,
-            tpa_vzone_tpa z 
+            tpa_vzone_tpa z
       WHERE ad.idn_allocation = ib.idn_allocation
         AND ad.idn_zone = z.idn_zone
         AND ad.idn_nomination_concept = c.idn
@@ -156,45 +184,75 @@ WITH
                                   AND biy.version_date <![CDATA[ <= ]]> ib.version_date)
         AND bi.idn_base_inv_mode = mo.idn_base_inv_mode
         AND z.idn_zone = bi.idn_zone
-    )                    
-SELECT * 
-  FROM (SELECT dgl.version_date, 
-               dgl.allocated_value, 
+    ),
+  intraday_gas_flow_ptt_shipper AS
+        (SELECT b.gas_day,
+                b.idn_allocation,
+                b.version_date,
+                igf.idn_user_group,
+                igf.idn_zone,
+                igf.flow_type,
+                igf.margin_value
+           FROM tpa_tintraday_gas_flow igf,
+                ptt_shipper            ptt,
+                intraday_balance       b
+          WHERE igf.idn_allocation = b.idn_allocation
+            AND igf.idn_user_group = ptt.idn_user_group)
+SELECT *
+  FROM (SELECT dgl.version_date,
+               dgl.allocated_value,
                dgl.aggregation,
-               CASE 
-                 WHEN dgl.allocated_value > b.HIGH_THRESHOLD_TOP AND dgl.concept_code = 'Acc_Imbalance_Inventory_Operator' THEN
-                   'red'
-                 WHEN dgl.allocated_value > b.HIGH_THRESHOLD_MID AND dgl.concept_code = 'Acc_Imbalance_Inventory_Operator' THEN
-                   'orange'
-                 WHEN dgl.allocated_value > b.HIGH_THRESHOLD AND dgl.concept_code = 'Acc_Imbalance_Inventory_Operator' THEN
-                   'yellow'
-                 WHEN dgl.allocated_value <![CDATA[ < ]]> b.LOW_THRESHOLD_TOP AND dgl.concept_code = 'Acc_Imbalance_Inventory_Operator' THEN
-                   'red'
-                 WHEN dgl.allocated_value <![CDATA[ < ]]> b.LOW_THRESHOLD_MID AND dgl.concept_code = 'Acc_Imbalance_Inventory_Operator' THEN
-                   'orange'
-                 WHEN dgl.allocated_value <![CDATA[ < ]]> b.LOW_THRESHOLD AND dgl.concept_code = 'Acc_Imbalance_Inventory_Operator' THEN
-                   'yellow'
+               CASE
+                 WHEN dgl.concept_code = 'Acc_Imbalance_Inventory_Operator' THEN
+                   CASE
+                     WHEN dgl.allocated_value > b.HIGH_THRESHOLD_TOP THEN
+                       'red'
+                     WHEN dgl.allocated_value > b.HIGH_THRESHOLD_MID THEN
+                       'orange'
+                     WHEN dgl.allocated_value > b.HIGH_THRESHOLD THEN
+                       'yellow'
+                     WHEN dgl.allocated_value <![CDATA[ < ]]> b.LOW_THRESHOLD_TOP THEN
+                       'red'
+                     WHEN dgl.allocated_value <![CDATA[ < ]]> b.LOW_THRESHOLD_MID THEN
+                       'orange'
+                     WHEN dgl.allocated_value <![CDATA[ < ]]> b.LOW_THRESHOLD THEN
+                       'yellow'
+                     ELSE
+                       'NO_WARN'
+                   END
+                 WHEN dgl.concept_code = 'Acc_Imbalance_Inventory_PTTShipper' THEN
+                   CASE
+                     WHEN ((dgl.allocated_value <![CDATA[ < ]]> 0 AND dgl.allocated_value <![CDATA[ < ]]> gf.margin_value) OR
+                           (dgl.allocated_value > 0 AND dgl.allocated_value > gf.margin_value)) THEN
+                       DECODE(gf.flow_type, 'INSTRUCTED FLOW', 'orange', 'red')
+                     ELSE
+                       'NO_WARN'
+                   END
                  ELSE
                    'NO_WARN'
                END AS colour,
                b.mode_code
           FROM data_global dgl
-          LEFT JOIN base_intraday_setup b  
+          LEFT JOIN base_intraday_setup b
             ON dgl.idn_allocation = b.idn_allocation
-           AND b.idn_zone = dgl.idn_zone
+           AND dgl.idn_zone = b.idn_zone
            AND dgl.gas_day = b.gas_day
+          LEFT JOIN intraday_gas_flow_ptt_shipper gf
+            ON dgl.idn_allocation = gf.idn_allocation
+           AND dgl.gas_day = gf.gas_day
+           AND dgl.idn_zone = gf.idn_zone
        )
 PIVOT(SUM(allocated_value) AS val, MIN(colour) AS warn, MIN(mode_code) AS mode_code
-       FOR aggregation IN ('EAST#Accumulated_Total_Inventory' AS e_total_Inventory, 
-                           'WEST#Accumulated_Total_Inventory' AS w_total_Inventory, 
+       FOR aggregation IN ('EAST#Accumulated_Total_Inventory' AS e_total_Inventory,
+                           'WEST#Accumulated_Total_Inventory' AS w_total_Inventory,
                            'EAST#Base_Inventory' AS e_base_Inventory,
                            'WEST#Base_Inventory' AS w_base_Inventory,
                            'EAST#Acc_Imbalance_Inventory_Operator' AS e_inventory_operator,
                            'WEST#Acc_Imbalance_Inventory_Operator' AS w_inventory_operator,
-                           'EAST#Acc_Imbalance_Others' AS e_other_shippers, 
+                           'EAST#Acc_Imbalance_Others' AS e_other_shippers,
                            'WEST#Acc_Imbalance_Others' AS w_other_shippers,
-                           'EAST#Acc_Imbalance_Inventory_Others' AS e_others,   
-                           'WEST#Acc_Imbalance_Inventory_Others' AS w_others, 
+                           'EAST#Acc_Imbalance_Inventory_Others' AS e_others,
+                           'WEST#Acc_Imbalance_Inventory_Others' AS w_others,
                            'EAST#Acc_Imbalance_Inventory_PTTShipper' AS e_pttshipper,
                            'WEST#Acc_Imbalance_Inventory_PTTShipper' AS w_pttshipper)
       )

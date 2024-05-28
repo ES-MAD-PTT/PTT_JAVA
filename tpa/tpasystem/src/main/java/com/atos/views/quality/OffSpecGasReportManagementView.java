@@ -627,7 +627,7 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
     	String errorMsg = null;
     	List<BigDecimal> lEmailRecipients = null;
     	
-    	if(selected != null && selected.getFilesAction().size() < 1) {
+    	if(selected.getChosenNextStatusRule().getNextStatusCode().equals("EV.ACCEPTED - CLOSED") && selected != null && selected.getFilesAction().size() < 1) {
     		errorMsg = msgs.getString("osrg_man_mandatoryOneFile");
     		getMessages().addMessage(Constants.head_menu[6],
 					new MessageBean(Constants.ERROR, msgs.getString("saving_data_error"), errorMsg, Calendar.getInstance().getTime()));

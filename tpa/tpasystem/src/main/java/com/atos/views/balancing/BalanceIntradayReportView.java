@@ -682,6 +682,7 @@ public class BalanceIntradayReportView extends CommonView {
 	    	filters_form.setSystemId(getChangeSystemView().getIdn_active());
 	    	//LOOKING TO THE SYSDATE parameter BD
 	    	sysdate= gettingValidDateStart();
+	    	timestampVarListNoShipper = new ArrayList<>();
 
 	    }
 	   
@@ -702,6 +703,7 @@ public class BalanceIntradayReportView extends CommonView {
 	    	
 	    	filters_form = new BalanceIntradayReportFilter();
 	    	filters_form.setSystemId(getChangeSystemView().getIdn_active());
+	    	timestampVarListNoShipper = new ArrayList<>();
 
 	    }
 }

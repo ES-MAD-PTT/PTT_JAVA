@@ -22,6 +22,7 @@ public interface BalanceIntradayReportMapper extends Serializable {
 	//public void insertReportTemplate(ReportTemplateBean rtb);
 	
 	public List<ComboFilterNS> selectTimestampIds(BalanceIntradayReportFilter filters);
+	public List<String> selectTimestampIdsNoShipper(BalanceIntradayReportFilter filters);
 	
 	public int deleteBalanceIntradayReportShipperFilter(BalanceIntradayReportFormBean bean);
 	public int insertBalanceIntradayReportShipperFilter(BalanceIntradayReportFormBean bean);

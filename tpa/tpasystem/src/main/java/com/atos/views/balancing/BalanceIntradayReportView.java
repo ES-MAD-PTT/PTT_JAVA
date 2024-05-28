@@ -51,6 +51,9 @@ public class BalanceIntradayReportView extends CommonView {
 	private List<BalanceIntradayReportOffshoreBean> itemsOffshore;
 	private BalanceIntradayReportBean selected;
 	private BalanceIntradayReportOffshoreBean selectedOffshore;
+	
+	private List<String> timestampVarListNoShipper = new ArrayList<>();
+	private List<String> timestampVarListNoShipperSelect = new ArrayList<>();
 
 	private static final Logger log = LogManager.getLogger("com.atos.views.balancing.BalanceIntradayReportView");
 
@@ -118,6 +121,22 @@ public class BalanceIntradayReportView extends CommonView {
 
 	public void setSelectedOffshore(BalanceIntradayReportOffshoreBean selectedOffshore) {
 		this.selectedOffshore = selectedOffshore;
+	}
+
+	public List<String> getTimestampVarListNoShipper() {
+		return timestampVarListNoShipper;
+	}
+
+	public void setTimestampVarListNoShipper(List<String> timestampVarListNoShipper) {
+		this.timestampVarListNoShipper = timestampVarListNoShipper;
+	}
+
+	public List<String> getTimestampVarListNoShipperSelect() {
+		return timestampVarListNoShipperSelect;
+	}
+
+	public void setTimestampVarListNoShipperSelect(List<String> timestampVarListNoShipperSelect) {
+		this.timestampVarListNoShipperSelect = timestampVarListNoShipperSelect;
 	}
 
 	// Este booleano marcara si esta habilitado el filtro de shipper (isOperator = true) o esta deshabilitado, 
@@ -650,6 +669,12 @@ public class BalanceIntradayReportView extends CommonView {
 	    	filters_form.setTimestampVarList(values.keySet().stream()
 	    			.map(BigDecimal::toString)
 	    			.collect(Collectors.toList()));
+	    	timestampVarListNoShipper = filters_form.getTimestampVarList();
+	    	
+	    	timestampVarListNoShipperSelect = service.selectTimestampIdsNoShipper(filters_form);
+	    	filters_form.getTimestampVarList().removeAll(timestampVarListNoShipperSelect);  	
+	    			
+	    	
 	    }
 	    
 	    public void cancelTimestamp() {
@@ -662,6 +687,9 @@ public class BalanceIntradayReportView extends CommonView {
 	   
 	    
 	    public void saveTimestamp() {
+	    	//Cojemos la lista de los Id que teniamos y borramos lo que hemos seleccionado para luego setearle el que no puede ver el shipper
+	    	timestampVarListNoShipper.removeAll(filters_form.getTimestampVarList());
+	    	filters_form.setTimestampVarList(timestampVarListNoShipper);
 
 	    	String ret = service.saveTimestamp(filters_form,getUser().getUsername());
 	    	if(ret.equals("0")) {

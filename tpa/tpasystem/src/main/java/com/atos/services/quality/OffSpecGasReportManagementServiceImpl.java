@@ -790,7 +790,7 @@ public class OffSpecGasReportManagementServiceImpl implements OffSpecGasReportMa
 	@Override
 	public List<OffSpecFileBean> selectFiles(OffSpecIncidentBean item, String statusCode, String userGroupType) {
 		Integer idnStatusCode = null;
-		if(statusCode.equals("EV.ACCEPTED - CLOSED")){
+		if(userGroupType == null){
 			idnStatusCode = item.getStatusId().intValue();
 		}
 		return osgrmMapper.selectFiles(item.getIncidentId(), idnStatusCode, userGroupType);

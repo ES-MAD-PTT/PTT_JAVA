@@ -1034,7 +1034,8 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 	 }
 	 
 	 public Boolean renderedInfoStatusAcceptedClosed(OffSpecIncidentBean item) {
-			return hmAllStatus.get(item.getStatusId()).getStatusCode().equals("EV.ACCEPTED - CLOSED");
+		boolean accetpedStatus = hmAllStatus.get(item.getStatusId()).getStatusCode().equals("EV.ACCEPTED - CLOSED");
+		return accetpedStatus && (getIsOperator() || item.getIdnFirstUser().equals(getUser().getIdn_user())) ? true : false;
 	}
 	 
 	 public void prepareInfoStatusAcceptedClosed(OffSpecIncidentBean offspec) {

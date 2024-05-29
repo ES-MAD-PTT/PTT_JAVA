@@ -25,6 +25,7 @@ public interface BalanceIntradayReportService extends Serializable {
 	//public void insertReportTemplate(ReportTemplateBean rtb) throws Exception;
 	
 	public Map<BigDecimal, Object> selectTimestampIds(BalanceIntradayReportFilter filters);
+	public List<String> selectTimestampIdsNoShipper(BalanceIntradayReportFilter filters);
 	
 	public String saveTimestamp(BalanceIntradayReportFilter filters_form, String user);
 }

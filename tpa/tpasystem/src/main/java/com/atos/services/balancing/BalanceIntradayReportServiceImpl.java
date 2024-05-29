@@ -105,6 +105,15 @@ public class BalanceIntradayReportServiceImpl implements BalanceIntradayReportSe
 		}
 		return map; 
 	}
+	
+	
+	@Override
+	public List<String> selectTimestampIdsNoShipper(BalanceIntradayReportFilter filters) {
+		
+		return birMapper.selectTimestampIdsNoShipper(filters); 
+	}
+	
+	
 
 	@Override
 	public String saveTimestamp(BalanceIntradayReportFilter filters_form, String user) {

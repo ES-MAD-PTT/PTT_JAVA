@@ -2327,6 +2327,14 @@
 		GROUP BY idn_allocation, to_char(a.version_date, 'DD/MM/YY HH24:MI:SS FF9')
 		ORDER BY idn_allocation, to_char(a.version_date, 'DD/MM/YY HH24:MI:SS FF9')
 		</select>
+		
+		
+		<select id="selectTimestampIdsNoShipper" resultType="java.lang.String">
+		SELECT idn_allocation 
+		FROM tpa_tallocation_shipper_filter 
+		WHERE gas_day = #{gasDay} AND page_code = 'BALANCE_INTRADAY_REPORT' AND is_enabled = 'Y'
+		
+		</select>
 
 	<!-- Para insertar la plantilla excel en la BD. Solo se usa en Desarrollo.	-->
  	<!-- <insert id="insertReportTemplate" useGeneratedKeys="true" keyProperty="repTemplateId" keyColumn="idn_report_template" parameterType="com.atos.beans.ReportTemplateBean">

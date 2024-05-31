@@ -37,20 +37,12 @@
 	</select>
 	
 	<select id="selectTimestampIds" resultType="com.atos.beans.ComboFilterNS">
-		SELECT a.idn_allocation as key,
-        to_char(a.version_date, 'DD/MM/YY HH24:MI:SS FF9') AS value
-        FROM tpa_tallocation a,
-        tpa_tallocation_origin ao
-        WHERE a.idn_pipeline_system = #{systemId}
-        AND ao.origin_code IN ('BALANCE', 'CLOSING_PROCESS')
-        AND a.idn_allocation_type =
-        (SELECT t.idn_allocation_type FROM tpa_tallocation_type t WHERE t.type_code = 'INTRADAY')
-        AND a.idn_allocation_origin = ao.idn_allocation_origin
-        AND to_char(a.gas_day,'DD/MM/YY')
-             = to_char(#{date},'DD/MM/YY')
-        AND a.gas_day = trunc(a.version_date)
-        GROUP BY idn_allocation, to_char(a.version_date, 'DD/MM/YY HH24:MI:SS FF9')
-        ORDER BY idn_allocation, to_char(a.version_date, 'DD/MM/YY HH24:MI:SS FF9')
+		select idn_webservice_input as key,
+		       to_char(input_date, 'DD/MM/YY HH24:MI:SS FF9') as value
+		  from TPA_TWEBSERVICE_INPUT t
+		 where webservice = 'BASE.WEBSERVICE'
+		   and trunc(input_date) = #{date}
+		 order by input_date
 		</select>
 	
 	<select id="selectIntradayBaseInventory" resultMap="IntradayBaseInventory">	
@@ -77,9 +69,7 @@
                   AND bix.idn_base_inv_mode = bi.idn_base_inv_mode
                   
         <if test="timestampVar != null and timestampVar != ''">    
-         AND bix.version_date <![CDATA[ < ]]> (select a.version_date
-                                             from tpa_tallocation a
-                                             where a.idn_allocation = #{timestampVar})
+         AND bix.idn_webservice_input = #{timestampVar}
                                    
         </if>       
                    )

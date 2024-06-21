@@ -92,6 +92,7 @@ WHERE
 		</if>
 		<if test="isShipper==true">
 		 and gf.idn_user_group = #{shipperId}  
+		 and gf.published = 'Y'
 		</if>
 		<if test="shipperId != null">
 		AND gf.idn_user_group = #{shipperId}

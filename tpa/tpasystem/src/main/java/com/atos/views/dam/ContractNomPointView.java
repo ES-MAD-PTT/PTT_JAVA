@@ -249,13 +249,16 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 		if (newContractNomPoint.getIdn_contract_point() != null && newContractNomPoint.getIdn_contract_point().compareTo(BigDecimal.ZERO) == 0) {
 		    newContractNomPoint.setIdn_contract_point(null);
 		    selecteds = service.selectContractNomPointsNullFormTable(newContractNomPoint);
+		    selectedsFornNew = selecteds;
 		}
 
 		
 		if(newContractNomPoint.getIdn_contract_point() == null) {
 			selecteds = service.selectContractNomPointsNullFormTable(newContractNomPoint);
+		    selectedsFornNew = selecteds;
 		}else{
 			selecteds = service.selectContractNomPointsFormTable(newContractNomPoint);
+		    selectedsFornNew = selecteds;
 		}
 		
 	}

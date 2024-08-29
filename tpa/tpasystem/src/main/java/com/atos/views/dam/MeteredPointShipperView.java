@@ -393,6 +393,7 @@ public class MeteredPointShipperView  extends CommonView implements Serializable
 	public void chargeAddEditTable() {
 		if(selection != null) {
 			allDataTableAddEdit = service.selectMetPointCustomerGroup(selection);
+			selectionTableAddEdit = allDataTableAddEdit;
 		}
 	}
 	

@@ -160,7 +160,7 @@
 						<shiro:hasPermission
 							name="#{changeSystemView.system}.DAM.METERING.SHIPPER.MOD">
 							<p:column
-								headerText="#{msg['contractNomPoint_limit_nomination_point']}"
+								headerText="#{msg['metPointShipper_limit_metering_point']}"
 								style="text-align:center;">
 								<p:commandButton id="edit" icon="fa fa-fw fa-edit"
 									process="@this" onstart="PF('cargando').show()"
@@ -241,7 +241,7 @@
 							</p:column>
 							<p:column>
 								<p:selectOneMenu id="newMeteredPointsId" style="width:100px"
-									value="#{selection.idnMeteringPoint}" disabled="#{meteredPointShipperView.disabledEdit}"
+									value="#{selection.idnMeteringPoint}"
 									filter="true" filterMatchMode="contains">
 									<f:selectItem itemLabel="" itemValue="" />
 									<f:selectItems
@@ -258,7 +258,7 @@
 							</p:column>
 							<p:column>
 								<p:selectOneMenu id="newCustomerTypesId" style="width:100px"
-									value="#{selection.idnCustomerType}" disabled="#{meteredPointShipperView.disabledEdit}"
+									value="#{selection.idnCustomerType}"
 									filter="true" filterMatchMode="contains">
 									<f:selectItem itemLabel="" itemValue="" />
 									<f:selectItems
@@ -274,7 +274,7 @@
 							</p:column>
 							<p:column>
 								<p:selectOneMenu id="newGroupsId" style="width:100px"
-									value="#{selection.idnGroup}" disabled="#{meteredPointShipperView.disabledEdit}"
+									value="#{selection.idnGroup}"
 									filter="true" filterMatchMode="contains">
 									<f:selectItem itemLabel="" itemValue="" />
 									<f:selectItems
@@ -300,8 +300,8 @@
 						rowKey="#{item.compositeKey}"
 						selection="#{meteredPointShipperView.selectionTableAddEdit}"
 						style="margin-bottom:20px;border-collapse:collapse"
-						paginator="true" rows="10" rowsPerPageTemplate="5,10,15,20,25"
-						scrollable="true" scrollHeight="100%" resizableColumns="false">
+						
+						scrollable="true" scrollHeight="300" resizableColumns="false">
 
 						<p:column selectionMode="multiple" 
 							style="width:36px;text-align:center" />

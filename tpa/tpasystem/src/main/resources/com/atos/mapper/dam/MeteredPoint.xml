@@ -624,11 +624,27 @@ WITH quality_point AS
 		       AND idn_system_point_param = #{idn_system_point_param} 
 	</update>
 	
+	<update id="deleteMeteredPoint" parameterType="com.atos.beans.dam.MeteredPointBean">
+		UPDATE tpa_tsystem_point set
+			   end_date = #{endDate},
+			   aud_last_user=#{username}
+		WHERE  idn_system_point = #{idn_system_point}
+	</update>
+	
 	<select id="getMeteredPointParamStarDate" resultType="java.util.Date">
 		SELECT  pp.start_date
 	    FROM tpa_tsystem_point_param pp
 		WHERE idn_system_point = #{idn_system_point}
 		      AND idn_system_point_param = #{idn_system_point_param} 
+	</select>
+	
+	
+	<select id="getIdnMeteredPointParam" resultType="java.math.BigDecimal">
+		SELECT  idn_system_point_param
+	    FROM tpa_tsystem_point_param pp
+		WHERE idn_system_point = #{idn_system_point}
+			and end_date is null
+		 
 	</select>
 	
 	<select id="getAreaCode" resultType="java.lang.String">

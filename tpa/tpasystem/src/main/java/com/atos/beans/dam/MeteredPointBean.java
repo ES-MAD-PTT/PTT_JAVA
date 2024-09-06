@@ -129,6 +129,47 @@ public class MeteredPointBean extends UserAudBean implements Serializable {
 		this.versionDate = versionDate;
 	}
 
+	public MeteredPointBean(MeteredPointBean b) {
+		super();
+		this.idn_system_point = b.getIdn_system_point();
+		this.idn_system_point_nomination = b.getIdn_system_point_nomination();
+		this.idn_area = b.getIdn_area();
+		this.idn_subarea = b.getIdn_subarea();
+		this.idn_system_point_group = b.getIdn_system_point_group();
+		this.idn_system_point_type = b.getIdn_system_point_type();
+		this.idn_customer_type = b.getIdn_customer_type();
+		this.idn_system_point_param = b.getIdn_system_point_param();
+		this.idn_system_point_contract = b.getIdn_system_point_contract();
+		this.idn_system_point_quality = b.getIdn_system_point_quality();
+		this.idn_zone = b.getIdn_zone();
+		this.idn_pipeline_system = b.getIdn_pipeline_system();
+		this.meteringID = b.getMeteringID();
+		this.point_code = b.getPoint_code();
+		this.id = b.getId();
+		this.newId = b.getNewId();
+		this.name = b.getName();
+		this.pointType = b.getPointType();
+		this.nominalCapacity = b.getNominalCapacity();
+		this.minPressure = b.getMinPressure();
+		this.maxPressure = b.getMaxPressure();
+		this.customerType = b.getCustomerType();
+		this.nominationPoint = b.getNominationPoint();
+		this.contractPoint = b.getContractPoint();
+		this.qualityPoint = b.getQualityPoint();
+		this.latitude = b.getLatitude();
+		this.longitud = b.getLongitud();
+		this.area = b.getArea();
+		this.subarea = b.getSubarea();
+		this.conectingPartyName = b.getConectingPartyName();
+		this.conectingPartyPhoneNumber = b.getConectingPartyPhoneNumber();
+		this.conectingPartyEmail = b.getConectingPartyEmail();
+		this.startDate = b.getStartDate();
+		this.endDate = b.getEndDate();
+		this.systemCode = b.getSystemCode();
+		this.zone = b.getZone();
+		this.versionDate = b.getVersionDate();
+	}
+
 	public String getContractPoint() {
 		return contractPoint;
 	}

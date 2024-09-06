@@ -257,9 +257,11 @@ public class MeteredPointServiceImpl implements MeteredPointService {
 		// primero buscar el idn ya que tenemos su .metering_id y luego hacer
 		// update
 
-		int up1 = meteredPointMapper.updateMocMetering(meteredPoint);
-		if (up1 != 1) {
-			throw new Exception("-4");
+		if(meteredPoint.getNewId()== null || meteredPoint.getNewId()=="") {
+			int up1 = meteredPointMapper.updateMocMetering(meteredPoint);
+			if (up1 != 1) {
+				throw new Exception("-4");
+			}
 		}
 		return "0";
 	}
@@ -483,6 +485,27 @@ public class MeteredPointServiceImpl implements MeteredPointService {
 		} else {
 			return false;
 		}
+	}
+
+	@Transactional(rollbackFor = { Throwable.class })
+	public String deleteOldMeteredPoint(MeteredPointBean meteredPoint) throws Exception {
+		
+		Date startDateBd = meteredPoint.getStartDate();
+		Date endDate = restarDiasFecha(startDateBd, 1);
+		meteredPoint.setEndDate(endDate);
+		
+		BigDecimal idn_system_point_param = meteredPointMapper.getIdnMeteredPointParam(meteredPoint.getIdn_system_point());
+		meteredPoint.setIdn_system_point_param(idn_system_point_param);
+		
+		int ins = meteredPointMapper.deleteMeteredPointParam(meteredPoint);
+		if (ins != 1) {
+			throw new Exception("-10");
+		}
+		int ins2 = meteredPointMapper.deleteMeteredPoint(meteredPoint);
+		if (ins2 != 1) {
+			throw new Exception("-11");
+		}
+		return "0";
 	}
 
 }

@@ -135,7 +135,7 @@ order by
 		FROM
 			tpa_tsystem_point_param
 		WHERE
-			idn_nomination_point = tcnp.idn_nom_point)) AS idn_contract_point,
+			idn_nomination_point = tcnp.idn_nom_point and nvl(end_date, to_date('31/12/9999', 'DD/MM/YYYY')) >= start_date)) AS idn_contract_point,
 	tcnp.idn_nom_point AS idn_nomination_point,
 	(
 	SELECT
@@ -150,14 +150,14 @@ order by
 		FROM
 			tpa_tsystem_point_param
 		WHERE
-			idn_nomination_point = tcnp.idn_nom_point)) AS contract_point,
+			idn_nomination_point = tcnp.idn_nom_point and nvl(end_date, to_date('31/12/9999', 'DD/MM/YYYY')) >= start_date)) AS contract_point,
 	(
 	SELECT
 		t.point_desc
 	FROM
 		TPA_TSYSTEM_POINT t
 	WHERE
-		t.idn_system_point = tcnp.idn_nom_point) AS nomination_point
+		t.idn_system_point = tcnp.idn_nom_point and nvl(end_date, to_date('31/12/9999', 'DD/MM/YYYY')) >= start_date) AS nomination_point
 FROM
 	TPA_TCONTRACT_NOM_POINT tcnp,
 	TPA_TCONTRACT tc

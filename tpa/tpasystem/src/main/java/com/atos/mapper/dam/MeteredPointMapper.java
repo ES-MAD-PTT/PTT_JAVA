@@ -76,6 +76,8 @@ public interface MeteredPointMapper {
 
 	public int deleteMeteredPointParam(MeteredPointBean meteredPoint);
 
+	public int deleteMeteredPoint(MeteredPointBean meteredPoint);
+
 	public Date getMeteredPointParamStarDate(MeteredPointBean meteredPoint);
 
 	public String getAreaCode(BigDecimal idn_nomination_point);
@@ -96,4 +98,6 @@ public interface MeteredPointMapper {
 
 	public List<BigDecimal> getValidateGroupIDEdit (MeteredPointBean meteredPoint);
 
+	public BigDecimal getIdnMeteredPointParam(BigDecimal idn_system_point);
+	
 }

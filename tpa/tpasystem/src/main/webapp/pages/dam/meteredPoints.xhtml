@@ -895,6 +895,7 @@
 								<p:inputText required="false" id="newId" value="#{meteredPointView.newPeriodMeteredPoint.newId}"  maxlength="120"
 									requiredMessage="#{msg['meteredPoint_newID']}: #{msg['empty_field']}" validatorMessage="#{msg['meteredPoint_newID']}: #{msg['lenght_field']} 250">
 									<f:validateLength maximum="250"/>
+									<p:ajax update="newId" event="change" />
 								</p:inputText>
 								<p:message for="newId" />
 							</p:column>
@@ -1057,7 +1058,7 @@
 									    <p:ajax  update="subarea,contractPoint" /> 					    
 					             </p:selectOneMenu>
 					            --> 
-					            <p:inputText disabled="true" required="true" id="area" value="#{meteredPointView.newPeriodMeteredPoint.area}"  maxlength="120"
+					            <p:inputText disabled="true" required="true" id="area" value="#{meteredPointView.getArea(meteredPointView.newPeriodMeteredPoint)}"  maxlength="120"
 									requiredMessage="#{msg['meteredPoint_Area']}: #{msg['empty_field']}" validatorMessage="#{msg['meteredPoint_Area']}: #{msg['lenght_field']} 250">
 									<f:validateLength maximum="250"/>
 								</p:inputText> 

@@ -49,6 +49,9 @@ public class MeteredPointView extends CommonView implements Serializable {
 	private MeteredPointBean newPeriodMeteredPoint;
 	private List<MeteredPointBean> items, items_backup;
 
+	private BigDecimal idn_area_old = null;
+	private String area_old = null;
+	
 	@ManagedProperty("#{meteredPointService}")
 	transient private MeteredPointService service;
 	private Calendar sysdate;
@@ -254,6 +257,25 @@ public class MeteredPointView extends CommonView implements Serializable {
 		return service.getAreaCode(it.getIdn_system_point_nomination());
 	}
 
+	public String getArea(MeteredPointBean it) {
+		if(it==null) {
+			return "";
+		}
+		if(this.idn_area_old==null) {
+			this.idn_area_old = it.getIdn_area();
+			this.area_old = it.getArea();
+		}
+		if(it.getNewId()==null) {
+			it.setIdn_area(this.idn_area_old);
+			it.setArea(this.area_old);
+			return it.getArea();
+		} else {
+			it.setIdn_area(service.getAreaID(it.getIdn_system_point_nomination()));
+			it.setArea(service.getAreaCode(it.getIdn_system_point_nomination()));
+			return it.getArea();
+		}
+	}
+	
 	public String getSystemCode(MeteredPointBean it) {
 		return service.getSystemCode(it.getIdn_system_point_nomination());
 	}
@@ -615,6 +637,11 @@ public class MeteredPointView extends CommonView implements Serializable {
     	String summaryMsgOk =  getMessageResourceString("insert_ok", params);
     	String summaryMsgNotOk=  getMessageResourceString("insert_noOk", params);
 		
+    	if(newPeriodMeteredPoint.getNewId()==null || newPeriodMeteredPoint.getNewId().equals("")) {
+    		newPeriodMeteredPoint.setIdn_area(this.idn_area_old);
+    		newPeriodMeteredPoint.setArea(this.area_old);
+    	}
+    	
 		if (newPeriodMeteredPoint.getStartDate() != null) { //No se va a dar.. la pantalla no lo permite
 			if (newPeriodMeteredPoint.getStartDate().before(sysdate.getTime())) {
 				errorMsg = msgs.getString("error_startDate_sysdate"); //error_startDate_sysdate= Start date must be later to sysdate
@@ -697,6 +724,9 @@ public class MeteredPointView extends CommonView implements Serializable {
 			}
 			
 			if(newPeriodMeteredPoint.getNewId()!= null && !newPeriodMeteredPoint.getNewId().isEmpty()) {
+				MeteredPointBean bean = new MeteredPointBean(newPeriodMeteredPoint);
+				error = service.deleteOldMeteredPoint(bean);
+
 				newPeriodMeteredPoint.setPoint_code(newPeriodMeteredPoint.getNewId());
 				error = service.insertMeteredPoint(newPeriodMeteredPoint);
 				
@@ -764,7 +794,7 @@ public class MeteredPointView extends CommonView implements Serializable {
 		 *  }
 		 */
 // CH748 se permite edicion total sin importar fechas
-		/*if (item.getStartDate().after(sysdate.getTime()) || item.getStartDate().equals(sysdate.getTime())) {
+		if (item.getStartDate().after(sysdate.getTime()) || item.getStartDate().equals(sysdate.getTime())) {
 			return "false";
 		}
 
@@ -777,7 +807,7 @@ public class MeteredPointView extends CommonView implements Serializable {
 			return "true";
 		}
 
-		return "true";*/
+		//return "true";
 		return "false";
 	}
 
@@ -851,6 +881,8 @@ public class MeteredPointView extends CommonView implements Serializable {
 		MeteredPointBean bean = service.selectMeteredPointValues(newPeriodMeteredPoint.getIdn_system_point());
 		bean.setIdn_pipeline_system(newPeriodMeteredPoint.getIdn_pipeline_system());
 		newPeriodMeteredPoint = bean;
+		this.idn_area_old = newPeriodMeteredPoint.getIdn_area();
+		this.area_old = newPeriodMeteredPoint.getArea();
 	}
 	
 	

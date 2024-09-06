@@ -80,4 +80,6 @@ public interface MeteredPointService extends Serializable {
 	public boolean getValidateGroupID (MeteredPointBean meteredPoint);
 
 	public boolean getValidateGroupIDEdit (MeteredPointBean meteredPoint);
+
+	public String deleteOldMeteredPoint(MeteredPointBean newPeriodMeteredPoint) throws Exception;
 }

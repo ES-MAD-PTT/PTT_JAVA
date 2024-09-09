@@ -191,7 +191,7 @@ public class MeteredPointShipperView  extends CommonView implements Serializable
 		selection.setUserName(getUser().getUsername());
 		selection.setStartDate(null);
 		selection.setEndDate(null);
-		chargeAddEditTable();
+		chargeAddTable();
 		disabledEdit = false;
 		renderedButtonAcceptEdit = true;
 		renderedEndDateEdit = true;
@@ -213,7 +213,7 @@ public class MeteredPointShipperView  extends CommonView implements Serializable
 			copySelectionTableAddEdit.addAll(selectionTableAddEdit);
 		}
 		selection.setIdnMeteringPoint(null);
-		chargeAddEditTable();
+		chargeEditTable();
 		if(selection.getEndDate() != null) {
 			if(selection.getIdnShipper() != null && selection.getStartDate().before(Calendar.getInstance().getTime()) && selection.getEndDate().after(Calendar.getInstance().getTime())) {
 				//Cuando el dia de hoy está entre las dos fecahs. Deshabilitado todo y se puede cambiar fecha fin
@@ -390,10 +390,15 @@ public class MeteredPointShipperView  extends CommonView implements Serializable
 		onSearch();
 	}
 	
-	public void chargeAddEditTable() {
+	public void chargeAddTable() {
 		if(selection != null) {
 			allDataTableAddEdit = service.selectMetPointCustomerGroup(selection);
 			selectionTableAddEdit = allDataTableAddEdit;
+		}
+	}
+	public void chargeEditTable() {
+		if(selection != null) {
+			allDataTableAddEdit = service.selectMetPointCustomerGroup(selection);
 		}
 	}
 	

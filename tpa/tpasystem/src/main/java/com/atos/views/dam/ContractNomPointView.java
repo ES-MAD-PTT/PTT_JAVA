@@ -57,6 +57,7 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 	private List<ContractNomPointBean> selecteds = new ArrayList<ContractNomPointBean>();
 	private List<ContractNomPointBean> selectedsFornNew = new ArrayList<ContractNomPointBean>();
 	private List<ContractNomPointBean> selectedsFornEdit = new ArrayList<ContractNomPointBean>();
+	private List<ContractNomPointBean> selectedsFornEditOld = new ArrayList<ContractNomPointBean>();
 	private List<ContractNomPointBean> selectedsFornEditDelete = new ArrayList<ContractNomPointBean>();
 	private ContractNomPointBean selected;
 	
@@ -161,6 +162,14 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 
 	public void setSelectedsFornEdit(List<ContractNomPointBean> selectedsFornEdit) {
 		this.selectedsFornEdit = selectedsFornEdit;
+	}
+
+	public List<ContractNomPointBean> getSelectedsFornEditOld() {
+		return selectedsFornEditOld;
+	}
+
+	public void setSelectedsFornEditOld(List<ContractNomPointBean> selectedsFornEditOld) {
+		this.selectedsFornEditOld = selectedsFornEditOld;
 	}
 
 	public List<ContractNomPointBean> getSelectedsFornEditDelete() {
@@ -546,10 +555,10 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 		
 		contractNomPointIdShipper = service.selectIdShipper(itemEdit);
 		newContractNomPoint = itemEdit;
-		selectedsFornNew = service.selectContractNomPointsFormEdit(newContractNomPoint);
+		selectedsFornEdit = service.selectContractNomPointsFormEdit(newContractNomPoint);
 		
 		List<BigDecimal> listIdnContractNomPoint = new ArrayList<>();
-		for (ContractNomPointBean item : selectedsFornNew) {
+		for (ContractNomPointBean item : selectedsFornEdit) {
 			listIdnContractNomPoint.add(service.getIdnSystemPoint(item));				
         }
 		// Verifica si todos los elementos son iguales
@@ -569,7 +578,7 @@ public class ContractNomPointView  extends CommonView implements Serializable {
         	newContractNomPoint.setIdn_contract_point(null);
         }
 		
-		selectedsFornEdit = selectedsFornNew;
+		selectedsFornEditOld = selectedsFornEdit;
 		newContractNomPoint.setStartDate(newContractNomPoint.getStartDateActive());
 		newContractNomPoint.setEndDate(newContractNomPoint.getEndDateActive());
 		newContractNomPoint.setIdn_system(getChangeSystemView().getIdn_active());
@@ -641,12 +650,12 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 			
 			
 			// Aqui guardamos en listIdnContractNomPointPrevious los Idn_nomination_point que estaban seleccionados antes del edit
-			for (ContractNomPointBean item : selectedsFornEdit) {
+			for (ContractNomPointBean item : selectedsFornEditOld) {
 				listIdnContractNomPointPrevious.add(item.getIdn_nomination_point());				
 	        }
 			
 			// Aqui guardamos en listIdnContractNomPoint los Idn_nomination_point que se han seleccionado nuevos
-			for (ContractNomPointBean item : selectedsFornNew) {
+			for (ContractNomPointBean item : selectedsFornEdit) {
 				listIdnContractNomPoint.add(item.getIdn_nomination_point());				
 	        }
 			
@@ -661,7 +670,7 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 				}
 				
 				//Aqui guardamos el Idn_contract_point en nuestra lista listIdnContractNomPointDeleteIdnContractPoint idn_contract_nom_point
-				for (ContractNomPointBean item : selectedsFornEdit) {
+				for (ContractNomPointBean item : selectedsFornEditOld) {
 				    BigDecimal idnNominationPoint = item.getIdn_nomination_point();
 				    if (listIdnContractNomPointDelete.contains(idnNominationPoint)) {
 				        listIdnContractNomPointDeleteIdnContractPoint.add(item.getIdn_contract_nom_point());
@@ -693,7 +702,7 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 				getMessages().addMessage(Constants.head_menu[0], new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
 				log.error(errorMsg);
 				newContractNomPoint = new ContractNomPointBean();
-				selectedsFornNew = new ArrayList<ContractNomPointBean>();
+				selectedsFornEdit = new ArrayList<ContractNomPointBean>();
 				return;
 			}
 			
@@ -705,7 +714,7 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 		
 		List<BigDecimal> listIdnContractNomPoint = new ArrayList<>();
 		
-		for (ContractNomPointBean item : selectedsFornNew) {
+		for (ContractNomPointBean item : selectedsFornEdit) {
 			listIdnContractNomPoint.add(item.getIdn_nomination_point());				
         }
 		
@@ -772,6 +781,7 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 		selectedsFornNew = new ArrayList<ContractNomPointBean>();
 		selectedsFornEditDelete = new ArrayList<ContractNomPointBean>();
 		selectedsFornEdit = new ArrayList<ContractNomPointBean>();
+		selectedsFornEditOld = new ArrayList<ContractNomPointBean>();
 
 	}
 	

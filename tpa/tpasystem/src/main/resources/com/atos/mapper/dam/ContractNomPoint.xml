@@ -115,7 +115,14 @@ order by
 			where t1.idn_system_point in
 			       (select distinct idn_nomination_point
 			          from TPA_TSYSTEM_POINT_PARAM t
-			         where idn_contract_point = #{idn_contract_point})
+			         where 1=1 
+			   <if test="startDate != null">
+		   AND nvl(t.end_date, to_date('9999/12/31', 'yyyy/mm/dd')) >= #{startDate}
+		   </if>
+		   <if test="endDate != null">
+		   AND #{endDate} >= t.start_date
+		   </if>
+         	and idn_contract_point = #{idn_contract_point})
 			order by contract_point, nomination_point 
 	</select>
 	
@@ -157,7 +164,9 @@ order by
 	FROM
 		TPA_TSYSTEM_POINT t
 	WHERE
-		t.idn_system_point = tcnp.idn_nom_point and nvl(end_date, to_date('31/12/9999', 'DD/MM/YYYY')) >= start_date) AS nomination_point
+		t.idn_system_point = tcnp.idn_nom_point and nvl(end_date, to_date('31/12/9999', 'DD/MM/YYYY')) >= start_date) AS nomination_point,
+        tcnp.active_date_from as start_date_active,
+        tcnp.active_date_to as end_date_active                  
 FROM
 	TPA_TCONTRACT_NOM_POINT tcnp,
 	TPA_TCONTRACT tc
@@ -180,7 +189,14 @@ from tpa_tsystem_point t1
 where t1.idn_system_point in
        (select distinct idn_nomination_point
           from TPA_TSYSTEM_POINT_PARAM t
-         where idn_contract_point in(
+         where 1=1
+         	<if test="startDate != null">
+		   AND nvl(t.end_date, to_date('9999/12/31', 'yyyy/mm/dd')) >= #{startDate}
+		   </if>
+		   <if test="endDate != null">
+		   AND #{endDate} >= t.start_date
+		   </if>
+         	and idn_contract_point in(
 
 
 select t1.idn_system_point as key
@@ -510,7 +526,9 @@ order by t1.point_code
 			FROM
 				tpa_tsystem_point_param
 			WHERE
-				idn_nomination_point = #{idn_nomination_point})     
+				idn_nomination_point = #{idn_nomination_point}
+				and #{endDateActive} > start_date 
+        	and nvl(end_date,to_date('9999/12/31', 'yyyy/mm/dd')) >= #{startDateActive})     
 	</select>
 	
 	<delete id="deleteContractNomPoint" parameterType="com.atos.beans.dam.ContractNomPointBean">

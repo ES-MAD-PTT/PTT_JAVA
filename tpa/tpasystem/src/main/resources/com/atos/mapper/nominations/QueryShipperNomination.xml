@@ -86,7 +86,7 @@
 		    and c.idn_pipeline_system = #{systemId}
  			and n.nomination_version = (select max(n2.nomination_version)
                                       from tpa_tnomination n2
-                                      where n.nomination_code = n2.nomination_code AND n.is_intraday = 'N'	)
+                                      where n.nomination_code = n2.nomination_code AND n2.is_intraday = 'N'	)
             AND n.is_intraday = 'N'		    
 		    <if test="shipper_code != null and shipper_code != ''">
 		    	and ug.idn_user_group = #{shipper_code}

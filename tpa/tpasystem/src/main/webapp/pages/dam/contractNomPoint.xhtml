@@ -253,8 +253,8 @@
 								<p:calendar required="true" id="new_fecInicio" size="10" pattern="dd/MM/yyyy" mask="true" value="#{contractNomPointView.newContractNomPoint.startDate}"
 									requiredMessage="You need to select a date" 
 									showOn="button" navigator="true">
-									<p:ajax event="dateSelect" update="new_fecInicio,new_contract_id"></p:ajax>
-									<p:ajax event="change" update="new_fecInicio,new_contract_id"></p:ajax>
+									<p:ajax event="dateSelect" update="new_fecInicio,new_contract_id,contractNomPoints2" listener="#{contractNomPointView.contractNomPointsTable}" onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()"></p:ajax>
+									<p:ajax event="change" update="new_fecInicio,new_contract_id,contractNomPoints2" listener="#{contractNomPointView.contractNomPointsTable}" onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()"></p:ajax>
 								</p:calendar>
 							</p:column>
 							<p:column  style="font-weight: bold;">
@@ -263,8 +263,8 @@
 							<p:column>
 								<p:calendar id="new_fecFin" size="10" pattern="dd/MM/yyyy" mask="true" value="#{contractNomPointView.newContractNomPoint.endDate}" 
 									showOn="button" navigator="true">
-									<p:ajax event="dateSelect" update="new_fecFin,new_contract_id"></p:ajax>
-									<p:ajax event="change" update="new_fecFin,new_contract_id"></p:ajax>
+									<p:ajax event="dateSelect" update="new_fecFin,new_contract_id,contractNomPoints2" listener="#{contractNomPointView.contractNomPointsTable}" onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()"></p:ajax>
+									<p:ajax event="change" update="new_fecFin,new_contract_id,contractNomPoints2" listener="#{contractNomPointView.contractNomPointsTable}" onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()"></p:ajax>
 								</p:calendar>
 							</p:column>
 						</p:row>

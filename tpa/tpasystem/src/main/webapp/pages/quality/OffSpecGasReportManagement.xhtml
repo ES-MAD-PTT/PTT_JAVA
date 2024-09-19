@@ -285,7 +285,7 @@
 	 					    <p:commandButton icon="ui-icon fa fa-file-text-o" update="filesFormId" 
 								onstart="PF('cargando').show()"	oncomplete="PF('cargando').hide(),PF('filesDlg').show()" 
 								actionListener="#{OSGRManagementView.selectFiles(incident, 'OPERATOR')}"
-								rendered="#{OSGRManagementView.isOperator or incident.shipper eq OSGRManagementView.user.user_group_id}">
+								>
 							</p:commandButton>
 				       	</p:column>
 				       	
@@ -301,7 +301,7 @@
  					       	<p:commandButton icon="ui-icon fa fa-list" update=":commentsFormId" 
  					       		onstart="PF('cargando').show()"	oncomplete="PF('cargando').hide(),PF('commentsDlg').show()"
  					       		actionListener="#{OSGRManagementView.selectComments(incident, 'OPERATOR')}"
- 					       		rendered="#{OSGRManagementView.isOperator or incident.shipper eq OSGRManagementView.user.user_group_id}">
+ 					       		>
 							</p:commandButton>	
 				       	</p:column>
 				       	
@@ -695,10 +695,8 @@
 						<p:column styleClass="ui-g-3">
 							<p:calendar id="newIncFecFin" size="12" pattern="dd/MM/yyyy HH:mm" value="#{newEvent.endDate}"
 								mask="true" showButtonPanel="true" showOn="button" navigator="true"
-								required="true" requiredMessage="#{msg['empty_field']}">
-								<p:ajax event="dateSelect" update="newIncFecFin"></p:ajax>
-								<p:ajax event="change" update="newIncFecFin"></p:ajax>
-							</p:calendar>
+								required="false" requiredMessage="#{msg['empty_field']}">
+								</p:calendar>
 						</p:column>
  	        		</p:row>
 

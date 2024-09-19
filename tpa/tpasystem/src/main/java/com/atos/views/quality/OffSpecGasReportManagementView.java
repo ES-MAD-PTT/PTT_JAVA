@@ -1018,7 +1018,7 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 	 public void prepareResponse(OffSpecIncidentBean offspec, String nameColumn) {
 		 selected = offspec;
 		 if(selected != null && selected.getDiscloseResponses() != null && !selected.getDiscloseResponses().isEmpty()) {
-			 if(!isShipper() && nameColumn != null) {
+			 if(nameColumn != null) {
 				 copyResp = new ArrayList<OffSpecResponseBean>(selected.getDiscloseResponses());
 				 selected.getDiscloseResponses().clear();
 				 for(OffSpecResponseBean item : copyResp) {

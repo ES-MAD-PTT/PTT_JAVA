@@ -687,6 +687,8 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
     	// Se actualiza la vista.
     	items = service.search(filters, getUser()); 
         updateIncidentInfo(hmAllStatus, items);
+        RequestContext context = RequestContext.getCurrentInstance();
+        context.update("form");
     }
     
     public void onNewRequest() {

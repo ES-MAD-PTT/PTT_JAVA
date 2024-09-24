@@ -651,15 +651,15 @@
 	        	<p:panelGrid style="width: 100%">
 
  	        		<p:row>
- 	        			<p:column styleClass="ui-g-2" style="font-weight: bold;">
+ 	        			<p:column styleClass="ui-g-2" style="font-weight: bold;" rendered="#{OSGRManagementView.isShipper()}">
 							<h:outputText value="#{msg['osgr_man_shipper']}" />
 						</p:column>
 						<p:column styleClass="ui-g-3">
-							<p:selectOneMenu id="newReqShipperId" style="max-width: -webkit-fill-available;" rendered="#{!OSGRManagementView.isShipper()}" value="#{newEvent.groupId}" 
+				<!-- 			<p:selectOneMenu id="newReqShipperId" style="max-width: -webkit-fill-available;" rendered="#{!OSGRManagementView.isShipper()}" value="#{newEvent.groupId}" 
 								required="true" requiredMessage="#{msg['empty_field']}" autoWidth="false">
  								<f:selectItems value="#{OSGRManagementView.shipperIds.entrySet()}" var="entry" 
  											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
-			           		</p:selectOneMenu>	
+			           		</p:selectOneMenu> -->	
 			           		<h:outputText value="#{newEvent.groupCode}" rendered="#{OSGRManagementView.isShipper()}"/>						
 						</p:column>
 						

@@ -1000,7 +1000,7 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 			                .anyMatch(obj -> !obj.getGroupCode().equals(item.getShipper()) && "Y".equalsIgnoreCase(obj.getIsResponded()));
 			 }
 		 }
-		 return exist ? "YES" : "NO";
+		 return (item.getGroupId()==null && nameColumn.equals("ORIGINATOR")) ? "" : exist ? "YES" : "NO";
 	 }
 	 
 	 public boolean renderedAsnwer(OffSpecIncidentBean item, String nameColumn) {

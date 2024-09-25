@@ -852,7 +852,7 @@
 								actionListener="#{OSGRManagementView.onChangeAction}" 
 								update="#{p:component('incidents1')},msgs"
 								validateClient="true" 
-								oncomplete="PF('nextStatusDlg').hide()"/>
+								onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()"/>
 						</p:column>
 					</p:row>
 				</p:panelGrid>

@@ -1006,7 +1006,7 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 	 public boolean renderedAsnwer(OffSpecIncidentBean item, String nameColumn) {
 		 boolean value = false;
 		 if(isShipper()) {
-			 if(item != null && item.getShipper().equals(getUser().getUser_group_id())) {
+			 if(item != null && getUser().getUser_group_id().equals(item.getShipper())) {
 				 value = nameColumn.equals("SHIPPER_ANSWER") || nameColumn.equals("SHIPPER_IF_ANSWER") ? false : true;
 			 }else {
 				 value = nameColumn.equals("SHIPPER_ANSWER") ? true : false;

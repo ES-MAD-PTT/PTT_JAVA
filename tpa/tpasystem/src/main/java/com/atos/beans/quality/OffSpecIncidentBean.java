@@ -330,7 +330,7 @@ public class OffSpecIncidentBean extends UserAudBean implements Serializable {
 	}
 	
 	public String getShortName() {
-		return shortName;
+		return (this.shipper==null ? "" : "("+shortName+")");
 	}
 
 	public void setShortName(String shortName) {

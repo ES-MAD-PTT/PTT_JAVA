@@ -851,6 +851,7 @@
 							<p:commandButton value="#{msg['save']}" style="float: right; vertical-align: bottom" 
 								actionListener="#{OSGRManagementView.onChangeAction}" 
 								update="#{p:component('incidents1')},msgs"
+								validateClient="true" 
 								oncomplete="PF('nextStatusDlg').hide()"/>
 						</p:column>
 					</p:row>

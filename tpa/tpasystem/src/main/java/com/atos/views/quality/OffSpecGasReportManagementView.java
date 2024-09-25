@@ -573,8 +573,8 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 		String[] params = { selected.getIncidentCode() };
 		String msg = super.getMessageResourceString("osgr_man_changeActionOK", params);
 		getMessages().addMessage(Constants.head_menu[3], new MessageBean(Constants.INFO, summaryMsg, msg, new Date()));
-		RequestContext context = RequestContext.getCurrentInstance();
-		context.execute("PF('nextStatusDlg').hide();");
+/*		RequestContext context = RequestContext.getCurrentInstance();
+		context.execute("PF('nextStatusDlg').hide();");*/
 		items = service.search(filters, getUser());
         updateIncidentInfo(hmAllStatus, items);
 	}

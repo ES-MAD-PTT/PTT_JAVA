@@ -850,7 +850,7 @@
 		       			<p:column>
 							<p:commandButton value="#{msg['save']}" style="float: right; vertical-align: bottom" 
 								actionListener="#{OSGRManagementView.onChangeAction}" 
-								update="#{p:component('incidents1')},msgs"/>
+								update="#{p:component('incidents1')},msgs,PF('nextStatusDlg').hide()"/>
 						</p:column>
 					</p:row>
 				</p:panelGrid>

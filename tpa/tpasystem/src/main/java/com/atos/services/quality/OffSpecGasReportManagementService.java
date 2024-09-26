@@ -50,6 +50,8 @@ public interface OffSpecGasReportManagementService extends Serializable {
 	public Integer saveAction(OffSpecIncidentBean _incid, UserBean _user, boolean isShipper) throws Exception;
 	public Integer acceptRejectAction(OffSpecIncidentBean _incid, String responseValue, UserBean _user) throws Exception;
 	
+	public void saveFile(OffSpecActionFileBean item);
 	//CH706
 	public String updateTransporterComments(OffSpecResponseBean response) throws Exception;
+	public Integer deleteFile(OffSpecActionFileBean item);
 }

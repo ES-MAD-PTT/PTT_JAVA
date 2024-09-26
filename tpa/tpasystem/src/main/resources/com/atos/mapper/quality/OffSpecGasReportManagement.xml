@@ -989,7 +989,7 @@ WHERE qpa.idn_area = a.IDN_AREA
 			#{userName})
 	</insert>
 	
-	<insert id="insertFileAction" parameterType="com.atos.beans.quality.OffSpecActionFileBean">
+	<insert id="insertFileAction" useGeneratedKeys="true" keyProperty="idnOffspecActionFile" keyColumn="idn_offspec_action_file" parameterType="com.atos.beans.quality.OffSpecActionFileBean">
 		insert into TPA_TOFFSPEC_ACTION_FILE(
 			idn_offspec_action_file, 
 			idn_offspec,
@@ -1014,6 +1014,11 @@ WHERE qpa.idn_area = a.IDN_AREA
 			#{userName})
 		
 	</insert>
+	
+	<delete id="deleteFile" parameterType="com.atos.beans.quality.OffSpecActionFileBean">
+		delete from TPA_TOFFSPEC_ACTION_FILE
+		where  idn_offspec_action_file = #{idnOffspecActionFile}
+	</delete>
 	
 	<select id="selectInfoStatusAcceptedClosed" resultMap="OffSpecIncident">
 		select o.op_comment_closed, o.end_date
@@ -1050,7 +1055,7 @@ WHERE qpa.idn_area = a.IDN_AREA
 	</select>
 	
 	<select id="selectActionFiles" resultType="com.atos.beans.quality.OffSpecActionFileBean">
-		select f.file_name as fileName, f.binary_data as binaryData 
+		select f.idn_offspec_action_file as idnOffspecActionFile, f.file_name as fileName, f.binary_data as binaryData 
 			from TPA_TOFFSPEC_ACTION_FILE f
 			where f.idn_offspec = #{incidentId}
 			<if test="groupId != null and groupId != ''">

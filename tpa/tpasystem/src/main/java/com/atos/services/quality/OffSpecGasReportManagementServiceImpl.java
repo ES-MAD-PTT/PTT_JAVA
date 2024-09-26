@@ -373,7 +373,11 @@ public class OffSpecGasReportManagementServiceImpl implements OffSpecGasReportMa
 		}
 		return res;
     }
-	
+
+    public void saveFile(OffSpecActionFileBean item) {
+    	osgrmMapper.insertFileAction(item);
+    }
+    
 	/*
 	 * private void discloseIncident(OffSpecIncidentBean _incid, BigDecimal
 	 * _receiverShipperId, UserBean _user) throws Exception {
@@ -830,5 +834,18 @@ public class OffSpecGasReportManagementServiceImpl implements OffSpecGasReportMa
 	@Override
 	public OffSpecIncidentBean selectInfoStatusAcceptedClosed(OffSpecIncidentBean item) {
 		return osgrmMapper.selectInfoStatusAcceptedClosed(item);
+	}
+
+	@Transactional( rollbackFor = { Throwable.class })
+	public Integer deleteFile(OffSpecActionFileBean item) {
+		int ret = osgrmMapper.deleteFile(item);
+		if(ret!=1) {
+			return -1;
+		} else {
+			return 0;
+		}
+		
+		
+		
 	}
 }

@@ -62,4 +62,5 @@ public interface OffSpecGasReportManagementMapper extends Serializable {
 	//CH706
 	public int updateTransporterComments(OffSpecResponseBean response);
 	public String getZoneCode(OffSpecIncidentBean incident);
+	public int deleteFile(OffSpecActionFileBean item);
 }

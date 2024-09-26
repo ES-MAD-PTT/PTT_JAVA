@@ -572,7 +572,7 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 		summaryMsg = msgs.getString("osgr_man_updatedSuccessfully");
 		String[] params = { selected.getIncidentCode() };
 		String msg = super.getMessageResourceString("osgr_man_changeActionOK", params);
-		getMessages().addMessage(Constants.head_menu[3], new MessageBean(Constants.INFO, summaryMsg, msg, new Date()));
+		getMessages().addMessage(Constants.head_menu[6], new MessageBean(Constants.INFO, summaryMsg, msg, new Date()));
 		RequestContext context = RequestContext.getCurrentInstance();
 		context.execute("PF('nextStatusDlg').hide();");
 		items = service.search(filters, getUser());
@@ -745,7 +745,7 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
     	if(newEvent.getStartDate() != null && newEvent.getEndDate() != null && newEvent.getEndDate().compareTo(newEvent.getStartDate()) < 0) {
     		summaryMsg = msgs.getString("validation_error");
 			errorMsg = msgs.getString("osgr_man_endDateEqualsOrLaaterStartDate"); 
-			getMessages().addMessage(Constants.head_menu[0], new MessageBean(Constants.ERROR, summaryMsg, errorMsg, Calendar.getInstance().getTime()));
+			getMessages().addMessage(Constants.head_menu[6], new MessageBean(Constants.ERROR, summaryMsg, errorMsg, Calendar.getInstance().getTime()));
 			return;
 		}
 
@@ -921,6 +921,21 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 			getMessages().addMessage(Constants.head_menu[6],new MessageBean(Constants.ERROR,"Error saving file","The file should be selected", Calendar.getInstance().getTime()));
 			return;
 		}
+		
+    }
+	 
+	 public void handleFileUploadTransporter(FileUploadEvent event) {
+		file = event.getFile();
+		OffSpecActionFileBean uploadFile = null;
+		if(file != null){
+			uploadFile = new OffSpecActionFileBean(selected.getIncidentId(), file.getFileName(), file.getContents(), getUser().getUsername());
+			selected.getFilesAction().add(uploadFile);
+			service.saveFile(uploadFile);
+		}
+		if(file == null || uploadFile == null){
+			getMessages().addMessage(Constants.head_menu[6],new MessageBean(Constants.ERROR,"Error saving file","The file should be selected", Calendar.getInstance().getTime()));
+			return;
+		}
 
     }
 	 
@@ -1048,5 +1063,36 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 		 String statusCode = hmAllStatus.get(offspec.getStatusId()).getStatusCode();
 		 //Buscamos los ficheros asociados al estado 'EV.ACCEPTED - CLOSED'
 		 selected.getFiles().addAll(service.selectFiles(offspec, statusCode, null));
+	 }
+	 
+	 public void deleteFile(OffSpecActionFileBean item) {
+		 
+		 for(int i=0;i<this.selected.getFilesAction().size();i++) {
+			 if(this.selected.getFilesAction().get(i).getFileName().equals(item.getFileName())){
+				 this.selected.getFilesAction().remove(i);
+				 break;
+			 }
+		 }
+		 
+	 }
+	 public void deleteFileTransporter(OffSpecActionFileBean item) {
+		 
+		 for(int i=0;i<this.selected.getFilesAction().size();i++) {
+			 if(this.selected.getFilesAction().get(i).getFileName().equals(item.getFileName())){
+				 this.selected.getFilesAction().remove(i);
+				 break;
+			 }
+		 }
+		 
+		 Integer ret = service.deleteFile(item);
+		 if(ret.intValue()==0) {
+			getMessages().addMessage(Constants.head_menu[6],new MessageBean(Constants.INFO,item.getFileName() + " deleted", item.getFileName() + " deleted", Calendar.getInstance().getTime()));	
+			log.info(item.getFileName() + " deleted", Calendar.getInstance().getTime());
+ 		 } else {
+ 			getMessages().addMessage(Constants.head_menu[6],new MessageBean(Constants.ERROR,"Error deleting file" +item.getFileName(), "Error deleting file" +item.getFileName(), Calendar.getInstance().getTime()));	
+ 			log.info("Error deleting file" +item.getFileName(), Calendar.getInstance().getTime());
+
+ 		 }
+		 
 	 }
 }

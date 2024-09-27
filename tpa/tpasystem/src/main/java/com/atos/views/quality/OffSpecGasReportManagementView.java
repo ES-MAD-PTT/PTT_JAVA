@@ -92,6 +92,7 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 	private OffSpecActionBean actionFix;
 	private DefaultStreamedContent scFile;
 	private List<OffSpecResponseBean> copyResp;
+	private boolean transporterAddFile = true;
 	
 	
 	private static final Logger log = LogManager.getLogger("com.atos.views.quality.OffSpecGasReportManagementView");
@@ -182,6 +183,10 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 
 	public void setNewEvent(OffSpecIncidentBean newEvent) {
 		this.newEvent = newEvent;
+	}
+
+	public boolean getTransporterAddFile() {
+		return transporterAddFile;
 	}
 
 	public StreamedContent getScEventFlowDiagFile() {
@@ -955,6 +960,9 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 			 if(item != null && action.equals("SHIPPER")) {
 				newItem.setGroupId(item.getGroupId());
 				newItem.setIdnAction(item.getIdnAction());
+				transporterAddFile = false;
+			 } else {
+				 transporterAddFile = true;
 			 }
 			 selected.getFilesAction().addAll(service.selectActionFiles(newItem));
 		 }else {

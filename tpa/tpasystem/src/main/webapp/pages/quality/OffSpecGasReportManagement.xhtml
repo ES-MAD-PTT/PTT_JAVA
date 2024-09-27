@@ -399,7 +399,7 @@
 				<p:growl id="msgs" showDetail="true" life="10000" globalOnly="true" />
 				
 				
-				<p:panelGrid id="transporterAddFiles" style="width:100%;margin-bottom: 10px;">
+				<p:panelGrid id="transporterAddFiles" style="width:100%;margin-bottom: 10px;" rendered="#{OSGRManagementView.transporterAddFile}">
 					<p:row>
 						<p:column style="width:150px">
 							<h:outputText value="#{msg['attach_file']}" />
@@ -412,7 +412,7 @@
 					</p:row>
 				</p:panelGrid>
 				<p:outputLabel id="numberFilesId" style="font-weight: bold; color:red"
-								value="#{msg['osgr_man_number_files_added']}: #{OSGRManagementView.selected.filesAction.size()} / 10"/>
+								value="#{msg['osgr_man_number_files_added']}: #{OSGRManagementView.selected.filesAction.size()} / 10"  rendered="#{OSGRManagementView.transporterAddFile}"/>
 								
 				<p:dataTable id="listActionFileId"
 					value="#{OSGRManagementView.selected.filesAction}" var="item"
@@ -428,7 +428,7 @@
 							<p:fileDownload value="#{OSGRManagementView.scFile}" />
 						</p:commandButton>
 					</p:column>
-					<p:column style="width:40px" headerText="#{msg['delete']}">
+					<p:column style="width:40px" headerText="#{msg['delete']}" rendered="#{OSGRManagementView.transporterAddFile}">
 				       		<p:commandButton icon="ui-icon fa fa-remove" actionListener="#{OSGRManagementView.deleteFileTransporter(item)}" onstart="PF('cargando').show()"
 								oncomplete="PF('cargando').hide();  "
 								update=":#{p:component('listActionFileId')},:#{p:component('numberFilesId')}">  

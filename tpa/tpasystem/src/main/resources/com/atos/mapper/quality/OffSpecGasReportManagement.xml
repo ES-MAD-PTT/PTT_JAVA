@@ -668,6 +668,21 @@ AND sr.ask_other_shippers = 'Y'
 		where idn_offspec_response=#{incidentResponseId}
 		
 	</update>
+
+    <update id="updateOperatorComment" parameterType="com.atos.beans.quality.OffSpecIncidentBean">
+		update tpa_toffspec_log t set
+       		t.operator_comments = #{comments}
+		where t.idn_offspec_log in 
+		(select ol.idn_offspec_log       
+		from   tpa_toffspec o ,
+             tpa_toffspec_log ol
+      where o.idn_offspec = ol.idn_offspec      
+        and ol.insert_date = (select max(tlog3.insert_date)
+                              from tpa_toffspec_log tlog3
+                              where tlog3.idn_offspec = ol.idn_offspec) 
+        and o.idn_offspec = #{incidentId} )
+		
+	</update>
 	
 	<!-- Se filtra para que un shipper no vea las respuestas de otro. -->
     <select id="selectDiscloseResponsesFromIncidentId" parameterType="map" resultMap="OffSpecResponsesFromId"> 

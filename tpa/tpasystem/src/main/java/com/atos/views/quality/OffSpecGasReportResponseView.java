@@ -172,6 +172,13 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 		}
 		activeIndex = -1;
 		filters = initFilter();
+		List<OffSpecStatusBean> l_status = getStatusIds();
+		BigDecimal[] tmpStatusIds = disclosedStatusIds.toArray(new BigDecimal[l_status.size()]);
+		for(int i=0;i<l_status.size();i++) {
+			tmpStatusIds[i] = l_status.get(i).getStatusId();
+		}
+    	filters.setStatusId(tmpStatusIds);
+
         items = service.search(filters);
         selected = new OffSpecIncidentBean();
 	}
@@ -199,6 +206,7 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 
 		tmpFilter.setResStatusId(new ArrayList<String>());
 		tmpFilter.getResStatusId().add("1");
+		tmpFilter.getResStatusId().add("2");
 		
 		Calendar tmpToday = Calendar.getInstance();
         tmpToday.set(Calendar.HOUR_OF_DAY, 0);
@@ -243,7 +251,7 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 		List<OffSpecStatusBean> lCurrentStatus = service.selectStatusIds(filters);
 		
 		// Para actualizar el filtro.
-		BigDecimal[] tmpStatusIds = new BigDecimal[lCurrentStatus.size()];
+/*	BigDecimal[] tmpStatusIds = new BigDecimal[lCurrentStatus.size()];
 		for(int i=0; i<lCurrentStatus.size(); i++) {
 			// Solo se marca el estado Disclosed si esta entre los devueltos por la consulta, segun el tipo de incidencia.
 			//if(disclosedStatusId.compareTo(lCurrentStatus.get(i).getStatusId())==0) {
@@ -254,7 +262,7 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 		}
 		
 		filters.setStatusId(tmpStatusIds);
-		
+		*/
 		return lCurrentStatus;
 	}
 	
@@ -308,7 +316,7 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 		actions = new HashMap<BigDecimal, Object>();
 		selected = item;
 		selected.getFirstResponse().setUserComments(null);
-		selected.getFirstResponse().setResponseValue("OK");
+		selected.getFirstResponse().setResponseValue(null);
 		selected.setIdnAction(null);
 		actions = selected.getActionsFree();
 		if(actions != null && !actions.isEmpty()) {

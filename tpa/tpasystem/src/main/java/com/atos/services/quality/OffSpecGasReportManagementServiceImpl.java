@@ -844,8 +844,17 @@ public class OffSpecGasReportManagementServiceImpl implements OffSpecGasReportMa
 		} else {
 			return 0;
 		}
+	}
+
+	@Override
+	public Integer saveOperatorComment(OffSpecIncidentBean item) {
 		
-		
+		int ret = osgrmMapper.updateOperatorComment(item);
+		if(ret!=1) {
+			return -1;
+		} else {
+			return 0;
+		}
 		
 	}
 }

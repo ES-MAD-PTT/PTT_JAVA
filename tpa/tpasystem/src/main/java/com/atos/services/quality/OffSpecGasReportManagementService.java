@@ -54,4 +54,5 @@ public interface OffSpecGasReportManagementService extends Serializable {
 	//CH706
 	public String updateTransporterComments(OffSpecResponseBean response) throws Exception;
 	public Integer deleteFile(OffSpecActionFileBean item);
+	public Integer saveOperatorComment(OffSpecIncidentBean selected);
 }

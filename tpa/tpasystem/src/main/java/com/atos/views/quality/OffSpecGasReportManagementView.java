@@ -1095,4 +1095,15 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
  		 }
 		 
 	 }
+	 public void saveOperatorComment() {
+		 Integer ret = service.saveOperatorComment(selected);
+		 if(ret.intValue()==0) {
+				getMessages().addMessage(Constants.head_menu[6],new MessageBean(Constants.INFO,"Operator comment updated", "Operator comment updated", Calendar.getInstance().getTime()));	
+				log.info("Operator comment updated", Calendar.getInstance().getTime());
+	 		 } else {
+	 			getMessages().addMessage(Constants.head_menu[6],new MessageBean(Constants.ERROR,"Error updating operator comment", "Error updating operator comment", Calendar.getInstance().getTime()));	
+	 			log.info("Error updating operator comment", Calendar.getInstance().getTime());
+
+	 		 }
+	 }
 }

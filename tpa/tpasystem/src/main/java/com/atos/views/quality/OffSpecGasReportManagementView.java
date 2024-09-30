@@ -1013,17 +1013,29 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 	 
 	 public String answerShipperOriginatorYesNo(OffSpecIncidentBean item, String nameColumn) {
 		 boolean exist = false;
+		 String state = "";
+		 int count = 0;
 		 if(item != null && item.getDiscloseResponses() != null && !item.getDiscloseResponses().isEmpty()) {
 			 if(nameColumn.equals("ORIGINATOR")) {
-				 exist = item.getDiscloseResponses().stream()
-			                .anyMatch(obj ->  obj.getGroupCode().equals(item.getShipper()) && "Y".equalsIgnoreCase(obj.getIsResponded()));
+/*				 exist = item.getDiscloseResponses().stream()
+			                .anyMatch(obj ->  obj.getGroupCode().equals(item.getShipper()) && "Y".equalsIgnoreCase(obj.getIsResponded()));*/
+				 for(int i=0;i<item.getDiscloseResponses().size();i++) {
+					 if(item.getDiscloseResponses().get(i).getGroupCode().equals(item.getShipper()) && "Y".equalsIgnoreCase(item.getDiscloseResponses().get(i).getIsResponded())) {
+						 count++;
+					 }
+				 }
 			 }
 			 if(nameColumn.equals("SHIPPER")) {
-				 exist = item.getDiscloseResponses().stream()
-			                .anyMatch(obj -> !obj.getGroupCode().equals(item.getShipper()) && "Y".equalsIgnoreCase(obj.getIsResponded()));
+	/*			 exist = item.getDiscloseResponses().stream()
+			                .anyMatch(obj -> !obj.getGroupCode().equals(item.getShipper()) && "Y".equalsIgnoreCase(obj.getIsResponded()));*/
+				 for(int i=0;i<item.getDiscloseResponses().size();i++) {
+					 if(item.getDiscloseResponses().get(i).getGroupCode().equals(item.getShipper()) && "Y".equalsIgnoreCase(item.getDiscloseResponses().get(i).getIsResponded())) {
+						 count++;
+					 }
+				 }
 			 }
 		 }
-		 return (item.getGroupId()==null && nameColumn.equals("ORIGINATOR")) ? "" : exist ? "YES" : "NO";
+		 return (item.getGroupId()==null && nameColumn.equals("ORIGINATOR")) ? "" : count==0 ? "NO" : count==item.getDiscloseResponses().size() ? "YES" : "PARTIAL";
 	 }
 	 
 	 public boolean renderedAsnwer(OffSpecIncidentBean item, String nameColumn) {

@@ -1017,8 +1017,39 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 		 int count = 0;
 		 if(item != null && item.getDiscloseResponses() != null && !item.getDiscloseResponses().isEmpty()) {
 			 if(nameColumn.equals("ORIGINATOR")) {
+				 if(item.getGroupId()==null) {
+					 return "";
+				 }
 /*				 exist = item.getDiscloseResponses().stream()
 			                .anyMatch(obj ->  obj.getGroupCode().equals(item.getShipper()) && "Y".equalsIgnoreCase(obj.getIsResponded()));*/
+				 if(this.getIsOperator() && item.getOriginatorShipperId().equals(getUser().getIdn_user_group())) {
+					 return "";
+				 }
+				 if(this.getIsOperator() && !item.getOriginatorShipperId().equals(getUser().getIdn_user_group())) {
+					 int count_shipper = 0;
+					 for(int i=0;i<item.getDiscloseResponses().size();i++) {
+						 if(item.getDiscloseResponses().get(i).getGroupCode().equals(item.getOriginatorShipperCode())) {
+							 count_shipper++;
+						 }
+						 if(item.getDiscloseResponses().get(i).getGroupCode().equals(item.getOriginatorShipperCode()) && "Y".equalsIgnoreCase(item.getDiscloseResponses().get(i).getIsResponded())) {
+							 count++;
+						 }
+					 }
+					 return (count==0 ? "NO" : count==count_shipper ? "YES" : "PARTIAL"); 
+				 }
+				 if(this.isShipper()) {
+					 int count_shipper = 0;
+					 for(int i=0;i<item.getDiscloseResponses().size();i++) {
+						 if(item.getDiscloseResponses().get(i).getGroupCode().equals(item.getOriginatorShipperCode())) {
+							 count_shipper++;
+						 }
+						 if(item.getDiscloseResponses().get(i).getGroupCode().equals(item.getOriginatorShipperCode()) && "Y".equalsIgnoreCase(item.getDiscloseResponses().get(i).getIsResponded())) {
+							 count++;
+						 }
+					 }
+					 return (count==0 ? "NO" : count==count_shipper ? "YES" : "PARTIAL"); 
+				 }
+	 
 				 for(int i=0;i<item.getDiscloseResponses().size();i++) {
 					 if(item.getDiscloseResponses().get(i).getGroupCode().equals(item.getShipper()) && "Y".equalsIgnoreCase(item.getDiscloseResponses().get(i).getIsResponded())) {
 						 count++;
@@ -1028,6 +1059,27 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 			 if(nameColumn.equals("SHIPPER")) {
 	/*			 exist = item.getDiscloseResponses().stream()
 			                .anyMatch(obj -> !obj.getGroupCode().equals(item.getShipper()) && "Y".equalsIgnoreCase(obj.getIsResponded()));*/
+				 if(this.getIsOperator() && item.getOriginatorShipperId().equals(getUser().getIdn_user_group())) {
+					 for(int i=0;i<item.getDiscloseResponses().size();i++) {
+						 if("Y".equalsIgnoreCase(item.getDiscloseResponses().get(i).getIsResponded())) {
+							 count++;
+						 }
+					 }
+					 return count==0 ? "NO" : count==item.getDiscloseResponses().size() ? "YES" : "PARTIAL";
+				 }
+				 if(this.isShipper()) {
+					 int count_shipper = 0;
+					 for(int i=0;i<item.getDiscloseResponses().size();i++) {
+						 if(!item.getDiscloseResponses().get(i).getGroupCode().equals(item.getShipper())) {
+							 count_shipper++;
+						 }
+						 if(!item.getDiscloseResponses().get(i).getGroupCode().equals(item.getShipper()) && "Y".equalsIgnoreCase(item.getDiscloseResponses().get(i).getIsResponded())) {
+							 count++;
+						 }
+					 }
+					 return (count==0 ? "NO" : count==count_shipper ? "YES" : "PARTIAL"); 
+				 }
+
 				 for(int i=0;i<item.getDiscloseResponses().size();i++) {
 					 if(item.getDiscloseResponses().get(i).getGroupCode().equals(item.getShipper()) && "Y".equalsIgnoreCase(item.getDiscloseResponses().get(i).getIsResponded())) {
 						 count++;

@@ -815,7 +815,7 @@
 							actionListener="#{OSGRManagementView.onNewEvent}" 
 							update="#{p:component('incidents1')},newEventFormId"
  			       			validateClient="true" 
- 			       			onstart="PF('newEventDlg').hide(),PF('cargando').show()" oncomplete="PF('cargando').hide()"/>
+ 			       			onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()"/>
 				</p:panelGrid>
 			</h:form> 	    
 		</p:dialog>
@@ -890,7 +890,7 @@
 							<p:commandButton value="#{msg['close']}" style="float: right; vertical-align: bottom" 
 								actionListener="#{OSGRManagementView.closeChangeAction}"  process="@form"
 								update="#{p:component('incidents1')},:form:msgs"
-								oncomplete="PF('cargando').hide();" onstart="PF('cargando').show()"
+								oncomplete="PF('nextStatusDlg').hide();PF('cargando').hide();" onstart="PF('cargando').show()"
 								/>
 						</p:column>
 					</p:row>

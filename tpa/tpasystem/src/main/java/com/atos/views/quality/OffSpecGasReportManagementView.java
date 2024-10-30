@@ -581,12 +581,6 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 		context.execute("PF('nextStatusDlg').hide();");
 		items = service.search(filters, getUser());
         updateIncidentInfo(hmAllStatus, items);
-        try {
-			Thread.sleep(2000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		getMessages().addMessage(Constants.head_menu[6], new MessageBean(Constants.INFO, summaryMsg, msg, new Date()));
 	}
 	
@@ -786,7 +780,7 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
     	catch(Exception e){
 			summaryMsg = msgs.getString("saving_data_error");
         	errorMsg = msgs.getString("update_error") + " " + msgs.getString("osgr_man_off_specification_event") + " " +
-					msgs.getString("with_id") + " " + newEvent.getIncidentCode();
+					msgs.getString("with_id") + " " + newEvent.getIncidentCode() + msgs.getString("osgr_man_error_update") ;
     		getMessages().addMessage(Constants.head_menu[6],
 					new MessageBean(Constants.ERROR, summaryMsg, errorMsg, Calendar.getInstance().getTime()));
 	    	log.error(e.getMessage(), e);

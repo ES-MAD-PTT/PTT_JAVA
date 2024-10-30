@@ -883,7 +883,7 @@
 					<p:row>
 		       			<p:column>
 							<p:commandButton value="#{msg['save']}" style="float: right; vertical-align: bottom" 
-								actionListener="#{OSGRManagementView.onChangeAction}" 
+								actionListener="#{OSGRManagementView.onChangeAction}"  process="@form"
 								update="#{p:component('incidents1')},:form:msgs"
 								
 								/>

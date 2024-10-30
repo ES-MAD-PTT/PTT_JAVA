@@ -579,9 +579,16 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 		String msg = super.getMessageResourceString("osgr_man_changeActionOK", params);
 		RequestContext context = RequestContext.getCurrentInstance();
 		context.execute("PF('nextStatusDlg').hide();");
+		getMessages().addMessage(Constants.head_menu[6], new MessageBean(Constants.INFO, summaryMsg, msg, new Date()));
+		
+		try {
+			Thread.sleep(3000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		items = service.search(filters, getUser());
         updateIncidentInfo(hmAllStatus, items);
-		getMessages().addMessage(Constants.head_menu[6], new MessageBean(Constants.INFO, summaryMsg, msg, new Date()));
 	}
 	
 	public void setChosenNextStatusRule(OffSpecIncidentBean _incident, BigDecimal _chosenNextStatusId) {

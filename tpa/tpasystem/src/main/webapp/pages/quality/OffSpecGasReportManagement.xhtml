@@ -821,8 +821,7 @@
 		</p:dialog>
 		
 		<p:dialog id="nextStatusDialogId" header="#{msg['osgr_man_changeAction']}" widgetVar="nextStatusDlg" modal="true" appendTo="@(body)" width="725" >
-			<p:ajax event="close" resetValues="true" update="nextStatusDialogId form" listener="#{OSGRManagementView.closeChangeAction}"
-				oncomplete="PF('cargando').hide();" onstart="PF('cargando').show()"/>
+
 			<h:form id="nextStatusFormId" enctype="multipart/form-data">
 				<p:growl id="msgs" showDetail="true" life="10000" globalOnly="true" autoUpdate="true"/>
 				<c:set var="incid" value="#{OSGRManagementView.selected}" scope="request" />

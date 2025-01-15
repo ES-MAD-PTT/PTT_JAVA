@@ -233,7 +233,9 @@ public class BalanceIntradayReportView extends CommonView {
     	} else {
     		filters.setIs_operator("N");
     	}
-    	
+    	if(isShipper()) {
+			filters.setIsShipper("Y");
+		}
 		if(getChangeSystemView().isOnshore()) {
 	        items = service.search(filters);
 	        // En cada busqueda se resetea la fila seleccionada.

@@ -106,8 +106,11 @@ WHERE
 	            <when test='strLastVersion != null and "Y".equals(strLastVersion)'>
 	              AND a.version_date = (SELECT MAX(ax.version_date)
                                       FROM tpa_tallocation        ax,
-                                           tpa_tallocation_origin ao
+                                           tpa_tallocation_origin ao,
+                                           tpa_tintraday_gas_flow gf2
                                      WHERE ax.gas_day = a.gas_day
+                                       and gf2.idn_allocation = ax.idn_allocation
+                                       and gf2.published = 'Y'
                                        AND ax.idn_pipeline_system = a.idn_pipeline_system
                                        AND ax.idn_allocation_type = a.idn_allocation_type
                                        AND ax.idn_allocation_origin = ao.idn_allocation_origin
@@ -129,8 +132,11 @@ WHERE
 		AND a.idn_allocation_origin = ao.idn_allocation_origin
 		AND to_char(a.gas_day,'DD/MM/YY')
              = to_char(#{date},'DD/MM/YY')
-		GROUP BY idn_allocation, to_char(a.version_date, 'DD/MM/YY HH24:MI:SS FF9')
-		ORDER BY idn_allocation, to_char(a.version_date, 'DD/MM/YY HH24:MI:SS FF9')
+		<if test="isShipper==true">
+		    AND a.idn_allocation IN (SELECT idn_allocation FROM tpa_tintraday_gas_flow gf WHERE gf.idn_allocation = a.idn_allocation and gf.published = 'Y' and to_char(gas_day,'DD/MM/YY') = to_char(#{date},'DD/MM/YY'))
+		</if>               
+		GROUP BY a.idn_allocation, to_char(a.version_date, 'DD/MM/YY HH24:MI:SS FF9')
+		ORDER BY a.idn_allocation, to_char(a.version_date, 'DD/MM/YY HH24:MI:SS FF9')
 		</select>
 	
 	<update id="updateComments" parameterType="com.atos.beans.balancing.InstructedOperationFlowShippersBean">

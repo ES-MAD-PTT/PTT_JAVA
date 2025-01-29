@@ -261,7 +261,7 @@ public class MeteredPointView extends CommonView implements Serializable {
 		if(it==null) {
 			return "";
 		}
-		if(this.idn_area_old==null) {
+/*		if(this.idn_area_old==null) {
 			this.idn_area_old = it.getIdn_area();
 			this.area_old = it.getArea();
 		}
@@ -269,11 +269,11 @@ public class MeteredPointView extends CommonView implements Serializable {
 			it.setIdn_area(this.idn_area_old);
 			it.setArea(this.area_old);
 			return it.getArea();
-		} else {
+		} else {*/
 			it.setIdn_area(service.getAreaID(it.getIdn_system_point_nomination()));
 			it.setArea(service.getAreaCode(it.getIdn_system_point_nomination()));
 			return it.getArea();
-		}
+		//}
 	}
 	
 	public String getSystemCode(MeteredPointBean it) {
@@ -637,10 +637,10 @@ public class MeteredPointView extends CommonView implements Serializable {
     	String summaryMsgOk =  getMessageResourceString("insert_ok", params);
     	String summaryMsgNotOk=  getMessageResourceString("insert_noOk", params);
 		
-    	if(newPeriodMeteredPoint.getNewId()==null || newPeriodMeteredPoint.getNewId().equals("")) {
+  /*  	if(newPeriodMeteredPoint.getNewId()==null || newPeriodMeteredPoint.getNewId().equals("")) {
     		newPeriodMeteredPoint.setIdn_area(this.idn_area_old);
     		newPeriodMeteredPoint.setArea(this.area_old);
-    	}
+    	}*/
     	
 		if (newPeriodMeteredPoint.getStartDate() != null) { //No se va a dar.. la pantalla no lo permite
 			if (newPeriodMeteredPoint.getStartDate().before(sysdate.getTime())) {
@@ -714,16 +714,26 @@ public class MeteredPointView extends CommonView implements Serializable {
 		try {
 			try {
 				newMeteredPointNewPeriod = service.selectMeteredPoint(newPeriodMeteredPoint);
+
+				if(newPeriodMeteredPoint.getNewId()!= null && !newPeriodMeteredPoint.getNewId().isEmpty()) {
+					MeteredPointBean bean = new MeteredPointBean(newPeriodMeteredPoint);
+					error = service.deleteOldMeteredPoint(bean);
+
+					newPeriodMeteredPoint.setPoint_code(newPeriodMeteredPoint.getNewId());
+					error = service.insertMeteredPoint(newPeriodMeteredPoint);
+				} else {
+					if(newMeteredPointNewPeriod != null) {
+						newMeteredPointNewPeriod.setStartDate(newPeriodMeteredPoint.getStartDate());
+						service.updateMeteredPointNewPeriod(newMeteredPointNewPeriod);				
+					}						
+					error = service.insertMeteredPointNewPeriod(newPeriodMeteredPoint);
+				}
 				
-				if(newMeteredPointNewPeriod != null) {
-					newMeteredPointNewPeriod.setStartDate(newPeriodMeteredPoint.getStartDate());
-					service.updateMeteredPointNewPeriod(newMeteredPointNewPeriod);				
-				}						
 			} catch (Exception e) {
 				log.catching(e);
 			}
 			
-			if(newPeriodMeteredPoint.getNewId()!= null && !newPeriodMeteredPoint.getNewId().isEmpty()) {
+/*			if(newPeriodMeteredPoint.getNewId()!= null && !newPeriodMeteredPoint.getNewId().isEmpty()) {
 				MeteredPointBean bean = new MeteredPointBean(newPeriodMeteredPoint);
 				error = service.deleteOldMeteredPoint(bean);
 
@@ -732,7 +742,7 @@ public class MeteredPointView extends CommonView implements Serializable {
 				
 			}else {
 				error = service.insertMeteredPointNewPeriod(newPeriodMeteredPoint);
-			}
+			}*/
 			
 		} catch (Exception e) {
 			log.catching(e);

@@ -618,7 +618,7 @@ SELECT ndq.gas_day,
 
        SUM(decode(nhq.hour, 24, nhq.hour_matched_quantity * ucfd.conversion_factor, 0)) AS hour_24,
 
-       MIN(ndq.day_matched_quantity * ucfd.conversion_factor) AS total,
+       SUM(ndq.day_matched_quantity * ucfd.conversion_factor) AS total,
 
        MIN(ndq.is_warned) AS is_warned,
 

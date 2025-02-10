@@ -4,7 +4,7 @@
 	<groupId>com.atos</groupId>
 	<artifactId>tpasystem</artifactId>
 	<packaging>war</packaging>
-	<version>1.4.0</version>
+	<version>1.4.1</version>
 	<name>tpasystem Maven Webapp</name>
 	<url>http://maven.apache.org</url>
 	<properties>

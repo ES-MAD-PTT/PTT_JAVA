@@ -64,10 +64,22 @@ public class MeteredPointsShipperServiceImpl implements MeteredPointsShipperServ
 	@Override
 	public String insertMeteredPointShipper(MeteredPointShipperBean meteredPoint, List<MeteredPointShipperBean> listMeteredPoint) throws Throwable {
 		try {
-			listMeteredPoint.forEach(item -> {
+			for(int i=0;i<listMeteredPoint.size();i++) {
+				try {
+				meteredPoint.setIdnMeteringPoint(listMeteredPoint.get(i).getIdnMeteringPoint());
+				meteredPointsShipperMapper.insertMeteredPointShipper(meteredPoint);
+				} catch (Exception e2) {
+					e2.printStackTrace();
+					System.out.println("1:" + listMeteredPoint.get(i));
+					System.out.println("2:" + meteredPoint);
+				}
+				
+			}
+			
+/*			listMeteredPoint.forEach(item -> {
 				meteredPoint.setIdnMeteringPoint(item.getIdnMeteringPoint());
 				meteredPointsShipperMapper.insertMeteredPointShipper(meteredPoint);
-			});
+			});*/
 		} catch (Exception e) {
 			throw new Exception("1");
 		}

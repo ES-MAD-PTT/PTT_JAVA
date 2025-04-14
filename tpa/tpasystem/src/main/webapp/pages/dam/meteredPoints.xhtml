@@ -197,7 +197,7 @@
 					           <p:cellEditor>
 					               <f:facet name="output"><h:outputText value="#{meteredPoint.name}" title="#{meteredPoint.name}" /></f:facet>
 					               <f:facet name="input">
-					               			<p:inputText value="#{meteredPoint.name}" style="width:100%" label="#{msg['meteredPoint_Name']}" disabled="#{meteredPointView.disabledField(meteredPoint)}"
+					               			<p:inputText value="#{meteredPoint.name}" style="width:100%" label="#{msg['meteredPoint_Name']}" disabled="#{meteredPointView.disabledField2(meteredPoint)}"
 					               				 required="true"  
 					               				 requiredMessage="#{msg['meteredPoint_Name']}: #{msg['empty_field']}"  maxlength="120"
 					               				 validatorMessage="#{msg['meteredPoint_Name']}: #{msg['lenght_field']} 120">
@@ -234,7 +234,7 @@
 					               <f:facet name="input">
 					             
 					              	 <p:inputText value="#{meteredPoint.nominalCapacity}" required="true" style="width:100%" 
-											label="#{msg['meteredPoint_Nominal_Capacity']}" disabled="#{meteredPointView.disabledField(meteredPoint)}"
+											label="#{msg['meteredPoint_Nominal_Capacity']}" disabled="#{meteredPointView.disabledField2(meteredPoint)}"
 					               			requiredMessage="#{msg['meteredPoint_Nominal_Capacity']}: #{msg['empty_field']}" 
 					               			validatorMessage="#{msg['meteredPoint_Nominal_Capacity']}: #{msg['lenght_field']}">
 					               			<f:convertNumber pattern="#,##0" />
@@ -253,7 +253,7 @@
 					               	</f:facet>
 					               <f:facet name="input">
 					               		<p:inputNumber value="#{meteredPoint.minPressure}"  style="width:100%" 
-					               						label="#{msg['meteredPoint_Min_Pressure']}" disabled="#{meteredPointView.disabledField(meteredPoint)}"
+					               						label="#{msg['meteredPoint_Min_Pressure']}" disabled="#{meteredPointView.disabledField2(meteredPoint)}"
 					               						requiredMessage="#{msg['meteredPoint_Min_Pressure']}: #{msg['empty_field']}" 
 					               						validatorMessage="#{msg['meteredPoint_Min_Pressure']}: #{msg['lenght_field']} "
 					               						decimalSeparator="." thousandSeparator="," decimalPlaces="0">
@@ -271,7 +271,7 @@
 					               </f:facet>
 					               <f:facet name="input">
 					               		<p:inputNumber value="#{meteredPoint.maxPressure}"  style="width:100%" 
-					               		label="#{msg['meteredPoint_Max_Pressure']}" disabled="#{meteredPointView.disabledField(meteredPoint)}"
+					               		label="#{msg['meteredPoint_Max_Pressure']}" disabled="#{meteredPointView.disabledField2(meteredPoint)}"
 						               		requiredMessage="#{msg['meteredPoint_Max_Pressure']}: #{msg['empty_field']}" 
 						               		validatorMessage="#{msg['meteredPoint_Max_Pressure']}: #{msg['lenght_field']}"
 						               		decimalSeparator="." thousandSeparator="," decimalPlaces="0">
@@ -352,7 +352,7 @@
 					               	</f:facet>
 					               <f:facet name="input">
 					               		<p:inputNumber value="#{meteredPoint.latitude}"  style="width:100%" 
-					               					label="#{msg['meteredPoint_Latitude']}" disabled="#{meteredPointView.disabledField(meteredPoint)}"
+					               					label="#{msg['meteredPoint_Latitude']}" disabled="#{meteredPointView.disabledField2(meteredPoint)}"
 					               					requiredMessage="#{msg['meteredPoint_Latitude']}: #{msg['empty_field']}" 
 					               					validatorMessage="#{msg['meteredPoint_Latitude']}: #{msg['lenght_field']} "
 					               					decimalSeparator="." thousandSeparator="," > 	
@@ -370,7 +370,7 @@
 					               	</f:facet>
 					               <f:facet name="input">
 					               		<p:inputNumber value="#{meteredPoint.longitud}"  style="width:100%" 
-					               					label="#{msg['meteredPoint_Longitude']}" disabled="#{meteredPointView.disabledField(meteredPoint)}"
+					               					label="#{msg['meteredPoint_Longitude']}" disabled="#{meteredPointView.disabledField2(meteredPoint)}"
 					               					requiredMessage="#{msg['meteredPoint_Longitude']}: #{msg['empty_field']}" 
 					               					validatorMessage="#{msg['meteredPoint_Longitude']}: #{msg['lenght_field']} "
 					               					decimalSeparator="." thousandSeparator="," > 
@@ -433,7 +433,7 @@
 					               <f:facet name="output"><h:outputText value="#{meteredPoint.conectingPartyName}" /></f:facet>
 					               <f:facet name="input">
 					               		<p:inputText value="#{meteredPoint.conectingPartyName}" required="false"  style="width:100%" 
-					               			label="#{msg['meteredPoint_Conecting_Party_Name']}" disabled="#{meteredPointView.disabledField(meteredPoint)}"
+					               			label="#{msg['meteredPoint_Conecting_Party_Name']}" disabled="#{meteredPointView.disabledField2(meteredPoint)}"
 					               			requiredMessage="#{msg['meteredPoint_Conecting_Party_Name']}: #{msg['empty_field']}" 
 					               			validatorMessage="#{msg['meteredPoint_Conecting_Party_Name']}: #{msg['lenght_field']} 120"
 					               			maxlength="120">
@@ -447,7 +447,7 @@
 					               <f:facet name="output"><h:outputText value="#{meteredPoint.conectingPartyPhoneNumber}" /></f:facet>
 					               <f:facet name="input">
 					               		<p:inputText value="#{meteredPoint.conectingPartyPhoneNumber}" required="false"  style="width:100%" 
-					               			label="#{msg['meteredPoint_Conecting_Party_Phone_Number']}" disabled="#{meteredPointView.disabledField(meteredPoint)}"
+					               			label="#{msg['meteredPoint_Conecting_Party_Phone_Number']}" disabled="#{meteredPointView.disabledField2(meteredPoint)}"
 					               			requiredMessage="#{msg['meteredPoint_Conecting_Party_Phone_Number']}: #{msg['empty_field']}" 
 					               			validatorMessage="#{msg['meteredPoint_Conecting_Party_Phone_Number']}: #{msg['lenght_field']} 120"
 					               			maxlength="120">
@@ -468,7 +468,7 @@
 					               
 					               <f:facet name="input">
 					               		<p:inputText value="#{meteredPoint.conectingPartyEmail}" required="false"  style="width:100%" 
-					               			label="#{msg['meteredPoint_Conecting_Party_Email']}" disabled="#{meteredPointView.disabledField(meteredPoint)}"
+					               			label="#{msg['meteredPoint_Conecting_Party_Email']}" disabled="#{meteredPointView.disabledField2(meteredPoint)}"
 					               			requiredMessage="#{msg['meteredPoint_Conecting_Party_Email']}: #{msg['empty_field']}" 
 					               			validatorMessage= "#{msg['meteredPoint_Invalid_Email_Format']}" >
 									        <f:validateRegex pattern="^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$" />		

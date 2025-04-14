@@ -821,6 +821,28 @@ public class MeteredPointView extends CommonView implements Serializable {
 		return "false";
 	}
 
+	public String disabledField2(MeteredPointBean item) {
+		// 2. En caso de un registro con la fecha Start Date anterior o igual al día actual y fecha End Date posterior al día actual (o vacía), el sistema habilitará 
+		// Name
+		// Nominal Capacity
+		// Min-Max Pressure
+		// Latitude
+		// Longitude
+		// Connecting party Name
+		// Connecting Party Phone Number
+		// Connecting Party Email
+		// End Date
+
+		if (item.getStartDate().before(sysdate.getTime()) && item.getEndDate()==null) {
+			return "false";
+		}
+		if (item.getStartDate().before(sysdate.getTime()) && item.getEndDate().before(sysdate.getTime())) {
+			return "true";
+		}
+		return "false";
+	}
+	
+	
 	public String disabledPointType(MeteredPointBean item) {
 		return "true";
 	}

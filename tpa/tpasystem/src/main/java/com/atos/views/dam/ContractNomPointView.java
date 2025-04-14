@@ -69,6 +69,12 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 
 	private Calendar sysdate = Calendar.getInstance();
 
+	public Date getTomorrow() {
+		Calendar cal = Calendar.getInstance();
+		cal.add(Calendar.DAY_OF_MONTH, 1);
+		return cal.getTime();
+	}
+
 	public Calendar getSysdate() {
 		return sysdate;
 	}
@@ -198,7 +204,7 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 	public void init() {
 		filters = new ContractNomPointFilter();
 		newContractNomPoint = new ContractNomPointBean();
-		newContractNomPoint.setStartDate(sysdate.getTime());
+		newContractNomPoint.setStartDate(getTomorrow());
 		newContractNomPoint.setIdn_system(getChangeSystemView().getIdn_active());
 
 		// cargamos los combos inicialment
@@ -362,7 +368,7 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 	public void cancel() {
 		// RequestContext.getCurrentInstance().reset("formNewEntity");
 		newContractNomPoint = new ContractNomPointBean();
-		newContractNomPoint.setStartDate(sysdate.getTime());
+		newContractNomPoint.setStartDate(getTomorrow());
 		newContractNomPoint.setIdn_system(getChangeSystemView().getIdn_active());
 		selecteds = new ArrayList<ContractNomPointBean>();
 		selectedsFornNew = new ArrayList<ContractNomPointBean>();
@@ -380,7 +386,7 @@ public class ContractNomPointView  extends CommonView implements Serializable {
     	String summaryMsgNotOk= CommonView.getMessageResourceString("insert_noOk", params);
 
 		if (newContractNomPoint.getStartDate() != null) {
-			if (newContractNomPoint.getStartDate().before(sysdate.getTime())) {
+			if (newContractNomPoint.getStartDate().before(getTomorrow())) {
 				errorMsg = msgs.getString("error_startDate_sysdate"); //error_startDate_sysdate= Start date must be later to sysdate
 				getMessages().addMessage(Constants.head_menu[0], new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
 				log.error(errorMsg);
@@ -389,7 +395,7 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 		}
 
 		if (newContractNomPoint.getEndDate() != null) {
-			if (newContractNomPoint.getEndDate().before(sysdate.getTime())) {
+			if (newContractNomPoint.getEndDate().before(getTomorrow())) {
 				errorMsg = msgs.getString("error_endDate_sysdate"); //error_endDate_sysdate= End Date must be later to sysdate
 				getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
 				log.error(errorMsg);
@@ -607,7 +613,7 @@ public class ContractNomPointView  extends CommonView implements Serializable {
     	sysdate.add(Calendar.DAY_OF_MONTH, -1);
 		if (newContractNomPoint.getEndDate() != null) {
 			sysdate.add(Calendar.DAY_OF_MONTH, -1);
-			if (newContractNomPoint.getEndDate().before(sysdate.getTime())) {
+			if (newContractNomPoint.getEndDate().before(getTomorrow())) {
 				errorMsg = msgs.getString("error_endDate_sysdate_short"); //error_endDate_sysdate_short= End Date must be later or equal to sysdate
 				getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
 				log.error(errorMsg);

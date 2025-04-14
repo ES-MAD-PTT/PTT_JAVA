@@ -250,7 +250,7 @@
 										itemLabel="#{entry.value}" />
 									<p:ajax
 										update="newCustomerTypesId newGroupsId addMeteredPointShipperId" 
-											listener="#{meteredPointShipperView.chargeAddEditTable}"/>
+											listener="#{meteredPointShipperView.chargeAddTable}"/>
 								</p:selectOneMenu>
 							</p:column>
 							<p:column style="font-weight: bold;">
@@ -266,7 +266,7 @@
 										var="entry" itemValue="#{entry.key}"
 										itemLabel="#{entry.value}" />
 									<p:ajax update="newGroupsId addMeteredPointShipperId" 
-										listener="#{meteredPointShipperView.chargeAddEditTable}"/>
+										listener="#{meteredPointShipperView.chargeAddTable}"/>
 								</p:selectOneMenu>
 							</p:column>
 							<p:column style="font-weight: bold;">
@@ -282,7 +282,7 @@
 										var="entry" itemValue="#{entry.key}"
 										itemLabel="#{entry.value}" />
 									<p:ajax update="addMeteredPointShipperId" 
-										listener="#{meteredPointShipperView.chargeAddEditTable}"/>
+										listener="#{meteredPointShipperView.chargeAddTable}"/>
 								</p:selectOneMenu>
 							</p:column>
 						</p:row>

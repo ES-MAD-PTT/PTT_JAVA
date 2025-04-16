@@ -81,7 +81,7 @@ AND a.idn_nomination_concept = c.idn_nomination_concept
 	
 	
 	
-	<insert id="insertNomConcept" parameterType="com.atos.filters.dam.NominationConceptFilter">
+	<insert id="insertNomConcept" useGeneratedKeys="true" keyProperty="idn_nomination_concept" keyColumn="idn_nomination_concept" parameterType="com.atos.filters.dam.NominationConceptFilter">
 INSERT
 	INTO tpa_tnomination_concept (idn_nomination_concept,
 	concept_code,
@@ -117,5 +117,55 @@ SYSDATE,
 #{userName})
 	</insert>
     
+    
+	<insert id="insertMeteredPoint" useGeneratedKeys="true" keyProperty="idn_system_point" keyColumn="idn_system_point" parameterType="com.atos.beans.dam.MeteredPointBean">
+		INSERT INTO tpa_tsystem_point
+			(idn_system_point,IDN_SYSTEM_POINT_GROUP,point_code,point_desc, 
+			idn_system_point_type, 
+			start_date, end_date,
+			aud_ins_user,aud_last_user)
+		VALUES
+			(tpa_ssystem_point.nextval,
+			 (SELECT pg.idn_system_point_group  FROM tpa_tsystem_point_group pg WHERE pg.group_code='CONNECTION'),
+			 #{point_code},
+			 #{name}, 
+			 (SELECT pg.idn_system_point_type  FROM tpa_tsystem_point_type pg WHERE pg.type_code='CONCEPT_POINT'),
+			 #{startDate},
+		     #{endDate},
+		     #{username},
+			 #{username})
+	</insert>
+    
+<insert id="insertNomConceptMetering" parameterType="com.atos.beans.dam.NomConceptMeteringBean">
+insert into tpa_tnom_concept_metering
+	(idn_nom_concept_metering,idn_system_point,start_date,idn_nomination_concept,aud_ins_user,aud_last_user)
+	values(
+		tpa_snom_concept_metering.nextval,
+		#{idn_system_point},
+		#{start_date},
+		#{idn_nomination_concept},
+		#{username},
+		#{username}
+	)
+
+</insert>    
+    
+<insert id="insertSystemPointConcept" parameterType="com.atos.beans.dam.SystemPointConnectBean">
+insert into tpa_tsystem_point_connect
+	(idn_system_point_connect,
+       idn_system_point,
+       idn_nomination_concept,
+       start_date,
+       aud_last_user)
+	values (
+	   tpa_ssystem_point_connect.nextval,
+       #{idn_system_point},
+       #{idn_nomination_concept},
+       #{start_date},
+       #{username}
+	)
+	
+
+</insert>    
 
 </mapper>

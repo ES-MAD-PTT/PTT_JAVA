@@ -179,7 +179,7 @@
     </select>
     
     <select id="selectMetPointCustomerGroup" resultMap="MeteredPointShipper">
-    	SELECT to_number(tp.idn_system_point || ct.idn_customer_type || conp.idn_system_point) as compositeKey,
+    	SELECT distinct(to_number(tp.idn_system_point || ct.idn_customer_type || conp.idn_system_point)) as compositeKey,
     			tp.idn_system_point as IDN_MET_POINT, tp.POINT_CODE as POINT_CODE,
 		       ct.idn_customer_type as idn_customer_type,  
 		       ct.TYPE_DESC as TYPE_DESC ,
@@ -203,6 +203,7 @@
 		      AND a.IDN_ZONE = z.IDN_ZONE
 		      AND z.IDN_PIPELINE_SYSTEM = ps.IDN_PIPELINE_SYSTEM 
 		      AND nvl(pp.end_date, pp.start_date) >= pp.start_date
+		      and (pp.end_date is null or pp.end_date >= trunc(sysdate))
 		      AND pp.version_date = (SELECT max(ppx.version_date) 
 		                                FROM tpa_tsystem_point_param ppx 
 		                                WHERE pp.idn_system_point = ppx.idn_system_point 

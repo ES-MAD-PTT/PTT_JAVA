@@ -152,6 +152,7 @@
 		            tpa_tsystem_point_type    spt
 		            WHERE spt.type_code = 'CONNECTION'
 		              AND sp_met.idn_system_point = spc.idn_system_point
+		              and spt.idn_system_point_type = sp_met.idn_system_point_type
 		              AND sp_met.idn_system_point_group =
 		                  (SELECT tspgr.idn_system_point_group FROM tpa_tsystem_point_group tspgr WHERE tspgr.group_code = 'CONNECTION')
 		                  <choose> 
@@ -170,7 +171,19 @@
 		                    <otherwise>
 		                      AND (-1) IN (spc.idn_area_to, spc.idn_area_from)
 		                    </otherwise>
-		                  </choose>             
+		                  </choose>  
+		                  
+				UNION
+		               SELECT sp_met.idn_system_point,
+		                      sp_met.point_code      
+		                 FROM tpa_tsystem_point         sp_met,
+		                      tpa_tsystem_point_connect spc,
+		                tpa_tsystem_point_type    spt
+		                WHERE spt.type_code = 'CONCEPT_POINT'
+		                  AND sp_met.idn_system_point = spc.idn_system_point
+		                  and sp_met.idn_system_point_type = spt.idn_system_point_type
+		                  AND sp_met.idn_system_point_group =
+		                      (SELECT tspgr.idn_system_point_group FROM tpa_tsystem_point_group tspgr WHERE tspgr.group_code = 'CONNECTION')		                             
 		    )
 		    <if test="idnShipper != null and idnShipper != ''"> 
 		    )

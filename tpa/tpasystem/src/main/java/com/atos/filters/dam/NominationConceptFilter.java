@@ -10,6 +10,7 @@ public class NominationConceptFilter implements Serializable{
 	 */
 	private static final long serialVersionUID = -5384739501695766356L;
 
+		private BigDecimal idn_nomination_concept;
 		private String nomConcept;
 		private BigDecimal nomConceptType;
 		private BigDecimal unitType;
@@ -45,7 +46,12 @@ public class NominationConceptFilter implements Serializable{
 			this.userName = userName;
 		}
 
-
+		public BigDecimal getIdn_nomination_concept() {
+			return idn_nomination_concept;
+		}
+		public void setIdn_nomination_concept(BigDecimal idn_nomination_concept) {
+			this.idn_nomination_concept = idn_nomination_concept;
+		}
 
 		public String getNomConcept() {
 			return nomConcept;
@@ -121,10 +127,29 @@ public class NominationConceptFilter implements Serializable{
 
 		@Override
 		public String toString() {
-			return "NominationConceptFilter [nomConcept=" + nomConcept + ", nomConceptType=" + nomConceptType
-					+ ", unitType=" + unitType + ", type=" + type + ", idn_system=" + idn_system + ", is_area_concept="
-					+ is_area_concept + ", is_zone_concept=" + is_zone_concept + ", idnUserGroup=" + idnUserGroup
-					+ ", userName=" + userName + "]";
+			StringBuilder builder = new StringBuilder();
+			builder.append("NominationConceptFilter [idn_nomination_concept=");
+			builder.append(idn_nomination_concept);
+			builder.append(", nomConcept=");
+			builder.append(nomConcept);
+			builder.append(", nomConceptType=");
+			builder.append(nomConceptType);
+			builder.append(", unitType=");
+			builder.append(unitType);
+			builder.append(", type=");
+			builder.append(type);
+			builder.append(", idn_system=");
+			builder.append(idn_system);
+			builder.append(", is_area_concept=");
+			builder.append(is_area_concept);
+			builder.append(", is_zone_concept=");
+			builder.append(is_zone_concept);
+			builder.append(", idnUserGroup=");
+			builder.append(idnUserGroup);
+			builder.append(", userName=");
+			builder.append(userName);
+			builder.append("]");
+			return builder.toString();
 		}
 	
 	}

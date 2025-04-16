@@ -29,10 +29,14 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import com.atos.beans.MessageBean;
+import com.atos.beans.dam.MeteredPointBean;
+import com.atos.beans.dam.NomConceptMeteringBean;
 import com.atos.beans.dam.NominationConceptBean;
+import com.atos.beans.dam.SystemPointConnectBean;
 import com.atos.filters.dam.NominationConceptFilter;
 import com.atos.services.dam.NominationConceptService;
 import com.atos.utils.Constants;
+import com.atos.utils.DateUtil;
 import com.atos.views.ChangeSystemView;
 import com.atos.views.CommonView;
 
@@ -333,6 +337,33 @@ public class NominationConceptView  extends CommonView implements Serializable {
 				
 				service.insertNomConcept(filtersNew);
 				service.insertNomConceptSystem(filtersNew);
+				MeteredPointBean sp = new MeteredPointBean();
+				sp.setPoint_code(filtersNew.getNomConcept());
+				sp.setName(filtersNew.getNomConcept());
+				Calendar cal = Calendar.getInstance();
+				cal.set(Calendar.DAY_OF_MONTH, 1);
+				cal.set(Calendar.MONTH, 1);
+				cal.set(Calendar.YEAR, 2016);
+				sp.setStartDate(DateUtil.adjustDate(cal.getTime()));
+				sp.setUsername(getUser().getUsername());
+				service.insertMeteredPoint(sp);
+				
+				NomConceptMeteringBean nomConcept = new NomConceptMeteringBean();
+				nomConcept.setIdn_system_point(sp.getIdn_system_point());
+				nomConcept.setIdn_nomination_concept(filtersNew.getIdn_nomination_concept());
+				nomConcept.setStart_date(sp.getStartDate());
+				nomConcept.setUsername(getUser().getUsername());
+				
+				service.insertNomConceptMetering(nomConcept);
+				
+				SystemPointConnectBean systemPointConnect = new SystemPointConnectBean();
+				systemPointConnect.setIdn_system_point(sp.getIdn_system_point());
+				systemPointConnect.setIdn_nomination_concept(filtersNew.getIdn_nomination_concept());
+				systemPointConnect.setStart_date(sp.getStartDate());
+				systemPointConnect.setUsername(getUser().getUsername());
+				
+				service.insertSystemPointConcept(systemPointConnect);
+				
 				String[] par2 = {msgs.getString("nominationConcept") };
 				String msg = getMessageResourceString("insert_ok", par2);
 				getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.INFO,summaryMsgOk, msg, Calendar.getInstance().getTime()));

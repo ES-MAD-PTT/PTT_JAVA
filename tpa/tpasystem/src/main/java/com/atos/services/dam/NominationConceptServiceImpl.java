@@ -9,8 +9,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.atos.beans.ComboFilterNS;
+import com.atos.beans.dam.MeteredPointBean;
+import com.atos.beans.dam.NomConceptMeteringBean;
 import com.atos.beans.dam.NominationConceptBean;
+import com.atos.beans.dam.SystemPointConnectBean;
 import com.atos.filters.dam.NominationConceptFilter;
+import com.atos.mapper.dam.MeteredPointMapper;
 import com.atos.mapper.dam.NominationConceptMapper;
 
 @Service("nominationConceptService")
@@ -77,4 +81,18 @@ public class NominationConceptServiceImpl implements NominationConceptService {
 		return nominationConceptMapper.insertNomConcept(filters);
 	}
 
+	@Override
+	public int insertMeteredPoint(MeteredPointBean bean) {
+		return nominationConceptMapper.insertMeteredPoint(bean);
+	}
+
+	@Override
+	public int insertNomConceptMetering(NomConceptMeteringBean bean) {
+		return nominationConceptMapper.insertNomConceptMetering(bean);
+	}
+	
+	@Override
+	public int insertSystemPointConcept(SystemPointConnectBean bean) {
+		return nominationConceptMapper.insertSystemPointConcept(bean);
+	}
 }

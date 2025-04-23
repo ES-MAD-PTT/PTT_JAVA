@@ -203,7 +203,6 @@
 						<p:column>
 							<p:selectOneMenu id="area" widgetVar="area" style="width:100px" value="#{NominationConceptView.filtersNew.idn_area}" 
 							 	disabled="#{NominationConceptView.disableArea}" required="#{NominationConceptView.requiredArea}" requiredMessage="#{msg['cap_pub_area']}: #{msg['empty_field']}">
-							   		<f:selectItem itemLabel="" itemValue="" />
 							   		<f:selectItems value="#{NominationConceptView.areaIdSystem.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
 			           		</p:selectOneMenu>
 			           		<p:message for="area" />

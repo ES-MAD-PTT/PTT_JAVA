@@ -360,10 +360,16 @@ public class NominationConceptView  extends CommonView implements Serializable {
 				filtersNew.setUserName(getUser().getUsername());
 				filtersNew.setIdn_system(getChangeSystemView().getIdn_active());
 				
+				String nom_concept = service.selectNominationConceptCode(filtersNew.getNomConceptType());
+				if(nom_concept!=null && nom_concept.equals("METERING") && filtersNew.getType()!=null && filtersNew.getType().equals("area") && filtersNew.getIdn_area()!=null) {
+					getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.ERROR, summaryMsgNotOk, "Must select an area", Calendar.getInstance().getTime()));
+					return;
+				}
+				
 				service.insertNomConcept(filtersNew);
 				service.insertNomConceptSystem(filtersNew);
 				
-				String nom_concept = service.selectNominationConceptCode(filtersNew.getNomConceptType());
+				
 		    	if(!this.isShipper() && nom_concept!=null && nom_concept.equals("METERING") && filtersNew.getType()!=null && filtersNew.getType().equals("area")) {
 				
 					MeteredPointBean sp = new MeteredPointBean();

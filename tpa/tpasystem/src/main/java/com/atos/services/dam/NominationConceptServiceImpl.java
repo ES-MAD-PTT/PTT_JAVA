@@ -10,9 +10,7 @@ import org.springframework.stereotype.Service;
 
 import com.atos.beans.ComboFilterNS;
 import com.atos.beans.dam.MeteredPointBean;
-import com.atos.beans.dam.NomConceptMeteringBean;
 import com.atos.beans.dam.NominationConceptBean;
-import com.atos.beans.dam.SystemPointConnectBean;
 import com.atos.filters.dam.NominationConceptFilter;
 import com.atos.mapper.dam.AreaMapper;
 import com.atos.mapper.dam.MeteredPointMapper;

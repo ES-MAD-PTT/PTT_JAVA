@@ -6,9 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.atos.beans.dam.MeteredPointBean;
-import com.atos.beans.dam.NomConceptMeteringBean;
 import com.atos.beans.dam.NominationConceptBean;
-import com.atos.beans.dam.SystemPointConnectBean;
 import com.atos.filters.dam.NominationConceptFilter;
 
 public interface NominationConceptService extends Serializable {

@@ -30,9 +30,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import com.atos.beans.MessageBean;
 import com.atos.beans.dam.MeteredPointBean;
-import com.atos.beans.dam.NomConceptMeteringBean;
 import com.atos.beans.dam.NominationConceptBean;
-import com.atos.beans.dam.SystemPointConnectBean;
 import com.atos.filters.dam.NominationConceptFilter;
 import com.atos.services.dam.NominationConceptService;
 import com.atos.utils.Constants;

@@ -52,6 +52,8 @@ public class NominationConceptView  extends CommonView implements Serializable {
 
 	private List<NominationConceptBean> items;
 	
+	private boolean disableArea = true;
+	
 	private static final Logger log = LogManager.getLogger("com.atos.views.dam.NominationConceptView");
 
 	@ManagedProperty("#{nominationConceptService}")
@@ -67,7 +69,7 @@ public class NominationConceptView  extends CommonView implements Serializable {
 	public void setSystemView(ChangeSystemView systemView) {
 		this.systemView = systemView;
 	}
-		
+	
 	//geters/seters
 	public NominationConceptFilter getFilters() {
 		return filters;
@@ -104,6 +106,7 @@ public class NominationConceptView  extends CommonView implements Serializable {
 		
 		filters = initFiltersCombos();
 		filtersNew = initFiltersCombos();
+		filtersNew.setType("area");
         
 	}
 
@@ -263,10 +266,14 @@ public class NominationConceptView  extends CommonView implements Serializable {
 	}
 	
 	// Para los elementos del combo del filtro de Type Concept Nomination.
-		public Map<BigDecimal, Object> getNomConceptType() {
-			return service.selectNominationConceptTypeCombo(systemView.getIdn_active());
-		}
+	public Map<BigDecimal, Object> getNomConceptType() {
+		return service.selectNominationConceptTypeCombo(systemView.getIdn_active());
+	}
 	
+	public Map<BigDecimal, Object> getAreaIdSystem() {
+		return service.selectIds(getChangeSystemView().getIdn_active());
+    }
+		
 	public void onSearch(){
     	
     	filters.setIdn_system(getChangeSystemView().getIdn_active()); // offShore
@@ -300,6 +307,26 @@ public class NominationConceptView  extends CommonView implements Serializable {
 		filtersNew = new NominationConceptFilter();		
 
 	}
+    
+    public boolean getDisableArea() {
+    	return this.disableArea;
+    	
+    }
+    
+    public void changeAreaRender() {
+    	String nom_concept = service.selectNominationConceptCode(filtersNew.getNomConceptType());
+    	if(!this.isShipper() && nom_concept!=null && nom_concept.equals("METERING") && filtersNew.getType()!=null && filtersNew.getType().equals("area")) {
+    		this.disableArea = false;
+    	}
+    	else {
+    		this.disableArea = true;
+    	}
+    }
+    
+    public boolean getRequiredArea() {
+    	return this.disableArea;
+    	
+    }
     
     public void save() {
 
@@ -337,32 +364,22 @@ public class NominationConceptView  extends CommonView implements Serializable {
 				
 				service.insertNomConcept(filtersNew);
 				service.insertNomConceptSystem(filtersNew);
-				MeteredPointBean sp = new MeteredPointBean();
-				sp.setPoint_code(filtersNew.getNomConcept());
-				sp.setName(filtersNew.getNomConcept());
-				Calendar cal = Calendar.getInstance();
-				cal.set(Calendar.DAY_OF_MONTH, 1);
-				cal.set(Calendar.MONTH, 1);
-				cal.set(Calendar.YEAR, 2016);
-				sp.setStartDate(DateUtil.adjustDate(cal.getTime()));
-				sp.setUsername(getUser().getUsername());
-				service.insertMeteredPoint(sp);
 				
-				NomConceptMeteringBean nomConcept = new NomConceptMeteringBean();
-				nomConcept.setIdn_system_point(sp.getIdn_system_point());
-				nomConcept.setIdn_nomination_concept(filtersNew.getIdn_nomination_concept());
-				nomConcept.setStart_date(sp.getStartDate());
-				nomConcept.setUsername(getUser().getUsername());
+				String nom_concept = service.selectNominationConceptCode(filtersNew.getNomConceptType());
+		    	if(!this.isShipper() && nom_concept!=null && nom_concept.equals("METERING") && filtersNew.getType()!=null && filtersNew.getType().equals("area")) {
 				
-				service.insertNomConceptMetering(nomConcept);
-				
-				SystemPointConnectBean systemPointConnect = new SystemPointConnectBean();
-				systemPointConnect.setIdn_system_point(sp.getIdn_system_point());
-				systemPointConnect.setIdn_nomination_concept(filtersNew.getIdn_nomination_concept());
-				systemPointConnect.setStart_date(sp.getStartDate());
-				systemPointConnect.setUsername(getUser().getUsername());
-				
-				service.insertSystemPointConcept(systemPointConnect);
+					MeteredPointBean sp = new MeteredPointBean();
+					sp.setPoint_code(filtersNew.getNomConcept());
+					sp.setName(filtersNew.getNomConcept());
+					Calendar cal = Calendar.getInstance();
+					cal.set(Calendar.DAY_OF_MONTH, 1);
+					cal.set(Calendar.MONTH, 1);
+					cal.set(Calendar.YEAR, 2016);
+					sp.setStartDate(DateUtil.adjustDate(cal.getTime()));
+					sp.setUsername(getUser().getUsername());
+					sp.setIdn_area(filtersNew.getIdn_area());
+					service.insertMeteredPoint(sp);
+		    	}
 				
 				String[] par2 = {msgs.getString("nominationConcept") };
 				String msg = getMessageResourceString("insert_ok", par2);

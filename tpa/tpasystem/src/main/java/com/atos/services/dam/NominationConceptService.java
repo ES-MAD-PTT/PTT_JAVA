@@ -29,7 +29,7 @@ public interface NominationConceptService extends Serializable {
 
 	public int insertMeteredPoint(MeteredPointBean bean);
 	
-	public int insertNomConceptMetering(NomConceptMeteringBean bean);
+	public Map<BigDecimal, Object> selectIds(BigDecimal idn_system);
 
-	public int insertSystemPointConcept(SystemPointConnectBean bean);
+	public String selectNominationConceptCode(BigDecimal idn);
 }

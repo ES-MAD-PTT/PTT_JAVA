@@ -20,6 +20,8 @@ public class NominationConceptFilter implements Serializable{
 		private String is_area_concept;
 		private String is_zone_concept;
 		
+		private BigDecimal idn_area;
+		
 		private BigDecimal idnUserGroup;
 		private String userName;
 		
@@ -124,6 +126,14 @@ public class NominationConceptFilter implements Serializable{
 		public void setIs_zone_concept(String is_zone_concept) {
 			this.is_zone_concept = is_zone_concept;
 		}
+		
+		public BigDecimal getIdn_area() {
+			return idn_area;
+		}
+
+		public void setIdn_area(BigDecimal idn_area) {
+			this.idn_area = idn_area;
+		}
 
 		@Override
 		public String toString() {
@@ -144,6 +154,8 @@ public class NominationConceptFilter implements Serializable{
 			builder.append(is_area_concept);
 			builder.append(", is_zone_concept=");
 			builder.append(is_zone_concept);
+			builder.append(", idn_area=");
+			builder.append(idn_area);
 			builder.append(", idnUserGroup=");
 			builder.append(idnUserGroup);
 			builder.append(", userName=");

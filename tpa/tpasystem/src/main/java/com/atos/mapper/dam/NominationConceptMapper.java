@@ -5,9 +5,7 @@ import java.util.List;
 
 import com.atos.beans.ComboFilterNS;
 import com.atos.beans.dam.MeteredPointBean;
-import com.atos.beans.dam.NomConceptMeteringBean;
 import com.atos.beans.dam.NominationConceptBean;
-import com.atos.beans.dam.SystemPointConnectBean;
 import com.atos.filters.dam.NominationConceptFilter;
 
 public interface NominationConceptMapper {
@@ -17,6 +15,8 @@ public interface NominationConceptMapper {
 	public List<ComboFilterNS> selectNominationConceptCombo (BigDecimal system);
 	
 	public List<ComboFilterNS> selectNominationConceptTypeCombo (BigDecimal system);
+	
+	public List<String> selectNominationConceptCode(BigDecimal idn);
 	
 	public List<ComboFilterNS> selectNominationConceptComboUnitType (BigDecimal system);
 	
@@ -28,7 +28,4 @@ public interface NominationConceptMapper {
 	
 	public int insertMeteredPoint(MeteredPointBean meteredPoint);
 	
-	public int insertNomConceptMetering(NomConceptMeteringBean bean);
-
-	public int insertSystemPointConcept(SystemPointConnectBean bean);
 }

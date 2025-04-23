@@ -14,6 +14,7 @@ import com.atos.beans.dam.NomConceptMeteringBean;
 import com.atos.beans.dam.NominationConceptBean;
 import com.atos.beans.dam.SystemPointConnectBean;
 import com.atos.filters.dam.NominationConceptFilter;
+import com.atos.mapper.dam.AreaMapper;
 import com.atos.mapper.dam.MeteredPointMapper;
 import com.atos.mapper.dam.NominationConceptMapper;
 
@@ -26,6 +27,9 @@ public class NominationConceptServiceImpl implements NominationConceptService {
 	private static final long serialVersionUID = 1L;
 	@Autowired
 	private NominationConceptMapper nominationConceptMapper;
+
+	@Autowired
+	private AreaMapper areaMapper;
 
 	@Override
 	public Map<BigDecimal, Object> selectNominationConceptCombo(BigDecimal system) {
@@ -87,12 +91,23 @@ public class NominationConceptServiceImpl implements NominationConceptService {
 	}
 
 	@Override
-	public int insertNomConceptMetering(NomConceptMeteringBean bean) {
-		return nominationConceptMapper.insertNomConceptMetering(bean);
+	public Map<BigDecimal, Object> selectIds(BigDecimal idn_system) {
+		Map<BigDecimal, Object> map = new LinkedHashMap<BigDecimal, Object>();
+ 		List<ComboFilterNS> list = areaMapper.selectIdsCombo(idn_system);
+		for (ComboFilterNS combo : list) {
+			if (combo == null) continue;
+			map.put(combo.getKey(), combo.getValue());
+		}
+		return map; 
 	}
-	
+
 	@Override
-	public int insertSystemPointConcept(SystemPointConnectBean bean) {
-		return nominationConceptMapper.insertSystemPointConcept(bean);
+	public String selectNominationConceptCode(BigDecimal idn) {
+		List<String> l = nominationConceptMapper.selectNominationConceptCode(idn);
+		if(l.size()==1) {
+			return l.get(0);
+		} else {
+			return null;
+		}
 	}
 }

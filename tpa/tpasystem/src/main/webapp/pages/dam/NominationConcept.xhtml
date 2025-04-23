@@ -153,6 +153,8 @@
 							   		<f:selectItem itemLabel="" itemValue="" />
     									<f:selectItems value="#{NominationConceptView.nomConceptType.entrySet()}" var="entry" 
     											itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+    								<p:ajax event="change" update="area" onstart="PF('cargando').show()" listener="#{NominationConceptView.changeAreaRender}"
+										oncomplete="PF('cargando').hide()"></p:ajax>
 			           		</p:selectOneMenu>
 			           		<p:message for="nomConceptType" />	
 							
@@ -163,7 +165,6 @@
 							<h:outputText value="#{msg['nominationConcept_UnitType']}" />
 						</p:column>
 						<p:column  style="font-weight: bold;">
-							<h:outputText value="#{msg['nominationConcept_Type']}" />
 						</p:column>
 					</p:row>
 					<p:row>					
@@ -177,12 +178,35 @@
 			           		<p:message for="nomConceptId2" />
 						</p:column>
 						<p:column>
+						</p:column>
+					</p:row>
+					<p:row>
+						<p:column  style="font-weight: bold;">
+							<h:outputText value="#{msg['nominationConcept_Type']}" />
+						</p:column>
+						<p:column  style="font-weight: bold;">
+							<h:outputText value="#{msg['cap_pub_area']}" />
+						</p:column>
+					</p:row>
+					<p:row>					
+						<p:column>
 							<p:selectOneMenu id="areaZone" style="width:100px" value="#{NominationConceptView.filtersNew.type}" 
 								rendered="#{!NominationConceptView.isShipper}" required="true" requiredMessage="#{msg['nominationConcept_Name']}: #{msg['empty_field']}">
 							   		<f:selectItem itemLabel="Area" itemValue="area" />
-							   		<f:selectItem itemLabel="Zone" itemValue="zone" />    									
+							   		<f:selectItem itemLabel="Zone" itemValue="zone" />    
+							   		
+							   		<p:ajax event="change" update="area" onstart="PF('cargando').show()" listener="#{NominationConceptView.changeAreaRender}"
+										oncomplete="PF('cargando').hide()"></p:ajax>									
 			           		</p:selectOneMenu>
 			           		<p:message for="areaZone" />
+						</p:column>
+						<p:column>
+							<p:selectOneMenu id="area" widgetVar="area" style="width:100px" value="#{NominationConceptView.filtersNew.idn_area}" 
+							 	disabled="#{NominationConceptView.disableArea}" required="#{NominationConceptView.requiredArea}" requiredMessage="#{msg['cap_pub_area']}: #{msg['empty_field']}">
+							   		<f:selectItem itemLabel="" itemValue="" />
+							   		<f:selectItems value="#{NominationConceptView.areaIdSystem.entrySet()}" var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
+			           		</p:selectOneMenu>
+			           		<p:message for="area" />
 						</p:column>
 					</p:row>
 				</p:panelGrid>
@@ -195,7 +219,8 @@
 								action="#{NominationConceptView.save}" update=":#{p:component('nomConcept1')},:newConcetNom"
 								onstart="PF('cargando').show()"
 								oncomplete="PF('dlgNewConcetNom').hide(),PF('cargando').hide()" />
-			        		<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close"/>	
+			        		<p:commandButton value="#{msg['cancel']}" styleClass="ui-confirmdialog-no" icon="ui-icon-close"
+			        			onclick="PF('dlgNewConcetNom').hide()"/>	
 						</p:column>					
 					</p:row>
 				</p:panelGrid>

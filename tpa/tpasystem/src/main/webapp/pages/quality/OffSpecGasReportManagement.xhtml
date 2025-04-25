@@ -407,7 +407,7 @@
 						<p:column>
 							<p:fileUpload id="upload" style="width:100%" fileUploadListener="#{OSGRManagementView.handleFileUploadTransporter}" mode="advanced" dragDropSupport="true"
           							auto="true" update="msgs,upload,listActionFileId,numberFilesId" onstart="PF('cargando').show()" oncomplete="PF('cargando').hide()"
-          							disabled="#{OSGRManagementView.selected.filesAction.size() eq 10}"/>
+          							disabled="#{OSGRManagementView.selected.filesAction.size() eq 10 || OSGRManagementView.isShipper()}"/>
 						</p:column>
 					</p:row>
 				</p:panelGrid>
@@ -430,7 +430,7 @@
 					</p:column>
 					<p:column style="width:40px" headerText="#{msg['delete']}" rendered="#{OSGRManagementView.transporterAddFile}">
 				       		<p:commandButton icon="ui-icon fa fa-remove" actionListener="#{OSGRManagementView.deleteFileTransporter(item)}" onstart="PF('cargando').show()"
-								oncomplete="PF('cargando').hide();  "
+								oncomplete="PF('cargando').hide();  " rendered="#{!OSGRManagementView.isShipper()}"
 								update=":#{p:component('listActionFileId')},:#{p:component('numberFilesId')}">  
 			                </p:commandButton> 
 			       </p:column>					

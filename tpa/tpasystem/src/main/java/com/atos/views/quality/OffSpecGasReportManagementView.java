@@ -1016,12 +1016,14 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 		 String state = "";
 		 int count = 0;
 		 if(item != null && item.getDiscloseResponses() != null && !item.getDiscloseResponses().isEmpty()) {
+			 // columna originator
 			 if(nameColumn.equals("ORIGINATOR")) {
 				 if(item.getGroupId()==null) {
 					 return "";
 				 }
 /*				 exist = item.getDiscloseResponses().stream()
 			                .anyMatch(obj ->  obj.getGroupCode().equals(item.getShipper()) && "Y".equalsIgnoreCase(obj.getIsResponded()));*/
+				 // si es operador y es el originator
 				 if(this.getIsOperator() && item.getOriginatorShipperId().equals(getUser().getIdn_user_group())) {
 					 return "";
 				 }
@@ -1059,7 +1061,8 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 			 if(nameColumn.equals("SHIPPER")) {
 	/*			 exist = item.getDiscloseResponses().stream()
 			                .anyMatch(obj -> !obj.getGroupCode().equals(item.getShipper()) && "Y".equalsIgnoreCase(obj.getIsResponded()));*/
-				 if(this.getIsOperator() && item.getOriginatorShipperId().equals(getUser().getIdn_user_group())) {
+				// para operador que es el originator 
+				 if(this.getIsOperator() && item.getOriginatorShipperId().equals(getUser().getIdn_user_group())) { 
 					 for(int i=0;i<item.getDiscloseResponses().size();i++) {
 						 if("Y".equalsIgnoreCase(item.getDiscloseResponses().get(i).getIsResponded())) {
 							 count++;
@@ -1067,17 +1070,55 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 					 }
 					 return count==0 ? "NO" : count==item.getDiscloseResponses().size() ? "YES" : "PARTIAL";
 				 }
-				 if(this.isShipper()) {
+				 // para operador que no es el originator, seria un shipper el originator
+				 if(this.getIsOperator() && !item.getOriginatorShipperId().equals(getUser().getIdn_user_group())) {
+					 int count_shipper_responded = 0;
 					 int count_shipper = 0;
 					 for(int i=0;i<item.getDiscloseResponses().size();i++) {
+						 // contamos los shipper que han respondido y que no son el originator
+						 if(!item.getDiscloseResponses().get(i).getGroupCode().equals(item.getShipper()) && "Y".equalsIgnoreCase(item.getDiscloseResponses().get(i).getIsResponded())) {
+							 count_shipper_responded++;
+						 }
+						 // contamos los shipper que tienen que responder, hayan respondido o no
 						 if(!item.getDiscloseResponses().get(i).getGroupCode().equals(item.getShipper())) {
 							 count_shipper++;
 						 }
-						 if(!item.getDiscloseResponses().get(i).getGroupCode().equals(item.getShipper()) && "Y".equalsIgnoreCase(item.getDiscloseResponses().get(i).getIsResponded())) {
+						 // contamos las respuestas que si ha dado el originator 
+						 if("Y".equalsIgnoreCase(item.getDiscloseResponses().get(i).getIsResponded())
+								 && item.getOriginatorShipperId().equals(item.getDiscloseResponses().get(i).getGroupId())) {
 							 count++;
 						 }
 					 }
-					 return (count==0 ? "NO" : count==count_shipper ? "YES" : "PARTIAL"); 
+					 // si los demas shippers no tienen que responder ponermos vacio
+					 // si los demas shippers tienen que responder, pero no han respondido, ponemos NO
+					 // si los demas shippers tienen que responder y han respondido a algunas ponemos PARTIAL
+					 // si los demas shippers tienen que responder y han respondido todos ponemos YES
+					 return (count_shipper==0 ? "" : count_shipper_responded==0 ? "NO" : count_shipper_responded!=count_shipper ? "PARTIAL" : "YES");
+				 }
+				 if(this.isShipper()) {
+					 int count_shipper = 0;
+					 int count_shipper_responded = 0;
+					 for(int i=0;i<item.getDiscloseResponses().size();i++) {
+						// contamos los shipper que han respondido y que no son el originator
+						 if(!item.getDiscloseResponses().get(i).getGroupCode().equals(item.getShipper()) && "Y".equalsIgnoreCase(item.getDiscloseResponses().get(i).getIsResponded())) {
+							 count_shipper_responded++;
+						 }
+						 // contamos los shipper que tienen que responder, hayan respondido o no
+						 if(!item.getDiscloseResponses().get(i).getGroupCode().equals(item.getShipper())) {
+							 count_shipper++;
+						 }
+						 // contamos las respuestas que si ha dado el originator 
+						 if("Y".equalsIgnoreCase(item.getDiscloseResponses().get(i).getIsResponded())
+								 && item.getOriginatorShipperId().equals(item.getDiscloseResponses().get(i).getGroupId())) {
+							 count++;
+						 }
+						 
+					 }
+					 // si los demas shippers no tienen que responder ponermos vacio
+					 // si los demas shippers tienen que responder, pero no han respondido, ponemos NO
+					 // si los demas shippers tienen que responder y han respondido a algunas ponemos PARTIAL
+					 // si los demas shippers tienen que responder y han respondido todos ponemos YES
+					 return (count_shipper==0 ? "" : count_shipper_responded==0 ? "NO" : count_shipper_responded!=count_shipper ? "PARTIAL" : "YES");
 				 }
 
 				 for(int i=0;i<item.getDiscloseResponses().size();i++) {

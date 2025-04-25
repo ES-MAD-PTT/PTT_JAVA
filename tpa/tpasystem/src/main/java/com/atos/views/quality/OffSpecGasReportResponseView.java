@@ -315,8 +315,8 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 		selected.setFilesAction(new ArrayList<OffSpecActionFileBean>());
 		actions = new HashMap<BigDecimal, Object>();
 		selected = item;
-		selected.getFirstResponse().setUserComments(null);
-		selected.getFirstResponse().setResponseValue(null);
+		/*selected.getFirstResponse().setUserComments(null);
+		selected.getFirstResponse().setResponseValue(null);*/
 		selected.setIdnAction(null);
 		actions = selected.getActionsFree();
 		if(actions != null && !actions.isEmpty()) {
@@ -395,7 +395,7 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 		file = event.getFile();
 		OffSpecActionFileBean uploadFile = null;
 		if(file != null){
-			uploadFile = new OffSpecActionFileBean(selected.getIncidentId(), selected.getFirstResponse().getGroupId(), selected.getIdnAction(), file.getFileName(), 
+			uploadFile = new OffSpecActionFileBean(selected.getIncidentId(), selected.getSelectedResponse().getGroupId(), selected.getIdnAction(), file.getFileName(), 
 					file.getContents(), getUser().getUsername());
 			selected.getFilesAction().add(uploadFile);
 		}
@@ -409,7 +409,7 @@ public class OffSpecGasReportResponseView extends CommonView implements Serializ
 		file = event.getFile();
 		OffSpecActionFileBean uploadFile = null;
 		if(file != null){
-			uploadFile = new OffSpecActionFileBean(selected.getIncidentId(), selected.getFirstResponse().getGroupId(), selected.getIdnAction(), file.getFileName(), 
+			uploadFile = new OffSpecActionFileBean(selected.getIncidentId(), selected.getSelectedResponse().getGroupId(), selected.getIdnAction(), file.getFileName(), 
 					file.getContents(), getUser().getUsername());
 			service.insertFile(uploadFile);
 			selected.getFilesAction().add(uploadFile);

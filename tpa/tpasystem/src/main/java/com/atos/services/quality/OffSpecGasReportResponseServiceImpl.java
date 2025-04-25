@@ -145,7 +145,7 @@ public class OffSpecGasReportResponseServiceImpl implements OffSpecGasReportResp
     	// Utilizo un ResourceBundle local por si el scope fuera Session o Application. En estos casos no se actualizaria el idioma.
     	ResourceBundle msgs = FacesContext.getCurrentInstance().getApplication().getResourceBundle(FacesContext.getCurrentInstance(),"msg");
 		
-    	if(_incid.getFirstResponse().getResponseValue()==null)
+    	if(_incid.getSelectedResponse().getResponseValue()==null)
 			throw new ValidationException(msgs.getString("the_following_mandatory_fields_error") + " " + 
 											msgs.getString("osgr_man_lab_response") + ".");
     	
@@ -170,7 +170,7 @@ public class OffSpecGasReportResponseServiceImpl implements OffSpecGasReportResp
 
 	private void saveIncidentResponse(OffSpecIncidentBean _incid, UserBean _user) throws Exception {
 
-		OffSpecResponseBean osResponse  =  _incid.getFirstResponse();
+		OffSpecResponseBean osResponse  =  _incid.getSelectedResponse();
 
 		osResponse.setIncidentId(_incid.getIncidentId());
 		osResponse.setIsResponded(OffSpecResponseBean.isRespondedYes);

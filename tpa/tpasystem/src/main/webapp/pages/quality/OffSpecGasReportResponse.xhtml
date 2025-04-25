@@ -507,7 +507,7 @@
 								<f:selectItem itemLabel="Select One" itemValue="" />
 								<f:selectItems value="#{incident.actionsFree.entrySet()}"
 									var="entry" itemValue="#{entry.key}" itemLabel="#{entry.value}" />
-								<p:ajax update="actionsId uploadId" />
+								<p:ajax update="actionsId uploadId okResponse inputTxtNewIncidCommentId" />
 							</p:selectOneMenu>
 						</p:column>
 					</p:row>
@@ -517,8 +517,8 @@
 						</p:column>
 						<p:column>
 							<p:selectOneMenu id="okResponse" autoWidth="false"
-								style="width: 25px"
-								value="#{incident.firstResponse.responseValue}">
+								style="width: 25px" disabled="#{incident.idnAction == null}"
+								value="#{incident.selectedResponse.responseValue}">
 								<f:selectItem itemLabel="#{msg['ok_option']}" itemValue="OK" />
 								<f:selectItem itemLabel="#{msg['ko_option']}" itemValue="KO" />
 							</p:selectOneMenu>
@@ -530,8 +530,8 @@
 						</p:column>
 						<p:column>
 							<p:inputTextarea id="inputTxtNewIncidCommentId" rows="10"
-								cols="80" value="#{incident.firstResponse.userComments}"
-								autoResize="false" maxlength="1020"
+								cols="80" value="#{incident.selectedResponse.userComments}"
+								autoResize="false" maxlength="1020" disabled="#{incident.idnAction == null}"
 								style="float: left;width:100%;">
 							</p:inputTextarea>
 						</p:column>

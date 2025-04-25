@@ -486,7 +486,21 @@ public class OffSpecIncidentBean extends UserAudBean implements Serializable {
 		
 		return tmpRes;
 	}
-	
+
+	public OffSpecResponseBean getSelectedResponse(){
+		OffSpecResponseBean tmpRes = null;
+		
+		if(discloseResponses!= null && !discloseResponses.isEmpty() && this.idnAction!=null) {
+			for(int i=0;i<this.discloseResponses.size();i++) {
+				if(this.discloseResponses.get(i).getIdnAction().compareTo(this.idnAction)==0) {
+					tmpRes = discloseResponses.get(i); 
+				}
+			}
+		}
+		
+		return tmpRes;
+	}
+
 	public BigDecimal getNewStatusId() {
 		return newStatusId;
 	}

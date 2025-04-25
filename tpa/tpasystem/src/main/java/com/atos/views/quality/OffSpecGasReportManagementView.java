@@ -1097,28 +1097,15 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 				 }
 				 if(this.isShipper()) {
 					 int count_shipper = 0;
-					 int count_shipper_responded = 0;
 					 for(int i=0;i<item.getDiscloseResponses().size();i++) {
-						// contamos los shipper que han respondido y que no son el originator
-						 if(!item.getDiscloseResponses().get(i).getGroupCode().equals(item.getShipper()) && "Y".equalsIgnoreCase(item.getDiscloseResponses().get(i).getIsResponded())) {
-							 count_shipper_responded++;
-						 }
-						 // contamos los shipper que tienen que responder, hayan respondido o no
 						 if(!item.getDiscloseResponses().get(i).getGroupCode().equals(item.getShipper())) {
 							 count_shipper++;
 						 }
-						 // contamos las respuestas que si ha dado el originator 
-						 if("Y".equalsIgnoreCase(item.getDiscloseResponses().get(i).getIsResponded())
-								 && item.getOriginatorShipperId().equals(item.getDiscloseResponses().get(i).getGroupId())) {
+						 if(!item.getDiscloseResponses().get(i).getGroupCode().equals(item.getShipper()) && "Y".equalsIgnoreCase(item.getDiscloseResponses().get(i).getIsResponded())) {
 							 count++;
 						 }
-						 
 					 }
-					 // si los demas shippers no tienen que responder ponermos vacio
-					 // si los demas shippers tienen que responder, pero no han respondido, ponemos NO
-					 // si los demas shippers tienen que responder y han respondido a algunas ponemos PARTIAL
-					 // si los demas shippers tienen que responder y han respondido todos ponemos YES
-					 return (count_shipper==0 ? "" : count_shipper_responded==0 ? "NO" : count_shipper_responded!=count_shipper ? "PARTIAL" : "YES");
+					 return (count==0 ? "NO" : count==count_shipper ? "YES" : "PARTIAL"); 
 				 }
 
 				 for(int i=0;i<item.getDiscloseResponses().size();i++) {

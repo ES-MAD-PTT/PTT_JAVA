@@ -1146,11 +1146,32 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 	 
 	 public boolean renderedAsnwer(OffSpecIncidentBean item, String nameColumn) {
 		 boolean value = false;
+		 // si es shipper
 		 if(isShipper()) {
-			 if(item != null && getUser().getUser_group_id().equals(item.getShipper())) {
-				 value = nameColumn.equals("SHIPPER_ANSWER") || nameColumn.equals("SHIPPER_IF_ANSWER") ? false : true;
-			 }else {
-				 value = nameColumn.equals("SHIPPER_ANSWER") ? true : false;
+			 // miramos para las columnas SHIPPER_ANSWER y SHIPPER_IF_ANSWER
+			 if(nameColumn.equals("SHIPPER_ANSWER") || nameColumn.equals("SHIPPER_IF_ANSWER")) {
+				 if(item!=null && !item.getDiscloseResponses().isEmpty()) {
+					 for(int i=0;i<item.getDiscloseResponses().size();i++) {
+						 // si no es el originator, miramos si tiene registros para mostrarselos 
+						 if(!getUser().getUser_group_id().equals(item.getShipper()) && getUser().getUser_group_id().equals(item.getDiscloseResponses().get(i).getGroupCode())) {
+							 value = true;
+						 }
+					 }
+				 } else {
+					 value = false;
+				 }
+			 }
+			 if(nameColumn.equals("ORIGINATOR_ANSWER") || nameColumn.equals("ORIGINATOR_IF_ANSWER")) {
+				 if(item!=null && !item.getDiscloseResponses().isEmpty()) {
+					 for(int i=0;i<item.getDiscloseResponses().size();i++) {
+						 // si no es el originator, miramos si tiene registros para mostrarselos 
+						 if(getUser().getUser_group_id().equals(item.getShipper()) && getUser().getUser_group_id().equals(item.getDiscloseResponses().get(i).getGroupCode())) {
+							 value = true;
+						 }
+					 }
+				 } else {
+					 value = false;
+				 }
 			 }
 		 }else {
 			 value = true;

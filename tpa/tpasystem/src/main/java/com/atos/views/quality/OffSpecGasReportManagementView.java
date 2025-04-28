@@ -1023,33 +1023,42 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 				 }
 /*				 exist = item.getDiscloseResponses().stream()
 			                .anyMatch(obj ->  obj.getGroupCode().equals(item.getShipper()) && "Y".equalsIgnoreCase(obj.getIsResponded()));*/
-				 // si es operador y es el originator
+				 // si es operador y es el originator, no sacamos nada
 				 if(this.getIsOperator() && item.getOriginatorShipperId().equals(getUser().getIdn_user_group())) {
 					 return "";
 				 }
+				 // si es operador y no es el originator
 				 if(this.getIsOperator() && !item.getOriginatorShipperId().equals(getUser().getIdn_user_group())) {
 					 int count_shipper = 0;
 					 for(int i=0;i<item.getDiscloseResponses().size();i++) {
+						 // contamos los que son de un shipper originator, esten respondidas o no
 						 if(item.getDiscloseResponses().get(i).getGroupCode().equals(item.getOriginatorShipperCode())) {
 							 count_shipper++;
 						 }
+						 // contamos las que son de un shipper originator, solo respondidas
 						 if(item.getDiscloseResponses().get(i).getGroupCode().equals(item.getOriginatorShipperCode()) && "Y".equalsIgnoreCase(item.getDiscloseResponses().get(i).getIsResponded())) {
 							 count++;
 						 }
 					 }
-					 return (count==0 ? "NO" : count==count_shipper ? "YES" : "PARTIAL"); 
+					 return ((count==0 && count_shipper==0)? "" : count==0 ? "NO" : count==count_shipper ? "YES" : "PARTIAL"); 
 				 }
-				 if(this.isShipper()) {
+				 if(this.isShipper() && !item.getOriginatorShipperId().equals(getUser().getIdn_user_group())) {
+					 return "";
+				 }
+				 // para un shipper
+				 if(this.isShipper()  && item.getOriginatorShipperId().equals(getUser().getIdn_user_group())) {
 					 int count_shipper = 0;
 					 for(int i=0;i<item.getDiscloseResponses().size();i++) {
+						 // contamos los que son del shipper originator, esten respondidas o no
 						 if(item.getDiscloseResponses().get(i).getGroupCode().equals(item.getOriginatorShipperCode())) {
 							 count_shipper++;
 						 }
+						 // contamos las que son de un shipper originator, solo respondidas
 						 if(item.getDiscloseResponses().get(i).getGroupCode().equals(item.getOriginatorShipperCode()) && "Y".equalsIgnoreCase(item.getDiscloseResponses().get(i).getIsResponded())) {
 							 count++;
 						 }
 					 }
-					 return (count==0 ? "NO" : count==count_shipper ? "YES" : "PARTIAL"); 
+					 return ((count==0 && count_shipper==0)? "" : count==0 ? "NO" : count==count_shipper ? "YES" : "PARTIAL"); 
 				 }
 	 
 				 for(int i=0;i<item.getDiscloseResponses().size();i++) {
@@ -1095,17 +1104,34 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 					 // si los demas shippers tienen que responder y han respondido todos ponemos YES
 					 return (count_shipper==0 ? "" : count_shipper_responded==0 ? "NO" : count_shipper_responded!=count_shipper ? "PARTIAL" : "YES");
 				 }
-				 if(this.isShipper()) {
+				 // si es shipper y el originator, devuelvo vacio, en esta columna no se debe rellenar ese valor
+				 if(this.isShipper() && item.getOriginatorShipperId().equals(getUser().getIdn_user_group())) {
+					 return "";
+				 }
+				 // para shipper no originator
+				 if(this.isShipper() && !item.getOriginatorShipperId().equals(getUser().getIdn_user_group())) {
+					 int count_shipper_responded = 0;
 					 int count_shipper = 0;
 					 for(int i=0;i<item.getDiscloseResponses().size();i++) {
+						 // contamos los shipper que han respondido y que no son el originator
+						 if(!item.getDiscloseResponses().get(i).getGroupCode().equals(item.getShipper()) && "Y".equalsIgnoreCase(item.getDiscloseResponses().get(i).getIsResponded())) {
+							 count_shipper_responded++;
+						 }
+						 // contamos los shipper que tienen que responder, hayan respondido o no
 						 if(!item.getDiscloseResponses().get(i).getGroupCode().equals(item.getShipper())) {
 							 count_shipper++;
 						 }
-						 if(!item.getDiscloseResponses().get(i).getGroupCode().equals(item.getShipper()) && "Y".equalsIgnoreCase(item.getDiscloseResponses().get(i).getIsResponded())) {
+						 // contamos las respuestas que si ha dado el originator 
+						 if("Y".equalsIgnoreCase(item.getDiscloseResponses().get(i).getIsResponded())
+								 && item.getOriginatorShipperId().equals(item.getDiscloseResponses().get(i).getGroupId())) {
 							 count++;
 						 }
 					 }
-					 return (count==0 ? "NO" : count==count_shipper ? "YES" : "PARTIAL"); 
+					 // si los demas shippers no tienen que responder ponermos vacio
+					 // si los demas shippers tienen que responder, pero no han respondido, ponemos NO
+					 // si los demas shippers tienen que responder y han respondido a algunas ponemos PARTIAL
+					 // si los demas shippers tienen que responder y han respondido todos ponemos YES
+					 return (count_shipper==0 ? "" : count_shipper_responded==0 ? "NO" : count_shipper_responded!=count_shipper ? "PARTIAL" : "YES");
 				 }
 
 				 for(int i=0;i<item.getDiscloseResponses().size();i++) {
@@ -1115,7 +1141,7 @@ public class OffSpecGasReportManagementView extends CommonView implements Serial
 				 }
 			 }
 		 }
-		 return (item.getGroupId()==null && nameColumn.equals("ORIGINATOR")) ? "" : count==0 ? "NO" : count==item.getDiscloseResponses().size() ? "YES" : "PARTIAL";
+		 return (item.getGroupId()==null && nameColumn.equals("ORIGINATOR")) ? "" : count==0 && item.getDiscloseResponses().isEmpty() ? "" : count==0 ? "NO" : count==item.getDiscloseResponses().size() ? "YES" : "PARTIAL";
 	 }
 	 
 	 public boolean renderedAsnwer(OffSpecIncidentBean item, String nameColumn) {

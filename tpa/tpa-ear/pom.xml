@@ -6,7 +6,7 @@
 	<artifactId>tpa-ear</artifactId>
 	<packaging>ear</packaging>
 	<groupId>com.atos</groupId>
-	<version>1.4.2</version>
+	<version>1.4.3</version>
 
 	<name>tpasystem</name>
 

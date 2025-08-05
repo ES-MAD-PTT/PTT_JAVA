@@ -39,6 +39,7 @@ import com.atos.beans.dam.ContractNomPointBean;
 import com.atos.filters.dam.ContractNomPointFilter;
 import com.atos.services.dam.ContractNomPointService;
 import com.atos.utils.Constants;
+import com.atos.utils.DateUtil;
 import com.atos.utils.POIXSSFExcelUtils;
 import com.atos.views.CommonView;
 
@@ -386,7 +387,7 @@ public class ContractNomPointView  extends CommonView implements Serializable {
     	String summaryMsgNotOk= CommonView.getMessageResourceString("insert_noOk", params);
 
 		if (newContractNomPoint.getStartDate() != null) {
-			if (newContractNomPoint.getStartDate().before(getTomorrow())) {
+			if (newContractNomPoint.getStartDate().compareTo(DateUtil.adjustDate(getTomorrow()))<0) {	
 				errorMsg = msgs.getString("error_startDate_sysdate"); //error_startDate_sysdate= Start date must be later to sysdate
 				getMessages().addMessage(Constants.head_menu[0], new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
 				log.error(errorMsg);
@@ -395,13 +396,13 @@ public class ContractNomPointView  extends CommonView implements Serializable {
 		}
 
 		if (newContractNomPoint.getEndDate() != null) {
-			if (newContractNomPoint.getEndDate().before(getTomorrow())) {
+			if (newContractNomPoint.getEndDate().compareTo(DateUtil.adjustDate(getTomorrow()))<0) {
 				errorMsg = msgs.getString("error_endDate_sysdate"); //error_endDate_sysdate= End Date must be later to sysdate
 				getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
 				log.error(errorMsg);
 				return;
 			}
-			if (newContractNomPoint.getStartDate().after(newContractNomPoint.getEndDate())) {
+			if (newContractNomPoint.getStartDate().compareTo(DateUtil.adjustDate(newContractNomPoint.getEndDate()))>0) {
 				errorMsg = msgs.getString("error_startEarlierEnd"); //error_startEarlierEnd = Start Date must be earlier or equal to End Date
 				getMessages().addMessage(Constants.head_menu[0],new MessageBean(Constants.ERROR, summaryMsgNotOk, errorMsg, Calendar.getInstance().getTime()));
 				log.error(errorMsg );
